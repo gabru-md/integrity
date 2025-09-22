@@ -7,8 +7,8 @@ from apps.events import events_app
 
 app = Flask(__name__)
 
-app.register_blueprint(contracts_app, url_prefix='/contracts')
-app.register_blueprint(events_app, url_prefix='/events')
+app.register_blueprint(contracts_app.blueprint, url_prefix='/contracts')
+app.register_blueprint(events_app.blueprint, url_prefix='/events')
 
 if __name__ == '__main__':
     app.run(
