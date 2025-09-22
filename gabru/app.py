@@ -17,12 +17,13 @@ class App(Generic[T]):
     """
 
     def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=5,
-                 _process_data_func=None):
+                 widget_recent_limit=3, _process_data_func=None):
         self.name = name
         self.log = Logger.get_log(f"{self.name.capitalize()}")
-        self.blueprint = Blueprint(self.name, __name__)
+        self.blueprint = Blueprint(self.name, __name__, template_folder='templates')
         self.service = service
         self.get_recent_limit = get_recent_limit
+        self.widget_recent_limit = widget_recent_limit
         self.model_class = model_class
         self._process_data_func = _process_data_func
         self.setup_default_routes()
@@ -90,9 +91,14 @@ class App(Generic[T]):
         @self.blueprint.route('/home')
         def home():
             """ Renders the home page """
-            return render_template(f"{self.name.lower()}_home.html")
+            print(f"Main app templates path: {self.blueprint.template_folder}")
+            return render_template(f"{self.name.lower()}/home.html")
 
     def _process_data(self, data):
         if self._process_data_func:
             return self._process_data_func(data)
         return data
+
+    def widget_data(self):
+        entities = self.service.get_recent_items(self.widget_recent_limit)
+        return jsonify([e.dict() for e in entities])
