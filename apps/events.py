@@ -14,7 +14,7 @@ log = Logger.get_log('Events')
 @events_app.route('/')
 def get_events():
     try:
-        events = events_service.get_recent_events()
+        events = events_service.get_recent_items(5)
         # Convert events to a list of dictionaries for JSON serialization
         event_dicts = [event.model_dump() for event in events]
         return jsonify(event_dicts), 200

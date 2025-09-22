@@ -45,14 +45,3 @@ class EventService(CRUDService[Event]):
 
     def _get_columns_for_select(self) -> List[str]:
         return ["id", "event_type", "timestamp", "description", "tags"]
-
-    def get_recent_events(self, limit: int = 20) -> List[Event]:
-        if not self.db.conn:
-            return []
-        with self.db.conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT id, event_type, timestamp, description, tags FROM events ORDER BY timestamp DESC LIMIT %s",
-                (limit,)
-            )
-            rows = cursor.fetchall()
-            return [self._to_object(row) for row in rows]

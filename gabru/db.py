@@ -7,7 +7,7 @@ from gabru.log import Logger
 load_dotenv()
 
 
-class DB():
+class DB:
     """
     A base class for database operations using psycopg2.
     It handles connection management and provides an abstract method for table creation.
@@ -23,7 +23,7 @@ class DB():
         self.host = os.getenv(self.get_db_env('POSTGRES_HOST'))
         self.port = os.getenv(self.get_db_env('POSTGRES_PORT'))
 
-        self.log = Logger.get_log(self.__class__.__name__)
+        self.log = Logger.get_log(f"{self.db.capitalize()}DB")
         self.conn = None
         self._connect()
 
