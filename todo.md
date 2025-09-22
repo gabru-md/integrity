@@ -9,4 +9,4 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 
 ### Libs
 
-* [ ] Make an app wrapper
+* [X] Make an app wrapper
