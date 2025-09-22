@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Event Logger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1f2937 0%, #0c0a09 100%);
+            color: #d1d5db;
+        }
+        .card {
+            background-color: #1f2937;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        input, textarea {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+        }
+        input:focus, textarea:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+        }
+        .btn-primary {
+            background-color: #6366f1;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5;
+        }
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        .event-card {
+            background-color: #111827;
+            border-left: 4px solid #6366f1;
+        }
+        .tag {
+            background-color: #374151;
+            color: #d1d5db;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+    <div class="card w-full max-w-5xl p-10 grid grid-cols-1 md:grid-cols-2 gap-12">
+        <!-- New Event Form -->
+        <div>
+            <h1 class="text-4xl font-extrabold mb-8 text-white tracking-tight">Log a New Event</h1>
+            <form id="event-form" class="space-y-6">
+                <div>
+                    <label for="event_type" class="block text-sm font-semibold text-gray-400">Event Type</label>
+                    <input type="text" id="event_type" name="event_type" required class="mt-1 block w-full rounded-md shadow-sm sm:text-sm p-3 focus:outline-none">
+                </div>
+                <div>
+                    <label for="description" class="block text-sm font-semibold text-gray-400">Description</label>
+                    <textarea id="description" name="description" rows="3" class="mt-1 block w-full rounded-md shadow-sm sm:text-sm p-3 focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label for="tags" class="block text-sm font-semibold text-gray-400">Tags (comma-separated)</label>
+                    <input type="text" id="tags" name="tags" class="mt-1 block w-full rounded-md shadow-sm sm:text-sm p-3 focus:outline-none" placeholder="e.g., health, work, chore">
+                </div>
+                <button type="submit" class="btn-primary w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Log Event
+                </button>
+            </form>
+            <div id="status-message" class="mt-6 text-center text-sm font-medium hidden"></div>
+        </div>
+
+        <!-- Recent Events Display -->
+        <div>
+            <h2 class="text-4xl font-extrabold mb-8 text-white tracking-tight">Recent Events</h2>
+            <div id="events-list" class="space-y-6 overflow-y-auto max-h-[75vh] pr-4 no-scrollbar">
+                <!-- Events will be dynamically inserted here -->
+                <div class="text-center text-gray-500 p-6">Loading events...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const eventForm = document.getElementById('event-form');
+            const eventsList = document.getElementById('events-list');
+            const statusMessage = document.getElementById('status-message');
+
+            const fetchEvents = async () => {
+                try {
+                    const response = await fetch('/events');
+                    const events = await response.json();
+
+                    eventsList.innerHTML = '';
+                    if (events.length > 0) {
+                        events.forEach(event => {
+                            const eventElement = document.createElement('div');
+                            eventElement.className = 'event-card p-6 rounded-lg shadow-lg';
+
+                            const date = new Date(event.timestamp * 1000);
+                            const formattedDate = date.toLocaleDateString();
+                            const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                            const tagsHtml = event.tags.map(tag =>
+                                `<span class="tag text-xs font-semibold mr-1 px-2.5 py-0.5 rounded-full">${tag}</span>`
+                            ).join('');
+
+                            eventElement.innerHTML = `
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="font-bold text-lg text-white">${event.event_type}</span>
+                                    <span class="text-xs text-gray-400">${formattedDate} @ ${formattedTime}</span>
+                                </div>
+                                <p class="text-sm text-gray-400 mb-3">${event.description}</p>
+                                <div class="flex flex-wrap gap-2">${tagsHtml}</div>
+                            `;
+                            eventsList.appendChild(eventElement);
+                        });
+                    } else {
+                        eventsList.innerHTML = '<div class="text-center text-gray-500 p-6">No events logged yet.</div>';
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch events:', error);
+                    eventsList.innerHTML = '<div class="text-center text-red-400 p-6">Error fetching events.</div>';
+                }
+            };
+
+            eventForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const eventType = document.getElementById('event_type').value;
+                const description = document.getElementById('description').value;
+                const tags = document.getElementById('tags').value;
+
+                const eventData = {
+                    event_type: eventType,
+                    description: description,
+                    tags: tags
+                };
+
+                statusMessage.textContent = 'Logging event...';
+                statusMessage.className = 'mt-6 text-center text-sm font-medium text-gray-400 block';
+
+                try {
+                    const response = await fetch('/events/log', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(eventData)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        statusMessage.textContent = result.message;
+                        statusMessage.className = 'mt-6 text-center text-sm font-medium text-green-400 block';
+                        eventForm.reset();
+                        fetchEvents(); // Refresh list after successful log
+                    } else {
+                        statusMessage.textContent = result.message || 'Failed to log event.';
+                        statusMessage.className = 'mt-6 text-center text-sm font-medium text-red-400 block';
+                    }
+                } catch (error) {
+                    console.error('Error logging event:', error);
+                    statusMessage.textContent = 'An unexpected error occurred.';
+                    statusMessage.className = 'mt-6 text-center text-sm font-medium text-red-400 block';
+                }
+            });
+
+            // Initial fetch and set interval for constant updates
+            fetchEvents();
+            setInterval(fetchEvents, 5000); // Refresh every 5 seconds
+        });
+    </script>
+</body>
+</html>

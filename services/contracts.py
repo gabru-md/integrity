@@ -1,20 +1,19 @@
-from gabru.crud_db import CrudDB
-from contract import Contract  # Assuming Contract class is defined
+from gabru.service import CRUDService
+from model.contract import Contract
 from typing import List
 
+from gabru.db import DB
 
-class ContractDB(CrudDB[Contract]):
+
+class ContractService(CRUDService[Contract]):
     def __init__(self):
         super().__init__(
-            "contracts",
-            "CONTRACTS_POSTGRES_DB", "CONTRACTS_POSTGRES_USER",
-            "CONTRACTS_POSTGRES_PASSWORD", "CONTRACTS_POSTGRES_HOST",
-            "CONTRACTS_POSTGRES_PORT", "contracts"
+            "contracts", DB("contracts")
         )
 
     def _create_table(self):
-        if self.conn:
-            with self.conn.cursor() as cursor:
+        if self.db.conn:
+            with self.db.conn.cursor() as cursor:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS contracts (
                         id SERIAL PRIMARY KEY,
@@ -24,11 +23,11 @@ class ContractDB(CrudDB[Contract]):
                         trigger_event VARCHAR(255),
                         conditions TEXT,
                         violation_message TEXT,
-                        start_time BIGINT,
-                        end_time BIGINT
+                        start_time TIMESTAMP,
+                        end_time TIMESTAMP
                     )
                 """)
-                self.conn.commit()
+                self.db.conn.commit()
 
     def _to_tuple(self, contract: Contract) -> tuple:
         return (contract.name, contract.description, contract.frequency, contract.trigger_event,

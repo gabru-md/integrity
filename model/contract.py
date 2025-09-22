@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class Contract(BaseModel):
@@ -10,5 +11,5 @@ class Contract(BaseModel):
     trigger_event: str
     conditions: str
     violation_message: str
-    start_time: Optional[int] = None
-    end_time: Optional[int] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
