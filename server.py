@@ -1,9 +1,25 @@
+import os
+from datetime import datetime
 from contracts import contracts_app
 from events import events_app
 from gabru.server import Server
 
 if __name__ == '__main__':
-    server = Server("Rasbhari")
+    basedir = os.path.dirname(__file__)
+    server = Server("Rasbhari", template_folder=os.path.join(basedir, "templates"))
+
+
+    @server.app.template_filter("datetimeformat")
+    def datetimeformat(value):
+        try:
+            if isinstance(value, (int, float)):
+                return datetime.fromtimestamp(value).strftime("%b %d, %Y %H:%M")
+            # ISO string
+            return datetime.fromisoformat(value.replace("Z", "")).strftime("%b %d, %Y %H:%M")
+        except Exception as _:
+            return value
+
+
     server.register_app(contracts_app)
     server.register_app(events_app)
     server.run()

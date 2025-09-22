@@ -20,7 +20,7 @@ class App(Generic[T]):
                  widget_recent_limit=3, _process_data_func=None):
         self.name = name
         self.log = Logger.get_log(f"{self.name.capitalize()}")
-        self.blueprint = Blueprint(self.name, __name__, template_folder='templates')
+        self.blueprint = Blueprint(self.name, __name__)
         self.service = service
         self.get_recent_limit = get_recent_limit
         self.widget_recent_limit = widget_recent_limit
@@ -101,4 +101,4 @@ class App(Generic[T]):
 
     def widget_data(self):
         entities = self.service.get_recent_items(self.widget_recent_limit)
-        return jsonify([e.dict() for e in entities])
+        return [e.dict() for e in entities]

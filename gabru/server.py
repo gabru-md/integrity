@@ -5,9 +5,9 @@ import os
 
 
 class Server:
-    def __init__(self, name: str):
+    def __init__(self, name: str, template_folder="templates"):
         self.name = name
-        self.app = Flask(__name__)
+        self.app = Flask(__name__, template_folder=template_folder)
         self.setup_default_routes()
         self.not_allowed_app_names = []
         self.log = Logger.get_log(self.name)
@@ -39,4 +39,5 @@ class Server:
             app: App = app
             widget_data = app.widget_data()
             widgets_data[app.name.capitalize()] = widget_data
+        print(widgets_data)
         return widgets_data

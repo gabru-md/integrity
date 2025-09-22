@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #0d9488 100%);
+      color: #e2e8f0;
+    }
+    .card {
+      background-color: #1e293b;
+      border-radius: 1rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+    .widget-card {
+      background-color: #111827;
+      border-left: 4px solid #14b8a6;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen p-8">
+  <!-- Header -->
+  <header class="mb-10 text-center">
+    <h1 class="text-4xl font-extrabold text-white tracking-tight">📊 Dashboard</h1>
+    <p class="text-gray-400">Overview of all your apps at a glance</p>
+  </header>
+
+  <!-- Dashboard Grid -->
+  <main class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+  {% for widget_name, widget_items in widgets_data.items() %}
+    <div class="widget-card p-5 rounded-lg shadow-md flex flex-col">
+      <h2 class="text-lg font-bold mb-3">
+        <a href="/{{ widget_name|lower|replace(' ', '-') }}/home"
+           class="text-white hover:text-teal-400 transition">
+          {{ widget_name }}
+        </a>
+      </h2>
+      <div class="space-y-2">
+        {% for item in widget_items %}
+          <div class="bg-slate-800/60 rounded-md p-3 text-xs flex flex-col gap-1 border border-slate-700">
+            {% for key, value in item.items() %}
+              <div class="flex justify-between items-center">
+                <span class="text-gray-400">{{ key|replace("_"," ")|title }}:</span>
+                <span class="text-gray-100 font-medium">
+                  {% if "time" in key.lower() or key == "timestamp" %}
+                    {{ value | datetimeformat }}
+                  {% else %}
+                    {{ value }}
+                  {% endif %}
+                </span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+
+  </main>
+</body>
+</html>
