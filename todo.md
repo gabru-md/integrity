@@ -4,9 +4,11 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 
 ### Apps
 
-* [ ] Add sentinal to enforce a contract
-* [ ] Make a dashboard of widgets from different apps
+* [ ] finish sentinel condition validation
+* [ ] Need an app for notifications
+* [X] ~~Make a dashboard of widgets from different apps~~
 
 ### Libs
 
-* [X] Make an app wrapper
+* [ ] Add process runner
+* [X] ~~Make an app wrapper~~
