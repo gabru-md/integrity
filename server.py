@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
-from contracts import contracts_app
-from events import events_app
+from apps.contracts import contracts_app
+from apps.events import events_app
 from gabru.server import Server
 
 if __name__ == '__main__':

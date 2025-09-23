@@ -1,3 +1,5 @@
+import threading
+
 from flask import Blueprint, request, jsonify, render_template
 from typing import TypeVar, Generic
 from gabru.log import Logger
@@ -27,8 +29,8 @@ class App(Generic[T]):
         self.model_class = model_class
         self._process_data_func = _process_data_func
         self.setup_default_routes()
-
         self.setup_home_route()
+        self.processes = []
 
     def setup_default_routes(self):
 
@@ -98,6 +100,13 @@ class App(Generic[T]):
         if self._process_data_func:
             return self._process_data_func(data)
         return data
+
+    def register_process(self, process: threading.Thread):
+        if process:
+            self.processes.append(process)
+
+    def get_processes(self):
+        return self.processes
 
     def widget_data(self):
         entities = self.service.get_recent_items(self.widget_recent_limit)

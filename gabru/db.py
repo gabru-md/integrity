@@ -45,6 +45,13 @@ class DB:
             self.log.error(f"Error connecting to the database: {e}")
             self.conn = None
 
+    def get_conn(self):
+        # this fixes unexpected closing of the connections like a pg_background_terminate()
+        if self.conn:
+            return self.conn
+        self._connect()
+        return self.conn
+
     def close(self):
         """Closes the database connection."""
         if self.conn:

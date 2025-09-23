@@ -39,5 +39,4 @@ class Server:
             app: App = app
             widget_data = app.widget_data()
             widgets_data[app.name.capitalize()] = widget_data
-        print(widgets_data)
         return widgets_data

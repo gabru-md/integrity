@@ -13,3 +13,4 @@ class Contract(BaseModel):
     violation_message: str
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    is_valid: bool
