@@ -1,4 +1,4 @@
-from gabru.app import App
+from gabru.flask.app import App
 from model.contract import Contract
 from processes.sentinel.sentinel import Sentinel
 from services.contracts import ContractService

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Optional, List, TypeVar, Generic, Dict, Any
 
-from gabru.db import DB
+from gabru.db.db import DB
 
 T = TypeVar('T')
 

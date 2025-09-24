@@ -4,7 +4,7 @@ from abc import abstractmethod
 from typing import Generic, TypeVar
 
 from gabru.log import Logger
-from gabru.service import ReadOnlyService
+from gabru.db.service import ReadOnlyService
 from gabru.qprocessor.qservice import QueueService
 from gabru.qprocessor.qstats import QueueStats
 

@@ -1,4 +1,4 @@
-from gabru.app import App
+from gabru.flask.app import App
 from model.event import Event
 from services.events import EventService
 from datetime import datetime

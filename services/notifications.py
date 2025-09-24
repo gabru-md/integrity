@@ -1,7 +1,7 @@
 from typing import List
 
-from gabru.db import DB
-from gabru.service import CRUDService
+from gabru.db.db import DB
+from gabru.db.service import CRUDService
 from model.notification import Notification
 
 

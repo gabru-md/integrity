@@ -1,6 +1,6 @@
 from model.event import Event
-from gabru.service import CRUDService
-from gabru.db import DB
+from gabru.db.service import CRUDService
+from gabru.db.db import DB
 from typing import List
 
 

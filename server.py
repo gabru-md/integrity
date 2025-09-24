@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from apps.contracts import contracts_app
 from apps.events import events_app
-from gabru.server import Server
+from gabru.flask.server import Server
 
 if __name__ == '__main__':
     basedir = os.path.dirname(__file__)

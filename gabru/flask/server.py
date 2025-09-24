@@ -2,7 +2,7 @@ import threading
 
 from flask import Flask, render_template
 from gabru.log import Logger
-from gabru.app import App
+from gabru.flask.app import App
 import os
 
 

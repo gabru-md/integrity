@@ -1,8 +1,8 @@
-from gabru.service import CRUDService
+from gabru.db.service import CRUDService
 from model.contract import Contract
 from typing import List
 import time
-from gabru.db import DB
+from gabru.db.db import DB
 
 
 class ContractService(CRUDService[Contract]):

@@ -20,3 +20,4 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 * [X] ~~Make an app wrapper~~
 * [ ] Create a queue database with queuestats table for enabling queue processor
 * [ ] Add queue db related info to .env
+* [ ] Add docs about qprocessor.py 

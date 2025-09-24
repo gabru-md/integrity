@@ -1,4 +1,4 @@
-## my collection of code
+## my collection of framework code
 
 - **log.py**: create a logger for any part of the application
 - **db.py**: wrapper to connect to a postgresql database

@@ -3,7 +3,7 @@ import threading
 from flask import Blueprint, request, jsonify, render_template
 from typing import TypeVar, Generic
 from gabru.log import Logger
-from gabru.service import CRUDService
+from gabru.db.service import CRUDService
 
 T = TypeVar('T')
 
