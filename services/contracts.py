@@ -65,7 +65,7 @@ class ContractService(CRUDService[Contract]):
     def get_associated_valid_contracts(self, event_type) -> List[Contract]:
         current_time = int(time.time())
         with self.db.conn.cursor() as cursor:
-            query = "SELECT * FROM contracts WHERE trigger_event = %s and end_time > %s and is_valid"
+            query = "SELECT * FROM contracts WHERE trigger_event = %s and end_time > to_timestamp(%s) and is_valid"
             cursor.execute(query, (event_type, current_time))
             rows = cursor.fetchall()
             contracts = [self._to_object(row) for row in rows]
@@ -75,7 +75,7 @@ class ContractService(CRUDService[Contract]):
         """ Get the contracts not associated to trigger_event and are valid"""
         current_time = int(time.time())
         with self.db.conn.cursor() as cursor:
-            query = "SELECT * FROM contracts WHERE trigger_event = null and end_time > %s and is_valid"
+            query = "SELECT * FROM contracts WHERE trigger_event = null and end_time > to_timestamp(%s) and is_valid"
             cursor.execute(query, (current_time,))
             rows = cursor.fetchall()
             contracts = [self._to_object(row) for row in rows]

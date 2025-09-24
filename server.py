@@ -22,4 +22,8 @@ if __name__ == '__main__':
 
     server.register_app(contracts_app)
     server.register_app(events_app)
+
+    # start process manager to run important processes for apps
+    server.start_process_manager()
+
     server.run()

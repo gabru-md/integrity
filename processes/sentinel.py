@@ -4,17 +4,20 @@ import time
 from gabru.log import Logger
 from model.contract import Contract
 from model.event import Event
+from processes.condition.evaluator import ContractEvaluator
 from services.contracts import ContractService
 from services.events import EventService
+from processes.condition.parser import parse_condition_as_dict
 
 
 class Sentinel(threading.Thread):
-    def __init__(self):
-        super().__init__()
-        self.log = Logger.get_log(self.__class__.name)
+    def __init__(self, daemon=True):
+        super().__init__(name=self.__class__.__name__, daemon=daemon)
+        self.log = Logger.get_log(self.__class__.__name__)
         self.event_service = EventService()
         self.contract_service = ContractService()
         self.sleep_duration_sec = 5
+        self.evaluator = ContractEvaluator(self.event_service)
 
     def run(self):
         self.log.info("Sentinel service is running")
@@ -51,7 +54,7 @@ class Sentinel(threading.Thread):
         associated_contracts = self.contract_service.get_associated_valid_contracts(event.event_type)
         if associated_contracts:
             for contract in associated_contracts:
-                is_valid = self.run_contract_validation(contract)
+                is_valid = self.run_contract_validation(contract, event)
                 if is_valid:
                     self.log.info(f"Contract {contract.name} remains valid")
                 else:
@@ -64,7 +67,7 @@ class Sentinel(threading.Thread):
         open_contracts = self.contract_service.get_open_contracts()
         if open_contracts:
             for contract in open_contracts:
-                is_valid = self.run_contract_validation(contract)
+                is_valid = self.run_contract_validation(contract, event)
                 if is_valid:
                     self.log.info(f"Contract {contract.name} remains valid")
                 else:
@@ -82,8 +85,11 @@ class Sentinel(threading.Thread):
                 # do not invalidate any other contract
                 self.log.info(f"{contract.name} [{contract.frequency}] remains valid")
 
-    def run_contract_validation(self, contract: Contract) -> bool:
+    def run_contract_validation(self, contract: Contract, trigger_event: Event) -> bool:
         # need to figure out how to build the contract conditions and how to validate them
+        condition_dict = parse_condition_as_dict(contract.conditions)
+        if condition_dict:
+            return self.evaluator.evaluate_contract_on_trigger(condition_dict, trigger_event)
         return False
 
     def queue_contract_invalidated_event(self, contract):

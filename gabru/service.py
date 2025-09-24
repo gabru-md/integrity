@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional, List, TypeVar, Generic
+from typing import Optional, List, TypeVar, Generic, Dict, Any
 
 from gabru.db import DB
 
@@ -139,6 +139,51 @@ class CRUDService(Generic[T]):
 
         with self.db.get_conn().cursor() as cursor:
             cursor.execute(query, (last_id,))
+            rows = cursor.fetchall()
+            return [self._to_object(row) for row in rows]
+
+    def find_all(self, filters: Optional[Dict[str, Any]] = None, sort_by: Optional[Dict[str, str]] = None) -> List[T]:
+        """
+        Retrieves items from the database based on flexible filters and sorting.
+        This is a crucial improvement for performance.
+        """
+        if not self.db.get_conn():
+            return []
+
+        columns = ", ".join(self._get_columns_for_select())
+        query = f"SELECT {columns} FROM {self.table_name}"
+        where_clauses = []
+        params = []
+
+        if filters:
+            for column, filter_val in filters.items():
+                if isinstance(filter_val, dict):
+                    # Handle advanced operators like $in and $lt
+                    for op, val in filter_val.items():
+                        if op == "$in":
+                            # For IN clauses, use %s for each item
+                            placeholders = ", ".join(["%s"] * len(val))
+                            where_clauses.append(f"{column} IN ({placeholders})")
+                            params.extend(val)
+                        elif op == "$lt":
+                            where_clauses.append(f"{column} < %s")
+                            params.append(val)
+                        elif op == "$gt":
+                            where_clauses.append(f"{column} > %s")
+                            params.append(val)
+                else:
+                    where_clauses.append(f"{column} = %s")
+                    params.append(filter_val)
+
+            if where_clauses:
+                query += " WHERE " + " AND ".join(where_clauses)
+
+        if sort_by:
+            sort_clauses = [f"{col} {order}" for col, order in sort_by.items()]
+            query += " ORDER BY " + ", ".join(sort_clauses)
+
+        with self.db.get_conn().cursor() as cursor:
+            cursor.execute(query, tuple(params))
             rows = cursor.fetchall()
             return [self._to_object(row) for row in rows]
 

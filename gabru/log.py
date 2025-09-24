@@ -3,7 +3,7 @@ import logging
 
 class Logger:
     @staticmethod
-    def get_log(name):
+    def get_log(name: str):
         logger = logging.getLogger(name)
 
         logger.setLevel(logging.INFO)

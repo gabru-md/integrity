@@ -1,3 +1,5 @@
+import threading
+
 from flask import Flask, render_template
 from gabru.log import Logger
 from gabru.app import App
@@ -12,6 +14,7 @@ class Server:
         self.not_allowed_app_names = []
         self.log = Logger.get_log(self.name)
         self.registered_apps = []
+        self.process_manager = None
 
     def register_app(self, app: App):
         if app.name.lower() in self.not_allowed_app_names:
@@ -40,3 +43,32 @@ class Server:
             widget_data = app.widget_data()
             widgets_data[app.name.capitalize()] = widget_data
         return widgets_data
+
+    def process_manager_init(self):
+        processes_to_start = {}
+        self.log.info(f"Starting process manager for {self.name}")
+        for app in self.registered_apps:
+            app: App = app
+            app_processes = app.get_processes()
+            if len(app_processes) > 0:
+                processes_to_start[app.name] = app_processes
+        self.log.info(f"Loaded all processes to run")
+
+        _process_threads = []
+
+        for app_name, processes in processes_to_start.items():
+            for process in processes:
+                process: threading.Thread = process
+                self.log.info(f"Starting {process.name} for {app_name}")
+                process.start()
+                _process_threads.append(process)
+
+        self.log.info("All processes started, waiting for them to end.")
+        for process_thread in _process_threads:
+            process_thread.join()
+
+        self.log.info("All processes concluded.")
+
+    def start_process_manager(self):
+        self.process_manager = threading.Thread(target=self.process_manager_init, daemon=True)
+        self.process_manager.start()

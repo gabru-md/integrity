@@ -24,6 +24,14 @@ class EventService(CRUDService[Event]):
                         """)
                 self.db.conn.commit()
 
+    def find_by_event_type_and_time_range(self, event_types: List[str], max_timestamp: int, min_timestamp:int) -> List[Event]:
+        filters = {
+            "event_type": {"$in": event_types},
+            "timestamp": {"$lt": max_timestamp, "$gt": min_timestamp}
+        }
+        sort_by = {"timestamp": "ASC"}
+        return self.find_all(filters=filters, sort_by=sort_by)
+
     def _to_tuple(self, event: Event) -> tuple:
         return (event.event_type, event.timestamp, event.description, event.tags)
 
