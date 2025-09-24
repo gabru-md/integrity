@@ -1,6 +1,6 @@
 from gabru.app import App
 from model.contract import Contract
-from processes.sentinel import Sentinel
+from processes.sentinel.sentinel import Sentinel
 from services.contracts import ContractService
 
 def process_data(json_data):

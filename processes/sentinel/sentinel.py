@@ -4,10 +4,10 @@ import time
 from gabru.log import Logger
 from model.contract import Contract
 from model.event import Event
-from processes.condition.evaluator import ContractEvaluator
+from processes.sentinel.condition.evaluator import ContractEvaluator
 from services.contracts import ContractService
 from services.events import EventService
-from processes.condition.parser import parse_condition_as_dict
+from processes.sentinel.condition.parser import parse_condition_as_dict
 
 
 class Sentinel(threading.Thread):
@@ -97,7 +97,7 @@ class Sentinel(threading.Thread):
             "event_type": "contract:invalidation",
             "timestamp": int(time.time()),
             "description": f"Contract: {contract.name} rendered invalid",
-            "tags": ["contracts"]
+            "tags": ["contracts", "notification"]
         }
         contract_invalidated_event = Event(**event_dict)
         self.event_service.create(contract_invalidated_event)
