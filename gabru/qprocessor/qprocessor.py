@@ -28,11 +28,11 @@ class QueueProcessor(Generic[T], threading.Thread):
         self.service = service
         self.log = Logger.get_log(name)
         self.sleep_time_sec = 5
-        self.last_processed_id = 0
         self.q_service = QueueService()
         self._set_up_queue_stats()
         self.queue = []
         self.max_queue_size = 10
+        self.q_stats: QueueStats
 
     def _set_up_queue_stats(self):
         filters = {
@@ -45,10 +45,12 @@ class QueueProcessor(Generic[T], threading.Thread):
                 "last_consumed_id": 0
             }
             q_stats = QueueStats(**q_stats_dict)
-            self.q_service.create(q_stats)
+            q_stats.id = self.q_service.create(q_stats)
             self.log.info("Initialised QueueStats")
+            self.q_stats = q_stats
         else:
             self.log.info("QueueStats already exist")
+            self.q_stats = q_stats[0]
 
     def sleep(self):
         self.log.info(f"Nothing to do, waiting for {self.sleep_time_sec}s")
@@ -77,7 +79,7 @@ class QueueProcessor(Generic[T], threading.Thread):
             self.log.warn("Failure to process item")
 
         # update the id in any case to keep things moving
-        self.last_processed_id = item.id
+        self.q_stats.last_consumed_id = item.id
 
         return result
 
@@ -86,15 +88,11 @@ class QueueProcessor(Generic[T], threading.Thread):
             return self.queue.pop(0)
 
         # if in-memory queue length is 0 then first update qstats
-        q_stats_dict = {
-            "name": self.name,
-            "last_consumed_id": self.last_processed_id
-        }
-        updated_q_stats = QueueStats(**q_stats_dict)
-        self.q_service.update(updated_q_stats)
+        if self.q_service.update(self.q_stats):
+            self.log.info("Updated up-to-date stats")
 
         # then fetch next batch of items from db
-        items_from_queue = self.service.get_all_items_after(self.last_processed_id, limit=self.max_queue_size)
+        items_from_queue = self.service.get_all_items_after(self.q_stats.last_consumed_id, limit=self.max_queue_size)
         if items_from_queue:
             self.queue.extend(items_from_queue)
             return self.get_next_item()
