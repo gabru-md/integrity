@@ -21,21 +21,20 @@ class ContractEvaluator:
             event_service: An instance of the EventService to fetch events.
         """
         self.event_service = event_service
-        self.log = Logger.get_log('Evaluator')
+        self.log = Logger.get_log(self.__class__.__name__)
 
-    def evaluate_contract_on_trigger(self, contract: Dict[str, Any], trigger_event: Any) -> bool:
+    def evaluate_contract_on_trigger(self, contract_dict: Dict[str, Any], trigger_event: Any) -> bool:
         """
         Evaluates a contract based on a single, newly triggered event.
-        This is optimized for real-time, event-driven systems.
 
         Args:
-            contract: The contract dictionary to evaluate.
+            contract_dict: The contract dictionary to evaluate.
             trigger_event: The single, latest event that triggered this evaluation.
 
         Returns:
             bool: True if the contract is met, False otherwise.
         """
-        trigger_event_type = contract["trigger"]
+        trigger_event_type = contract_dict["trigger"]
         if trigger_event.event_type != trigger_event_type:
             self.log.info("Trigger event type mismatch. Skipping evaluation.")
             return False
@@ -43,7 +42,7 @@ class ContractEvaluator:
         self.log.info(
             f"Checking contract for latest trigger at timestamp: {datetime.fromtimestamp(trigger_event.timestamp / 1000)}")
 
-        return self._evaluate_conditions(contract["conditions"], trigger_event.timestamp)
+        return self._evaluate_conditions(contract_dict["conditions"], trigger_event.timestamp)
 
     def _get_required_event_types(self, condition_dict: Dict[str, Any]) -> List[str]:
         """
@@ -122,7 +121,8 @@ class ContractEvaluator:
         raise ValueError(
             f"Unknown condition type or operator: {condition_dict.get('type') or condition_dict.get('operator')}")
 
-    def _evaluate_event_count(self, condition: Dict[str, Any], events_to_check: List[Any]) -> bool:
+    @staticmethod
+    def _evaluate_event_count(condition: Dict[str, Any], events_to_check: List[Any]) -> bool:
         """
         Evaluates a single event_count condition.
         """
@@ -137,7 +137,8 @@ class ContractEvaluator:
 
         return actual_count >= min_count
 
-    def _convert_to_milliseconds(self, value: int, unit: str) -> int:
+    @staticmethod
+    def _convert_to_milliseconds(value: int, unit: str) -> int:
         """
         Converts a time value and unit to milliseconds.
         """
@@ -150,7 +151,6 @@ class ContractEvaluator:
         raise ValueError(f"Unknown time unit: {unit}")
 
 
-# --- Usage Example ---
 if __name__ == '__main__':
     class MockEvent:
         def __init__(self, **kwargs):
@@ -176,8 +176,8 @@ if __name__ == '__main__':
             return [e for e in events if e.event_type in event_types and min_timestamp <= e.timestamp < max_timestamp]
 
 
-    event_service = MockEventService()
-    evaluator = ContractEvaluator(event_service)
+    _event_service = MockEventService()
+    evaluator = ContractEvaluator(_event_service)
 
     # Let's get the most recent trigger event to pass to the evaluator
     latest_trigger_event = MockEvent(id=4, event_type='gaming:league_of_legends', timestamp=int(time.time() * 1000))

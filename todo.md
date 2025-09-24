@@ -4,11 +4,16 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 
 ### Apps
 
-* [ ] finish sentinel condition validation
 * [ ] Need an app for notifications
+* [ ] enforce temporal conditions on contracts
+* [ ] what exactly is frequency and how to use it properly needs to be documented
+* [X] ~~should all contracts be linked to a trigger event~~ - No, there can be unlinked contracts. I need to refine what
+  sentinel should do.
+* [X] ~~finish sentinel condition validation~~
 * [X] ~~Make a dashboard of widgets from different apps~~
 
 ### Libs
 
-* [ ] Add process runner
+* [ ] Add c_util.py and a_util.py for collections and array utils
+* [X] ~~Add process runner~~
 * [X] ~~Make an app wrapper~~

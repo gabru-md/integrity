@@ -188,7 +188,6 @@ def parse_condition_as_dict(condition: str):
 if __name__ == '__main__':
     import json
 
-    # New example with durations on each term
     lexer = Lexer()
     contract_str = "gaming:league_of_legends AFTER 2x exercise WITHIN 1h AND 1x laundry:loaded WITHIN 30m"
     _parser = Parser(lexer.tokenize(contract_str))
