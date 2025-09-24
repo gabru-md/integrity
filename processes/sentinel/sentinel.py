@@ -1,3 +1,4 @@
+import datetime
 import time
 
 from gabru.log import Logger
@@ -6,7 +7,7 @@ from model.contract import Contract
 from model.event import Event
 from processes.sentinel.condition.evaluator import ContractEvaluator
 from services.contracts import ContractService
-from processes.sentinel.condition.parser import parse_condition_as_dict
+from processes.sentinel.condition.parser import parse_contract_as_dict
 from services.events import EventService
 
 
@@ -20,7 +21,7 @@ class Sentinel(QueueProcessor[Event]):
         self.log = Logger.get_log(self.__class__.__name__)
         self.excluded_event_types = []
         self.contract_service = ContractService()
-        self.evaluator = ContractEvaluator()
+        self.evaluator = ContractEvaluator(self.event_service)
 
     def filter_item(self, event: Event):
         if event.event_type in self.excluded_event_types:
@@ -56,9 +57,9 @@ class Sentinel(QueueProcessor[Event]):
             for contract in open_contracts:
                 is_valid = self.run_contract_validation(contract, event)
                 if is_valid:
-                    self.log.info(f"Contract {contract.name} remains valid")
+                    self.log.info(f"Open Contract {contract.name} remains valid")
                 else:
-                    self.log.info(f"Contract {contract.name} was invalidated")
+                    self.log.info(f"Open Contract {contract.name} was invalidated")
                     self.queue_contract_invalidated_event(contract)
                     # add to contracts to invalidate later
                     contracts_to_invalidate.append(contract)
@@ -74,7 +75,7 @@ class Sentinel(QueueProcessor[Event]):
 
     def run_contract_validation(self, contract: Contract, trigger_event: Event) -> bool:
         # need to figure out how to build the contract conditions and how to validate them
-        condition_dict = parse_condition_as_dict(contract.conditions)
+        condition_dict = parse_contract_as_dict(contract.conditions)
         if condition_dict:
             return self.evaluator.evaluate_contract_on_trigger(condition_dict, trigger_event)
         return False

@@ -13,43 +13,29 @@ class ContractEvaluator:
     It encapsulates all the logic for checking event-based conditions.
     """
 
-    def __init__(self):
+    def __init__(self, service: EventService):
         """
         Initializes the Evaluator with its required dependencies.
 
         Args:
             event_service: An instance of the EventService to fetch events.
         """
-        self.event_service = EventService()
+        self.event_service = service
         self.log = Logger.get_log(self.__class__.__name__)
 
     def evaluate_contract_on_trigger(self, contract_dict: Dict[str, Any], trigger_event: Any) -> bool:
-        """
-        Evaluates a contract based on a single, newly triggered event.
-
-        Args:
-            contract_dict: The contract dictionary to evaluate.
-            trigger_event: The single, latest event that triggered this evaluation.
-
-        Returns:
-            bool: True if the contract is met, False otherwise.
-        """
         trigger_event_type = contract_dict["trigger"]
         if trigger_event.event_type != trigger_event_type:
             self.log.info("Trigger event type mismatch. Skipping evaluation.")
             return False
 
         self.log.info(
-            f"Checking contract for latest trigger at timestamp: {datetime.fromtimestamp(trigger_event.timestamp / 1000)}")
+            f"Checking contract for latest trigger at timestamp: {datetime.fromtimestamp(trigger_event.timestamp)}")
 
         return self._evaluate_conditions(contract_dict["conditions"], trigger_event.timestamp)
 
     def _get_required_event_types(self, condition_dict: Dict[str, Any]) -> List[str]:
-        """
-        Recursively walks the condition tree to find all unique event types required.
-        """
         required_events = set()
-
         if "event" in condition_dict:
             required_events.add(condition_dict["event"])
 
@@ -60,37 +46,22 @@ class ContractEvaluator:
         return list(required_events)
 
     def _evaluate_conditions(self, condition_dict: Dict[str, Any], trigger_timestamp: int) -> bool:
-        """
-        Recursively evaluates a condition dictionary.
-        This function now handles temporal filtering and fetches only the required data.
-        """
-        # Determine the min and max timestamps for this specific condition
         max_timestamp = trigger_timestamp
-        min_timestamp = 0  # Default to the beginning of time
+        min_timestamp = 0
 
-        # Check if the condition has a time window
         if "time_window" in condition_dict:
             time_window_ms = self._convert_to_milliseconds(condition_dict["time_window"], condition_dict["unit"])
             min_timestamp = trigger_timestamp - time_window_ms
-
-            # Since this is a nested temporal condition, we need to strip the time window
-            # keys so the inner condition can be evaluated correctly.
             inner_condition = {k: v for k, v in condition_dict.items() if k not in ["time_window", "unit"]}
-
-            # Find the event types for the inner condition
             required_event_types = self._get_required_event_types(inner_condition)
-
-            # Fetch events from the database only for this specific time window
             events_to_check = self.event_service.find_by_event_type_and_time_range(
                 event_types=required_event_types,
                 max_timestamp=max_timestamp,
                 min_timestamp=min_timestamp
             )
-
             return self._evaluate_event_count(inner_condition, events_to_check)
 
         elif condition_dict.get("type") == "event_count":
-            # If it's a direct event count without a time window, find the events
             required_event_types = self._get_required_event_types(condition_dict)
             events_to_check = self.event_service.find_by_event_type_and_time_range(
                 event_types=required_event_types,
@@ -118,14 +89,16 @@ class ContractEvaluator:
             self.log.info("Contract not met for any trigger event instance.")
             return False
 
+        elif condition_dict.get("operator") == "NOT":
+            # The NOT operator negates the result of its single child term
+            term = condition_dict["terms"][0]
+            return not self._evaluate_conditions(term, trigger_timestamp)
+
         raise ValueError(
             f"Unknown condition type or operator: {condition_dict.get('type') or condition_dict.get('operator')}")
 
     @staticmethod
     def _evaluate_event_count(condition: Dict[str, Any], events_to_check: List[Any]) -> bool:
-        """
-        Evaluates a single event_count condition.
-        """
         target_event = condition["event"]
         min_count = condition["min_count"]
 
@@ -139,9 +112,6 @@ class ContractEvaluator:
 
     @staticmethod
     def _convert_to_milliseconds(value: int, unit: str) -> int:
-        """
-        Converts a time value and unit to milliseconds.
-        """
         if unit == 's':
             return value * 1000
         elif unit == 'm':
@@ -152,6 +122,7 @@ class ContractEvaluator:
 
 
 if __name__ == '__main__':
+    # Mock classes to simulate the environment for demonstration
     class MockEvent:
         def __init__(self, **kwargs):
             self.id = kwargs.get('id')
@@ -161,52 +132,63 @@ if __name__ == '__main__':
 
     class MockEventService:
         def __init__(self):
-            # A base timestamp for our mock events (e.g., now)
             self.base_ts = int(time.time() * 1000)
 
         def find_by_event_type_and_time_range(self, event_types, max_timestamp, min_timestamp):
             events = [
-                MockEvent(id=1, event_type='exercise', timestamp=self.base_ts - 3600000),  # 1 hour ago
-                MockEvent(id=2, event_type='laundry:loaded', timestamp=self.base_ts - 1800000),  # 30 mins ago
-                MockEvent(id=3, event_type='exercise', timestamp=self.base_ts - 1200000),  # 20 mins ago
-                MockEvent(id=4, event_type='gaming:league_of_legends', timestamp=self.base_ts)  # Now
+                MockEvent(id=1, event_type='exercise', timestamp=self.base_ts - 3600000),
+                MockEvent(id=2, event_type='laundry:loaded', timestamp=self.base_ts - 1800000),
+                MockEvent(id=3, event_type='exercise', timestamp=self.base_ts - 1200000),
+                MockEvent(id=4, event_type='gaming:league_of_legends', timestamp=self.base_ts),
+                MockEvent(id=5, event_type='cooking_dinner', timestamp=self.base_ts - 7200000)
             ]
 
-            # Simulate database filtering with both min and max timestamps
             return [e for e in events if e.event_type in event_types and min_timestamp <= e.timestamp < max_timestamp]
 
 
     _event_service = MockEventService()
     evaluator = ContractEvaluator(_event_service)
 
-    # Let's get the most recent trigger event to pass to the evaluator
-    latest_trigger_event = MockEvent(id=4, event_type='gaming:league_of_legends', timestamp=int(time.time() * 1000))
-
-    # Define the contract with time constraints
-    contract = {
-        "name": "Generated Contract",
+    # Example: gaming only after cooking_dinner
+    contract_gaming_after_cooking = {
+        "name": "Gaming only after cooking",
         "trigger": "gaming:league_of_legends",
         "conditions": {
             "operator": "AND",
             "terms": [
                 {
                     "type": "event_count",
-                    "event": "exercise",
-                    "min_count": 2,
-                    "time_window": 1,
-                    "unit": "h"
-                },
-                {
-                    "type": "event_count",
-                    "event": "laundry:loaded",
-                    "min_count": 1,
-                    "time_window": 30,
-                    "unit": "m"
+                    "event": "cooking_dinner",
+                    "min_count": 1
                 }
             ]
         }
     }
 
-    # Evaluate the contract using the new optimized method
-    result = evaluator.evaluate_contract_on_trigger(contract, latest_trigger_event)
-    # print(f"\nFinal contract evaluation result: {result}")
+    # Example: No gaming after 10pm (simplified for this evaluator)
+    # The logic "after 10pm" would need to be handled by a separate rule engine or in the application logic
+    # Here, we can simulate with "No gaming AFTER hand_wash"
+    contract_no_gaming_after_hand_wash = {
+        "name": "No gaming after hand_wash",
+        "trigger": "gaming:league_of_legends",
+        "conditions": {
+            "operator": "NOT",
+            "terms": [
+                {
+                    "type": "event_count",
+                    "event": "hand_wash",
+                    "min_count": 1
+                }
+            ]
+        }
+    }
+
+    latest_trigger_event = MockEvent(id=4, event_type='gaming:league_of_legends', timestamp=int(time.time() * 1000))
+    print("\nEvaluating 'Gaming only after cooking_dinner' contract...")
+    result = evaluator.evaluate_contract_on_trigger(contract_gaming_after_cooking, latest_trigger_event)
+    print(f"Result: {result}")
+
+    print("\nEvaluating 'No gaming after hand_wash' contract...")
+    # This will be true if 'hand_wash' has not occurred
+    result = evaluator.evaluate_contract_on_trigger(contract_no_gaming_after_hand_wash, latest_trigger_event)
+    print(f"Result: {result}")

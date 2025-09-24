@@ -63,7 +63,7 @@ class Server:
                 process.start()
                 _process_threads.append(process)
 
-        self.log.info("All processes started, waiting for them to end.")
+        self.log.info(f"{len(_process_threads)} processes started, waiting for them to end.")
         for process_thread in _process_threads:
             process_thread.join()
 

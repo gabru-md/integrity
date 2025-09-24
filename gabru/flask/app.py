@@ -93,7 +93,6 @@ class App(Generic[T]):
         @self.blueprint.route('/home')
         def home():
             """ Renders the home page """
-            print(f"Main app templates path: {self.blueprint.template_folder}")
             return render_template(f"{self.name.lower()}/home.html")
 
     def _process_data(self, data):
