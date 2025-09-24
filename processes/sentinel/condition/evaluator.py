@@ -13,14 +13,14 @@ class ContractEvaluator:
     It encapsulates all the logic for checking event-based conditions.
     """
 
-    def __init__(self, event_service: EventService):
+    def __init__(self):
         """
         Initializes the Evaluator with its required dependencies.
 
         Args:
             event_service: An instance of the EventService to fetch events.
         """
-        self.event_service = event_service
+        self.event_service = EventService()
         self.log = Logger.get_log(self.__class__.__name__)
 
     def evaluate_contract_on_trigger(self, contract_dict: Dict[str, Any], trigger_event: Any) -> bool:

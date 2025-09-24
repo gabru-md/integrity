@@ -24,7 +24,7 @@ class QueueProcessor(Generic[T], threading.Thread):
     """
 
     def __init__(self, name, service: ReadOnlyService[T]):
-        super().__init__(name, daemon=True)
+        super().__init__(name=name, daemon=True)
         self.service = service
         self.log = Logger.get_log(name)
         self.sleep_time_sec = 5
@@ -36,7 +36,7 @@ class QueueProcessor(Generic[T], threading.Thread):
 
     def _set_up_queue_stats(self):
         filters = {
-            "name": {"$in": [self.name]}
+            "name": self.name
         }
         q_stats = self.q_service.find_all(filters=filters)
         if q_stats is None or len(q_stats) == 0:
@@ -102,7 +102,8 @@ class QueueProcessor(Generic[T], threading.Thread):
 
     @abstractmethod
     def filter_item(self, item: T):
-        pass
+        """ returns None if this item can be excluded else return the item """
+        return item
 
     @abstractmethod
     def _process_item(self, next_item: T) -> bool:

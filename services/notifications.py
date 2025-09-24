@@ -12,8 +12,8 @@ class NotificationService(CRUDService[Notification]):
         )
 
     def _create_table(self):
-        if self.db.get_conn():
-            with self.db.get_conn() as cursor:
+        if self.db.conn:
+            with self.db.conn.cursor() as cursor:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS notifications (
                         id SERIAL PRIMARY KEY,

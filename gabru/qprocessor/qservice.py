@@ -10,11 +10,12 @@ class QueueService(CRUDService[QueueStats]):
         super().__init__("queuestats", DB("queue"))
 
     def _create_table(self):
-        if self.db.get_conn():
-            with self.db.get_conn() as cursor:
+        if self.db.conn:
+            with self.db.conn.cursor() as cursor:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS queuestats (
-                        name VARCHAR(255) PRIMARY KEY,
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(255) UNIQUE NOT NULL,
                         last_consumed_id INT
                     )
                 """)
@@ -26,8 +27,9 @@ class QueueService(CRUDService[QueueStats]):
 
     def _to_object(self, row: tuple) -> QueueStats:
         qstat_dict = {
-            "name": row[0],
-            "last_consumed_id": row[1]
+            "id": row[0],
+            "name": row[1],
+            "last_consumed_id": row[2]
         }
         return QueueStats(**qstat_dict)
 
@@ -38,4 +40,4 @@ class QueueService(CRUDService[QueueStats]):
         return ["name", "last_consumed_id"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["name", "last_consumed_id"]
+        return ["id", "name", "last_consumed_id"]

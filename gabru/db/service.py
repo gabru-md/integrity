@@ -57,20 +57,6 @@ class ReadOnlyService(Generic[T]):
             rows = cursor.fetchall()
             return [self._to_object(row) for row in rows]
 
-    def get_most_recent_item_id(self):
-        """Retrieves the ID of the most recently created item from the database."""
-        if not self.db.get_conn():
-            return None
-
-        query = f"SELECT id FROM {self.table_name} ORDER BY id DESC LIMIT 1"
-        with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchone()
-            if result:
-                return result[0]
-            else:
-                return None
-
     def get_all_items_after(self, last_id: int, limit=10) -> List[T]:
         """
         Retrieves all events with an ID greater than the given last_id.

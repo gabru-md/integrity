@@ -1,52 +1,39 @@
-import threading
 import time
 
 from gabru.log import Logger
+from gabru.qprocessor.qprocessor import QueueProcessor, T
 from model.contract import Contract
 from model.event import Event
 from processes.sentinel.condition.evaluator import ContractEvaluator
 from services.contracts import ContractService
-from services.events import EventService
 from processes.sentinel.condition.parser import parse_condition_as_dict
+from services.events import EventService
 
 
-class Sentinel(threading.Thread):
-    def __init__(self, daemon=True):
-        super().__init__(name=self.__class__.__name__, daemon=daemon)
-        self.log = Logger.get_log(self.__class__.__name__)
+class Sentinel(QueueProcessor[Event]):
+
+    def __init__(self):
         self.event_service = EventService()
+
+        super().__init__(name=self.__class__.__name__, service=self.event_service)
+
+        self.log = Logger.get_log(self.__class__.__name__)
+        self.excluded_event_types = []
         self.contract_service = ContractService()
-        self.sleep_duration_sec = 5
-        self.evaluator = ContractEvaluator(self.event_service)
+        self.evaluator = ContractEvaluator()
 
-    def run(self):
-        self.log.info("Sentinel service is running")
+    def filter_item(self, event: Event):
+        if event.event_type in self.excluded_event_types:
+            return None
+        return event
+
+    def _process_item(self, event: Event) -> bool:
         try:
-            last_event_id = self.get_most_recent_event_id()
-            while True:
-                most_recent_event_id = self.get_most_recent_event_id()
-                if most_recent_event_id > last_event_id:
-                    self.log.info("New event detected. Processing...")
-                    new_events = self.get_new_events_after(last_event_id)
-                    for event in new_events:
-                        self.validate_event(event)
-                    last_event_id = most_recent_event_id
-
-                self.sleep()
+            self.validate_event(event=event)
         except Exception as e:
             self.log.exception(e)
-        finally:
-            self.log.info("Sentinel service is stopped")
-
-    def sleep(self):
-        self.log.info(f"Sleeping for {self.sleep_duration_sec}s")
-        time.sleep(self.sleep_duration_sec)
-
-    def get_most_recent_event_id(self):
-        return self.event_service.get_most_recent_item_id()
-
-    def get_new_events_after(self, last_event_id):
-        return self.event_service.get_all_items_after(last_event_id)
+            return False
+        return True
 
     def validate_event(self, event: Event):
         contracts_to_invalidate = []
