@@ -63,13 +63,13 @@ class QueueProcessor(Generic[T], threading.Thread):
                 # no item to process, sleep for a bit
                 self.sleep()
             else:
-                next_item = self.filter_item(next_item)
-                if next_item:
-                    if not self.process_item(next_item):
+                filtered_item = self.filter_item(next_item)
+                if filtered_item:
+                    if not self.process_item(filtered_item):
                         self.log.error("Error processing item from the queue")
                 else:
-                    # nothing to do since this item is filtered
-                    pass
+                    # nothing to do since this item is filtered, just update id
+                    self.q_stats.last_consumed_id = next_item.id
 
     def process_item(self, item: T) -> bool:
         result = self._process_item(item)

@@ -1,5 +1,6 @@
 from gabru.flask.app import App
 from model.event import Event
+from processes.courier.courier import Courier
 from services.events import EventService
 from datetime import datetime
 
@@ -16,3 +17,5 @@ def process_data(json_data):
 
 
 events_app = App('Events', EventService(), Event, _process_data_func=process_data)
+
+events_app.register_process(Courier())

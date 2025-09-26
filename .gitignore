@@ -1,3 +1,5 @@
 .venv/
 .env
 .idea/
+google_rasbhari_creds.json
+*.json

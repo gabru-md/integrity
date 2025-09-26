@@ -33,7 +33,7 @@ class NotificationService(CRUDService[Notification]):
             "id": row[0],
             "notification_type": row[1],
             "notification_data": row[2],
-            "created_at": row[4]
+            "created_at": row[3]
         }
         return Notification(**notification_dict)
 
