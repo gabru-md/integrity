@@ -4,7 +4,7 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 
 ### Apps
 
-* [ ] Need an app for notifications -> need to enable queue processor first
+* [X] ~~Need an app for notifications -> need to enable queue processor first~~
 * [ ] enforce temporal conditions on contracts
 * [ ] what exactly is frequency and how to use it properly needs to be documented
 * [ ] tailscale for making it accessible to world
@@ -12,6 +12,7 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
   sentinel should do.
 * [X] ~~finish sentinel condition validation~~
 * [X] ~~Make a dashboard of widgets from different apps~~
+* [ ] enable notifications from emails on iphone
 
 ### Libs
 
