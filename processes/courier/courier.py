@@ -48,7 +48,7 @@ class Courier(QueueProcessor[Event]):
             message = Mail(
                 from_email=self.sender_email,
                 to_emails=self.receiver_email,
-                subject=f"New Event Notification: {event.id}",
+                subject=f"Courier: {event.id}",
                 plain_text_content=event.description
             )
 
