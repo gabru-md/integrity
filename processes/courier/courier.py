@@ -1,12 +1,13 @@
 import os
 import time
-from gabru.qprocessor.qprocessor import QueueProcessor, T
+from gabru.qprocessor.qprocessor import QueueProcessor
 from model.event import Event
 from model.notification import Notification
 from services.events import EventService
 from services.notifications import NotificationService
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+
 
 class Courier(QueueProcessor[Event]):
     """
