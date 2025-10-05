@@ -40,8 +40,10 @@ class Courier(QueueProcessor[Event]):
         notification = Notification(**notification_dict)
         if self.create_email_notification(event):
             self.notification_service.create(notification)
+            return True
         else:
             self.log.warn("Could not send email notification")
+            return False
 
     def create_email_notification(self, event: Event) -> bool:
         try:
