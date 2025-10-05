@@ -94,20 +94,25 @@ class App(Generic[T]):
         clazz = self.model_class
         attributes = []
 
-        for attr, attr_type in clazz.__annotations__.items():
-            attr_type_str = str(attr_type)
-            is_required = 'optional' not in attr_type_str.lower()
+        for name, field in clazz.model_fields.items():
+            attr_type = str(field.annotation)
+            is_required = field.is_required()
 
-            attr_type_str = attr_type_str.lower().replace("<class '", "").replace("'>", "").replace(
-                "typing.optional[",
-                "").replace("]", "").replace('typing.', "")
+            # Clean up type string
+            print(attr_type)
+            attr_type_str = attr_type.lower().replace("<class '", "").replace("'>", "").replace(
+                "typing.optional[", "").replace("]", "").replace("typing.list[", "list-")
+
+            extra = field.json_schema_extra or {}
+            ui_disabled = extra.get("ui_disabled", False)
 
             attributes.append({
-                "name": attr,
+                "name": name,
                 "type": attr_type_str,
-                "required": is_required
+                "required": is_required,
+                "ui_disabled": ui_disabled,
             })
-
+        print(attributes)
         return attributes
 
     def setup_home_route(self):

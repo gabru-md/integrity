@@ -1,5 +1,5 @@
 {% extends "index.html" %}
-{% block title %}Dashboard | {{ model_class_name }}s{% endblock %}
+{% block title %}{{ model_class_name }}s{% endblock %}
 
 {% block content %}
 <script src="https://cdn.tailwindcss.com"></script>
@@ -29,14 +29,15 @@
             <form action="/{{ app_name.lower() }}" method="POST" class="space-y-4">
                 {% for attribute in model_class_attributes %}
                     {% set attr_name = attribute['name'] %}
-                    {% if attr_name != 'id' %}
+                    {% set attr_ui_disabled = attribute['ui_disabled'] %}
+                    {% if not attr_ui_disabled %}
                         <div class="flex flex-col space-y-1">
                             <label for="{{ attr_name }}" class="text-sm font-medium text-gray-700 capitalize">
                                 {{ attr_name.replace('_', ' ') }}
                                 {% if attribute['required'] %}<span class="text-red-500">*</span>{% endif %}
                             </label>
 
-                            {% if attribute['type'] == 'str' or attribute['type'] == 'list' %}
+                            {% if attribute['type'] == 'str' or attribute['type'] == 'list-str' %}
                                 <input type="text" id="{{ attr_name }}" name="{{ attr_name }}"
                                        class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
                                        placeholder="Enter {{ attr_name.replace('_', ' ') }}"
