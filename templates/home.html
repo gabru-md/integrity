@@ -42,7 +42,7 @@
 
                     <dl class="space-y-0.5 text-sm">
                         <template v-for="(value, key, index) in item">
-                            <div v-if="index < 3" :class="['flex justify-between items-start', `wdg-${widgetName.toLowerCase()}-${key}`]">
+                            <div v-if="shouldShowItem(key, data[1])" :class="['flex justify-between items-start', `wdg-${widgetName.toLowerCase()}-${key}`]">
                                 <dt class="font-medium text-slate-500 capitalize pr-2 dark:text-gray-400">
                                     {{ formatKey(key) }}:
                                 </dt>
@@ -77,6 +77,17 @@
             function formatKey(key) {
                 if (typeof key !== 'string') return '';
                 return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            }
+
+            function shouldShowItem(key, attributes) {
+            console.log(attributes)
+                if (typeof key !== 'string') return false;
+
+                // 1. Find the attribute definition
+                const attrDef = attributes.find(attr => attr.name === key);
+
+                // 2. Check for existence and the 'widget_enabled' property
+                return attrDef && attrDef.widget_enabled;
             }
 
             function formatValue(value, key, attributes) {
@@ -115,6 +126,7 @@
                 widgetsData,
                 formatKey,
                 formatValue,
+                shouldShowItem
             };
         }
     };

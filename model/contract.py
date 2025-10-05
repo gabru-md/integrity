@@ -2,16 +2,16 @@ from typing import Optional
 from pydantic import Field
 from datetime import datetime
 
-from gabru.flask.model import UIModel
+from gabru.flask.model import WidgetUIModel
 
 
-class Contract(UIModel):
+class Contract(WidgetUIModel):
     id: Optional[int] = Field(default=None, ui_disabled=True)
-    name: str
-    description: Optional[str]
+    name: str = Field(default=None, widget_enabled=True)
+    description: Optional[str] = Field(default=None, widget_enabled=True)
     frequency: Optional[str]
     trigger_event: str
-    conditions: str
+    conditions: str = Field(default=None, widget_enabled=True)
     violation_message: str
     start_time: Optional[datetime]
     end_time: Optional[datetime]

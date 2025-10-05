@@ -106,12 +106,14 @@ class App(Generic[T]):
 
             extra = field.json_schema_extra or {}
             ui_disabled = extra.get("ui_disabled", False)
+            widget_enabled = extra.get("widget_enabled", False)
 
             attributes.append({
                 "name": name,
                 "type": attr_type_str,
                 "required": is_required,
                 "ui_disabled": ui_disabled,
+                "widget_enabled": widget_enabled
             })
         return attributes
 
