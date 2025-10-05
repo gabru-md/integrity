@@ -22,18 +22,21 @@ class Logger:
                 os.makedirs(log_dir)
 
             # Construct the log file path
-            log_file_path = os.path.join(log_dir, f"{name}.log")
+            main_logfile_path = os.path.join(log_dir, f"main.log")
+            specific_logfile_path = os.path.join(log_dir, f"{name}.log")
 
             # Create a FileHandler instead of a StreamHandler
-            handler = logging.FileHandler(log_file_path)
+            specific_logfile_handler = logging.FileHandler(specific_logfile_path)
+            main_logfile_handler = logging.FileHandler(main_logfile_path)
 
             # Create a formatter for the log messages
             formatter = logging.Formatter(
                 '%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s'
             )
 
-            handler.setFormatter(formatter)
+            specific_logfile_handler.setFormatter(formatter)
 
-            logger.addHandler(handler)
+            logger.addHandler(specific_logfile_handler)
+            logger.addHandler(main_logfile_handler)
 
         return logger

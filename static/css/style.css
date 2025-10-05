@@ -1,0 +1,80 @@
+/* ------------------------------------------------------------------
+   BASE STYLES: Minimal, Professional Dashboard Theme
+   ------------------------------------------------------------------ */
+
+/* 1. Global Font and Background */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    /* A very soft, light blue-gray background for a clean workspace */
+    background-color: #f7f9fc; /* Equivalent to a very light gray/blue-50 */
+}
+
+/* 2. Scrollbar Styling (Optional but nice for UX) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #e0e7ff; /* Light indigo track */
+}
+::-webkit-scrollbar-thumb {
+    background: #93c5fd; /* Soft blue thumb */
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #60a5fa; /* Darker blue on hover */
+}
+
+/* 3. Common Component Overrides (Forms & Inputs) */
+.app-input {
+    /* Base styles for all form inputs on both pages */
+    @apply w-full p-3 border border-gray-300 rounded-xl shadow-sm
+           focus:ring-indigo-500 focus:border-indigo-500 transition duration-200
+           placeholder:text-gray-400;
+}
+
+/* 4. Dashboard Widget Styling (Home Page) */
+.widget-card {
+    @apply bg-white shadow-xl rounded-2xl border border-gray-100 overflow-hidden
+           transition duration-300 ease-in-out hover:shadow-2xl hover:border-indigo-200;
+}
+
+.widget-header {
+    @apply p-5 bg-indigo-50/50 border-b border-indigo-100 flex justify-between items-center;
+}
+
+.widget-item-detail {
+    /* Styling for each key-value pair inside an item */
+    @apply flex justify-between items-start border-b border-gray-50/50 py-1 last:border-b-0;
+}
+
+/* 5. CRUD Table Styling (CRUD Home Page) */
+.crud-table {
+    @apply min-w-full divide-y divide-gray-200 shadow-lg rounded-xl overflow-hidden;
+}
+
+.crud-table thead th {
+    @apply bg-indigo-600 text-white px-6 py-4 text-left text-sm font-bold uppercase tracking-wider;
+}
+
+.crud-table tbody tr {
+    @apply transition duration-100 ease-in-out;
+}
+
+.crud-table tbody tr:nth-child(odd) {
+    background-color: #fcfcfc; /* Very light odd row */
+}
+
+.crud-table tbody tr:nth-child(even) {
+    background-color: #f7f9fc; /* Background color (gray-50 equivalent) for even row */
+}
+
+.crud-table tbody tr:hover {
+    background-color: #eef2ff; /* Light indigo hover */
+}
+
+.crud-action-btn {
+    @apply font-semibold transition duration-150 hover:underline focus:outline-none;
+}

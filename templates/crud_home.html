@@ -1,0 +1,225 @@
+{% extends "index.html" %}
+{% block title %}Dashboard | {{ model_class_name }}s{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    /* Custom font for a professional look */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+</style>
+
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+    <!-- Header Section -->
+    <header class="mb-8 p-6 bg-white shadow-lg rounded-xl">
+        <h1 class="text-4xl font-bold text-gray-800 capitalize">{{ model_class_name }}s Dashboard</h1>
+        <p class="text-gray-500 mt-1">Manage and create new <span class="lowercase">{{ model_class_name }}</span> entries.</p>
+    </header>
+
+    <!-- Main Grid Layout (Create and View Recent) -->
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- 1. Create Section (Form) -->
+        <div id="create-section" class="lg:col-span-1 p-6 bg-white shadow-xl rounded-xl border border-blue-100 h-fit">
+            <h2 class="text-2xl font-semibold mb-6 text-blue-700 border-b pb-2">Create New {{ model_class_name }}</h2>
+
+            <!-- Assuming POST method for form submission -->
+            <form action="/{{ app_name.lower() }}" method="POST" class="space-y-4">
+                {% for attribute in model_class_attributes %}
+                    {% set attr_name = attribute['name'] %}
+                    {% if attr_name != 'id' %}
+                        <div class="flex flex-col space-y-1">
+                            <label for="{{ attr_name }}" class="text-sm font-medium text-gray-700 capitalize">
+                                {{ attr_name.replace('_', ' ') }}
+                                {% if attribute['required'] %}<span class="text-red-500">*</span>{% endif %}
+                            </label>
+
+                            {% if attribute['type'] == 'str' or attribute['type'] == 'list' %}
+                                <input type="text" id="{{ attr_name }}" name="{{ attr_name }}"
+                                       class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+                                       placeholder="Enter {{ attr_name.replace('_', ' ') }}"
+                                       {% if attribute['required'] %}required{% endif %}
+                                >
+                            {% elif attribute['type'] == 'datetime.datetime' %}
+                                <input type="datetime-local" id="{{ attr_name }}" name="{{ attr_name }}"
+                                       class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+                                       {% if attribute['required'] %}required{% endif %}
+                                >
+                            {% elif attribute['type'] == 'int' or attribute['type'] == 'float' %}
+                                <input type="number" id="{{ attr_name }}" name="{{ attr_name }}"
+                                       class="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+                                       placeholder="Enter numeric value"
+                                       {% if attribute['required'] %}required{% endif %}
+                                >
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <button type="submit"
+                        class="w-full py-3 mt-6 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    Create {{ model_class_name }}
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. View Recent Section -->
+        <div id="view-recent-section" class="lg:col-span-2 p-6 bg-white shadow-xl rounded-xl border border-green-100">
+            <h2 class="text-2xl font-semibold mb-6 text-green-700 border-b pb-2">Recent {{ model_class_name }}s</h2>
+
+            <div id="recent-data-container" class="overflow-x-auto">
+                <p id="loading-message" class="text-center py-10 text-gray-500">Loading recent data...</p>
+                <p id="error-message" class="text-center py-10 text-red-500 hidden">
+                    Failed to load data. Please check the API route: <code class="bg-red-100 p-1 rounded">/{{ model_class_name }}/</code>
+                </p>
+                <!-- Data will be rendered here by JavaScript -->
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- JavaScript for Data Fetching and Rendering -->
+<script>
+    // Safely embed model attributes for use in JavaScript
+    // NOTE: This assumes 'model_class_attributes' is available and correctly serialized to JSON in the Jinja context.
+    const modelAttributes = JSON.parse('{{ model_class_attributes | tojson | safe }}');
+    const appName = '{{ app_name.lower() }}';
+    const fetchUrl = '/{{ app_name.lower() }}/'; // The route specified by the user
+
+    const dataContainer = document.getElementById('recent-data-container');
+    const loadingMessage = document.getElementById('loading-message');
+    const errorMessage = document.getElementById('error-message');
+
+    // Utility to capitalize a string
+    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    // Function to handle the exponential backoff retry logic
+    async function fetchWithRetry(url, options, maxRetries = 3) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Fetch attempt ${i + 1} failed:`, error);
+                if (i < maxRetries - 1) {
+                    const delay = Math.pow(2, i) * 1000; // Exponential backoff: 1s, 2s, 4s...
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    throw error;
+                }
+            }
+        }
+    }
+
+
+    async function fetchAndRenderRecentData() {
+        loadingMessage.classList.remove('hidden');
+        errorMessage.classList.add('hidden');
+        dataContainer.querySelector('table')?.remove(); // Clear previous table if any
+
+        try {
+            // Fetch data: assuming the route returns an array of model instances (list of dictionaries)
+            const data = await fetchWithRetry(fetchUrl, { method: 'GET' });
+
+            loadingMessage.classList.add('hidden');
+
+            if (!data || data.length === 0) {
+                dataContainer.innerHTML = '<p class="text-center py-10 text-gray-500">No recent entries found. Start by creating one!</p>';
+                return;
+            }
+
+            // --- Table Rendering Logic ---
+            const table = document.createElement('table');
+            table.className = 'min-w-full divide-y divide-gray-200 shadow-md rounded-xl overflow-hidden';
+
+            // Filter attributes to only show non-'id' columns
+            const visibleAttributes = modelAttributes.filter(attr => attr.name !== 'id');
+            const headers = visibleAttributes.map(attr => capitalize(attr.name.replace('_', ' ')));
+
+            // 1. Table Header
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            headerRow.className = 'bg-gray-100';
+
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                th.className = 'px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider';
+                headerRow.appendChild(th);
+            });
+
+            // Add an actions column
+            const thActions = document.createElement('th');
+            thActions.textContent = 'Actions';
+            thActions.className = 'px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider';
+            headerRow.appendChild(thActions);
+
+
+            // 2. Table Body
+            const tbody = document.createElement('tbody');
+            tbody.className = 'bg-white divide-y divide-gray-200';
+
+            data.forEach((item, index) => {
+                const row = tbody.insertRow();
+                // Alternating row colors
+                row.className = index % 2 === 0 ? 'bg-white hover:bg-gray-50 transition duration-100' : 'bg-gray-50 hover:bg-gray-100 transition duration-100';
+
+                visibleAttributes.forEach(attr => {
+                    const cell = row.insertCell();
+                    let cellContent = item[attr.name] !== undefined ? item[attr.name] : 'N/A';
+
+                    // Basic Content Formatting
+                    if (attr.type === 'datetime.datetime' && cellContent) {
+                        try {
+                            // Format date string for better display
+                            cellContent = new Date(cellContent).toLocaleString('en-US', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+                        } catch (e) { /* Keep original content if date parsing fails */ }
+                    } else if (Array.isArray(cellContent)) {
+                        cellContent = cellContent.join(', ');
+                    } else if (typeof cellContent === 'string' && cellContent.length > 50) {
+                        cellContent = cellContent.substring(0, 47) + '...';
+                    }
+
+                    cell.textContent = cellContent;
+                    cell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+                });
+
+                // Actions Cell (Edit/Delete links)
+                const actionCell = row.insertCell();
+                actionCell.className = 'px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4';
+
+                const editLink = document.createElement('a');
+                editLink.href = `/${appName}/${item.id}`;
+                editLink.textContent = 'Edit';
+                editLink.className = 'text-blue-600 hover:text-blue-900 transition duration-150 font-semibold';
+
+                const deleteLink = document.createElement('a');
+                deleteLink.href = `/${appName}/${item.id}`;
+                deleteLink.textContent = 'Delete';
+                deleteLink.className = 'text-red-600 hover:text-red-900 transition duration-150 font-semibold';
+
+                actionCell.appendChild(editLink);
+                actionCell.appendChild(deleteLink);
+            });
+
+            table.appendChild(tbody);
+            dataContainer.appendChild(table);
+
+        } catch (error) {
+            loadingMessage.classList.add('hidden');
+            errorMessage.classList.remove('hidden');
+            console.error("Error fetching data:", error);
+        }
+    }
+
+    // Initialize data fetch on page load
+    window.onload = fetchAndRenderRecentData;
+
+</script>
+
+{% endblock %}

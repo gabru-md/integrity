@@ -1,68 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+{% extends "index.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<style>
+    /* Custom font for a professional look */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #0d9488 100%);
-      color: #e2e8f0;
+        font-family: 'Inter', sans-serif;
     }
-    .card {
-      background-color: #1e293b;
-      border-radius: 1rem;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-    }
-    .widget-card {
-      background-color: #111827;
-      border-left: 4px solid #14b8a6;
-    }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
-</head>
-<body class="min-h-screen p-8">
-  <!-- Header -->
-  <header class="mb-10 text-center">
-    <h1 class="text-4xl font-extrabold text-white tracking-tight">📊 Dashboard</h1>
-    <p class="text-gray-400">Overview of all your apps at a glance</p>
-  </header>
+</style>
 
-  <!-- Dashboard Grid -->
-  <main class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-  {% for widget_name, widget_items in widgets_data.items() %}
-    <div class="widget-card p-5 rounded-lg shadow-md flex flex-col">
-      <h2 class="text-lg font-bold mb-3">
-        <a href="/{{ widget_name|lower|replace(' ', '-') }}/home"
-           class="text-white hover:text-teal-400 transition">
-          {{ widget_name }}
-        </a>
-      </h2>
-      <div class="space-y-2">
-        {% for item in widget_items %}
-          <div class="bg-slate-800/60 rounded-md p-3 text-xs flex flex-col gap-1 border border-slate-700">
-            {% for key, value in item.items() %}
-              <div class="flex justify-between items-center">
-                <span class="text-gray-400">{{ key|replace("_"," ")|title }}:</span>
-                <span class="text-gray-100 font-medium">
-                  {% if "time" in key.lower() or key == "timestamp" %}
-                    {{ value | datetimeformat }}
-                  {% else %}
-                    {{ value }}
-                  {% endif %}
-                </span>
-              </div>
-            {% endfor %}
-          </div>
-        {% endfor %}
-      </div>
+<div id="vue-dashboard-app" class="min-h-screen bg-gray-50 p-4 sm:p-8">
+    <header class="mb-8 p-6 bg-white shadow-lg rounded-xl">
+        <h1 class="text-4xl font-bold text-gray-800">Dashboard</h1>
+        <p class="text-gray-500 mt-1">Overview of all application data widgets.</p>
+    </header>
+
+    <main class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+
+        {% raw %}
+        <div v-for="(data, widgetName) in widgetsData" :key="widgetName"
+             class="bg-white shadow-xl rounded-xl border border-gray-200 overflow-hidden transition duration-300 hover:shadow-2xl">
+
+            <header class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-800 capitalize">
+                    <a :href="`/${widgetName.toLowerCase().replace(' ', '-')}/home`" class="hover:text-blue-600 transition duration-150">
+                        {{ widgetName }}
+                    </a>
+                </h2>
+                <a :href="`/${widgetName.toLowerCase().replace(' ', '-')}/home`"
+                   class="text-sm text-blue-500 hover:text-blue-700 font-medium">
+                    Manage All &rarr;
+                </a>
+            </header>
+
+            <div class="p-4 space-y-4">
+                <div v-if="!data[0] || data[0].length === 0" class="text-center py-4 text-gray-500 italic">
+                    No recent items found.
+                </div>
+
+                <div v-for="(item, itemIndex) in data[0]" :key="item.id || itemIndex"
+                     class="p-4 border border-gray-100 rounded-lg bg-white transition duration-150 hover:bg-blue-50/50">
+
+                    <dl class="space-y-1 text-sm">
+                        <div v-for="(value, key) in item" :key="key" :class="['flex justify-between', 'items-start', `wdg-${widgetName.toLowerCase()}-${key}`]">
+                            <dt class="font-medium text-gray-600 capitalize pr-2">
+                                {{ formatKey(key) }}:
+                            </dt>
+                            <dd class="text-gray-900 truncate max-w-[60%] text-right">
+                                {{ formatValue(value, key, data[1]) }}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        {% endraw %}
+    </main>
+
+    <div v-if="Object.keys(widgetsData).length === 0" class="text-center py-20 text-gray-500">
+        <p class="text-2xl font-medium mb-2">No widgets configured.</p>
+        <p>Please check your backend to ensure `widgets_data` is being passed.</p>
     </div>
-  {% endfor %}
+</div>
 
-  </main>
-</body>
-</html>
+<script>
+    const { createApp, ref, onMounted } = Vue
+
+    // Safely embed the dynamic data from Jinja2
+    const JINJA_WIDGETS_DATA = JSON.parse('{{ widgets_data | tojson | safe }}');
+
+    const App = {
+        setup() {
+            const widgetsData = ref(JINJA_WIDGETS_DATA);
+
+            // Utility to format keys (e.g., snake_case to Title Case)
+            function formatKey(key) {
+                if (typeof key !== 'string') return '';
+                return key.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+            }
+
+            // Utility to format values, using model attributes for type checking
+            function formatValue(value, key, attributes) {
+                if (value === null || value === undefined) return 'N/A';
+
+                // Find the attribute definition for the current key
+                const attrDef = attributes.find(attr => attr.name === key);
+                const type = attrDef ? attrDef.type : null;
+
+                let strValue = String(value);
+
+                // 1. Date/Time formatting (using type from model_class_attributes)
+                if (type === 'datetime.datetime' || (typeof key === 'string' && key.toLowerCase().includes('time')) || key === 'timestamp') {
+                    try {
+                        return new Date(value).toLocaleString('en-US', {
+                            year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                        });
+                    } catch (e) {
+                        return strValue; // Return original if date parsing fails
+                    }
+                }
+
+                // 2. Array/List formatting
+                if (type === 'list' || Array.isArray(value)) {
+                    return value.join(', ');
+                }
+
+                // 3. Truncate long strings
+                if (strValue.length > 50) {
+                    return strValue.substring(0, 47) + '...';
+                }
+
+                return strValue;
+            }
+
+            onMounted(() => {
+                console.log('Dashboard mounted with widgets:', widgetsData.value);
+            });
+
+            return {
+                widgetsData,
+                formatKey,
+                formatValue,
+            };
+        }
+    };
+
+    // Mount the Vue app to the main container
+    createApp(App).mount('#vue-dashboard-app');
+</script>
+
+{% endblock %}

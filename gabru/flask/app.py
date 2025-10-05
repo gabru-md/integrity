@@ -1,7 +1,8 @@
 import threading
 
-from flask import Blueprint, request, jsonify, render_template
-from typing import TypeVar, Generic
+from flask import Blueprint, request, jsonify, render_template, redirect
+from typing import TypeVar, Generic, Optional
+
 from gabru.log import Logger
 from gabru.db.service import CRUDService
 
@@ -27,6 +28,7 @@ class App(Generic[T]):
         self.get_recent_limit = get_recent_limit
         self.widget_recent_limit = widget_recent_limit
         self.model_class = model_class
+        self.model_class_attributes = self.get_model_class_attributes()
         self._process_data_func = _process_data_func
         self.setup_default_routes()
         self.setup_home_route()
@@ -37,14 +39,14 @@ class App(Generic[T]):
         @self.blueprint.route('/', methods=['POST'])
         def create():
             """ Create a new entity """
-            data = request.json
+            data = request.form
+            data = dict(data)
             try:
                 data = self._process_data(data)
                 new_entity = self.model_class(**data)
                 new_entity_id = self.service.create(new_entity)
                 if new_entity_id:
-                    return jsonify(
-                        {"id": new_entity_id, "message": f"{self.name.capitalize()} created successfully"}), 201
+                    return redirect('home'), 302
                 else:
                     return jsonify({"error": f"Failed to create {self.name.lower()}"}), 500
             except Exception as e:
@@ -69,7 +71,7 @@ class App(Generic[T]):
         @self.blueprint.route('/int:entity_id>', methods=['PUT'])
         def update(entity_id):
             """ Update an entity """
-            data = request.json
+            data = request.form
             try:
                 updated_entity = self.model_class(id=entity_id, **data)
                 if self.service.update(updated_entity):
@@ -88,12 +90,35 @@ class App(Generic[T]):
             else:
                 return jsonify({"error": f"{self.name.capitalize()} not found"})
 
+    def get_model_class_attributes(self):
+        clazz = self.model_class
+        attributes = []
+
+        for attr, attr_type in clazz.__annotations__.items():
+            attr_type_str = str(attr_type)
+            is_required = 'optional' not in attr_type_str.lower()
+
+            attr_type_str = attr_type_str.lower().replace("<class '", "").replace("'>", "").replace(
+                "typing.optional[",
+                "").replace("]", "").replace('typing.', "")
+
+            attributes.append({
+                "name": attr,
+                "type": attr_type_str,
+                "required": is_required
+            })
+
+        return attributes
+
     def setup_home_route(self):
 
         @self.blueprint.route('/home')
         def home():
             """ Renders the home page """
-            return render_template(f"{self.name.lower()}/home.html")
+            return render_template(f"crud_home.html",
+                                   model_class_attributes=self.model_class_attributes,
+                                   model_class_name=self.model_class.__name__,
+                                   app_name=self.name)
 
     def _process_data(self, data):
         if self._process_data_func:
@@ -109,4 +134,4 @@ class App(Generic[T]):
 
     def widget_data(self):
         entities = self.service.get_recent_items(self.widget_recent_limit)
-        return [e.dict() for e in entities]
+        return [e.dict() for e in entities], self.model_class_attributes

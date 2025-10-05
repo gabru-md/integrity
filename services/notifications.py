@@ -26,7 +26,7 @@ class NotificationService(CRUDService[Notification]):
 
     def _to_tuple(self, notification: Notification) -> tuple:
         return (
-            notification.id, notification.notification_type, notification.notification_data, notification.created_at)
+            notification.notification_type, notification.notification_data, notification.created_at)
 
     def _to_object(self, row: tuple) -> Notification:
         notification_dict = {

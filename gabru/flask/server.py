@@ -40,8 +40,8 @@ class Server:
         widgets_data = {}
         for app in self.registered_apps:
             app: App = app
-            widget_data = app.widget_data()
-            widgets_data[app.name.capitalize()] = widget_data
+            widget_data, model_class_attributes = app.widget_data()
+            widgets_data[app.name.capitalize()] = (widget_data, model_class_attributes)
         return widgets_data
 
     def process_manager_init(self):

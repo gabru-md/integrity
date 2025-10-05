@@ -18,4 +18,4 @@ def process_data(json_data):
 
 events_app = App('Events', EventService(), Event, _process_data_func=process_data)
 
-events_app.register_process(Courier())
+# events_app.register_process(Courier())

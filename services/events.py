@@ -33,7 +33,8 @@ class EventService(CRUDService[Event]):
         return self.find_all(filters=filters, sort_by=sort_by)
 
     def _to_tuple(self, event: Event) -> tuple:
-        return (event.event_type, event.timestamp, event.description, event.tags)
+        return (
+            event.event_type, event.timestamp, event.description, event.tags)
 
     def _to_object(self, row: tuple) -> Event:
         event_dict = {

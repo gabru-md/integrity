@@ -2,9 +2,11 @@ from abc import abstractmethod
 from typing import Optional, List, TypeVar, Generic, Dict, Any
 
 from gabru.db.db import DB
+from gabru.log import Logger
 
 T = TypeVar('T')
 
+log = Logger.get_log('ReadOnlyService')
 
 class ReadOnlyService(Generic[T]):
     """ ReadOnlyService also useful for queue processor """
@@ -156,9 +158,14 @@ class CRUDService(ReadOnlyService[T]):
         query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders}) RETURNING id"
 
         with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, self._to_tuple(obj))
-            self.db.get_conn().commit()
-            return cursor.fetchone()[0]
+            try:
+                cursor.execute(query, self._to_tuple(obj))
+                self.db.get_conn().commit()
+                return cursor.fetchone()[0]
+            except Exception as e:
+                log.exception(e)
+                log.warn(self._to_tuple(obj))
+
 
     def update(self, obj: T) -> bool:
         """Updates an existing object."""
