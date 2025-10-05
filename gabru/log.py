@@ -1,10 +1,13 @@
 import logging
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Logger:
     @staticmethod
-    def get_log(name: str, log_dir: str = '/Users/manish/rasbhari/logs'):
+    def get_log(name: str, log_dir: str = os.getenv('LOG_DIR')):
         """
         Retrieves a logger instance, configuring it to write to a file in a specified directory.
 
