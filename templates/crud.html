@@ -28,11 +28,6 @@
             <div class="flex space-x-4 mb-4">
                 <input type="text" v-model="searchTerm" placeholder="Search entries..."
                        class="flex-grow p-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
-                <select v-model="filterStatus" class="p-2 border border-slate-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
-                    <option value="">Filter by Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Archived">Archived</option>
-                </select>
             </div>
 
             <div id="recent-data-container" class="overflow-x-auto relative shadow-sm rounded-xl">
@@ -151,7 +146,6 @@
             const loading = ref(true);
             const error = ref(null);
             const searchTerm = ref('');
-            const filterStatus = ref('');
 
             // Modal State
             const isModalOpen = ref(false);
@@ -389,7 +383,6 @@
                 loading,
                 error,
                 searchTerm,
-                filterStatus,
                 isModalOpen,
                 formMode,
                 formData,
