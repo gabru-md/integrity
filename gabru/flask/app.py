@@ -39,14 +39,14 @@ class App(Generic[T]):
         @self.blueprint.route('/', methods=['POST'])
         def create():
             """ Create a new entity """
-            data = request.form
+            data = request.json
             data = dict(data)
             try:
                 data = self._process_data(data)
                 new_entity = self.model_class(**data)
                 new_entity_id = self.service.create(new_entity)
                 if new_entity_id:
-                    return redirect('home'), 302
+                    return jsonify({"message": f"{self.name.capitalize()} created successfully"}), 200
                 else:
                     return jsonify({"error": f"Failed to create {self.name.lower()}"}), 500
             except Exception as e:
@@ -68,11 +68,13 @@ class App(Generic[T]):
             else:
                 return jsonify({"error": f"{self.name.capitalize()} not found"}), 404
 
-        @self.blueprint.route('/int:entity_id>', methods=['PUT'])
+        @self.blueprint.route('/<int:entity_id>', methods=['PUT'])
         def update(entity_id):
             """ Update an entity """
-            data = request.form
+            data = request.json
+            data = dict(data)
             try:
+                data = self._process_data(data)
                 updated_entity = self.model_class(id=entity_id, **data)
                 if self.service.update(updated_entity):
                     return jsonify({"message": f"{self.name.capitalize()} updated successfully"}), 200
@@ -118,7 +120,7 @@ class App(Generic[T]):
         @self.blueprint.route('/home')
         def home():
             """ Renders the home page """
-            return render_template(f"crud_home.html",
+            return render_template(f"crud.html",
                                    model_class_attributes=self.model_class_attributes,
                                    model_class_name=self.model_class.__name__,
                                    app_name=self.name)

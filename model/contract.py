@@ -1,9 +1,11 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import Field
 from datetime import datetime
 
+from gabru.flask.model import UIModel
 
-class Contract(BaseModel):
+
+class Contract(UIModel):
     id: Optional[int] = Field(default=None, ui_disabled=True)
     name: str
     description: Optional[str]

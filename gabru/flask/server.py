@@ -7,9 +7,9 @@ import os
 
 
 class Server:
-    def __init__(self, name: str, template_folder="templates"):
+    def __init__(self, name: str, template_folder="templates", static_folder="static"):
         self.name = name
-        self.app = Flask(__name__, template_folder=template_folder)
+        self.app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
         self.setup_default_routes()
         self.not_allowed_app_names = []
         self.log = Logger.get_log(self.name)

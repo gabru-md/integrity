@@ -1,0 +1,418 @@
+{% extends "index.html" %}
+{% block title %}Manage {{ model_class_name }}s{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<div id="vue-crud-app" class="p-4 sm:p-8">
+
+    {% raw %}
+    <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
+        <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100 capitalize">{{ modelClassName }}s Management</h1>
+        <p class="text-slate-500 mt-1 dark:text-gray-400">Manage and view all <span class="lowercase">{{ modelClassName }}</span> entries.</p>
+    </header>
+
+    <div id="data-view">
+        <div id="view-data-card" class="p-6 bg-white shadow-xl rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-6 border-b pb-4 border-slate-100 dark:border-gray-700/50">
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100 capitalize">All {{ modelClassName }}s</h2>
+
+                <button @click="openCreateModal"
+                        class="flex items-center space-x-2 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md
+                               hover:bg-indigo-700 transition duration-300 focus:ring-4 focus:ring-indigo-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>Create {{ modelClassName }}</span>
+                </button>
+            </div>
+
+            <div class="flex space-x-4 mb-4">
+                <input type="text" v-model="searchTerm" placeholder="Search entries..."
+                       class="flex-grow p-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                <select v-model="filterStatus" class="p-2 border border-slate-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                    <option value="">Filter by Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Archived">Archived</option>
+                </select>
+            </div>
+
+            <div id="recent-data-container" class="overflow-x-auto relative shadow-sm rounded-xl">
+                <p v-if="loading" class="text-center py-10 text-slate-500 dark:text-gray-400">Loading data...</p>
+                <p v-if="error" class="text-center py-10 text-red-500">
+                    Failed to load data. Please check the API route: <code class="bg-red-100 p-1 rounded">{{ fetchUrl }}</code>
+                </p>
+                <p v-else-if="!loading && filteredData.length === 0" class="text-center py-10 text-slate-500 dark:text-gray-400">
+                    No recent entries found. Start by creating one!
+                </p>
+
+                <table v-else class="min-w-full divide-y divide-slate-200 dark:divide-gray-700">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-gray-700">
+                            <th v-for="attr in visibleAttributes" :key="attr.name"
+                                class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-gray-300">
+                                {{ formatKey(attr.name) }}
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-gray-300">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-slate-200 dark:bg-gray-800 dark:divide-gray-700">
+                        <tr v-for="(item, index) in filteredData" :key="item.id"
+                            :class="[index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-slate-50 dark:bg-gray-700/50',
+                                     'hover:bg-slate-50 dark:hover:bg-gray-700 transition duration-150']">
+
+                            <td v-for="attr in visibleAttributes" :key="attr.name"
+                                class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 dark:text-gray-200">
+                                {{ formatValue(item[attr.name], attr.name) }}
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                                <button @click="openEditModal(item)"
+                                        class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">
+                                    Edit
+                                </button>
+                                <button @click="handleDelete(item.id)"
+                                        class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/50 backdrop-blur-sm dark:bg-gray-900/80">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl
+                        dark:bg-gray-800">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-start justify-between border-b pb-3 border-slate-100 dark:border-gray-700/50">
+                        <h3 id="modal-title" class="text-xl font-bold text-slate-800 dark:text-gray-100">{{ formMode === 'create' ? 'Create New' : 'Edit' }} {{ modelClassName }}</h3>
+                        <button type="button" @click="isModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:text-gray-400 dark:hover:text-gray-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="handleCrudFormSubmission" class="mt-6 space-y-4">
+                        <div v-for="attr in editableAttributes" :key="attr.name" class="flex flex-col space-y-1">
+                            <label :for="attr.name" class="text-sm font-medium text-slate-700 capitalize dark:text-gray-300">
+                                {{ formatKey(attr.name) }}
+                                <span v-if="attr.required" class="text-red-500">*</span>
+                            </label>
+
+                            <input :type="getInputType(attr.type)"
+                                   :id="attr.name"
+                                   :name="attr.name"
+                                   v-model="formData[attr.name]"
+                                   class="p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
+                                          dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                                   :placeholder="`Enter ${formatKey(attr.name)}`"
+                                   :required="attr.required">
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-100 dark:border-gray-700/50 flex justify-end space-x-3">
+                            <button type="button" @click="isModalOpen = false"
+                                    class="py-2 px-4 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition duration-150
+                                           dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                                Cancel
+                            </button>
+                            <button type="submit" :disabled="isSubmitting"
+                                    class="py-2 px-4 bg-indigo-600 text-white font-medium rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                                {{ isSubmitting ? 'Saving...' : (formMode === 'create' ? `Save ${modelClassName}` : `Update ${modelClassName}`) }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endraw %}
+</div>
+
+<script>
+    const { createApp, ref, onMounted, computed, watch } = Vue
+
+    // Safely embed the dynamic data from Jinja2
+    const JINJA_ATTRIBUTES = JSON.parse('{{ model_class_attributes | tojson | safe }}');
+    const JINJA_MODEL_NAME = '{{ model_class_name }}';
+    const JINJA_APP_NAME = '{{ app_name.lower() }}';
+
+    const App = {
+        setup() {
+            const modelClassName = ref(JINJA_MODEL_NAME);
+            const modelAttributes = ref(JINJA_ATTRIBUTES);
+            const appName = ref(JINJA_APP_NAME);
+            const fetchUrl = ref(`/${JINJA_APP_NAME}/`);
+
+            // --- State ---
+            const allData = ref([]);
+            const loading = ref(true);
+            const error = ref(null);
+            const searchTerm = ref('');
+            const filterStatus = ref('');
+
+            // Modal State
+            const isModalOpen = ref(false);
+            const formMode = ref('create'); // 'create' or 'edit'
+            const itemId = ref(null);
+            const formData = ref({});
+            const isSubmitting = ref(false);
+
+            // --- Computed Properties ---
+            const visibleAttributes = computed(() => {
+                // Filter out 'id' and any attributes marked 'ui_disabled'
+                return modelAttributes.value.filter(attr => attr.name !== 'id');
+            });
+
+            const editableAttributes = computed(() => {
+                // Filter out 'id' and any attributes marked 'ui_disabled'
+                return modelAttributes.value.filter(attr => attr.name !== 'id' && !attr.ui_disabled);
+            });
+
+            const filteredData = computed(() => {
+                // Basic filtering (Search/Filter logic is not fully implemented but the structure is here)
+                let data = allData.value;
+                if (searchTerm.value) {
+                    const lowerSearch = searchTerm.value.toLowerCase();
+                    data = data.filter(item =>
+                        Object.values(item).some(val =>
+                            String(val).toLowerCase().includes(lowerSearch)
+                        )
+                    );
+                }
+                // (Status filter logic would go here)
+                return data;
+            });
+
+
+            // --- Utility Functions ---
+            function formatKey(key) {
+                if (typeof key !== 'string') return '';
+                // Converts 'start_time' to 'Start Time'
+                return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            }
+
+            function formatValue(value, key) {
+                const attributes = modelAttributes.value;
+                if (value === null || value === undefined ) return 'N/A';
+
+                const attrDef = attributes.find(attr => attr.name === key);
+                const type = attrDef ? attrDef.type : null;
+                let strValue = String(value);
+
+                if (type && type.includes('datetime')) {
+                    try {
+                        // Formatting for table display
+                        return new Date(value).toLocaleString('en-US', {
+                            year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                        });
+                    } catch (e) {
+                        return strValue;
+                    }
+                }
+
+                if (type === 'list' || Array.isArray(value)) {
+                    return value.join(', ');
+                }
+
+                if (strValue.length > 50) {
+                    return strValue.substring(0, 47) + '...';
+                }
+
+                return strValue;
+            }
+
+            function getInputType(type) {
+                if (type && type.includes('datetime')) return 'datetime-local';
+                if (type && (type.includes('int') || type.includes('float'))) return 'number';
+                return 'text';
+            }
+
+
+            // --- API Functions ---
+
+            // The common fetch function from the original script
+            async function fetchWithRetry(url, options, maxRetries = 3) {
+                options = options || {};
+                options.headers = options.headers || {};
+
+                if (options.body && options.method !== 'GET' && options.method !== 'HEAD') {
+                    options.headers['Content-Type'] = options.headers['Content-Type'] || 'application/json';
+                }
+
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const response = await fetch(url, options);
+                        if (!response.ok) {
+                            let errorBody = await response.text();
+                            try { errorBody = JSON.parse(errorBody); } catch (e) { /* not json */ }
+                            throw new Error(`HTTP error! Status: ${response.status}. Details: ${JSON.stringify(errorBody)}`);
+                        }
+
+                        if (response.status === 204 || response.headers.get('content-length') === '0') {
+                            return null;
+                        }
+
+                        return await response.json();
+                    } catch (error) {
+                        console.error(`Fetch attempt ${i + 1} failed:`, error);
+                        if (i < maxRetries - 1) {
+                            const delay = Math.pow(2, i) * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        } else {
+                            throw error;
+                        }
+                    }
+                }
+            }
+
+            async function fetchAndRenderRecentData() {
+                loading.value = true;
+                error.value = null;
+
+                try {
+                    const data = await fetchWithRetry(fetchUrl.value, { method: 'GET' });
+                    allData.value = data || [];
+                } catch (e) {
+                    error.value = e;
+                    allData.value = [];
+                    console.error("Error fetching data:", e);
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+
+            async function handleCrudFormSubmission() {
+                isSubmitting.value = true;
+
+                const data = { ...formData.value };
+                let method, url;
+
+                if (formMode.value === 'edit' && itemId.value) {
+                    method = 'PUT';
+                    url = `${fetchUrl.value}${itemId.value}`;
+                } else {
+                    method = 'POST';
+                    url = fetchUrl.value;
+                }
+
+                try {
+                    // Filter out any undefined or null values if needed, though Pydantic usually handles it.
+                    // The v-model binding should ensure values exist.
+                    await fetchWithRetry(url, {
+                        method: method,
+                        body: JSON.stringify(data),
+                    });
+
+                    isModalOpen.value = false;
+                    await fetchAndRenderRecentData();
+
+                } catch (e) {
+                    alert(`Failed to ${formMode.value === 'edit' ? 'update' : 'create'} entry. Check console for details.`);
+                    console.error(`Error during ${method} request:`, e);
+                } finally {
+                    isSubmitting.value = false;
+                }
+            }
+
+            async function handleDelete(id) {
+                if (!confirm(`Are you sure you want to delete this ${modelClassName.value} (ID: ${id})? This action cannot be undone.`)) {
+                    return;
+                }
+
+                try {
+                    await fetchWithRetry(`${fetchUrl.value}${id}`, { method: 'DELETE' });
+                    await fetchAndRenderRecentData();
+                } catch (e) {
+                    alert('Failed to delete entry. Check console for details.');
+                    console.error('Error during DELETE request:', e);
+                }
+            }
+
+
+            // --- Modal Logic ---
+
+            function setupFormForCreate() {
+                formMode.value = 'create';
+                itemId.value = null;
+                // Reset formData to an object with keys based on editable attributes, initialized to empty string
+                const newFormData = {};
+                editableAttributes.value.forEach(attr => {
+                    newFormData[attr.name] = '';
+                });
+                formData.value = newFormData;
+            }
+
+            function openCreateModal() {
+                setupFormForCreate();
+                isModalOpen.value = true;
+            }
+
+            function openEditModal(item) {
+                setupFormForCreate(); // Reset form first
+
+                formMode.value = 'edit';
+                itemId.value = item.id;
+
+                // Populate form data from the clicked item
+                const newFormData = {};
+                editableAttributes.value.forEach(attr => {
+                    let value = item[attr.name];
+
+                    // FIX: Correctly format ISO datetime string for datetime-local input
+                    if (attr.type.includes('datetime')) {
+                        if (typeof value === 'string' && value.includes('T')) {
+                            // Required format is YYYY-MM-DDTHH:mm (first 16 characters of ISO 8601)
+                            value = value.substring(0, 16);
+                        }
+                    }
+
+                    newFormData[attr.name] = value !== undefined && value !== null ? value : '';
+                });
+                formData.value = newFormData;
+                isModalOpen.value = true;
+            }
+
+
+            // --- Initialization ---
+            onMounted(() => {
+                fetchAndRenderRecentData();
+            });
+
+            return {
+                // State
+                modelClassName,
+                fetchUrl,
+                loading,
+                error,
+                searchTerm,
+                filterStatus,
+                isModalOpen,
+                formMode,
+                formData,
+                isSubmitting,
+
+                // Computed
+                visibleAttributes,
+                editableAttributes,
+                filteredData,
+
+                // Methods
+                formatKey,
+                formatValue,
+                getInputType,
+                openCreateModal,
+                openEditModal,
+                handleCrudFormSubmission,
+                handleDelete,
+            };
+        }
+    };
+
+    createApp(App).mount('#vue-crud-app');
+</script>
+
+{% endblock %}
