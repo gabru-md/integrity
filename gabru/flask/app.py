@@ -99,7 +99,6 @@ class App(Generic[T]):
             is_required = field.is_required()
 
             # Clean up type string
-            print(attr_type)
             attr_type_str = attr_type.lower().replace("<class '", "").replace("'>", "").replace(
                 "typing.optional[", "").replace("]", "").replace("typing.list[", "list-")
 
@@ -112,7 +111,6 @@ class App(Generic[T]):
                 "required": is_required,
                 "ui_disabled": ui_disabled,
             })
-        print(attributes)
         return attributes
 
     def setup_home_route(self):

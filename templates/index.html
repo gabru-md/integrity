@@ -1,15 +1,128 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <title>{% block title %}Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <title>{% block title %}App Dashboard{% endblock %}</title>
 </head>
-<body>
-<main>
+
+<body class="transition-colors duration-300">
+<nav class="hidden md:block fixed top-0 left-0 h-screen w-64 p-4 z-20 transition-all duration-300
+                bg-white border-r border-slate-200 shadow-xl
+                dark:bg-gray-800 dark:border-gray-700">
+
+    <div class="flex items-center space-x-2 p-2 mb-8 border-b border-slate-100 dark:border-gray-700/50">
+        <span class="text-2xl font-extrabold text-slate-800 dark:text-gray-100">Rasbhari</span>
+    </div>
+
+    <ul class="space-y-2">
+        <li>
+            <a href="/" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
+                                 hover:bg-indigo-50 hover:text-indigo-600
+                                 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
+                                 {% if request.path == '/' %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="/apps/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
+                                 hover:bg-indigo-50 hover:text-indigo-600
+                                 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
+                                 {% if request.path == '/apps/home' %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Apps
+            </a>
+        </li>
+        <li>
+            <a href="/processes/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
+                                 hover:bg-indigo-50 hover:text-indigo-600
+                                 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
+                                 {% if request.path == '/processes/home' %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Processes
+            </a>
+        </li>
+    </ul>
+
+    <div class="absolute bottom-4 left-4 right-4 p-3 border-t border-slate-100 dark:border-gray-700/50">
+        <button id="theme-toggle" onclick="toggleTheme()"
+                class="flex items-center justify-center w-full p-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors
+                           dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">
+            <svg id="sun-icon" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                 xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            <svg id="moon-icon" class="w-5 h-5 mr-2 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                 xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+            <span id="theme-text">Light Mode</span>
+        </button>
+    </div>
+</nav>
+
+<main id="content-wrapper" class="md:ml-64 min-h-screen transition-all duration-300 bg-slate-50 dark:bg-gray-900">
     {% block content %}{% endblock %}
 </main>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+<script>
+    // Theme Toggle Logic
+    function toggleTheme() {
+        const html = document.documentElement;
+        const isDarkMode = html.classList.toggle('dark');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        updateThemeIcons(isDarkMode);
+    }
+
+    function updateThemeIcons(isDarkMode) {
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        const themeText = document.getElementById('theme-text');
+
+        if (isDarkMode) {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+            themeText.textContent = 'Light Mode';
+        } else {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+            themeText.textContent = 'Dark Mode';
+        }
+    }
+
+    // Apply theme on load
+    const storedTheme = localStorage.getItem('theme');
+    // MODIFICATION 3: Logic simplified to prioritize stored theme, then default to dark if no preference is found
+    if (storedTheme === 'dark' || (storedTheme === null && window.matchMedia('(prefers-color-scheme: light)').matches === false)) {
+        document.documentElement.classList.add('dark');
+        updateThemeIcons(true);
+    } else {
+        // If storedTheme is 'light' OR there is no stored theme and system preference is light
+        document.documentElement.classList.remove('dark');
+        updateThemeIcons(false);
+    }
+</script>
 </body>
 </html>
