@@ -29,10 +29,11 @@ class App(Generic[T]):
         self.widget_recent_limit = widget_recent_limit
         self.model_class = model_class
         self.model_class_attributes = self.get_model_class_attributes()
-        self._process_data_func = _process_data_func
+        self._process_model_data_func = _process_data_func
         self.setup_default_routes()
         self.setup_home_route()
         self.processes = []
+        self.disabled_processes = set()
 
     def setup_default_routes(self):
 
@@ -42,7 +43,7 @@ class App(Generic[T]):
             data = request.json
             data = dict(data)
             try:
-                data = self._process_data(data)
+                data = self.process_model_data(data)
                 new_entity = self.model_class(**data)
                 new_entity_id = self.service.create(new_entity)
                 if new_entity_id:
@@ -74,7 +75,7 @@ class App(Generic[T]):
             data = request.json
             data = dict(data)
             try:
-                data = self._process_data(data)
+                data = self.process_model_data(data)
                 updated_entity = self.model_class(id=entity_id, **data)
                 if self.service.update(updated_entity):
                     return jsonify({"message": f"{self.name.capitalize()} updated successfully"}), 200
@@ -127,14 +128,23 @@ class App(Generic[T]):
                                    model_class_name=self.model_class.__name__,
                                    app_name=self.name)
 
-    def _process_data(self, data):
-        if self._process_data_func:
-            return self._process_data_func(data)
+    def process_model_data(self, data):
+        if self._process_model_data_func:
+            return self._process_model_data_func(data)
         return data
 
-    def register_process(self, process: threading.Thread):
+    def register_process(self, process: threading.Thread, enabled=True):
         if process:
+            if not enabled:
+                self.disabled_processes.add(process.name)
             self.processes.append(process)
+
+    def get_enabled_processes(self):
+        enabled_processes = []
+        for process in self.processes:
+            if process.name not in self.disabled_processes:
+                enabled_processes.append(process)
+        return enabled_processes
 
     def get_processes(self):
         return self.processes

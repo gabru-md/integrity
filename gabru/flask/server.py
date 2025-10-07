@@ -5,6 +5,8 @@ from gabru.log import Logger
 from gabru.flask.app import App
 import os
 
+from gabru.qprocessor.qprocessor import QueueProcessor
+
 
 class Server:
     def __init__(self, name: str, template_folder="templates", static_folder="static"):
@@ -36,6 +38,43 @@ class Server:
             widgets_data = self.get_widgets_data()
             return render_template('home.html', widgets_data=widgets_data)
 
+        @self.app.route('/apps')
+        def apps():
+            apps_data = self.get_apps_data()
+            return render_template('apps.html', apps_data=apps_data)
+
+        @self.app.route('/processes')
+        def processes():
+            processes_data = self.get_processes_data()
+            return render_template('processes.html', processes_data=processes_data)
+
+    def get_processes_data(self) -> []:
+        processes_data = []
+        for app in self.registered_apps:
+            app: App = app
+            for process in app.get_processes():
+                process: QueueProcessor = process
+                process_data = {
+                    'name': process.q_stats.name,
+                    'type': 'QueueProcessor',
+                    'is_alive': process.is_alive(),
+                    'last_consumed_id': process.q_stats.last_consumed_id
+                }
+                processes_data.append(process_data)
+        return processes_data
+
+    def get_apps_data(self) -> []:
+        apps_data = []
+        for app in self.registered_apps:
+            app: App = app
+            app_data = {
+                'name': app.name,
+                'model_class': app.model_class.__name__,
+                'processes': app.processes
+            }
+            apps_data.append(app_data)
+        return apps_data
+
     def get_widgets_data(self) -> {}:
         widgets_data = {}
         for app in self.registered_apps:
@@ -49,7 +88,7 @@ class Server:
         self.log.info(f"Starting process manager for {self.name}")
         for app in self.registered_apps:
             app: App = app
-            app_processes = app.get_processes()
+            app_processes = app.get_enabled_processes()
             if len(app_processes) > 0:
                 processes_to_start[app.name] = app_processes
         self.log.info(f"Loaded all processes to run")
