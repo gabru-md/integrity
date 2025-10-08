@@ -1,6 +1,11 @@
+from datetime import datetime
 from uuid import uuid4
 
+from flask import jsonify
+
 from gabru.flask.app import App
+from model.event import Event
+from services.events import EventService
 from services.shortcuts import ShortcutService
 from model.shortcut import Shortcut
 from gabru.apple.shortcuts import ShortcutBuilder
@@ -19,38 +24,30 @@ def process_data(json_data):
     if 'filename' in json_data:
         return json_data
 
-    event_type = json_data['event_type']
     name = json_data['name']
-    description = json_data['description']
-
     file_name = f"{'-'.join(f.lower() for f in name.split())}_{uuid4()}.shortcut"
-
-    filepath = os.path.join(SERVER_FILES_FOLDER, file_name)
-
-    builder = ShortcutBuilder(name)
-
-    # Create JSON as text first
-    json_text = json.dumps({
-        "event_type": event_type,
-        "tags": ['shortcut-invoked'],
-        "description": description
-    })
-    builder.add_text(json_text)
-
-
-    builder.add_post_request(
-        url=RASBHARI_LOCAL_URL + "/events/",
-        headers={"Content-Type": "application/json"}
-        # Don't provide body or json_body - it will use the previous text action's output
-    )
-
-    saved_file_path = builder.save(filepath=filepath)
-
-    if saved_file_path:
-        json_data['filename'] = file_name
+    json_data['filename'] = file_name
 
     return json_data
 
 
 shortcuts_app = App('Shortcuts', ShortcutService(), Shortcut, _process_model_data_func=process_data,
                     get_recent_limit=10)
+
+event_service = EventService()
+
+
+@shortcuts_app.blueprint.route('/invoke/<int:entity_id>', methods=['POST'])
+def invoke_event_shortcut(entity_id):
+    shortcut: Shortcut = shortcuts_app.service.get_by_id(entity_id)
+    if shortcut:
+        event_data = {
+            "event_type": shortcut.event_type,
+            "tags": ['shortcut-invoked'],
+            "description": shortcut.description,
+            "timestamp": int(datetime.now().timestamp())
+        }
+
+        event_service.create(Event(**event_data))
+        return jsonify({"message": f"{shortcut.event_type} created successfully"}), 200
+    return jsonify({"error": f"Failed to invoke shortcut event"}), 500

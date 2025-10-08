@@ -1,7 +1,10 @@
-from typing import List
+import os
+from typing import List, Optional
+from uuid import uuid4
 
+from gabru.apple.shortcuts import ShortcutBuilder
 from gabru.db.db import DB
-from gabru.db.service import CRUDService
+from gabru.db.service import CRUDService, T
 from model.shortcut import Shortcut
 
 
@@ -11,6 +14,8 @@ class ShortcutService(CRUDService[Shortcut]):
         super().__init__(
             "shortcuts", DB("rasbhari")
         )
+        self.RASBHARI_LOCAL_URL = os.getenv("RASBHARI_LOCAL_URL", "rasbhari.local:5000")
+        self.SERVER_FILES_FOLDER = os.getenv("SERVER_FILES_FOLDER", "/tmp")
 
     def _create_table(self):
         if self.db.conn:
@@ -55,3 +60,18 @@ class ShortcutService(CRUDService[Shortcut]):
 
     def _get_columns_for_select(self) -> List[str]:
         return ["id", "name", "event_type", "description", "filename"]
+
+    def create(self, obj: Shortcut) -> Optional[int]:
+        new_obj_id = super().create(obj)
+
+        file_name = obj.filename
+        filepath = os.path.join(self.SERVER_FILES_FOLDER, file_name)
+
+        builder = ShortcutBuilder(obj.name)
+        builder.add_post_request(
+            url=f"{self.RASBHARI_LOCAL_URL}/shortcuts/invoke/{new_obj_id}",
+            headers={"Content-Type": "application/json"}
+        )
+        builder.save(filepath=filepath)
+
+        return new_obj_id
