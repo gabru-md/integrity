@@ -14,7 +14,9 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 * [X] ~~Make a dashboard of widgets from different apps~~
 * [ ] enable notifications from emails on iphone
 * [ ] make an easy shortcut creator which can be imported on iphone and iwatch easily instead ot
-f shortcuts app
+  f shortcuts app
+* [ ] the shortcuts need to change. With shortcut I can define a specific shortcut and it will be invoked by a get call
+  to the shortcut id instead of actual call
 
 ### Libs
 
