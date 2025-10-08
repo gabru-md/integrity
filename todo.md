@@ -13,6 +13,8 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 * [X] ~~finish sentinel condition validation~~
 * [X] ~~Make a dashboard of widgets from different apps~~
 * [ ] enable notifications from emails on iphone
+* [ ] make an easy shortcut creator which can be imported on iphone and iwatch easily instead ot
+f shortcuts app
 
 ### Libs
 
