@@ -1,6 +1,5 @@
 import os
 from typing import List, Optional
-from uuid import uuid4
 
 from gabru.apple.shortcuts import ShortcutBuilder
 from gabru.db.db import DB
