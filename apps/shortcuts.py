@@ -8,10 +8,8 @@ from model.event import Event
 from services.events import EventService
 from services.shortcuts import ShortcutService
 from model.shortcut import Shortcut
-from gabru.apple.shortcuts import ShortcutBuilder
 import os
 from dotenv import load_dotenv
-import json
 
 load_dotenv()
 

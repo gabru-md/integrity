@@ -12,10 +12,10 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
   sentinel should do.
 * [X] ~~finish sentinel condition validation~~
 * [X] ~~Make a dashboard of widgets from different apps~~
-* [ ] enable notifications from emails on iphone
-* [ ] make an easy shortcut creator which can be imported on iphone and iwatch easily instead ot
+* [x] enable notifications from emails on iphone
+* [x] make an easy shortcut creator which can be imported on iphone and iwatch easily instead ot
   f shortcuts app
-* [ ] the shortcuts need to change. With shortcut I can define a specific shortcut and it will be invoked by a get call
+* [x] the shortcuts need to change. With shortcut I can define a specific shortcut and it will be invoked by a get call
   to the shortcut id instead of actual call
 
 ### Libs
@@ -29,5 +29,5 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 
 ### Database
 
-* [ ] Cleanup the queuestats table of unexpected sentinels
+* [x] Cleanup the queuestats table of unexpected sentinels
 * [ ] Cleanup the testing events from events database
