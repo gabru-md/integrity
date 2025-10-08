@@ -9,6 +9,6 @@ def process_data(json_data):
     return json_data
 
 
-contracts_app = App('Contracts', ContractService(), Contract, _process_data_func=process_data)
+contracts_app = App('Contracts', ContractService(), Contract, _process_model_data_func=process_data)
 
 contracts_app.register_process(Sentinel())

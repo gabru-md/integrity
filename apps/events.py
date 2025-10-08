@@ -16,6 +16,6 @@ def process_data(json_data):
     return json_data
 
 
-events_app = App('Events', EventService(), Event, _process_data_func=process_data, get_recent_limit=15)
+events_app = App('Events', EventService(), Event, _process_model_data_func=process_data, get_recent_limit=15)
 
-# events_app.register_process(Courier(), enabled=False)
+events_app.register_process(Courier(), enabled=False)

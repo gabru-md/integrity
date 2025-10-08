@@ -11,4 +11,4 @@ def process_data(json_data):
     return json_data
 
 
-thoughts_app = App('Thoughts', ThoughtService(), Thought, _process_data_func=process_data, get_recent_limit=10)
+thoughts_app = App('Thoughts', ThoughtService(), Thought, _process_model_data_func=process_data, get_recent_limit=10)

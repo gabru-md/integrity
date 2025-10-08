@@ -20,7 +20,7 @@ class App(Generic[T]):
     """
 
     def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=5,
-                 widget_recent_limit=3, _process_data_func=None):
+                 widget_recent_limit=3, _process_model_data_func=None):
         self.name = name
         self.log = Logger.get_log(f"{self.name.capitalize()}")
         self.blueprint = Blueprint(self.name, __name__)
@@ -29,7 +29,7 @@ class App(Generic[T]):
         self.widget_recent_limit = widget_recent_limit
         self.model_class = model_class
         self.model_class_attributes = self.get_model_class_attributes()
-        self._process_model_data_func = _process_data_func
+        self._process_model_data_func = _process_model_data_func
         self.setup_default_routes()
         self.setup_home_route()
         self.processes = []
@@ -107,6 +107,7 @@ class App(Generic[T]):
 
             extra = field.json_schema_extra or {}
             ui_disabled = extra.get("ui_disabled", False)
+            download_enabled = extra.get("download_enabled", False)
             widget_enabled = extra.get("widget_enabled", False)
 
             attributes.append({
@@ -114,7 +115,8 @@ class App(Generic[T]):
                 "type": attr_type_str,
                 "required": is_required,
                 "ui_disabled": ui_disabled,
-                "widget_enabled": widget_enabled
+                "widget_enabled": widget_enabled,
+                "download_enabled": download_enabled
             })
         return attributes
 

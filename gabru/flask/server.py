@@ -1,11 +1,17 @@
 import threading
 
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, send_from_directory
 from gabru.log import Logger
 from gabru.flask.app import App
 import os
 
 from gabru.qprocessor.qprocessor import QueueProcessor
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SERVER_FILES_FOLDER = os.getenv("SERVER_FILES_FOLDER", "/tmp")
 
 
 class Server:
@@ -48,6 +54,14 @@ class Server:
             processes_data = self.get_processes_data()
             return render_template('processes.html', processes_data=processes_data)
 
+        @self.app.route('/shortcuts')
+        def shortcuts():
+            return redirect('shortcuts/home'), 302
+
+        @self.app.route('/download/<filename>')
+        def download(filename):
+            return send_from_directory(directory=SERVER_FILES_FOLDER, path=filename, as_attachment=True)
+
     def get_processes_data(self) -> []:
         processes_data = []
         for app in self.registered_apps:
@@ -58,7 +72,8 @@ class Server:
                     'name': process.q_stats.name,
                     'type': 'QueueProcessor',
                     'is_alive': process.is_alive(),
-                    'last_consumed_id': process.q_stats.last_consumed_id
+                    'last_consumed_id': process.q_stats.last_consumed_id,
+                    'owner_app': app.name
                 }
                 processes_data.append(process_data)
         return processes_data

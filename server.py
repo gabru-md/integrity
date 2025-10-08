@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from apps.contracts import contracts_app
 from apps.events import events_app
+from apps.shortcuts import shortcuts_app
 from apps.thoughts import thoughts_app
 from gabru.flask.server import Server
 
@@ -25,6 +26,7 @@ if __name__ == '__main__':
     server.register_app(contracts_app)
     server.register_app(events_app)
     server.register_app(thoughts_app)
+    server.register_app(shortcuts_app)
 
     # start process manager to run important processes for apps
     server.start_process_manager()

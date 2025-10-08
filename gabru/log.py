@@ -38,6 +38,7 @@ class Logger:
             )
 
             specific_logfile_handler.setFormatter(formatter)
+            main_logfile_handler.setFormatter(formatter)
 
             logger.addHandler(specific_logfile_handler)
             logger.addHandler(main_logfile_handler)
