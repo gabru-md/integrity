@@ -1,5 +1,5 @@
-import datetime
 import time
+from datetime import datetime
 
 from gabru.log import Logger
 from gabru.qprocessor.qprocessor import QueueProcessor, T
@@ -51,6 +51,9 @@ class Sentinel(QueueProcessor[Event]):
                     # add to contracts to invalidate later
                     contracts_to_invalidate.append(contract)
 
+        self.invalidate_trigger_based_contracts(contracts_to_invalidate)
+
+        contracts_to_invalidate = []
         # 2. try to validate the open contracts
         open_contracts = self.contract_service.get_open_contracts()
         if open_contracts:
@@ -64,14 +67,48 @@ class Sentinel(QueueProcessor[Event]):
                     # add to contracts to invalidate later
                     contracts_to_invalidate.append(contract)
 
-        # 3. invalidate the contracts
+        self.invalidate_open_contracts(contracts_to_invalidate)
+
+    def invalidate_trigger_based_contracts(self, contracts_to_invalidate):
+        """
+            do nothing in this case as these are trigger based contracts
+            even if it is invalidated we still want to check them anytime
+            the trigger event is produced.
+        """
         for contract in contracts_to_invalidate:
-            if contract.frequency == "ad-hoc":
-                contract.is_valid = False
-                self.contract_service.update(contract)
-            else:
-                # do not invalidate any other contract
-                self.log.info(f"{contract.name} [{contract.frequency}] remains valid")
+            contract: Contract = contract
+            contract.last_run_date = int(datetime.now().timestamp())
+
+            # update the last run
+            self.contract_service.update(contract)
+
+    def invalidate_open_contracts(self, contracts_to_invalidate):
+        """
+            here we need to invalidate them, then update the last_run_date
+            depending on the frequency we then need to adjust the next run date
+        """
+
+        seconds_in_hour = 3600
+        seconds_in_day = 86400
+        seconds_in_week = 604800
+        seconds_in_month = 2592000
+
+        for contract in contracts_to_invalidate:
+            contract: Contract = contract
+            current_timestamp = int(datetime.now().timestamp())
+            contract.last_run_date = current_timestamp
+
+            if contract.frequency == "daily":
+                contract.next_run_date = current_timestamp + seconds_in_day
+            elif contract.frequency == "hourly":
+                contract.next_run_date = current_timestamp + seconds_in_hour
+            elif contract.frequency == "weekly":
+                contract.next_run_date = current_timestamp + seconds_in_week
+            elif contract.frequency == "monthly":
+                contract.next_run_date = current_timestamp + seconds_in_month
+
+            # update the last run and next run date in db
+            self.contract_service.update(contract)
 
     def run_contract_validation(self, contract: Contract, trigger_event: Event) -> bool:
         # need to figure out how to build the contract conditions and how to validate them

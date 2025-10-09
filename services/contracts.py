@@ -1,6 +1,8 @@
-from gabru.db.service import CRUDService
+from datetime import datetime
+
+from gabru.db.service import CRUDService, T
 from model.contract import Contract
-from typing import List
+from typing import List, Optional
 import time
 from gabru.db.db import DB
 
@@ -25,7 +27,8 @@ class ContractService(CRUDService[Contract]):
                         violation_message TEXT,
                         start_time TIMESTAMP,
                         end_time TIMESTAMP,
-                        is_valid BOOLEAN DEFAULT TRUE
+                        last_run_date TIMESTAMP,
+                        next_run_date TIMESTAMP
                     )
                 """)
                 self.db.conn.commit()
@@ -33,7 +36,7 @@ class ContractService(CRUDService[Contract]):
     def _to_tuple(self, contract: Contract) -> tuple:
         return (contract.name, contract.description, contract.frequency, contract.trigger_event,
                 contract.conditions, contract.violation_message, contract.start_time, contract.end_time,
-                contract.is_valid)
+                contract.last_run_date, contract.next_run_date)
 
     def _to_object(self, row: tuple) -> Contract:
         contract_dict = {
@@ -46,26 +49,27 @@ class ContractService(CRUDService[Contract]):
             "violation_message": row[6],
             "start_time": row[7],
             "end_time": row[8],
-            "is_valid": row[9]
+            "last_run_date": row[9],
+            "next_run_date": row[10]
         }
         return Contract(**contract_dict)
 
     def _get_columns_for_insert(self) -> List[str]:
         return ["name", "description", "frequency", "trigger_event", "conditions",
-                "violation_message", "start_time", "end_time", "is_valid"]
+                "violation_message", "start_time", "end_time", "last_run_date", "next_run_date"]
 
     def _get_columns_for_update(self) -> List[str]:
         return ["name", "description", "frequency", "trigger_event", "conditions",
-                "violation_message", "start_time", "end_time", "is_valid"]
+                "violation_message", "start_time", "end_time", "last_run_date", "next_run_date"]
 
     def _get_columns_for_select(self) -> List[str]:
         return ["id", "name", "description", "frequency", "trigger_event", "conditions",
-                "violation_message", "start_time", "end_time", "is_valid"]
+                "violation_message", "start_time", "end_time", "last_run_date", "next_run_date"]
 
     def get_associated_valid_contracts(self, event_type) -> List[Contract]:
         current_time = int(time.time())
         with self.db.conn.cursor() as cursor:
-            query = "SELECT * FROM contracts WHERE trigger_event = %s and end_time > to_timestamp(%s) and is_valid"
+            query = "SELECT * FROM contracts WHERE trigger_event = %s and end_time > to_timestamp(%s)"
             cursor.execute(query, (event_type, current_time))
             rows = cursor.fetchall()
             contracts = [self._to_object(row) for row in rows]
@@ -75,8 +79,12 @@ class ContractService(CRUDService[Contract]):
         """ Get the contracts not associated to trigger_event and are valid"""
         current_time = int(time.time())
         with self.db.conn.cursor() as cursor:
-            query = "SELECT * FROM contracts WHERE trigger_event = null and end_time > to_timestamp(%s) and is_valid"
+            query = "SELECT * FROM contracts WHERE trigger_event = null and end_time > to_timestamp(%s)"
             cursor.execute(query, (current_time,))
             rows = cursor.fetchall()
             contracts = [self._to_object(row) for row in rows]
         return contracts
+
+    def create(self, obj: Contract) -> Optional[int]:
+        obj.last_run_date = int(datetime.now().timestamp())
+        return super().create(obj)
