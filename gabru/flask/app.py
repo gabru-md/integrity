@@ -107,7 +107,7 @@ class App(Generic[T]):
                 "typing.optional[", "").replace("]", "").replace("typing.list[", "list-")
 
             extra = field.json_schema_extra or {}
-            ui_disabled = extra.get("ui_disabled", False)
+            edit_enabled = extra.get("edit_enabled", True)
             download_enabled = extra.get("download_enabled", False)
             widget_enabled = extra.get("widget_enabled", False)
 
@@ -115,7 +115,7 @@ class App(Generic[T]):
                 "name": name,
                 "type": attr_type_str,
                 "required": is_required,
-                "ui_disabled": ui_disabled,
+                "edit_enabled": edit_enabled,
                 "widget_enabled": widget_enabled,
                 "download_enabled": download_enabled
             })

@@ -6,7 +6,7 @@ from gabru.flask.model import WidgetUIModel
 
 
 class Contract(WidgetUIModel):
-    id: Optional[int] = Field(default=None, ui_disabled=True)
+    id: Optional[int] = Field(default=None, edit_enabled=False)
     name: str = Field(default=None, widget_enabled=True)
     description: Optional[str] = Field(default=None, widget_enabled=True)
     frequency: Optional[str]
@@ -15,4 +15,4 @@ class Contract(WidgetUIModel):
     violation_message: str
     start_time: Optional[datetime]
     end_time: Optional[datetime]
-    is_valid: bool = Field(..., ui_disabled=True)
+    is_valid: bool = Field(..., edit_enabled=False)
