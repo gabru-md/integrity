@@ -10,3 +10,4 @@ class Shortcut(WidgetUIModel):
     event_type: str = Field(default=None, widget_enabled=True)
     description: str = Field(default=None, widget_enabled=True)
     filename: str = Field(default=None, widget_enabled=False, ui_disabled=True, download_enabled=True)
+    signed: bool = Field(deafult=False, widget_enabled=False, ui_disabled=True)

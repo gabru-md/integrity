@@ -19,13 +19,14 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
   to the shortcut id instead of actual call
 
 ### Libs
-
+* [ ] get rid of _process_model_data func this can be done in the service
 * [ ] Add c_util.py and a_util.py for collections and array utils
 * [X] ~~Add process runner~~
 * [X] ~~Make an app wrapper~~
 * [X] ~~Create a queue database with queuestats table for enabling queue processor~~
 * [X] ~~Add queue db related info to .env~~
 * [X] ~~Add docs about qprocessor.py~~
+* [ ] Add readme for .env variables
 
 ### Database
 

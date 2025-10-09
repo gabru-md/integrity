@@ -1,0 +1,25 @@
+{% extends "crud.html" %}
+{% block title %}Manage Shortcuts{% endblock %}
+
+{% block xth %}
+    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-gray-300">
+        Status
+    </th>
+{% endblock %}
+
+{% block xtd %}
+    {% raw %}
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 dark:text-gray-200">
+        <span v-if="item.signed"
+              class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-gray-700 dark:text-green-400">
+            Signed
+        </span>
+        <span v-else
+              class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-gray-700 dark:text-yellow-400">
+            <a :href="`/shortcuts/sign/${item.id}`" class="text-yellow-800 hover:underline">
+                Sign now
+            </a>
+        </span>
+    </td>
+    {% endraw %}
+{% endblock %}

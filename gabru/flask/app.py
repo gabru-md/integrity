@@ -20,7 +20,7 @@ class App(Generic[T]):
     """
 
     def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=5,
-                 widget_recent_limit=3, _process_model_data_func=None):
+                 widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html"):
         self.name = name
         self.log = Logger.get_log(f"{self.name.capitalize()}")
         self.blueprint = Blueprint(self.name, __name__)
@@ -34,6 +34,7 @@ class App(Generic[T]):
         self.setup_home_route()
         self.processes = []
         self.disabled_processes = set()
+        self.home_template = home_template
 
     def setup_default_routes(self):
 
@@ -125,7 +126,7 @@ class App(Generic[T]):
         @self.blueprint.route('/home')
         def home():
             """ Renders the home page """
-            return render_template(f"crud.html",
+            return render_template(self.home_template,
                                    model_class_attributes=self.model_class_attributes,
                                    model_class_name=self.model_class.__name__,
                                    app_name=self.name)

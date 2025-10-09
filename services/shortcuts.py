@@ -25,7 +25,8 @@ class ShortcutService(CRUDService[Shortcut]):
                         name VARCHAR(255) NOT NULL,
                         event_type VARCHAR(255) NOT NULL,
                         description VARCHAR(500) NOT NULL,
-                        filename VARCHAR(255)
+                        filename VARCHAR(255),
+                        signed BOOLEAN DEFAULT FALSE
                     )
                 """)
                 self.db.conn.commit()
@@ -35,7 +36,8 @@ class ShortcutService(CRUDService[Shortcut]):
             shortcut.name,
             shortcut.event_type,
             shortcut.description,
-            shortcut.filename
+            shortcut.filename,
+            shortcut.signed
         )
 
     def _to_object(self, row: tuple) -> Shortcut:
@@ -47,18 +49,19 @@ class ShortcutService(CRUDService[Shortcut]):
             "name": row[1],
             "event_type": row[2],
             "description": row[3],
-            "filename": row[4]
+            "filename": row[4],
+            "signed": row[5]
         }
         return Shortcut(**shortcut_dict)
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["name", "event_type", "description", "filename"]
+        return ["name", "event_type", "description", "filename", "signed"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["name", "description"]
+        return ["name", "event_type", "description", "filename", "signed"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "name", "event_type", "description", "filename"]
+        return ["id", "name", "event_type", "description", "filename", "signed"]
 
     def create(self, obj: Shortcut) -> Optional[int]:
         new_obj_id = super().create(obj)
