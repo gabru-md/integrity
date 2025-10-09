@@ -8,7 +8,8 @@
 
     <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
         <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100">Rasbhari Apps Dashboard</h1>
-        <p class="text-slate-500 mt-1 dark:text-gray-400">Overview of key metrics and recent items from all applications.</p>
+        <p class="text-slate-500 mt-1 dark:text-gray-400">Overview of key metrics and recent items from all
+            applications.</p>
     </header>
 
     <main class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -26,12 +27,17 @@
                 <a :href="`/${widgetName.toLowerCase().replace(' ', '-')}/home`"
                    class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition duration-150"
                    title="Manage All Items">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
                 </a>
             </header>
 
             <div class="p-5 space-y-3">
-                <div v-if="!data[0] || data[0].length === 0" class="text-center py-4 text-slate-500 italic dark:text-gray-400">
+                <div v-if="!data[0] || data[0].length === 0"
+                     class="text-center py-4 text-slate-500 italic dark:text-gray-400">
                     No recent items found.
                 </div>
 
@@ -80,7 +86,6 @@
             }
 
             function shouldShowItem(key, attributes) {
-            console.log(attributes)
                 if (typeof key !== 'string') return false;
 
                 // 1. Find the attribute definition

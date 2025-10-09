@@ -9,6 +9,46 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        /* Custom styles for collapsible nav */
+        /* Start with the sidebar collapsed on mobile */
+        #sidebar {
+            transform: translateX(-100%);
+        }
+
+        /* Show the sidebar on desktop (md screens and up) */
+        @media (min-width: 768px) {
+            #sidebar {
+                transform: translateX(0);
+            }
+            /* Default main content wrapper margin on desktop */
+            #content-wrapper {
+                margin-left: 16rem; /* ml-64 (256px) */
+            }
+        }
+
+        /* State for when the sidebar is toggled *open* on mobile */
+        #sidebar.open {
+            transform: translateX(0);
+        }
+
+        /* State for when the sidebar is toggled *closed* on mobile (optional, as default style handles it) */
+        #sidebar.closed {
+            transform: translateX(-100%);
+        }
+
+        /* Optional: Change main content margin on large screens if you want a *truly* collapsible desktop experience */
+        /*
+        .sidebar-collapsed-desktop #content-wrapper {
+            margin-left: 4rem; // for a small icon-only bar, adjust as needed
+        }
+        */
+
+        #sidebar.open ~ #sidebar-backdrop {
+            opacity: 1;
+            pointer-events: auto; /* Re-enable clicks on the backdrop */
+        }
+
     </style>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -16,7 +56,7 @@
 </head>
 
 <body class="transition-colors duration-300">
-<nav class="hidden md:block fixed top-0 left-0 h-screen w-64 p-4 z-20 transition-all duration-300
+<nav id="sidebar" class="fixed top-0 left-0 h-screen w-64 p-4 z-20 transition-transform duration-300
                 bg-white border-r border-slate-200 shadow-xl
                 dark:bg-gray-800 dark:border-gray-700">
 
@@ -96,19 +136,33 @@
             </svg>
             <span id="theme-text">Light Mode</span>
         </button>
-        <footer class="p-4 text-center text-sm text-slate-500 bg-white border-t border-slate-200
-        dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+        <div class="mt-4 p-0 text-center text-sm text-slate-500
+        dark:text-gray-400">
             github: <a href="https://github.com/gabru-md" target="_blank">@gabru-md</a>
-        </footer>
+        </div>
     </div>
 </nav>
 
-<main id="content-wrapper" class="md:ml-64 min-h-screen transition-all duration-300 bg-slate-50 dark:bg-gray-900">
+<div id="sidebar-backdrop" onclick="toggleSidebar()"
+     class="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 opacity-0 md:hidden pointer-events-none">
+</div>
+
+<header class="md:hidden sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between z-10 dark:bg-gray-800 dark:border-gray-700">
+    <button id="sidebar-toggle-button" onclick="toggleSidebar()" class="p-2 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+    <div class="text-xl font-extrabold text-slate-800 dark:text-gray-100">Rasbhari</div>
+    <div></div>
+</header>
+
+<main id="content-wrapper" class="min-h-screen transition-all duration-300 bg-slate-50 dark:bg-gray-900">
     {% block content %}{% endblock %}
 </main>
 
 <script>
-    // Theme Toggle Logic
+    // Theme Toggle Logic (unchanged)
     function toggleTheme() {
         const html = document.documentElement;
         const isDarkMode = html.classList.toggle('dark');
@@ -132,6 +186,16 @@
         }
     }
 
+    // Sidebar Toggle Logic (NEW)
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        // On mobile screens, we toggle the 'open' class
+        // On desktop (md:), the CSS handles keeping it open.
+        // For mobile, we use transform: translateX(-100%) to hide it, and translateX(0) to show it.
+        sidebar.classList.toggle('open');
+    }
+
+    // Initial setup for theme and sidebar
     let theme = localStorage.getItem('theme') || 'dark'; // default dark
     document.documentElement.classList.toggle('dark', theme === 'dark');
     updateThemeIcons(theme === 'dark');
