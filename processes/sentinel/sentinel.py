@@ -1,8 +1,7 @@
 import time
 from datetime import datetime
 
-from gabru.log import Logger
-from gabru.qprocessor.qprocessor import QueueProcessor, T
+from gabru.qprocessor.qprocessor import QueueProcessor
 from model.contract import Contract
 from model.event import Event
 from processes.sentinel.condition.evaluator import ContractEvaluator
@@ -18,7 +17,6 @@ class Sentinel(QueueProcessor[Event]):
 
         super().__init__(name=self.__class__.__name__, service=self.event_service)
 
-        self.log = Logger.get_log(self.__class__.__name__)
         self.excluded_event_types = []
         self.contract_service = ContractService()
         self.evaluator = ContractEvaluator(self.event_service)

@@ -17,3 +17,4 @@ zipp==3.23.0
 protobuf~=6.32.1
 sendgrid~=6.12.5
 requests~=2.32.5
+ultralytics~=8.3.209

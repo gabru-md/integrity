@@ -1,17 +1,16 @@
-import threading
 import time
 from abc import abstractmethod
 from typing import Generic, TypeVar
 
-from gabru.log import Logger
 from gabru.db.service import ReadOnlyService
+from gabru.process import Process
 from gabru.qprocessor.qservice import QueueService
 from gabru.qprocessor.qstats import QueueStats
 
 T = TypeVar('T')
 
 
-class QueueProcessor(Generic[T], threading.Thread):
+class QueueProcessor(Generic[T], Process):
     """
         A generic, single-threaded queue processor that continuously pulls items
         from a database, processes them, and updates its state to ensure
@@ -26,12 +25,11 @@ class QueueProcessor(Generic[T], threading.Thread):
     def __init__(self, name, service: ReadOnlyService[T]):
         super().__init__(name=name, daemon=True)
         self.service = service
-        self.log = Logger.get_log(name)
-        self.sleep_time_sec = 5
         self.q_service = QueueService()
         self._set_up_queue_stats()
         self.queue = []
         self.max_queue_size = 10
+        self.sleep_time_sec = 5
         self.q_stats: QueueStats
 
     def _set_up_queue_stats(self):
@@ -52,16 +50,16 @@ class QueueProcessor(Generic[T], threading.Thread):
             self.log.info("QueueStats already exist")
             self.q_stats = q_stats[0]
 
-    def sleep(self):
+    def qprocessor_sleep(self):
         self.log.info(f"Nothing to do, waiting for {self.sleep_time_sec}s")
         time.sleep(self.sleep_time_sec)
 
-    def run(self):
+    def process(self):
         while True:
             next_item = self.get_next_item()
             if not next_item:
                 # no item to process, sleep for a bit
-                self.sleep()
+                self.qprocessor_sleep()
             else:
                 filtered_item = self.filter_item(next_item)
                 if filtered_item:

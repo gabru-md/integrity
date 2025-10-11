@@ -5,6 +5,7 @@ from gabru.log import Logger
 from gabru.flask.app import App
 import os
 
+from gabru.process import Process
 from gabru.qprocessor.qprocessor import QueueProcessor
 
 from dotenv import load_dotenv
@@ -67,14 +68,24 @@ class Server:
         for app in self.registered_apps:
             app: App = app
             for process in app.get_processes():
-                process: QueueProcessor = process
-                process_data = {
-                    'name': process.q_stats.name,
-                    'type': 'QueueProcessor',
-                    'is_alive': process.is_alive(),
-                    'last_consumed_id': process.q_stats.last_consumed_id,
-                    'owner_app': app.name
-                }
+                if isinstance(process, QueueProcessor):
+                    process: QueueProcessor = process
+                    process_data = {
+                        'name': process.q_stats.name,
+                        'type': 'QueueProcessor',
+                        'is_alive': process.is_alive(),
+                        'last_consumed_id': process.q_stats.last_consumed_id,
+                        'owner_app': app.name
+                    }
+                else:
+                    process: Process = process
+                    process_data = {
+                        'name': process.name,
+                        'is_alive': process.is_alive(),
+                        'owner_app': app.name,
+                        'type': 'Process',
+                        'last_consumed_id': None
+                    }
                 processes_data.append(process_data)
         return processes_data
 
