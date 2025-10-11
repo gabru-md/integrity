@@ -192,7 +192,7 @@
             // --- Computed Properties ---
             const visibleAttributes = computed(() => {
                 // Filter out 'id' and any attributes marked 'edit_enabled'
-                return modelAttributes.value.filter(attr => attr.name !== 'id' && attr.edit_enabled);
+                return modelAttributes.value.filter(attr => attr.name !== 'id' && attr.ui_enabled);
             });
 
             const editableAttributes = computed(() => {

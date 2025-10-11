@@ -117,7 +117,8 @@ class App(Generic[T]):
                 "required": is_required,
                 "edit_enabled": edit_enabled,
                 "widget_enabled": widget_enabled,
-                "download_enabled": download_enabled
+                "download_enabled": download_enabled,
+                "ui_enabled": edit_enabled or widget_enabled
             })
         return attributes
 
