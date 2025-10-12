@@ -33,7 +33,7 @@ def process_data(json_data):
 
 
 shortcuts_app = App('Shortcuts', ShortcutService(), Shortcut, _process_model_data_func=process_data,
-                    get_recent_limit=10, home_template="shortcuts.html")
+                    get_recent_limit=10, home_template="shortcuts.html", widget_enabled=False)
 
 event_service = EventService()
 

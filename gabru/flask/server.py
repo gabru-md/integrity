@@ -164,7 +164,9 @@ class Server:
             app_data = {
                 'name': app.name,
                 'model_class': app.model_class.__name__,
-                'processes': app.processes
+                'processes': app.processes,
+                'widget_enabled': app.widget_enabled,
+                'model_class_attributes': app.model_class_attributes
             }
             apps_data.append(app_data)
         return apps_data
@@ -174,7 +176,8 @@ class Server:
         for app in self.registered_apps:
             app: App = app
             widget_data, model_class_attributes = app.widget_data()
-            widgets_data[app.name.capitalize()] = (widget_data, model_class_attributes)
+            if widget_data:
+                widgets_data[app.name.capitalize()] = (widget_data, model_class_attributes)
         return widgets_data
 
     def process_manager_init(self):

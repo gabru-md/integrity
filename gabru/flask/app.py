@@ -20,7 +20,7 @@ class App(Generic[T]):
     """
 
     def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=5,
-                 widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html"):
+                 widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html", widget_enabled=True):
         self.name = name
         self.log = Logger.get_log(f"{self.name.capitalize()}")
         self.blueprint = Blueprint(self.name, __name__)
@@ -34,6 +34,7 @@ class App(Generic[T]):
         self.setup_home_route()
         self.processes = []
         self.home_template = home_template
+        self.widget_enabled = widget_enabled
 
     def setup_default_routes(self):
 
@@ -93,6 +94,22 @@ class App(Generic[T]):
             else:
                 return jsonify({"error": f"{self.name.capitalize()} not found"})
 
+        @self.blueprint.route('/widget/<action>', methods=['POST'])
+        def toggle_widget(action):
+            if action == 'enable':
+                success = self.set_widget_enabled(True)
+                if success:
+                    return jsonify({"message": f"Widget for {self.name} enabled successfully"}), 200
+                else:
+                    return jsonify({"message": f"Widget for {self.name} was already enabled"}), 200
+            elif action == 'disable':
+                success = self.set_widget_enabled(False)
+                if success:
+                    return jsonify({"message": f"Widget for {self.name} disabled successfully"}), 200
+                else:
+                    return jsonify({"message": f"Widget for {self.name} was already disabled"}), 200
+
+
     def get_model_class_attributes(self):
         clazz = self.model_class
         attributes = []
@@ -145,5 +162,14 @@ class App(Generic[T]):
         return self.processes
 
     def widget_data(self):
+        if not self.widget_enabled:
+            return [], None
         entities = self.service.get_recent_items(self.widget_recent_limit)
         return [e.dict() for e in entities], self.model_class_attributes
+
+    def set_widget_enabled(self, enabled: bool) -> bool:
+        if self.widget_enabled != enabled:
+            self.widget_enabled = enabled
+            self.log.info(f"Widget for '{self.name.capitalize()}' set to {'Enabled' if enabled else 'Disabled'}")
+            return True
+        return False

@@ -20,10 +20,16 @@
                         Data Model
                     </th>
                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
-                        Active Processes
+                        Model Attributes
+                    </th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
+                        Background Processes
+                    </th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
+                        Dashboard Widget
                     </th>
                     <th scope="col" class="relative px-6 py-4">
-                        <span class="sr-only">View</span>
+                        <span class="sr-only">Actions</span>
                     </th>
                 </tr>
             </thead>
@@ -43,17 +49,51 @@
                         </div>
                     </td>
 
+                    <td class="px-6 py-4">
+                        {% if app.model_class_attributes is defined and app.model_class_attributes is not none %}
+                            <div class="text-xs text-slate-400 dark:text-gray-500 max-w-xs truncate">
+                                {% for attr in app.model_class_attributes[:2] %}
+                                    {{ attr.name }} ({{ attr.type }}),
+                                {% endfor %}
+                                {% if app.model_class_attributes | length > 2 %}
+                                    ... ({{ app.model_class_attributes | length }} total)
+                                {% else %}
+                                    ({{ app.model_class_attributes | length }} total)
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span class="text-xs text-slate-400 dark:text-gray-500">N/A</span>
+                        {% endif %}
+                    </td>
+
                     <td class="px-6 py-4 whitespace-nowrap">
                         {% if app.processes | length > 0 %}
-                            <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400">
+                            <a href="/processes" class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-700/30 transition duration-150">
                                 {{ app.processes | length }} Active
-                            </span>
+                            </a>
                         {% else %}
                             <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 text-slate-600 dark:bg-gray-700 dark:text-gray-400">
                                 None
                             </span>
                         {% endif %}
                     </td>
+
+                    {# START OF REVISED DASHBOARD WIDGET CELL #}
+                    <td class="px-6 py-4 whitespace-nowrap flex justify-center">
+                        {% set widget_enabled = app.widget_enabled | default(true) %}
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                value=""
+                                class="sr-only peer"
+                                {% if widget_enabled %}checked{% endif %}
+                                onchange="toggleWidget('{{ app.name | lower }}', this.checked)"
+                            >
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300 sr-only">Toggle Widget</span>
+                        </label>
+                    </td>
+                    {# END OF REVISED DASHBOARD WIDGET CELL #}
 
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <a href="/{{ app.name | lower }}/home" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition duration-150">
@@ -66,4 +106,43 @@
         </table>
     </div>
 </div>
+
+<script>
+    function toggleWidget(appName, isChecked) {
+        // Determine action based on the checkbox state (true for 'enable', false for 'disable')
+        const action = isChecked ? 'enable' : 'disable';
+
+        // Using the API route structure established in the backend change suggestions
+        fetch(`/${appName}/widget/${action}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                // Success, reload the page to show the confirmed state
+                alert(`${appName} widget ${action}d successfully!`);
+                window.location.reload();
+            } else {
+                // If API call fails, revert the checkbox state to maintain visual consistency with the actual state
+                const checkbox = event.target;
+                checkbox.checked = !isChecked;
+
+                response.json().then(data => {
+                    alert(`Failed to ${action} widget for ${appName}: ${data.error || 'Unknown error'}`);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // If network error, revert the checkbox state
+            const checkbox = event.target;
+            checkbox.checked = !isChecked;
+
+            alert(`Network error while trying to ${action} widget for ${appName}.`);
+        });
+    }
+
+</script>
 {% endblock %}
