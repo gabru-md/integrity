@@ -17,6 +17,8 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
   f shortcuts app
 * [x] the shortcuts need to change. With shortcut I can define a specific shortcut and it will be invoked by a get call
   to the shortcut id instead of actual call
+* [ ] cleanup todos
+* [ ] cleanup comments from the code added by ai
 
 ### Libs
 * [ ] get rid of _process_model_data func this can be done in the service
