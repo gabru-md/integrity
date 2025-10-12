@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from gabru.db.service import CRUDService, T
+from gabru.db.service import CRUDService
 from model.contract import Contract
 from typing import List, Optional
 import time
@@ -66,21 +66,21 @@ class ContractService(CRUDService[Contract]):
         return ["id", "name", "description", "frequency", "trigger_event", "conditions",
                 "violation_message", "start_time", "end_time", "last_run_date", "next_run_date"]
 
-    def get_associated_valid_contracts(self, event_type) -> List[Contract]:
+    def get_contracts_linked_to_event_type(self, event_type) -> List[Contract]:
         current_time = int(time.time())
         with self.db.conn.cursor() as cursor:
-            query = "SELECT * FROM contracts WHERE trigger_event = %s and end_time > to_timestamp(%s)"
-            cursor.execute(query, (event_type, current_time))
+            query = "SELECT * FROM contracts WHERE trigger_event = %s and end_time > to_timestamp(%s) and start_time <= to_timestamp(%s)"
+            cursor.execute(query, (event_type, current_time, current_time,))
             rows = cursor.fetchall()
             contracts = [self._to_object(row) for row in rows]
         return contracts
 
     def get_open_contracts(self) -> List[Contract]:
-        """ Get the contracts not associated to trigger_event and are valid"""
+        """ Get the contracts not associated to trigger_event """
         current_time = int(time.time())
         with self.db.conn.cursor() as cursor:
-            query = "SELECT * FROM contracts WHERE trigger_event = null and end_time > to_timestamp(%s)"
-            cursor.execute(query, (current_time,))
+            query = "SELECT * FROM contracts WHERE trigger_event = null and end_time > to_timestamp(%s) and next_run_date <= to_timestamp(%s)"
+            cursor.execute(query, (current_time,current_time,))
             rows = cursor.fetchall()
             contracts = [self._to_object(row) for row in rows]
         return contracts

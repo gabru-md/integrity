@@ -34,6 +34,14 @@ class ContractEvaluator:
 
         return self._evaluate_conditions(contract_dict["conditions"], trigger_event.timestamp)
 
+    def evaluate_open_contract(self, contract_dict: Dict[str, Any]) -> bool:
+        """ evaluates an open contract without a trigger event on current_timestamp """
+        current_time = int(datetime.now().timestamp())
+        self.log.info(
+            f"Checking contract for latest trigger at timestamp: {datetime.fromtimestamp(current_time)}")
+
+        return self._evaluate_conditions(contract_dict["conditions"], current_time)
+
     def _get_required_event_types(self, condition_dict: Dict[str, Any]) -> List[str]:
         required_events = set()
         if "event" in condition_dict:

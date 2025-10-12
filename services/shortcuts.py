@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from gabru.apple.shortcuts import ShortcutBuilder
 from gabru.db.db import DB
-from gabru.db.service import CRUDService, T
+from gabru.db.service import CRUDService
 from model.shortcut import Shortcut
 
 
