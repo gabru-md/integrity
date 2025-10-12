@@ -131,7 +131,7 @@ def run_contract_validation(contract: Contract, trigger_event: Event = None) -> 
     if condition_dict:
         if trigger_event:
             return evaluator.evaluate_contract_on_trigger(condition_dict, trigger_event)
-        return evaluator.evaluate_open_contract(condition_dict)
+        return evaluator.evaluate_open_contract(condition_dict, contract.frequency)
     return False
 
 

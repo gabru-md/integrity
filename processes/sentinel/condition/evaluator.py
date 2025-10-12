@@ -34,13 +34,13 @@ class ContractEvaluator:
 
         return self._evaluate_conditions(contract_dict["conditions"], trigger_event.timestamp)
 
-    def evaluate_open_contract(self, contract_dict: Dict[str, Any]) -> bool:
+    def evaluate_open_contract(self, contract_dict: Dict[str, Any], frequency: str) -> bool:
         """ evaluates an open contract without a trigger event on current_timestamp """
-        current_time = int(datetime.now().timestamp())
+        current_time = int(datetime.now().timestamp() * 1000)
         self.log.info(
-            f"Checking contract for latest trigger at timestamp: {datetime.fromtimestamp(current_time)}")
+            f"Checking contract for latest trigger at timestamp: {datetime.fromtimestamp(current_time / 1000)}")
 
-        return self._evaluate_conditions(contract_dict["conditions"], current_time)
+        return self._evaluate_conditions(contract_dict["conditions"], current_time, frequency=frequency)
 
     def _get_required_event_types(self, condition_dict: Dict[str, Any]) -> List[str]:
         required_events = set()
@@ -53,12 +53,19 @@ class ContractEvaluator:
 
         return list(required_events)
 
-    def _evaluate_conditions(self, condition_dict: Dict[str, Any], trigger_timestamp: int) -> bool:
+    def _evaluate_conditions(self, condition_dict: Dict[str, Any], trigger_timestamp: int,
+                             frequency: str = None) -> bool:
         max_timestamp = trigger_timestamp
         min_timestamp = 0
 
         if "time_window" in condition_dict:
-            time_window_ms = self._convert_to_milliseconds(condition_dict["time_window"], condition_dict["unit"])
+
+            if frequency:
+                self.log.info(f"Open contract detected. Overriding WITHIN window with contract frequency: {frequency}")
+                time_window_ms = self._get_frequency_duration_ms(frequency)
+            else:
+                time_window_ms = self._convert_to_milliseconds(condition_dict["time_window"], condition_dict["unit"])
+
             min_timestamp = trigger_timestamp - time_window_ms
             inner_condition = {k: v for k, v in condition_dict.items() if k not in ["time_window", "unit"]}
             required_event_types = self._get_required_event_types(inner_condition)
@@ -80,7 +87,7 @@ class ContractEvaluator:
 
         elif condition_dict.get("operator") == "AND":
             for term in condition_dict["terms"]:
-                if not self._evaluate_conditions(term, trigger_timestamp):
+                if not self._evaluate_conditions(term, trigger_timestamp, frequency):
                     self.log.info("Contract not met for some trigger event instance.")
                     return False
             self.log.info(
@@ -89,7 +96,7 @@ class ContractEvaluator:
 
         elif condition_dict.get("operator") == "OR":
             for term in condition_dict["terms"]:
-                if self._evaluate_conditions(term, trigger_timestamp):
+                if self._evaluate_conditions(term, trigger_timestamp, frequency):
                     self.log.info(
                         f"Contract conditions met at timestamp: {datetime.fromtimestamp(trigger_timestamp / 1000)}")
                     return True
@@ -100,7 +107,7 @@ class ContractEvaluator:
         elif condition_dict.get("operator") == "NOT":
             # The NOT operator negates the result of its single child term
             term = condition_dict["terms"][0]
-            return not self._evaluate_conditions(term, trigger_timestamp)
+            return not self._evaluate_conditions(term, trigger_timestamp, frequency)
 
         raise ValueError(
             f"Unknown condition type or operator: {condition_dict.get('type') or condition_dict.get('operator')}")
@@ -127,6 +134,25 @@ class ContractEvaluator:
         elif unit == 'h':
             return value * 60 * 60 * 1000
         raise ValueError(f"Unknown time unit: {unit}")
+
+    @staticmethod
+    def _get_frequency_duration_ms(frequency: str) -> int:
+        """Maps the contract frequency string (from sentinel.py) to a duration in milliseconds."""
+        # Using values defined in sentinel.py for consistency
+        seconds_in_hour = 3600
+        seconds_in_day = 86400
+        seconds_in_week = 604800
+        seconds_in_month = 2592000
+
+        if frequency == "hourly":
+            return seconds_in_hour * 1000
+        elif frequency == "daily":
+            return seconds_in_day * 1000
+        elif frequency == "weekly":
+            return seconds_in_week * 1000
+        elif frequency == "monthly":
+            return seconds_in_month * 1000
+        raise ValueError(f"Unknown contract frequency: {frequency}")
 
 
 if __name__ == '__main__':
