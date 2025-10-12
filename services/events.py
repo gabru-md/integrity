@@ -17,7 +17,7 @@ class EventService(CRUDService[Event]):
                             CREATE TABLE IF NOT EXISTS events (
                                 id SERIAL PRIMARY KEY,
                                 event_type VARCHAR(255) NOT NULL,
-                                timestamp BIGINT NOT NULL,
+                                timestamp TIMESTAMP NOT NULL,
                                 description TEXT,
                                 tags TEXT[]
                             )
