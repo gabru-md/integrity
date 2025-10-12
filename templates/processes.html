@@ -28,12 +28,15 @@
                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
                         Progress (Last ID)
                     </th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
+                        Actions
+                    </th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-slate-200 dark:bg-gray-800 dark:divide-gray-700">
                 {% if processes_data | length > 0 %}
                     {% for process in processes_data %}
-                    <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition duration-150">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition duration-150" id="process-row-{{ process.name | replace(' ', '-') }}">
 
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-slate-800 dark:text-gray-100">
@@ -55,11 +58,11 @@
 
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if process.is_alive %}
-                                <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400">
+                                <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400" id="status-{{ process.name | replace(' ', '-') }}">
                                     Running
                                 </span>
                             {% else %}
-                                <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400">
+                                <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400" id="status-{{ process.name | replace(' ', '-') }}">
                                     Stopped
                                 </span>
                             {% endif %}
@@ -71,11 +74,26 @@
                             </div>
                         </td>
 
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                                onclick="controlProcess('{{ process.name }}', 'start')"
+                                class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3"
+                                title="Start Process">
+                                Start
+                            </button>
+                            <button
+                                onclick="controlProcess('{{ process.name }}', 'stop')"
+                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                title="Stop Process">
+                                Stop
+                            </button>
+                        </td>
+
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-slate-500 dark:text-gray-400">
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-gray-400">
                             No active background processes are currently registered.
                         </td>
                     </tr>
@@ -83,5 +101,49 @@
             </tbody>
         </table>
     </div>
+
 </div>
+
+<script>
+    function controlProcess(processName, action) {
+        const endpoint = `/${action}_process/${processName}`;
+        const processSlug = processName.replace(/ /g, '-');
+        const statusElement = document.getElementById(`status-${processSlug}`);
+        const actionButton = event.target;
+
+        if (confirm(`Are you sure you want to ${action} the process: ${processName}?`)) {
+            // Disable button to prevent multiple clicks
+            actionButton.disabled = true;
+
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // CSRF token header might be needed in a real app
+                }
+            })
+            .then(response => {
+                // Re-enable button
+                actionButton.disabled = false;
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.message || `Process ${processName} ${action} request sent.`);
+                // For a real-time UI, you would need to refresh the data or use WebSockets.
+                // A simple page reload is the easiest for a non-real-time update.
+                window.location.reload();
+            })
+            .catch(error => {
+                // Re-enable button
+                actionButton.disabled = false;
+                console.error('Error controlling process:', error);
+                alert(`Failed to ${action} process ${processName}. Check console for details.`);
+            });
+        }
+    }
+</script>
 {% endblock %}

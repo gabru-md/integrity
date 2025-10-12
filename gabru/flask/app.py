@@ -33,7 +33,6 @@ class App(Generic[T]):
         self.setup_default_routes()
         self.setup_home_route()
         self.processes = []
-        self.disabled_processes = set()
         self.home_template = home_template
 
     def setup_default_routes(self):
@@ -137,18 +136,9 @@ class App(Generic[T]):
             return self._process_model_data_func(data)
         return data
 
-    def register_process(self, process: threading.Thread, enabled=True):
+    def register_process(self, process: threading.Thread):
         if process:
-            if not enabled:
-                self.disabled_processes.add(process.name)
             self.processes.append(process)
-
-    def get_enabled_processes(self):
-        enabled_processes = []
-        for process in self.processes:
-            if process.name not in self.disabled_processes:
-                enabled_processes.append(process)
-        return enabled_processes
 
     def get_processes(self):
         return self.processes

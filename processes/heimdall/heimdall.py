@@ -24,7 +24,7 @@ class Heimdall(Process):
         self.classes_to_detect = items_to_detection_classes(items_to_detect)
 
     def process(self):
-        while True:
+        while self.running:
             try:
                 image_data = self.load_image_data()
                 identified_objects_data = self.identify_objects(image_data)

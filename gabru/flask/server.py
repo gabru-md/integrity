@@ -1,11 +1,11 @@
 import threading
 
-from flask import Flask, render_template, redirect, send_from_directory
+from flask import Flask, render_template, redirect, send_from_directory, jsonify
 from gabru.log import Logger
 from gabru.flask.app import App
 import os
 
-from gabru.process import Process
+from gabru.process import Process, ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
 
 from dotenv import load_dotenv
@@ -24,6 +24,7 @@ class Server:
         self.log = Logger.get_log(self.name)
         self.registered_apps = []
         self.process_manager = None
+        self.process_manager_thread = None
 
     def register_app(self, app: App):
         if app.name.lower() in self.not_allowed_app_names:
@@ -63,17 +64,43 @@ class Server:
         def download(filename):
             return send_from_directory(directory=SERVER_FILES_FOLDER, path=filename, as_attachment=True)
 
+        @self.app.route('/start_process/<process_name>', methods=['POST'])
+        def start_process(process_name):
+            if self.process_manager:
+                process_manager: ProcessManager = self.process_manager
+                success = process_manager.start_process(process_name)
+                if success:
+                    return jsonify({"message": f"Process {process_name} started successfully"}), 200
+                else:
+                    return jsonify({"error": f"Failed to start process {process_name}. Check logs for details."}), 500
+            return jsonify({"error": "Process Manager is not initialized"}), 500
+
+        @self.app.route('/stop_process/<process_name>', methods=['POST'])
+        def stop_process(process_name):
+            if self.process_manager:
+                process_manager: ProcessManager = self.process_manager
+                process_manager.stop_process(process_name)
+                return jsonify({"message": f"Process {process_name} stopped successfully"}), 200
+            return jsonify({"error": "Process Manager is not initialized"}), 500
+
     def get_processes_data(self) -> []:
         processes_data = []
+        process_manager: ProcessManager = self.process_manager
+
         for app in self.registered_apps:
             app: App = app
             for process in app.get_processes():
+
+                is_alive = process.is_alive()
+                if process_manager and process.name in process_manager.all_processes_map:
+                    is_alive = process_manager.get_process_status(process.name)
+
                 if isinstance(process, QueueProcessor):
                     process: QueueProcessor = process
                     process_data = {
                         'name': process.q_stats.name,
                         'type': 'QueueProcessor',
-                        'is_alive': process.is_alive(),
+                        'is_alive': is_alive,  # Use the managed status
                         'last_consumed_id': process.q_stats.last_consumed_id,
                         'owner_app': app.name
                     }
@@ -81,13 +108,14 @@ class Server:
                     process: Process = process
                     process_data = {
                         'name': process.name,
-                        'is_alive': process.is_alive(),
+                        'is_alive': is_alive,  # Use the managed status
                         'owner_app': app.name,
                         'type': 'Process',
                         'last_consumed_id': None
                     }
                 processes_data.append(process_data)
         return processes_data
+
 
     def get_apps_data(self) -> []:
         apps_data = []
@@ -101,6 +129,7 @@ class Server:
             apps_data.append(app_data)
         return apps_data
 
+
     def get_widgets_data(self) -> {}:
         widgets_data = {}
         for app in self.registered_apps:
@@ -110,30 +139,28 @@ class Server:
         return widgets_data
 
     def process_manager_init(self):
-        processes_to_start = {}
+        # Now pass ALL processes to the ProcessManager
+        processes_to_manage = {}
         self.log.info(f"Starting process manager for {self.name}")
+
         for app in self.registered_apps:
             app: App = app
-            app_processes = app.get_enabled_processes()
+            # Get ALL processes, not just enabled ones
+            app_processes = app.get_processes()
             if len(app_processes) > 0:
-                processes_to_start[app.name] = app_processes
-        self.log.info(f"Loaded all processes to run")
+                processes_to_manage[app.name] = app_processes
 
-        _process_threads = []
+        self.log.info(f"Loaded all processes to manage")
 
-        for app_name, processes in processes_to_start.items():
-            for process in processes:
-                process: threading.Thread = process
-                self.log.info(f"Starting {process.name} for {app_name}")
-                process.start()
-                _process_threads.append(process)
+        # Pass ALL processes to the ProcessManager
+        self.process_manager = ProcessManager(processes_to_manage=processes_to_manage)
 
-        self.log.info(f"{len(_process_threads)} processes started, waiting for them to end.")
-        for process_thread in _process_threads:
-            process_thread.join()
+        self.process_manager.start()
+        self.process_manager.join()
 
         self.log.info("All processes concluded.")
 
+
     def start_process_manager(self):
-        self.process_manager = threading.Thread(target=self.process_manager_init, daemon=True)
-        self.process_manager.start()
+        self.process_manager_thread = threading.Thread(target=self.process_manager_init, daemon=True)
+        self.process_manager_thread.start()

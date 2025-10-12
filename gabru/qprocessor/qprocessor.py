@@ -22,8 +22,8 @@ class QueueProcessor(Generic[T], Process):
         restarts, it knows where to pick up.
     """
 
-    def __init__(self, name, service: ReadOnlyService[T]):
-        super().__init__(name=name, daemon=True)
+    def __init__(self, name, service: ReadOnlyService[T], enabled=False):
+        super().__init__(name=name, enabled=enabled, daemon=True)
         self.service = service
         self.q_service = QueueService()
         self._set_up_queue_stats()
@@ -55,7 +55,7 @@ class QueueProcessor(Generic[T], Process):
         time.sleep(self.sleep_time_sec)
 
     def process(self):
-        while True:
+        while self.running:
             next_item = self.get_next_item()
             if not next_item:
                 # no item to process, sleep for a bit
