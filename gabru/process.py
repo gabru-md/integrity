@@ -8,7 +8,7 @@ class Process(threading.Thread):
     A Process comes with the name and log
     It is a continuous process where we define
     the sleep and run method and giving away
-    the def process(self)
+    the def process(self):
     """
 
     def __init__(self, name, enabled=False, daemon=True):
@@ -37,7 +37,8 @@ class ProcessManager(Process):
         self.registered_processes_by_app = processes_to_manage
         self.running_process_threads = {}
         self.all_processes_map: dict[str, Process] = {}
-        self.disabled_processes = set()
+        # The disabled_processes set is no longer needed as we use Process.enabled and Process.running
+        # self.disabled_processes = set()
 
         for app_name, processes in processes_to_manage.items():
             for process in processes:
@@ -45,37 +46,78 @@ class ProcessManager(Process):
                 self.all_processes_map[process.name] = process
 
     def process(self):
-        self.start_all_processes()
+        self.start_all_processes_on_init()
 
     def get_process_status(self, process_name: str) -> bool:
-        """ Returns True if the process is currently running AND not disabled. """
-        # A process is considered "alive" only if the thread is running AND it's not explicitly disabled
-        is_thread_alive = process_name in self.running_process_threads and self.running_process_threads[
-            process_name].is_alive()
-        is_disabled = process_name in self.disabled_processes
+        """ Returns True if the process is currently enabled AND its thread is alive. """
+        process = self.all_processes_map.get(process_name)
+        if not process or not process.enabled:
+            return False  # Not alive if not enabled
 
-        return is_thread_alive and not is_disabled
+        # The thread object in running_process_threads might be an old, completed thread.
+        # We check the thread's actual status.
+        return process.is_alive() and process.running
 
-    def start_all_processes(self):
+    def start_all_processes_on_init(self):
         for app_name, processes in self.registered_processes_by_app.items():
             for process in processes:
                 # Start if enabled AND not already running
-                if process.enabled:
-                    if process.name not in self.disabled_processes and process.name not in self.running_process_threads:
-                        self.log.info(f"Starting {process.name} for {app_name}")
-                        process.start()
-                        self.running_process_threads[process.name] = process
+                if process.enabled and process.name not in self.running_process_threads:
+                    self.log.info(f"Starting {process.name} for {app_name}")
+                    # Ensure running is True before start
+                    process.running = True
+                    process.start()
+                    self.running_process_threads[process.name] = process
 
-    def start_process(self, process_name: str):
+    def enable_process(self, process_name: str):
         if process_name not in self.all_processes_map:
-            self.log.error(f"Attempted to start unknown process: {process_name}")
+            self.log.error(f"Attempted to enable unknown process: {process_name}")
             return False
 
         process_object = self.all_processes_map[process_name]
 
-        self.disabled_processes.discard(process_name)
+        if process_object.enabled:
+            self.log.warning(f"Process {process_name} is already enabled.")
+            return True
 
-        if process_name in self.running_process_threads and process_object.is_alive() and process_object.running:
+        # Set the persistent state to enabled
+        process_object.enabled = True
+        self.log.info(f"Process {process_name} is now enabled.")
+        return True
+
+    def disable_process(self, process_name: str):
+        if process_name not in self.all_processes_map:
+            self.log.error(f"Attempted to disable unknown process: {process_name}")
+            return False
+
+        process_object = self.all_processes_map[process_name]
+
+        if not process_object.enabled:
+            self.log.warning(f"Process {process_name} is already disabled.")
+            return True
+
+        # Stop the process first if it is running
+        if process_object.is_alive():
+            self._stop_process_thread(process_name, process_object)
+
+        # Set the persistent state to disabled
+        process_object.enabled = False
+        self.log.info(f"Process {process_name} is now disabled.")
+        return True
+
+    # Renaming start_process to run_process to reflect runtime control under an 'enabled' state
+    def run_process(self, process_name: str):
+        if process_name not in self.all_processes_map:
+            self.log.error(f"Attempted to run unknown process: {process_name}")
+            return False
+
+        process_object = self.all_processes_map[process_name]
+
+        if not process_object.enabled:
+            self.log.error(f"Cannot run process {process_name}. It must be enabled first.")
+            return False
+
+        if process_object.is_alive() and process_object.running:
             self.log.warning(f"Process {process_name} is already running.")
             return True
 
@@ -87,7 +129,7 @@ class ProcessManager(Process):
             self.log.info(f"Process {process_name} started successfully.")
             return True
         except RuntimeError as e:
-            self.disabled_processes.add(process_name)
+            # This happens if a thread has already completed and cannot be restarted.
             self.log.error(f"Failed to start {process_name}: {e}. (Thread already completed and cannot be restarted.)")
             return False
 
@@ -99,25 +141,30 @@ class ProcessManager(Process):
         if process_name in self.running_process_threads:
             del self.running_process_threads[process_name]
 
-    def stop_process(self, process_name: str):
+    # Renaming stop_process to pause_process to reflect runtime control under an 'enabled' state
+    def pause_process(self, process_name: str):
         if process_name not in self.all_processes_map:
-            self.log.error(f"Attempted to stop unknown process: {process_name}")
+            self.log.error(f"Attempted to pause unknown process: {process_name}")
             return
 
-        # Critical: Add to disabled set
-        self.disabled_processes.add(process_name)
+        process_object = self.all_processes_map[process_name]
+
+        if not process_object.enabled:
+            self.log.error(f"Cannot pause process {process_name}. It must be enabled first.")
+            return
 
         # Stop the running thread if it exists
         process_thread = self.running_process_threads.get(process_name)
         if process_thread:
             self._stop_process_thread(process_name, process_thread)
         else:
-            self.log.warning(f"Process {process_name} was already marked as stopped/not running.")
+            self.log.warning(f"Process {process_name} was already paused/not running.")
 
     def stop_all_processes(self):
-        # Stop all running threads and mark them as disabled
+        # Stop all running threads
         for process_name, process_thread in list(self.running_process_threads.items()):
-            self.disabled_processes.add(process_name)
             self._stop_process_thread(process_name, process_thread)
+            # Ensure the state is still 'enabled' but paused
+            process_thread.enabled = True
 
         self.running_process_threads.clear()

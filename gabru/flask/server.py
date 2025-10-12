@@ -5,7 +5,7 @@ from gabru.log import Logger
 from gabru.flask.app import App
 import os
 
-from gabru.process import Process, ProcessManager
+from gabru.process import Process, ProcessManager  # Citation: gabru.process is in process.py
 from gabru.qprocessor.qprocessor import QueueProcessor
 
 from dotenv import load_dotenv
@@ -64,22 +64,45 @@ class Server:
         def download(filename):
             return send_from_directory(directory=SERVER_FILES_FOLDER, path=filename, as_attachment=True)
 
+        @self.app.route('/enable_process/<process_name>', methods=['POST'])
+        def enable_process(process_name):
+            if self.process_manager:
+                process_manager: ProcessManager = self.process_manager
+                success = process_manager.enable_process(process_name)
+                if success:
+                    return jsonify({"message": f"Process {process_name} enabled successfully"}), 200
+                else:
+                    return jsonify({"error": f"Failed to enable process {process_name}. Check logs for details."}), 500
+            return jsonify({"error": "Process Manager is not initialized"}), 500
+
+        @self.app.route('/disable_process/<process_name>', methods=['POST'])
+        def disable_process(process_name):
+            if self.process_manager:
+                process_manager: ProcessManager = self.process_manager
+                success = process_manager.disable_process(process_name)
+                if success:
+                    return jsonify({"message": f"Process {process_name} disabled successfully"}), 200
+                else:
+                    return jsonify({"error": f"Failed to disable process {process_name}. Check logs for details."}), 500
+            return jsonify({"error": "Process Manager is not initialized"}), 500
+
         @self.app.route('/start_process/<process_name>', methods=['POST'])
         def start_process(process_name):
             if self.process_manager:
                 process_manager: ProcessManager = self.process_manager
-                success = process_manager.start_process(process_name)
+                success = process_manager.run_process(process_name)
                 if success:
                     return jsonify({"message": f"Process {process_name} started successfully"}), 200
                 else:
-                    return jsonify({"error": f"Failed to start process {process_name}. Check logs for details."}), 500
+                    return jsonify({
+                                       "error": f"Failed to start process {process_name}. It might be disabled or already running."}), 500
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
         @self.app.route('/stop_process/<process_name>', methods=['POST'])
         def stop_process(process_name):
             if self.process_manager:
                 process_manager: ProcessManager = self.process_manager
-                process_manager.stop_process(process_name)
+                process_manager.pause_process(process_name)
                 return jsonify({"message": f"Process {process_name} stopped successfully"}), 200
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
@@ -92,6 +115,8 @@ class Server:
             for process in app.get_processes():
 
                 is_alive = process.is_alive()
+                is_enabled = process.enabled
+
                 if process_manager and process.name in process_manager.all_processes_map:
                     is_alive = process_manager.get_process_status(process.name)
 
@@ -100,7 +125,8 @@ class Server:
                     process_data = {
                         'name': process.q_stats.name,
                         'type': 'QueueProcessor',
-                        'is_alive': is_alive,  # Use the managed status
+                        'is_alive': is_alive,
+                        'is_enabled': is_enabled,  # Pass enabled state to UI
                         'last_consumed_id': process.q_stats.last_consumed_id,
                         'owner_app': app.name
                     }
@@ -108,14 +134,14 @@ class Server:
                     process: Process = process
                     process_data = {
                         'name': process.name,
-                        'is_alive': is_alive,  # Use the managed status
+                        'is_alive': is_alive,
+                        'is_enabled': is_enabled,  # Pass enabled state to UI
                         'owner_app': app.name,
                         'type': 'Process',
                         'last_consumed_id': None
                     }
                 processes_data.append(process_data)
         return processes_data
-
 
     def get_apps_data(self) -> []:
         apps_data = []
@@ -128,7 +154,6 @@ class Server:
             }
             apps_data.append(app_data)
         return apps_data
-
 
     def get_widgets_data(self) -> {}:
         widgets_data = {}
@@ -159,7 +184,6 @@ class Server:
         self.process_manager.join()
 
         self.log.info("All processes concluded.")
-
 
     def start_process_manager(self):
         self.process_manager_thread = threading.Thread(target=self.process_manager_init, daemon=True)

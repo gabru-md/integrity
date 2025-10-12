@@ -6,11 +6,16 @@
 
     <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
         <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100">Background Processes</h1>
-        <p class="text-slate-500 mt-1 dark:text-gray-400">Real-time status and progress of all registered background workers and queue processors.</p>
+        <p class="text-slate-500 mt-1 dark:text-gray-400">A process must be Enabled using the toggle before its runtime state can be controlled via Start/Stop.</p>
     </header>
 
     <div class="shadow-xl overflow-hidden rounded-2xl border border-slate-100 dark:border-gray-700/50">
-        <table class="min-w-full divide-y divide-slate-200 dark:divide-gray-700">
+
+        <div class="p-6 bg-white dark:bg-gray-800 border-b border-slate-100 dark:border-gray-700/50">
+            <input type="text" id="processSearchInput" onkeyup="filterProcesses()" placeholder="Search processes by name, app, or type..."
+                   class="w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+        </div>
+        <table class="min-w-full divide-y divide-slate-200 dark:divide-gray-700" id="processesTable">
             <thead class="bg-slate-50 dark:bg-gray-700/50">
                 <tr>
                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
@@ -23,13 +28,16 @@
                         Type
                     </th>
                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
+                        Running
+                    </th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
                         Status
                     </th>
                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
-                        Progress (Last ID)
+                        Action
                     </th>
                     <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider dark:text-gray-300">
-                        Actions
+                        Progress (Last ID)
                     </th>
                 </tr>
             </thead>
@@ -57,15 +65,62 @@
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap">
+                            {# Running/Stopped Status #}
                             {% if process.is_alive %}
-                                <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400" id="status-{{ process.name | replace(' ', '-') }}">
+                                <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400" id="status-running-{{ process.name | replace(' ', '-') }}">
                                     Running
                                 </span>
                             {% else %}
-                                <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400" id="status-{{ process.name | replace(' ', '-') }}">
+                                <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 text-slate-800 dark:bg-slate-800/30 dark:text-slate-400" id="status-running-{{ process.name | replace(' ', '-') }}">
                                     Stopped
                                 </span>
                             {% endif %}
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            {# Enable/Disable Toggle Column #}
+                            {% if process.is_enabled %}
+                                <button
+                                    onclick="controlProcess('{{ process.name }}', 'disable')"
+                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-bold"
+                                    title="Click to Disable Process (This will also stop it if running)">
+                                    Disable
+                                </button>
+                            {% else %}
+                                <button
+                                    onclick="controlProcess('{{ process.name }}', 'enable')"
+                                    class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 font-bold"
+                                    title="Click to Enable Process">
+                                    Enable
+                                </button>
+                            {% endif %}
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            {# Start/Stop Column (Greyed out if disabled) #}
+                            <div class="space-x-2
+                                {% if not process.is_enabled %}
+                                    opacity-50 cursor-not-allowed
+                                {% endif %}">
+                                <button
+                                    onclick="controlProcess('{{ process.name }}', 'start')"
+                                    class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300
+                                    {% if not process.is_enabled %}
+                                        pointer-events-none
+                                    {% endif %}"
+                                    title="Start Process (Only available when Enabled)">
+                                    Start
+                                </button>
+                                <button
+                                    onclick="controlProcess('{{ process.name }}', 'stop')"
+                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300
+                                    {% if not process.is_enabled %}
+                                        pointer-events-none
+                                    {% endif %}"
+                                    title="Stop Process (Only available when Enabled)">
+                                    Stop
+                                </button>
+                            </div>
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -74,44 +129,42 @@
                             </div>
                         </td>
 
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                                onclick="controlProcess('{{ process.name }}', 'start')"
-                                class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3"
-                                title="Start Process">
-                                Start
-                            </button>
-                            <button
-                                onclick="controlProcess('{{ process.name }}', 'stop')"
-                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                title="Stop Process">
-                                Stop
-                            </button>
-                        </td>
-
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-gray-400">
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500 dark:text-gray-400" id="no-processes-message">
                             No active background processes are currently registered.
                         </td>
                     </tr>
                 {% endif %}
             </tbody>
         </table>
+        <div id="no-results-message" class="hidden px-6 py-12 text-center text-slate-500 dark:text-gray-400 border-t border-slate-100 dark:border-gray-700/50">
+            No processes match your search query.
+        </div>
     </div>
 
 </div>
 
 <script>
     function controlProcess(processName, action) {
+        // action will be 'enable', 'disable', 'start', or 'stop'
         const endpoint = `/${action}_process/${processName}`;
-        const processSlug = processName.replace(/ /g, '-');
-        const statusElement = document.getElementById(`status-${processSlug}`);
         const actionButton = event.target;
+        const actionVerb = action.charAt(0).toUpperCase() + action.slice(1); // Enable, Disable, Start, Stop
 
-        if (confirm(`Are you sure you want to ${action} the process: ${processName}?`)) {
+        // Confirmation prompt tailored to the action
+        let confirmMessage;
+        if (action === 'disable') {
+            confirmMessage = `Are you sure you want to DISABLE the process: ${processName}? This will also stop it if running.`;
+        } else if (action === 'enable') {
+            confirmMessage = `Are you sure you want to ENABLE the process: ${processName}?`;
+        } else {
+            confirmMessage = `Are you sure you want to ${action} the process: ${processName}?`;
+        }
+
+        if (confirm(confirmMessage)) {
             // Disable button to prevent multiple clicks
             actionButton.disabled = true;
 
@@ -127,22 +180,70 @@
                 actionButton.disabled = false;
 
                 if (!response.ok) {
-                    throw new Error('Network response was not ok.');
+                    // Check if response has JSON error message
+                    return response.json().then(err => {
+                        throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+                    });
                 }
                 return response.json();
             })
             .then(data => {
-                alert(data.message || `Process ${processName} ${action} request sent.`);
-                // For a real-time UI, you would need to refresh the data or use WebSockets.
-                // A simple page reload is the easiest for a non-real-time update.
+                alert(data.message || `Process ${processName} ${actionVerb} request sent.`);
+                // Refresh the page to show new state
                 window.location.reload();
             })
             .catch(error => {
                 // Re-enable button
                 actionButton.disabled = false;
                 console.error('Error controlling process:', error);
-                alert(`Failed to ${action} process ${processName}. Check console for details.`);
+                alert(`Failed to ${action} process ${processName}. Check console for details. Error: ${error.message}`);
             });
+        }
+    }
+
+    // New function to filter the table based on search input
+    function filterProcesses() {
+        const input = document.getElementById("processSearchInput");
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById("processesTable");
+        const tbody = table.querySelector("tbody");
+        const tr = tbody.getElementsByTagName("tr");
+        let found = false;
+
+        // Hide the initial "No active processes" message if it exists
+        const initialNoProcesses = document.getElementById("no-processes-message");
+        if (initialNoProcesses) {
+            initialNoProcesses.style.display = "none";
+        }
+
+        const noResults = document.getElementById("no-results-message");
+
+        // Loop through all table rows, and hide those that don't match the search query
+        for (let i = 0; i < tr.length; i++) {
+            let rowText = "";
+            const td = tr[i].getElementsByTagName("td");
+
+            // Only search the first three columns: Name, App, Type (indices 0, 1, 2)
+            for (let j = 0; j < 3; j++) {
+                if (td[j]) {
+                    // Use textContent to get the full, unformatted text
+                    rowText += td[j].textContent.toLowerCase() + " ";
+                }
+            }
+
+            if (rowText.includes(filter)) {
+                tr[i].style.display = "";
+                found = true;
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+
+        // Show/Hide the "No results" message
+        if (found || tr.length === 0) {
+            noResults.classList.add("hidden");
+        } else {
+            noResults.classList.remove("hidden");
         }
     }
 </script>
