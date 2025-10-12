@@ -17,11 +17,11 @@ class Heimdall(Process):
         Heimdall looks from the sky and keeps track of where everyone is.
     """
 
-    def __init__(self, items_to_detect):
+    def __init__(self, **kwargs):
         super().__init__(name='Heimdall', daemon=True)
         self.event_service = EventService()
         self.sleep_time_sec = 5
-        self.classes_to_detect = items_to_detection_classes(items_to_detect)
+        self.classes_to_detect = items_to_detection_classes(items_to_detect=['cat', 'person'])
 
     def process(self):
         while self.running:

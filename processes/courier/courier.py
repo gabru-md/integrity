@@ -14,7 +14,7 @@ class Courier(QueueProcessor[Event]):
     Courier class sending emails via SendGrid API
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__("Courier", EventService())
         self.notification_service = NotificationService()
 

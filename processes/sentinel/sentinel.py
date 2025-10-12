@@ -15,7 +15,7 @@ class Sentinel(QueueProcessor[Event]):
     def __init__(self, **kwargs):
         self.event_service = EventService()
 
-        super().__init__(name=self.__class__.__name__, service=self.event_service, **kwargs)
+        super().__init__(service=self.event_service, **kwargs)
 
         self.excluded_event_types = []
         self.contract_service = ContractService()

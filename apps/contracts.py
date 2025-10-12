@@ -5,4 +5,4 @@ from services.contracts import ContractService
 
 contracts_app = App('Contracts', ContractService(), Contract)
 
-contracts_app.register_process(Sentinel(enabled=True))
+contracts_app.register_process(Sentinel, enabled=True)

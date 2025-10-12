@@ -20,7 +20,7 @@ def process_data(json_data):
 events_app = App('Events', EventService(), Event, _process_model_data_func=process_data, get_recent_limit=15)
 
 # disabled until I figure a reporting mechanism otherwise emails exhaust
-events_app.register_process(Courier())
+events_app.register_process(Courier, enabled=False)
 
 # disabled until I set up the esp32cams
-events_app.register_process(Heimdall(items_to_detect=['cat', 'person']))
+events_app.register_process(Heimdall, enabled=False)

@@ -5,7 +5,7 @@ from gabru.log import Logger
 from gabru.flask.app import App
 import os
 
-from gabru.process import Process, ProcessManager  # Citation: gabru.process is in process.py
+from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
 
 from dotenv import load_dotenv
@@ -106,41 +106,55 @@ class Server:
                 return jsonify({"message": f"Process {process_name} stopped successfully"}), 200
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
-    def get_processes_data(self) -> []:
+    def get_processes_data(self) -> list:
         processes_data = []
         process_manager: ProcessManager = self.process_manager
 
         for app in self.registered_apps:
             app: App = app
-            for process in app.get_processes():
 
-                is_alive = process.is_alive()
-                is_enabled = process.enabled
+            for blueprint in app.get_processes():
 
-                if process_manager and process.name in process_manager.all_processes_map:
-                    is_alive = process_manager.get_process_status(process.name)
+                # Extract the process class and kwargs from the blueprint
+                process_class, args, kwargs = blueprint
 
-                if isinstance(process, QueueProcessor):
-                    process: QueueProcessor = process
+                process_name = kwargs.get('name', process_class.__name__)
+                is_alive = False
+                is_enabled = kwargs.get('enabled', False)
+
+                # Get the current INSTANCE from the ProcessManager's map
+                process_instance = process_manager.all_processes_map.get(process_name) if process_manager else None
+
+                # retrieve actual live status and enabled state from the instance/manager
+                if process_manager and process_instance:
+                    is_alive = process_manager.get_process_status(process_name)
+                    is_enabled = process_instance.enabled
+
+                # Check the *class* type, not the instance (which might not exist)
+                if issubclass(process_class, QueueProcessor):  # Assuming QueueProcessor is the class name
+
+                    last_consumed_id = process_instance.q_stats.last_consumed_id if process_instance and hasattr(
+                        process_instance, 'q_stats') else None
+
                     process_data = {
-                        'name': process.q_stats.name,
+                        'name': process_name,
                         'type': 'QueueProcessor',
                         'is_alive': is_alive,
-                        'is_enabled': is_enabled,  # Pass enabled state to UI
-                        'last_consumed_id': process.q_stats.last_consumed_id,
+                        'is_enabled': is_enabled,
+                        'last_consumed_id': last_consumed_id,
                         'owner_app': app.name
                     }
                 else:
-                    process: Process = process
                     process_data = {
-                        'name': process.name,
+                        'name': process_name,
                         'is_alive': is_alive,
-                        'is_enabled': is_enabled,  # Pass enabled state to UI
+                        'is_enabled': is_enabled,
                         'owner_app': app.name,
                         'type': 'Process',
                         'last_consumed_id': None
                     }
                 processes_data.append(process_data)
+
         return processes_data
 
     def get_apps_data(self) -> []:

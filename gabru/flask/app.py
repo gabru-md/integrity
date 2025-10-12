@@ -136,9 +136,10 @@ class App(Generic[T]):
             return self._process_model_data_func(data)
         return data
 
-    def register_process(self, process: threading.Thread):
-        if process:
-            self.processes.append(process)
+    def register_process(self, process_class: type, *args, **kwargs):
+        """Registers a process class and its arguments for later instantiation."""
+        if process_class:
+            self.processes.append((process_class, args, kwargs))
 
     def get_processes(self):
         return self.processes
