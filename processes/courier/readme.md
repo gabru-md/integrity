@@ -314,4 +314,4 @@ CREATE INDEX idx_notifications_created_at ON notifications(created_at);
 
 ## License
 
-See main project [license](../../license.md).
+See main project [license](../../license.md)
