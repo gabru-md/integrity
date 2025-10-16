@@ -19,6 +19,10 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
   to the shortcut id instead of actual call
 * [ ] cleanup todos
 * [ ] cleanup comments from the code added by ai
+* [ ] setup cameras
+* [ ] setup beacons
+* [ ] code for indoor positioning system
+* [ ] Add logs or some visualizer for processes on ui
 
 ### Libs
 * [ ] get rid of _process_model_data func this can be done in the service
@@ -29,6 +33,7 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 * [X] ~~Add queue db related info to .env~~
 * [X] ~~Add docs about qprocessor.py~~
 * [ ] Add readme for .env variables
+* [ ] add dependency injection to manage many db objects
 
 ### Database
 
