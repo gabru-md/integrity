@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from apps.contracts import contracts_app
-from apps.device import devices_app
+from apps.devices import devices_app
 from apps.events import events_app
 from apps.shortcuts import shortcuts_app
 from apps.thoughts import thoughts_app

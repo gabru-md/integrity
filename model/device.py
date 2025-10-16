@@ -8,7 +8,6 @@ from gabru.flask.model import WidgetUIModel
 class Device(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
     name: str = Field(widget_enabled=True)
-    enabled: bool = Field(default=None, widget_enabled=True)
     location: str = Field(widget_enabled=True)
     type: str = Field(widget_enabled=True)
 
@@ -21,3 +20,4 @@ class Device(WidgetUIModel):
     url: str = Field(default=None, widget_enabled=False)
     config_json: Optional[str] = Field(default=None, widget_enabled=False)
     status_json: Optional[str] = Field(default=None, widget_enabled=False)
+    enabled: bool = Field(default=None, widget_enabled=True)

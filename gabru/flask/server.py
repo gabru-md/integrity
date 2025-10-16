@@ -60,6 +60,10 @@ class Server:
         def shortcuts():
             return redirect('shortcuts/home'), 302
 
+        @self.app.route('/devices')
+        def devices():
+            return redirect('devices/home'), 302
+
         @self.app.route('/download/<filename>')
         def download(filename):
             return send_from_directory(directory=SERVER_FILES_FOLDER, path=filename, as_attachment=True)
