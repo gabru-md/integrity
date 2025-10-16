@@ -56,3 +56,15 @@ class DB:
         """Closes the database connection."""
         if self.conn:
             self.conn.close()
+
+    def __del__(self):
+        """
+        Called by the garbage collector when the object is destroyed.
+        """
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()

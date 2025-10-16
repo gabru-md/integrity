@@ -5,8 +5,10 @@ from typing import List
 from ultralytics import YOLO
 
 from gabru.process import Process
+from model.device import Device
 from model.event import Event
 from processes.heimdall.model import IdentifiedObject
+from services.devices import DeviceService
 from services.events import EventService
 
 model = YOLO("yolo11n.pt")
@@ -22,27 +24,35 @@ class Heimdall(Process):
         self.event_service = EventService()
         self.sleep_time_sec = 5
         self.classes_to_detect = items_to_detection_classes(items_to_detect=['cat', 'person'])
+        self.device_service = DeviceService()  # I can implement a app context to manage db conns
+        self.devices = self.device_service.get_devices_enabled_for(self.name)
 
     def process(self):
         while self.running:
             try:
-                image_data = self.load_image_data()
-                identified_objects_data = self.identify_objects(image_data)
-                if identified_objects_data:
-                    self.track_identified_objects(identified_objects_data)
+                if len(self.devices) == 0:
+                    self.log.info("No devices are configured, exiting.")
+                    # breaks from the loop and the process dies
+                    break
+                for device in self.devices:
+                    image_data = self.load_image_data(device)
+                    identified_objects_data = self.identify_objects(image_data)
+                    if identified_objects_data:
+                        self.track_identified_objects(device, identified_objects_data)
             except Exception as e:
                 self.log.exception(e)
 
             self.sleep()
 
-    def load_image_data(self) -> str:
+    @staticmethod
+    def load_image_data(device: Device) -> str:
         """
             load image from the camera module
             this can also simply return the URL
             from where the .jpg can be sourced
             e.g.: http://192.168.A.B:PORT/video/stream.jpg
         """
-        pass
+        return device.url
 
     def identify_objects(self, image_data) -> List[IdentifiedObject]:
         """ identify objects data from the image_data """
@@ -60,10 +70,11 @@ class Heimdall(Process):
 
         return identified_objects
 
-    def track_identified_objects(self, identified_objects_data):
+    def track_identified_objects(self, device, identified_objects_data):
         """ create events in the events db for identified objects """
         for identified_object in identified_objects_data:
             identified_object: IdentifiedObject = identified_object
+            identified_object.device_name = device.name
             tracker_event_dict = create_tracker_event_dict(identified_object)
             # queue an event for tracking
             self.event_service.create(Event(**tracker_event_dict))
@@ -74,7 +85,7 @@ class Heimdall(Process):
 
 
 def create_tracker_event_dict(identified_object: IdentifiedObject):
-    description = f"{identified_object.name} identified in {identified_object.location}"
+    description = f"{identified_object.name} identified in {identified_object.location} by {identified_object.device_name}"
     return {
         "event_type": f"tracking:{identified_object.name}",
         "timestamp": int(datetime.now().timestamp()),

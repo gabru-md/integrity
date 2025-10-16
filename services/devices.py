@@ -27,7 +27,7 @@ class DeviceService(CRUDService[Device]):
                         coordinates VARCHAR(255),
                         url VARCHAR(500),
                         config_json TEXT, 
-                        status_json TEXT 
+                        authorized_apps TEXT 
                     )
                 """)
                 self.db.conn.commit()
@@ -43,7 +43,7 @@ class DeviceService(CRUDService[Device]):
             device.coordinates,
             device.url,
             device.config_json,
-            device.status_json
+            device.authorized_apps
         )
 
     def _to_object(self, row: tuple) -> Device:
@@ -59,7 +59,7 @@ class DeviceService(CRUDService[Device]):
             "coordinates": row[7],
             "url": row[8],
             "config_json": row[9],
-            "status_json": row[10]
+            "authorized_apps": row[10]
         }
         return Device(**device_dict)
 
@@ -67,29 +67,36 @@ class DeviceService(CRUDService[Device]):
         return [
             "name", "enabled", "location", "type",
             "vendor", "model", "coordinates", "url",
-            "config_json", "status_json"
+            "config_json", "authorized_apps"
         ]
 
     def _get_columns_for_update(self) -> List[str]:
         return [
             "name", "enabled", "location", "type",
             "vendor", "model", "coordinates", "url",
-            "config_json", "status_json"
+            "config_json", "authorized_apps"
         ]
 
     def _get_columns_for_select(self) -> List[str]:
         return [
             "id", "name", "enabled", "location", "type",
             "vendor", "model", "coordinates", "url",
-            "config_json", "status_json"
+            "config_json", "authorized_apps"
         ]
 
     # Add specific methods here, e.g., get_enabled_devices_by_location
     def get_devices_by_type(self, device_type: str) -> List[Device]:
-        devices = []
         with self.db.conn.cursor() as cursor:
             query = "SELECT * FROM device WHERE device_type = %s;"
             cursor.execute(query, (device_type,))
+            rows = cursor.fetchall()
+            devices = [self._to_object(row) for row in rows]
+        return devices
+
+    def get_devices_enabled_for(self, key):
+        with self.db.conn.cursor() as cursor:
+            query = "SELECT * FROM devices WHERE  enabled = TRUE AND %s = ANY(string_to_array(authorized_apps, ','))"
+            cursor.execute(query, (key,))
             rows = cursor.fetchall()
             devices = [self._to_object(row) for row in rows]
         return devices

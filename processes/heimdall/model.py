@@ -5,7 +5,8 @@ class IdentifiedObject:
         from UI then adapt it into the UIModel and take hemidall into own app
     """
 
-    def __init__(self, name=None, location=None, tags=None):
+    def __init__(self, name=None, location=None, tags=None, device_name=None):
         self.name = name
         self.location = location
         self.tags = tags if tags else []
+        self.device_name = device_name

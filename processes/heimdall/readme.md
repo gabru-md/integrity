@@ -33,11 +33,13 @@ Heimdall runs as a continuous background process that captures images from a cam
 ### Detection Loop
 
 Heimdall runs continuously every 5 seconds (processes/heimdall/heimdall.py:36):
-1. Load image from camera stream
-2. Run YOLO11 object detection
-3. Filter detected objects by configured classes
-4. Create tracking events for identified objects
-5. Sleep and repeat
+1. Load all devices authorized for `Heimdall`
+2. Load image from each device's camera stream
+3. Run object detection (YOLO11) on the image to get object coordinates and classes (person, cat)
+4. For each detected object:
+   - Create an **IdentifiedObject** instance
+   - Dispatch a tracking event to the event service
+5. Logs what was detected or sleeps for 5 seconds
 
 ### Object Identification
 
@@ -54,24 +56,21 @@ When objects are detected, tracking events are created:
 ```python
 # Example tracking event
 {
-    "event_type": "tracking:person",
-    "timestamp": 1736953200,
-    "description": "person identified in apartment",
-    "tags": ["heimdall", "tracking"]
+  "event_type": "tracking:person",
+  "timestamp": 1737037810,
+  "description": "person identified in apartment by KitchenCam",
+  "tags": ["heimdall", "tracking"]
 }
 ```
 
-### Camera Integration
-
-The `load_image_data()` method needs to be implemented for your specific camera (processes/heimdall/heimdall.py:38-45):
+### Load Image Data
 
 ```python
-def load_image_data(self) -> str:
-    """
-    Return camera URL or image path
-    e.g.: http://192.168.1.100:8080/video/stream.jpg
-    """
-    pass
+# Loads image data from a device, such as a camera stream (processes/heimdall/heimdall.py:46)
+def load_image_data(self, device):
+    """ load image data from a device, such as a camera stream """
+    # Current simple implementation uses the device's URL as the image source
+    return device.url
 ```
 
 ## Configuration
@@ -95,6 +94,12 @@ EVENTS_POSTGRES_USER=postgres
 EVENTS_POSTGRES_PASSWORD=yourpassword
 EVENTS_POSTGRES_HOST=localhost
 EVENTS_POSTGRES_PORT=5432
+
+RASBHARI_POSTGRES_DB=rasbhari
+RASBHARI_POSTGRES_USER=postgres
+RASBHARI_POSTGRES_PASSWORD=yourpassword
+RASBHARI_POSTGRES_HOST=localhost
+RASBHARI_POSTGRES_PORT=5432
 ```
 
 ### Detection Settings
@@ -126,7 +131,7 @@ CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     event_type VARCHAR(255) NOT NULL,  -- e.g., "tracking:person"
     timestamp TIMESTAMP NOT NULL,
-    description TEXT,                  -- e.g., "person identified in apartment"
+    description TEXT,                  -- e.g., "person identified in apartment by KitchenCam"
     tags TEXT[]                        -- ["heimdall", "tracking"]
 );
 ```
@@ -141,9 +146,9 @@ Complete the camera integration:
 from processes.heimdall.heimdall import Heimdall
 
 class MyHeimdall(Heimdall):
-    def load_image_data(self) -> str:
+    def load_image_data(self, device) -> str:
         # Return camera stream URL
-        return "http://192.168.1.100:8080/video/stream.jpg"
+        return device.url
 ```
 
 ### Custom Detection Classes
@@ -180,7 +185,7 @@ WHERE event_type = 'tracking:person'
 ```python
 from picamera2 import Picamera2
 
-def load_image_data(self) -> str:
+def load_image_data(self, device) -> str:
     picam2 = Picamera2()
     picam2.start()
     return picam2.capture_file("temp.jpg")
@@ -189,7 +194,7 @@ def load_image_data(self) -> str:
 ### IP Camera / RTSP Stream
 
 ```python
-def load_image_data(self) -> str:
+def load_image_data(self, device) -> str:
     return "http://192.168.1.100:8080/video/stream.jpg"
 ```
 
@@ -198,7 +203,7 @@ def load_image_data(self) -> str:
 ```python
 import cv2
 
-def load_image_data(self):
+def load_image_data(self, device):
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
     cv2.imwrite("temp.jpg", frame)

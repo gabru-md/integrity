@@ -19,5 +19,5 @@ class Device(WidgetUIModel):
     # this is used incase there is url to access something
     url: str = Field(default=None, widget_enabled=False)
     config_json: Optional[str] = Field(default=None, widget_enabled=False)
-    status_json: Optional[str] = Field(default=None, widget_enabled=False)
+    authorized_apps: Optional[str] = Field(default=None, widget_enabled=False)
     enabled: bool = Field(default=None, widget_enabled=True)
