@@ -74,10 +74,13 @@ class Heimdall(Process):
         """ create events in the events db for identified objects """
         for identified_object in identified_objects_data:
             identified_object: IdentifiedObject = identified_object
+            # make sure to add the device_name
             identified_object.device_name = device.name
             tracker_event_dict = create_tracker_event_dict(identified_object)
             # queue an event for tracking
             self.event_service.create(Event(**tracker_event_dict))
+
+        self.log.info(f"Identified {len(identified_objects_data)} objects")
 
     def sleep(self):
         self.log.info(f"Nothing to do, waiting for {self.sleep_time_sec}s")

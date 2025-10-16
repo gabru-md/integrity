@@ -126,6 +126,7 @@ class App(Generic[T]):
             edit_enabled = extra.get("edit_enabled", True)
             download_enabled = extra.get("download_enabled", False)
             widget_enabled = extra.get("widget_enabled", False)
+            ui_enabled = extra.get("ui_enabled", edit_enabled or widget_enabled)
 
             attributes.append({
                 "name": name,
@@ -134,7 +135,7 @@ class App(Generic[T]):
                 "edit_enabled": edit_enabled,
                 "widget_enabled": widget_enabled,
                 "download_enabled": download_enabled,
-                "ui_enabled": edit_enabled or widget_enabled
+                "ui_enabled": ui_enabled
             })
         return attributes
 
