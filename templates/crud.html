@@ -74,9 +74,22 @@
 
                         <td v-for="attr in visibleAttributes" :key="attr.name"
                             class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 dark:text-gray-200">
-                            {{ formatValue(item[attr.name], attr.name) }}
+                            <template v-if="attr.name === 'enabled'">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        v-model="item.enabled"
+                                        class="sr-only peer"
+                                        @change="toggleDeviceEnabled(item)"
+                                    >
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                                    <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300 sr-only">{{ item.enabled ? 'Enabled' : 'Disabled' }}</span>
+                                </label>
+                            </template>
+                            <template v-else>
+                                {{ formatValue(item[attr.name], attr.name) }}
+                            </template>
                         </td>
-
                         <td v-for="attr in downloadableAttributes" :key="attr.name"
                             class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 dark:text-gray-200">
                             <a :href="getDownloadUrl(item, attr)" target="_blank"
@@ -124,21 +137,40 @@
                     </div>
 
                     <form @submit.prevent="handleCrudFormSubmission" class="mt-6 space-y-4">
-                        <div v-for="attr in editableAttributes" :key="attr.name" class="flex flex-col space-y-1">
-                            <label :for="attr.name"
-                                   class="text-sm font-medium text-slate-700 capitalize dark:text-gray-300">
-                                {{ formatKey(attr.name) }}
-                                <span v-if="attr.required" class="text-red-500">*</span>
-                            </label>
+                        <div v-for="attr in editableAttributes" :key="attr.name"
+                             :class="['flex', getInputType(attr.type) === 'checkbox' ? 'items-center space-x-3' : 'flex-col space-y-1']">
 
-                            <input :type="getInputType(attr.type)"
-                                   :id="attr.name"
-                                   :name="attr.name"
-                                   v-model="formData[attr.name]"
-                                   class="p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
-                                          dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                                   :placeholder="`Enter ${formatKey(attr.name)}`"
-                                   :required="attr.required">
+                            <template v-if="getInputType(attr.type) === 'checkbox'">
+                                <input type="checkbox"
+                                       :id="attr.name"
+                                       :name="attr.name"
+                                       v-model="formData[attr.name]"
+                                       class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500
+                                              dark:bg-gray-700 dark:border-gray-600 dark:ring-offset-gray-800">
+
+                                <label :for="attr.name"
+                                       class="text-sm font-medium text-slate-700 capitalize dark:text-gray-300 cursor-pointer">
+                                    {{ formatKey(attr.name) }}
+                                    <span v-if="attr.required" class="text-red-500">*</span>
+                                </label>
+                            </template>
+
+                            <template v-else>
+                                <label :for="attr.name"
+                                       class="text-sm font-medium text-slate-700 capitalize dark:text-gray-300">
+                                    {{ formatKey(attr.name) }}
+                                    <span v-if="attr.required" class="text-red-500">*</span>
+                                </label>
+
+                                <input :type="getInputType(attr.type)"
+                                       :id="attr.name"
+                                       :name="attr.name"
+                                       v-model="formData[attr.name]"
+                                       class="p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
+                                              dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                                       :placeholder="`Enter ${formatKey(attr.name)}`"
+                                       :required="attr.required">
+                            </template>
                         </div>
 
                         <div class="pt-4 border-t border-slate-100 dark:border-gray-700/50 flex justify-end space-x-3">
@@ -254,6 +286,11 @@
                     }
                 }
 
+                // Logic for boolean display in the table (used for non-toggled booleans)
+                if (type === 'bool' || type === 'boolean') {
+                    return value ? '✅ Yes' : '❌ No';
+                }
+
                 if (type === 'list' || Array.isArray(value)) {
                     return value.join(', ');
                 }
@@ -266,6 +303,7 @@
             }
 
             function getInputType(type) {
+                if (type && (type.includes('bool') || type.includes('boolean'))) return 'checkbox';
                 if (type && type.includes('datetime')) return 'datetime-local';
                 if (type && (type.includes('int') || type.includes('float'))) return 'number';
                 return 'text';
@@ -325,6 +363,28 @@
                 }
             }
 
+            // NEW: Function to toggle the device's enabled state directly from the list view
+            async function toggleDeviceEnabled(item) {
+                // Store the current (pre-toggled) state in case the API call fails
+                const previousState = !item.enabled;
+
+                try {
+                    // Send PUT request to update only the 'enabled' field.
+                    await fetchWithRetry(`${fetchUrl.value}${item.id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ enabled: item.enabled }),
+                    });
+                    // On success, the item.enabled state in Vue's data model is already updated by v-model.
+                    console.log(`Device ${item.id} enabled status updated to ${item.enabled}.`);
+
+                } catch (e) {
+                    // On failure, revert the local state for visual consistency
+                    item.enabled = previousState;
+                    alert(`Failed to update status for Device (ID: ${item.id}). Reverting change.`);
+                    console.error(`Error during status update:`, e);
+                }
+            }
+
 
             async function handleCrudFormSubmission() {
                 isSubmitting.value = true;
@@ -379,10 +439,15 @@
             function setupFormForCreate() {
                 formMode.value = 'create';
                 itemId.value = null;
-                // Reset formData to an object with keys based on editable attributes, initialized to empty string
+                // Reset formData to an object with keys based on editable attributes, initialized to empty string or default boolean value
                 const newFormData = {};
                 editableAttributes.value.forEach(attr => {
-                    newFormData[attr.name] = '';
+                    // For booleans, initialize to false or a default you prefer (e.g., matching the Pydantic default)
+                    if (getInputType(attr.type) === 'checkbox') {
+                         newFormData[attr.name] = false;
+                    } else {
+                         newFormData[attr.name] = '';
+                    }
                 });
                 formData.value = newFormData;
             }
@@ -404,11 +469,16 @@
                     let value = item[attr.name];
 
                     // FIX: Correctly format ISO datetime string for datetime-local input
-                    if (attr.type.includes('datetime')) {
+                    if (getInputType(attr.type) === 'datetime-local') {
                         if (typeof value === 'string' && value.includes('T')) {
                             // Required format is YYYY-MM-DDTHH:mm (first 16 characters of ISO 8601)
                             value = value.substring(0, 16);
                         }
+                    }
+
+                    // Booleans are bound directly, but handle null/undefined safely
+                    if (getInputType(attr.type) === 'checkbox') {
+                        value = !!value; // Convert to strict boolean: true/false
                     }
 
                     newFormData[attr.name] = value !== undefined && value !== null ? value : '';
@@ -449,7 +519,8 @@
                 openEditModal,
                 handleCrudFormSubmission,
                 handleDelete,
-                getDownloadUrl
+                getDownloadUrl,
+                toggleDeviceEnabled // Added the new function
             };
         }
     };
