@@ -18,3 +18,5 @@ protobuf~=6.32.1
 sendgrid~=6.12.5
 requests~=2.32.5
 ultralytics~=8.3.209
+numpy~=2.0.2
+scipy
