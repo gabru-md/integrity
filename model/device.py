@@ -21,3 +21,20 @@ class Device(WidgetUIModel):
     config_json: Optional[str] = Field(default=None, widget_enabled=False, ui_enabled=False)
     authorized_apps: Optional[str] = Field(default=None, widget_enabled=False)
     enabled: bool = Field(default=None)
+
+    def get_coordinates(self):
+        if self.coordinates:
+            try:
+                parts = [part.strip() for part in self.coordinates.split(',')]
+
+                if len(parts) == 2:
+                    x = int(parts[0])
+                    y = int(parts[1])
+                    return x, y
+
+            except ValueError:
+                pass
+            except TypeError:
+                pass
+
+        return 0, 0

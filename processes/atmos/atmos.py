@@ -96,7 +96,7 @@ class Atmos(Process):
         beacon_measurements = {}
         for device in self.devices:
             device_name = device.name
-            device_pos = device.coordinates
+            device_pos = device.get_coordinates() # (x, y)
             if device_pos is None:
                 self.log.warning(f"Device {device_name} has no known position, skipping.")
                 continue
