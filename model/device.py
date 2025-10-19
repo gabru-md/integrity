@@ -24,18 +24,25 @@ class Device(WidgetUIModel):
     enabled: bool = Field(default=None)
 
     def get_coordinates(self):
+        """
+        returns the coordinates in metres to be used for rssi calc
+        """
         if self.coordinates:
             try:
                 parts = [part.strip() for part in self.coordinates.split(',')]
 
                 if len(parts) == 2:
-                    x = int(parts[0])
-                    y = int(parts[1])
-                    return x, y
+                    x_cm = int(parts[0])
+                    y_cm = int(parts[1])
+
+                    x_m = x_cm / 100.0
+                    y_m = y_cm / 100.0
+
+                    return x_m, y_m
 
             except ValueError:
                 pass
             except TypeError:
                 pass
 
-        return 0, 0
+        return 0.0, 0.0
