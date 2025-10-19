@@ -23,6 +23,7 @@ Todos are listed by Apps and Libs. Apps are for work on functionality. Libs are 
 * [ ] setup beacons
 * [ ] code for indoor positioning system
 * [ ] Add logs or some visualizer for processes on ui
+* [ ] Create a coordinate map to map floor plan to the coordinates
 
 ### Libs
 * [ ] get rid of _process_model_data func this can be done in the service
