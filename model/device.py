@@ -8,6 +8,7 @@ from gabru.flask.model import WidgetUIModel
 class Device(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
     name: str = Field(widget_enabled=True)
+    description: Optional[str] = Field(default=None)
     location: str = Field(widget_enabled=True)
     type: str = Field(widget_enabled=True)
 

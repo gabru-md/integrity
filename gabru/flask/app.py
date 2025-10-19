@@ -1,7 +1,5 @@
-import threading
-
-from flask import Blueprint, request, jsonify, render_template, redirect
-from typing import TypeVar, Generic, Optional
+from flask import Blueprint, request, jsonify, render_template
+from typing import TypeVar, Generic
 
 from gabru.log import Logger
 from gabru.db.service import CRUDService
@@ -19,7 +17,7 @@ class App(Generic[T]):
     entities in the database via a provided service.
     """
 
-    def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=5,
+    def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=10,
                  widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html", widget_enabled=True):
         self.name = name
         self.log = Logger.get_log(f"{self.name.capitalize()}")

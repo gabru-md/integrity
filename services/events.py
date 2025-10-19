@@ -20,7 +20,7 @@ class EventService(CRUDService[Event]):
                                 timestamp TIMESTAMP NOT NULL,
                                 description TEXT,
                                 tags TEXT[]
-                            )
+                            ) PARTITION BY RANGE (timestamp)
                         """)
                 self.db.conn.commit()
 

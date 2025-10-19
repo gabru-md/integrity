@@ -27,7 +27,8 @@ class DeviceService(CRUDService[Device]):
                         coordinates VARCHAR(255),
                         url VARCHAR(500),
                         config_json TEXT, 
-                        authorized_apps TEXT 
+                        authorized_apps TEXT,
+                        description TEXT 
                     )
                 """)
                 self.db.conn.commit()
@@ -43,7 +44,8 @@ class DeviceService(CRUDService[Device]):
             device.coordinates,
             device.url,
             device.config_json,
-            device.authorized_apps
+            device.authorized_apps,
+            device.description
         )
 
     def _to_object(self, row: tuple) -> Device:
@@ -59,7 +61,8 @@ class DeviceService(CRUDService[Device]):
             "coordinates": row[7],
             "url": row[8],
             "config_json": row[9],
-            "authorized_apps": row[10]
+            "authorized_apps": row[10],
+            "description": row[11]
         }
         return Device(**device_dict)
 
@@ -67,21 +70,21 @@ class DeviceService(CRUDService[Device]):
         return [
             "name", "enabled", "location", "type",
             "vendor", "model", "coordinates", "url",
-            "config_json", "authorized_apps"
+            "config_json", "authorized_apps", "description"
         ]
 
     def _get_columns_for_update(self) -> List[str]:
         return [
             "name", "enabled", "location", "type",
             "vendor", "model", "coordinates", "url",
-            "config_json", "authorized_apps"
+            "config_json", "authorized_apps", 'description'
         ]
 
     def _get_columns_for_select(self) -> List[str]:
         return [
             "id", "name", "enabled", "location", "type",
             "vendor", "model", "coordinates", "url",
-            "config_json", "authorized_apps"
+            "config_json", "authorized_apps", "description"
         ]
 
     # Add specific methods here, e.g., get_enabled_devices_by_location
