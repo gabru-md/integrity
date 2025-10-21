@@ -19,4 +19,5 @@ sendgrid~=6.12.5
 requests~=2.32.5
 ultralytics~=8.3.209
 numpy~=2.0.2
-scipy
+scipy~=1.13.1
+opencv-python~=4.12.0.88
