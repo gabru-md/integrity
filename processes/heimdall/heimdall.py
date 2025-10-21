@@ -3,7 +3,7 @@ from datetime import datetime
 import time
 from typing import List
 
-from queue import Queue
+from queue import Queue, Empty
 
 import cv2
 from ultralytics import YOLO
@@ -26,7 +26,7 @@ class Heimdall(Process):
     def __init__(self, **kwargs):
         super().__init__(name='Heimdall', daemon=True)
         self.event_service = EventService()
-        self.sleep_time_sec = 5
+        self.sleep_time_sec = 30
         self.classes_to_detect = items_to_detection_classes(items_to_detect=['cat', 'person', 'dog'])
         self.device_service = DeviceService()  # I can implement a app context to manage db conns
         self.devices = self.device_service.get_devices_enabled_for(self.name)
@@ -36,9 +36,32 @@ class Heimdall(Process):
 
         self.device_processor_threads = []
         self.delay_seconds = 30
-        self.target_fps = 30
+        self.target_fps = 60
         self.buffer_max_size = self.delay_seconds * self.target_fps
         self.device_frame_read_timeout_sec = 3
+
+    def stream(self, device_name):
+        device_frame_buffers = self.frame_buffers[device_name]
+        if not device_frame_buffers:
+            return
+
+        while True:
+            try:
+                frame = device_frame_buffers.get_nowait()
+                ret, frame_buffer = cv2.imencode('.jpg', frame)
+                frame_bytes = frame_buffer.tobytes()
+
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            except Empty:
+                # If the queue is empty during runtime, the consumer thread has failed.
+                self.log.warn(f"Stream buffer unexpectedly empty for {device_name}. Waiting...")
+                time.sleep(1)
+
+            except Exception as e:
+                self.log.exception(f"Stream generation error for {device_name}: {e}")
+                break
+
 
     def process(self):
         self.log.info("Starting Heimdall")
@@ -47,6 +70,7 @@ class Heimdall(Process):
             return
         self.start_device_processor_threads()
         self.run_process_detection()
+
 
     def process_device(self, device: Device):
         """
@@ -79,23 +103,38 @@ class Heimdall(Process):
                 continue
 
             upscaled_frame = self.upscale_frame(frame)
-            device_frame_buffer_queue.get(timeout=1)  # remove the first one
+            if device_frame_buffer_queue.full():
+                try:
+                    # Remove the oldest frame (the one that has completed the 30s delay)
+                    device_frame_buffer_queue.get_nowait()
+                except Empty:
+                    # This should theoretically not happen if the queue is full,
+                    # but it handles rare race conditions during shutdown or unexpected drain.
+                    self.log.warning(f"{device.name} buffer reported full but was empty on get.")
+            else:
+                # If the queue is not full, it's either the initial fill
+                # or a refilling process after an outage. Just put the frame.
+                pass
+
             device_frame_buffer_queue.put(upscaled_frame)
 
             with self.latest_frame_lock:
                 self.latest_frame[device.name] = upscaled_frame.copy()
 
+
     def upscale_frame(self, frame: cv2.typing.MatLike) -> cv2.typing.MatLike:
         """ implement the upscaling logic in this, upscaling will depend on the device """
         return frame
 
+
     def start_device_processor_threads(self):
         for device in self.devices:
             self.frame_buffers[device.name] = Queue(maxsize=30)
-            device_processor_thread = threading.Thread(target=self.process_device, args=(device,), daemon=True)
+            device_processor_thread = threading.Thread(name=f"{device.name} Stream Processor", target=self.process_device, args=(device,), daemon=True)
             self.log.info(f"Starting thread to process device: {device.name}")
             device_processor_thread.start()
             self.device_processor_threads.append(device_processor_thread)
+
 
     def run_process_detection(self):
         while self.running:
@@ -112,6 +151,7 @@ class Heimdall(Process):
                 self.log.exception(e)
             self.sleep()
 
+
     def load_image_data(self, device: Device):
         """
         get the most recent frame for the device
@@ -121,6 +161,7 @@ class Heimdall(Process):
         if latest_frame is None:
             return None
         return latest_frame
+
 
     def identify_objects(self, image_data) -> List[IdentifiedObject]:
         """ identify objects data from the image_data """
@@ -133,12 +174,13 @@ class Heimdall(Process):
 
             detected_class_names = [result.names[int(c)] for c in result.boxes.cls.tolist()]
             for detected_class_name in detected_class_names:
-                if detected_class_name == 'dog': # yolo identifies my cat as a dog
+                if detected_class_name == 'dog':  # yolo identifies my cat as a dog
                     detected_class_name = 'cat'
                 identified_objects.append(
                     IdentifiedObject(name=detected_class_name, location='apartment', tags=['heimdall', 'tracking']))
 
         return identified_objects
+
 
     def track_identified_objects(self, device, identified_objects_data):
         """ create events in the events db for identified objects """
@@ -151,6 +193,7 @@ class Heimdall(Process):
             self.event_service.create(Event(**tracker_event_dict))
 
         self.log.info(f"Identified {len(identified_objects_data)} objects")
+
 
     def sleep(self):
         self.log.info(f"Nothing to do, waiting for {self.sleep_time_sec}s")

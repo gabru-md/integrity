@@ -33,6 +33,7 @@ class App(Generic[T]):
         self.processes = []
         self.home_template = home_template
         self.widget_enabled = widget_enabled
+        self.server_instance = None
 
     def setup_default_routes(self):
 
@@ -172,3 +173,26 @@ class App(Generic[T]):
             self.log.info(f"Widget for '{self.name.capitalize()}' set to {'Enabled' if enabled else 'Disabled'}")
             return True
         return False
+
+    def get_running_process(self, process_class: type):
+        if not self.server_instance or not self.server_instance.process_manager:
+            self.log.error(f"Cannot get running process: Process Manager is not initialized.")
+            return None
+
+        process_manager = self.server_instance.process_manager
+
+        # The process name is defined in Heimdall's __init__ (default is class name)
+        process_name = process_class.__name__
+
+        running_thread = process_manager.running_process_threads.get(process_name)
+
+        if running_thread:
+            #    If the thread is running, look up the actual instance object
+            #    from the all_processes_map. This is the instance that holds the buffers.
+            #    (We must use all_processes_map for the instance object, as running_process_threads
+            #    holds the thread, which is also the instance itself since Process inherits Thread).
+            return process_manager.all_processes_map.get(process_name)
+        else:
+            # Process is registered but not enabled/running.
+            self.log.warning(f"Process {process_name} is not currently running.")
+            return None

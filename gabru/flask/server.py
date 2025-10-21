@@ -31,6 +31,7 @@ class Server:
             raise Exception("Could not register app")
 
         self.registered_apps.append(app)
+        app.server_instance = self # give it the server instance
         self.app.register_blueprint(app.blueprint, url_prefix=f"/{app.name.lower()}")
 
     def run(self):
