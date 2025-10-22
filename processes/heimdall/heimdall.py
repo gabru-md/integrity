@@ -53,6 +53,7 @@ class Heimdall(Process):
 
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                time.sleep(0.25) # we take 4 frames per second on average
             except Empty:
                 # If the queue is empty during runtime, the consumer thread has failed.
                 self.log.warn(f"Stream buffer unexpectedly empty for {device_name}. Waiting...")
@@ -129,7 +130,7 @@ class Heimdall(Process):
 
     def start_device_processor_threads(self):
         for device in self.devices:
-            self.frame_buffers[device.name] = Queue(maxsize=30)
+            self.frame_buffers[device.name] = Queue(maxsize=self.buffer_max_size)
             device_processor_thread = threading.Thread(name=f"{device.name} Stream Processor", target=self.process_device, args=(device,), daemon=True)
             self.log.info(f"Starting thread to process device: {device.name}")
             device_processor_thread.start()
