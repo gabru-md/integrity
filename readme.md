@@ -40,7 +40,7 @@ The **Events App** is the backbone of the entire platform. It allows for the cre
 
 | Processes | Description |
 | :--- | :--- |
-| **[Courier](https://www.google.com/search?q=processes/courier/readme.md)** | A **notification delivery service** that listens to the event stream for events tagged with `notification`. It sends email notifications via **SendGrid API**, often configured to trigger **iOS Shortcuts** automations. |
+| **[Courier](processes/courier/readme.md)** | A **notification delivery service** that listens to the event stream for events tagged with `notification`. It sends email notifications via **SendGrid API**, often configured to trigger **iOS Shortcuts** automations. |
 
 ### Contracts
 
@@ -48,8 +48,8 @@ The **Contracts App** is the project's **integrity system**. It enables the crea
 
 | Processes | Description |
 | :--- | :--- |
-| **[Sentinel](https://www.google.com/search?q=processes/sentinel/readme.md)** | The **Event-Driven contract validator**. It listens for specific events, evaluates complex behavioral rules (contracts) against historical events, and publishes a `contract:invalidation` event if a rule is broken (e.g., "Gaming only after exercise"). |
-| **[SentinelOC](https://www.google.com/search?q=processes/sentinel/readme.md)** | The **Open Contract validator**. It runs periodically (e.g., every 15 minutes) to evaluate contracts that are **not** triggered by an event, such as a daily check (e.g., "Check every day if exercise happened"). |
+| **[Sentinel](processes/sentinel/readme.md)** | The **Event-Driven contract validator**. It listens for specific events, evaluates complex behavioral rules (contracts) against historical events, and publishes a `contract:invalidation` event if a rule is broken (e.g., "Gaming only after exercise"). |
+| **[SentinelOC](processes/sentinel/readme.md)** | The **Open Contract validator**. It runs periodically (e.g., every 15 minutes) to evaluate contracts that are **not** triggered by an event, such as a daily check (e.g., "Check every day if exercise happened"). |
 
 ### Devices
 
@@ -60,8 +60,8 @@ The **Devices App** manages the configuration and access for various hardware de
 
 | Processes | Description |
 | :--- | :--- |
-| **[Heimdall](https://www.google.com/search?q=processes/heimdall/readme.md)** | A visual monitoring daemon that utilizes devices (like ESP32Cams) for object detection and tracking. |
-| **[Atmos](https://www.google.com/search?q=processes/atmos/readme.md)** | A **BLE device location tracker**. It uses data from multiple BLE beacons/receivers and a **trilateration algorithm** to determine the precise location (X, Y) of moving devices in a defined area. |
+| **[Heimdall](processes/heimdall/readme.md)** | A visual monitoring daemon that utilizes devices (like ESP32Cams) for object detection and tracking. |
+| **[Atmos](processes/atmos/readme.md)** | A **BLE device location tracker**. It uses data from multiple BLE beacons/receivers and a **trilateration algorithm** to determine the precise location (X, Y) of moving devices in a defined area. |
 
 ### Shortcuts
 
