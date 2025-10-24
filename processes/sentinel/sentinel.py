@@ -16,12 +16,14 @@ evaluator = ContractEvaluator(event_service)
 
 
 class SentinelOC(Process):
+    """Handles continuous validation for open contracts (e.g., daily checks)."""
     def __init__(self, **kwargs):
-        super().__init__('SentinelOC', daemon=True)
+        super().__init__(daemon=True, **kwargs)
         self.sleep_time_min = 15
         self.sleep_time_sec = 60 * self.sleep_time_min
 
     def process(self):
+        self.log.info("Starting SentinelOC")
         while self.running:
             try:
                 self.validate_open_contracts()
@@ -31,6 +33,7 @@ class SentinelOC(Process):
             self.sleep()
 
     def validate_open_contracts(self):
+        self.log.info("Trying to validate open contracts")
         open_contracts = contract_service.get_open_contracts()
         if open_contracts:
             for contract in open_contracts:
@@ -42,12 +45,13 @@ class SentinelOC(Process):
                     queue_contract_invalidated_event(contract)
 
             self.update_last_run_next_run(open_contracts)
+        else:
+            self.log.info("No open contracts to check")
 
     @staticmethod
     def update_last_run_next_run(open_contracts):
         """
-            here we need to invalidate them, then update the last_run_date
-            depending on the frequency we then need to adjust the next run date
+            Updates last_run_date and sets next_run_date based on frequency.
         """
 
         seconds_in_hour = 3600
@@ -58,7 +62,7 @@ class SentinelOC(Process):
         for contract in open_contracts:
             contract: Contract = contract
             current_timestamp = int(datetime.now().timestamp())
-            contract.last_run_date = current_timestamp
+            contract.last_run_date = datetime.fromtimestamp(current_timestamp)
 
             if contract.frequency == "daily":
                 contract.next_run_date = current_timestamp + seconds_in_day
@@ -68,7 +72,7 @@ class SentinelOC(Process):
                 contract.next_run_date = current_timestamp + seconds_in_week
             elif contract.frequency == "monthly":
                 contract.next_run_date = current_timestamp + seconds_in_month
-
+            contract.next_run_date  = datetime.fromtimestamp(contract.next_run_date)
             # update the last run and next run date in db
             contract_service.update(contract)
 
@@ -78,6 +82,7 @@ class SentinelOC(Process):
 
 
 class Sentinel(QueueProcessor[Event]):
+    """Handles validation for contracts triggered by events."""
 
     def __init__(self, **kwargs):
         super().__init__(service=event_service, **kwargs)
@@ -112,11 +117,7 @@ class Sentinel(QueueProcessor[Event]):
 
     @staticmethod
     def update_last_run(triggered_contracts):
-        """
-            do nothing in this case as these are trigger based contracts
-            even if it is invalidated we still want to check them anytime
-            the trigger event is produced.
-        """
+        """Sets the last_run_date."""
         for contract in triggered_contracts:
             contract: Contract = contract
             contract.last_run_date = int(datetime.now().timestamp())
@@ -126,7 +127,7 @@ class Sentinel(QueueProcessor[Event]):
 
 
 def run_contract_validation(contract: Contract, trigger_event: Event = None) -> bool:
-    # need to figure out how to build the contract conditions and how to validate them
+    """Parses the contract conditions and runs the evaluation."""
     condition_dict = parse_contract_as_dict(contract.conditions)
     if condition_dict:
         if trigger_event:

@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from model.event import Event
 from gabru.db.service import CRUDService
 from gabru.db.db import DB
-from typing import List
+from typing import List, Optional
 
 
 class EventService(CRUDService[Event]):
@@ -24,13 +26,42 @@ class EventService(CRUDService[Event]):
                         """)
                 self.db.conn.commit()
 
-    def find_by_event_type_and_time_range(self, event_types: List[str], max_timestamp: int, min_timestamp:int) -> List[Event]:
+    def find_by_event_type_and_time_range(self, event_types: List[str], max_timestamp: int, min_timestamp: int) -> List[
+        Event]:
+        """Finds all events of the specified types within a given time range."""
         filters = {
             "event_type": {"$in": event_types},
-            "timestamp": {"$lt": max_timestamp, "$gt": min_timestamp}
+            "timestamp": {"$lt": datetime.fromtimestamp(max_timestamp), "$gt": datetime.fromtimestamp(min_timestamp)}
         }
         sort_by = {"timestamp": "ASC"}
         return self.find_all(filters=filters, sort_by=sort_by)
+
+    def find_latest_event_before(self, event_type: str, max_timestamp: int) -> Optional[Event]:
+        """
+        Finds the single latest event of a specific type that occurred strictly before max_timestamp.
+        This is optimized for the 'SINCE' logic.
+
+        NOTE: Assuming the timestamp is stored as an integer epoch time or is handled appropriately
+              by the underlying database layer when compared to the integer max_timestamp.
+        """
+        try:
+            with self.db.conn.cursor() as cursor:
+                # Selects the most recent event (DESC) of the given type that is older than max_timestamp (the trigger time)
+                query = """
+                    SELECT * FROM events
+                    WHERE event_type = %s AND timestamp < %s
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                """
+                cursor.execute(query, (event_type, max_timestamp))
+                row = cursor.fetchone()
+
+                if row:
+                    return self._to_object(row)
+                return None
+        except Exception as e:
+            # self.log.error(f"Error finding latest event: {e}")
+            return None
 
     def _to_tuple(self, event: Event) -> tuple:
         return (

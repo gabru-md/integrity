@@ -447,9 +447,29 @@
 
                     // FIX: Correctly format ISO datetime string for datetime-local input
                     if (getInputType(attr.type) === 'datetime-local') {
-                        if (typeof value === 'string' && value.includes('T')) {
-                            // Required format is YYYY-MM-DDTHH:mm (first 16 characters of ISO 8601)
-                            value = value.substring(0, 16);
+                        if (typeof value === 'string' && value) {
+                           const date = new Date(value);
+                           console.log(date);
+                           value = String(date);
+
+                                // Check if the date object is valid
+                                if (!isNaN(date.getTime())) {
+                                    // Custom format using UTC methods to prevent browser's local timezone shift
+                                    // This assumes the value received (e.g., "Oct 23, 2025, 02:30 PM") represents a UTC time.
+                                    const pad = (num) => String(num).padStart(2, '0');
+
+                                    const year = date.getFullYear();
+                                    const month = pad(date.getMonth() + 1); // getUTCMonth is 0-indexed
+                                    const day = pad(date.getDate());
+                                    const hours = pad(date.getHours());
+                                    const minutes = pad(date.getMinutes());
+
+                                    value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                                    console.log(value);
+                                } else {
+                                     // If parsing failed, treat as empty string
+                                     value = '';
+                                }
                         }
                     }
 

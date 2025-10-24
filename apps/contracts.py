@@ -7,4 +7,4 @@ contracts_app = App('Contracts', ContractService(), Contract)
 
 contracts_app.register_process(Sentinel, enabled=True)
 
-contracts_app.register_process(SentinelOC, enabled=True, name="SentinelOC")
+contracts_app.register_process(SentinelOC, enabled=False, name="SentinelOC")

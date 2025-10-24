@@ -13,7 +13,7 @@ class Process(threading.Thread):
     the def process(self):
     """
 
-    def __init__(self, name, enabled=False, daemon=True):
+    def __init__(self, name, enabled=False, daemon=True, **kwargs):
         super().__init__(name=name, daemon=daemon)
         self.log = Logger.get_log(self.name)
         self.enabled = enabled
