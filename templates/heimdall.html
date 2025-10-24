@@ -28,7 +28,7 @@
      */
     function createDeviceBox(device) {
         // Use location for display title, falling back to name
-        const rawTitle = device.location || device.name;
+        const rawTitle = device.name;
         const title = toTitleCase(rawTitle);
 
         // The /stream/<device_name> route expects the URL-safe device name (d.name)
