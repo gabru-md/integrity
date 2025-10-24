@@ -36,7 +36,7 @@ class Heimdall(Process):
 
         self.device_processor_threads = []
         self.delay_seconds = 30
-        self.target_fps = 60
+        self.target_fps = 10
         self.buffer_max_size = self.delay_seconds * self.target_fps
         self.device_frame_read_timeout_sec = 3
 
@@ -45,6 +45,8 @@ class Heimdall(Process):
         if not device_frame_buffers:
             return
 
+        max_empty_retries = 5
+        empty_retries = 0
         while True:
             try:
                 frame = device_frame_buffers.get_nowait()
@@ -58,7 +60,9 @@ class Heimdall(Process):
                 # If the queue is empty during runtime, the consumer thread has failed.
                 self.log.warn(f"Stream buffer unexpectedly empty for {device_name}. Waiting...")
                 time.sleep(1)
-
+                empty_retries += 1
+                if empty_retries == max_empty_retries:
+                    break
             except Exception as e:
                 self.log.exception(f"Stream generation error for {device_name}: {e}")
                 break
@@ -86,7 +90,8 @@ class Heimdall(Process):
             self.log.info("Filling for initial load from device")
             ret, frame = device_capture.read()
             if ret and frame is not None:
-                upscaled_frame = self.upscale_frame(frame)
+                timestamp = datetime.now()
+                upscaled_frame = self.upscale_frame(frame, timestamp)
                 device_frame_buffer_queue.put(upscaled_frame)
                 with self.latest_frame_lock:
                     self.latest_frame[device.name] = upscaled_frame.copy()
@@ -103,7 +108,8 @@ class Heimdall(Process):
                 device_capture = cv2.VideoCapture(device_streaming_url)  # Attempt to reconnect
                 continue
 
-            upscaled_frame = self.upscale_frame(frame)
+            timestamp = datetime.now()
+            upscaled_frame = self.upscale_frame(frame, timestamp)
             if device_frame_buffer_queue.full():
                 try:
                     # Remove the oldest frame (the one that has completed the 30s delay)
@@ -123,8 +129,16 @@ class Heimdall(Process):
                 self.latest_frame[device.name] = upscaled_frame.copy()
 
 
-    def upscale_frame(self, frame: cv2.typing.MatLike) -> cv2.typing.MatLike:
+    def upscale_frame(self, frame: cv2.typing.MatLike, timestamp: datetime = None) -> cv2.typing.MatLike:
         """ implement the upscaling logic in this, upscaling will depend on the device """
+        if timestamp:
+            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]  # Truncate microseconds for millisecond precision
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.7
+            font_color = (255, 255, 255)  # White
+            line_type = 2
+            position = (10, frame.shape[0] - 10)  # Bottom-left corner, 10 pixels up/right from the edge
+            cv2.putText(frame, timestamp_str, position, font, font_scale, font_color, line_type)
         return frame
 
 

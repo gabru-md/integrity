@@ -1,4 +1,4 @@
-from flask import Response
+from flask import Response, jsonify
 
 from gabru.flask.app import App
 from model.device import Device
@@ -22,6 +22,21 @@ class DeviceApp(App):
                 return "Heimdall stream process is not running"
             return Response(heimdall_instance.stream(device_name),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
+
+        @self.blueprint.route('/heimdall-devices')
+        def heimdall_devices():
+            devices = self.service.get_devices_enabled_for('Heimdall')
+
+            device_dicts = []
+            for d in devices:
+                device_dicts.append({
+                    "name": d.name,
+                    "location": d.location,
+                    "url": d.url,
+                    "status": "Online"
+                })
+
+            return jsonify(device_dicts)
 
 
 devices_app = DeviceApp()
