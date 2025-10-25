@@ -3,8 +3,6 @@ from datetime import datetime
 import time
 from typing import List
 
-from queue import Queue, Empty
-
 import cv2
 from ultralytics import YOLO
 
@@ -104,10 +102,9 @@ class Heimdall(Process):
 
                 timestamp = datetime.now()
                 self.add_frame_metadata(device_stats, frame, timestamp)
-                upscaled_frame = self.upscale_frame(frame)
 
                 with self.latest_frame_lock:
-                    self.latest_frame[device.name] = upscaled_frame.copy()
+                    self.latest_frame[device.name] = frame.copy()
 
                 time_taken_ms = (time.time() - start_time) * 1000
 
@@ -124,12 +121,6 @@ class Heimdall(Process):
             if device_capture:
                 self.log.info(f"Releasing video capture for {device.name} due to thread termination/exception.")
                 device_capture.release()
-
-    def upscale_frame(self, frame: cv2.typing.MatLike) -> cv2.typing.MatLike:
-        """
-        Implement the upscaling logic and draw timestamp and FPS on the frame.
-        """
-        return frame
 
     def add_frame_metadata(self, device_stats, frame: cv2.typing.MatLike, timestamp):
         font = cv2.FONT_HERSHEY_SIMPLEX
