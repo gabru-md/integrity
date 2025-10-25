@@ -18,10 +18,11 @@ model = YOLO("yolo11n.pt")
 
 
 class DeviceStat:
-    def __init__(self, name='', frames_processed=0, average_time=0):
+    def __init__(self, name='', frames_processed=0, average_time=0, bbox=None):
         self.name = name
         self.frames_processed = frames_processed
         self.average_time = average_time
+        self.bbox = bbox
 
     def __str__(self):
         return f"{self.name}: [{self.frames_processed} @ {self.average_time}ms]"
@@ -33,17 +34,20 @@ class Heimdall(Process):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(name='Heimdall', daemon=True)
+        super().__init__(daemon=True, **kwargs)
         self.event_service = EventService()
         self.sleep_time_sec = 30
+        # Included person, cat, dog, mouse in detection classes
         self.classes_to_detect = items_to_detection_classes(items_to_detect=['cat', 'person', 'dog', 'mouse'])
         self.device_service = DeviceService()
         self.latest_frame = {}
         self.latest_frame_lock = threading.Lock()
         self.devices = []
+        self.zoom_factor = 3.0
 
         self.device_processor_threads = []
         self.device_frame_read_timeout_sec = 3
+        self.bbox_enabled = False
 
         self.device_stats: dict[str, DeviceStat] = {}
 
@@ -65,7 +69,7 @@ class Heimdall(Process):
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
             time.sleep(device_stats.average_time / 1000)
-            if device_stats.frames_processed % 100 == 0:
+            if device_stats.frames_processed > 0 and device_stats.frames_processed % 100 == 0:
                 self.log.info(f"Streaming {device_name} @ {1000 / device_stats.average_time:.2f} fps.")
 
     def process(self):
@@ -76,6 +80,115 @@ class Heimdall(Process):
             return
         self.start_device_processor_threads()
         self.run_process_detection()
+
+    def _get_animal_bbox(self, results):
+        """Finds the bounding box of the largest cat/dog/mouse in the detection results."""
+        best_box = None
+        max_area = 0
+
+        # Check if any results were found
+        if not results or not results[0].boxes:
+            return None
+
+        result = results[0]
+
+        # Target classes for zoom
+        animal_classes = ['cat', 'dog', 'mouse']
+
+        # Iterate over all detections
+        for i, box in enumerate(result.boxes.xyxy.cpu().numpy()):
+            # box is in format [x1, y1, x2, y2]
+            x1, y1, x2, y2 = box.astype(int)
+
+            # Get the class name for the current box
+            class_id = int(result.boxes.cls.cpu().numpy()[i])
+            class_name = result.names[class_id]
+
+            # Check if it's one of the target animals
+            if class_name in animal_classes:
+                area = (x2 - x1) * (y2 - y1)
+                if area > max_area:
+                    max_area = area
+                    best_box = [x1, y1, x2, y2]
+
+        return best_box
+
+    def _zoom_and_draw_metadata(self, frame: cv2.typing.MatLike, device_stats, timestamp):
+        """Crops/Zooms the frame to the object, then adds timestamp and FPS metadata."""
+
+        # Frame dimensions
+        H, W = frame.shape[:2]
+
+        # 1. Apply Zoom/Crop
+        bbox = device_stats.bbox
+        if bbox and self.bbox_enabled:
+            x1, y1, x2, y2 = bbox
+
+            # Calculate center and dimensions of the bounding box
+            center_x = (x1 + x2) // 2
+            center_y = (y1 + y2) // 2
+
+            # Add a margin around the object (e.g., 50% on each side)
+            margin_factor = 1.0  # 1.0 means the crop box will be 2x the object size
+            obj_width = x2 - x1
+            obj_height = y2 - y1
+
+            # Determine the size of the square crop area
+            # Use the max dimension of the object for the size of the crop box
+            crop_half_side = int(max(obj_width, obj_height) * self.zoom_factor / 2)
+
+            # Calculate the top-left and bottom-right corners of the potential crop box
+            crop_x1 = max(0, center_x - crop_half_side)
+            crop_y1 = max(0, center_y - crop_half_side)
+            crop_x2 = min(W, center_x + crop_half_side)
+            crop_y2 = min(H, center_y + crop_half_side)
+
+            # Ensure the crop box is square based on the size we were able to crop
+            actual_crop_size = min(crop_x2 - crop_x1, crop_y2 - crop_y1)
+
+            # Re-center the crop box based on the 'actual_crop_size' to ensure it's square
+            crop_x1 = center_x - actual_crop_size // 2
+            crop_x2 = center_x + actual_crop_size // 2
+            crop_y1 = center_y - actual_crop_size // 2
+            crop_y2 = center_y + actual_crop_size // 2
+
+            # Re-validate bounds after re-centering
+            crop_x1 = max(0, crop_x1)
+            crop_y1 = max(0, crop_y1)
+            crop_x2 = min(W, crop_x2)
+            crop_y2 = min(H, crop_y2)
+
+            # Final crop
+            cropped_frame = frame[crop_y1:crop_y2, crop_x1:crop_x2]
+
+            # Resize the cropped frame back to the original frame size for streaming consistency
+            if cropped_frame.size > 0:
+                frame = cv2.resize(cropped_frame, (W, H), interpolation=cv2.INTER_LINEAR)
+
+        # 2. Add Metadata (Timestamp and FPS)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.7
+        line_type = 2
+        # Timestamp (Bottom Left)
+        if timestamp:
+            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            font_color = (255, 255, 255)  # White
+            position = (10, frame.shape[0] - 10)  # Bottom-left
+            cv2.putText(frame, timestamp_str, position, font, font_scale, font_color, line_type)
+
+        # FPS (Top Right)
+        if device_stats and device_stats.frames_processed > 0 and device_stats.average_time > 0:
+            fps = 1000 / device_stats.average_time
+            fps_text = f"FPS: {fps:.2f}"
+            font_color = (0, 255, 255)  # Yellow (BGR)
+            font_scale = 0.5
+
+            (text_width, text_height), baseline = cv2.getTextSize(fps_text, font, font_scale, line_type)
+            position_fps = (frame.shape[1] - text_width - 10, text_height + 10)
+
+            cv2.putText(frame, fps_text, position_fps, font, font_scale, font_color, line_type)
+
+        return frame
 
     def process_device(self, device: Device):
         """
@@ -100,14 +213,27 @@ class Heimdall(Process):
                     device_capture = cv2.VideoCapture(device_streaming_url)  # Attempt to reconnect
                     continue
 
-                timestamp = datetime.now()
-                self.add_frame_metadata(device_stats, frame, timestamp)
+                # --- NEW REAL-TIME DETECTION AND PROCESSING ---
+                # 1. Run Detection
+                results = model(frame, classes=self.classes_to_detect, verbose=False)
 
+                # 2. Get Animal Bounding Box
+                animal_bbox = self._get_animal_bbox(results)
+                if animal_bbox:
+                    device_stats.bbox = animal_bbox
+
+                timestamp = datetime.now()
+
+                # 3. Zoom/Crop and Add Metadata
+                processed_frame = self._zoom_and_draw_metadata(frame, device_stats, timestamp)
+
+                # Update the latest frame for the web stream
                 with self.latest_frame_lock:
-                    self.latest_frame[device.name] = frame.copy()
+                    self.latest_frame[device.name] = processed_frame.copy()
 
                 time_taken_ms = (time.time() - start_time) * 1000
 
+                # Update running average time
                 device_stats.average_time = ((
                                                      device_stats.average_time * device_stats.frames_processed) + time_taken_ms) / (
                                                     device_stats.frames_processed + 1)
@@ -122,24 +248,6 @@ class Heimdall(Process):
                 self.log.info(f"Releasing video capture for {device.name} due to thread termination/exception.")
                 device_capture.release()
 
-    def add_frame_metadata(self, device_stats, frame: cv2.typing.MatLike, timestamp):
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 0.7
-        line_type = 2
-        if timestamp:
-            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            font_color = (255, 255, 255)
-            position = (10, frame.shape[0] - 10)
-            cv2.putText(frame, timestamp_str, position, font, font_scale, font_color, line_type)
-        if device_stats and device_stats.frames_processed > 0 and device_stats.average_time > 0:
-            fps = 1000 / device_stats.average_time
-            fps_text = f"FPS: {fps:.2f}"
-            font_color = (0, 255, 255)
-            font_scale = 0.5
-            (text_width, text_height), baseline = cv2.getTextSize(fps_text, font, font_scale, line_type)
-            position_fps = (frame.shape[1] - text_width - 10, text_height + 10)
-
-            cv2.putText(frame, fps_text, position_fps, font, font_scale, font_color, line_type)
 
     def start_device_processor_threads(self):
         for device in self.devices:
@@ -159,6 +267,7 @@ class Heimdall(Process):
                     if image_data is None:
                         self.log.info(f"No image data for detection for device: {device.name}")
                         continue
+                    # Note: This detection still runs periodically for event tracking
                     identified_objects_data = self.identify_objects(image_data)
                     if identified_objects_data:
                         self.track_identified_objects(device, identified_objects_data)
@@ -207,7 +316,6 @@ class Heimdall(Process):
     def sleep(self):
         self.log.info(f"Nothing to do, waiting for {self.sleep_time_sec}s")
         time.sleep(self.sleep_time_sec)
-
 
 def create_tracker_event_dict(identified_object: IdentifiedObject):
     description = f"{identified_object.name} identified in {identified_object.location} by {identified_object.device_name}"
