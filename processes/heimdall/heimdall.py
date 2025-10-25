@@ -15,7 +15,18 @@ from processes.heimdall.model import IdentifiedObject
 from services.devices import DeviceService
 from services.events import EventService
 
+# Assuming model is initialized outside the class as before
 model = YOLO("yolo11n.pt")
+
+
+class DeviceStat:
+    def __init__(self, name='', frames_processed=0, average_time=0):
+        self.name = name
+        self.frames_processed = frames_processed
+        self.average_time = average_time
+
+    def __str__(self):
+        return f"{self.name}: [{self.frames_processed} @ {self.average_time}ms]"
 
 
 class Heimdall(Process):
@@ -27,22 +38,25 @@ class Heimdall(Process):
         super().__init__(name='Heimdall', daemon=True)
         self.event_service = EventService()
         self.sleep_time_sec = 30
-        self.classes_to_detect = items_to_detection_classes(items_to_detect=['cat', 'person', 'dog'])
-        self.device_service = DeviceService()  # I can implement a app context to manage db conns
-        self.frame_buffers = {}
+        self.classes_to_detect = items_to_detection_classes(items_to_detect=['cat', 'person', 'dog', 'mouse'])
+        self.device_service = DeviceService()
         self.latest_frame = {}
         self.latest_frame_lock = threading.Lock()
         self.devices = []
 
         self.device_processor_threads = []
-        self.delay_seconds = 30
-        self.target_fps = 10
-        self.buffer_max_size = self.delay_seconds * self.target_fps
         self.device_frame_read_timeout_sec = 3
 
+        self.device_stats: dict[str, DeviceStat] = {}
+
     def stream(self, device_name):
+        """
+        Provides a near-real-time MJPEG stream for multiple clients.
+        It uses the latest_frame dictionary, which is non-destructive.
+        """
         while True:
-            # safely retrieve the latest frame
+            # Safely retrieve the latest frame
+            device_stats = self.device_stats[device_name]
             with self.latest_frame_lock:
                 frame = self.latest_frame.get(device_name)
 
@@ -52,8 +66,9 @@ class Heimdall(Process):
 
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-
-            time.sleep(0.25)
+            time.sleep(device_stats.average_time / 1000)
+            if device_stats.frames_processed % 100 == 0:
+                self.log.info(f"Streaming {device_name} @ {1000 / device_stats.average_time:.2f} fps.")
 
     def process(self):
         self.log.info("Starting Heimdall")
@@ -66,85 +81,84 @@ class Heimdall(Process):
 
     def process_device(self, device: Device):
         """
-        process from the device.url stream
+        Process the device stream, fill the 30s buffer, and save the latest frame.
+        Includes critical cleanup logic using try...finally.
         """
         device_streaming_url = device.url
-        device_capture = None
-
-        device_frame_buffer_queue: Queue = self.frame_buffers[device.name]
+        device_capture = None  # Initialize outside try for scope
 
         try:
             device_capture = cv2.VideoCapture(device_streaming_url)
-            while not device_frame_buffer_queue.full() and self.running:
-                self.log.info("Filling for initial load from device")
-                ret, frame = device_capture.read()
-                if ret and frame is not None:
-                    timestamp = datetime.now()
-                    upscaled_frame = self.upscale_frame(frame, timestamp)
-                    device_frame_buffer_queue.put(upscaled_frame)
-                    with self.latest_frame_lock:
-                        self.latest_frame[device.name] = upscaled_frame.copy()
-                else:
-                    time.sleep(self.device_frame_read_timeout_sec)  # wait if frame is not ready yet
-            self.log.info(f"{device.name} frame buffer filling complete")
+
             while self.running:
+                device_stats = self.device_stats[device.name]
+                start_time = time.time()
                 ret, frame = device_capture.read()
                 if not ret or frame is None:
-                    self.log.warning(f"Failed to read frame from {device.name}. Reconnecting in 3s...")
+                    self.log.warning(
+                        f"Failed to read frame from {device.name}. Reconnecting in {self.device_frame_read_timeout_sec}s...")
                     time.sleep(self.device_frame_read_timeout_sec)
+                    device_capture.release()  # Release before attempting to re-open
                     device_capture = cv2.VideoCapture(device_streaming_url)  # Attempt to reconnect
                     continue
 
                 timestamp = datetime.now()
-                upscaled_frame = self.upscale_frame(frame, timestamp)
-                if device_frame_buffer_queue.full():
-                    try:
-                        # Remove the oldest frame (the one that has completed the 30s delay)
-                        device_frame_buffer_queue.get_nowait()
-                    except Empty:
-                        # This should theoretically not happen if the queue is full,
-                        # but it handles rare race conditions during shutdown or unexpected drain.
-                        self.log.warning(f"{device.name} buffer reported full but was empty on get.")
-                else:
-                    # If the queue is not full, it's either the initial fill
-                    # or a refilling process after an outage. Just put the frame.
-                    pass
-
-                device_frame_buffer_queue.put(upscaled_frame)
+                self.add_frame_metadata(device_stats, frame, timestamp)
+                upscaled_frame = self.upscale_frame(frame)
 
                 with self.latest_frame_lock:
                     self.latest_frame[device.name] = upscaled_frame.copy()
+
+                time_taken_ms = (time.time() - start_time) * 1000
+
+                device_stats.average_time = ((
+                                                     device_stats.average_time * device_stats.frames_processed) + time_taken_ms) / (
+                                                    device_stats.frames_processed + 1)
+                device_stats.frames_processed += 1
+
+                self.device_stats[device.name] = device_stats
         except Exception as e:
             self.log.exception(f"Exception in device processor thread for {device.name}: {e}")
+
         finally:
             if device_capture:
-                self.log.info(f"Releasing video capture for {device.name}")
+                self.log.info(f"Releasing video capture for {device.name} due to thread termination/exception.")
                 device_capture.release()
 
-
-    def upscale_frame(self, frame: cv2.typing.MatLike, timestamp: datetime = None) -> cv2.typing.MatLike:
-        """ implement the upscaling logic in this, upscaling will depend on the device """
-        if timestamp:
-            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[
-                            :-3]  # Truncate microseconds for millisecond precision
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 0.7
-            font_color = (255, 255, 255)  # White
-            line_type = 2
-            position = (10, frame.shape[0] - 10)  # Bottom-left corner, 10 pixels up/right from the edge
-            cv2.putText(frame, timestamp_str, position, font, font_scale, font_color, line_type)
+    def upscale_frame(self, frame: cv2.typing.MatLike) -> cv2.typing.MatLike:
+        """
+        Implement the upscaling logic and draw timestamp and FPS on the frame.
+        """
         return frame
 
+    def add_frame_metadata(self, device_stats, frame: cv2.typing.MatLike, timestamp):
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.7
+        line_type = 2
+        if timestamp:
+            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            font_color = (255, 255, 255)
+            position = (10, frame.shape[0] - 10)
+            cv2.putText(frame, timestamp_str, position, font, font_scale, font_color, line_type)
+        if device_stats and device_stats.frames_processed > 0 and device_stats.average_time > 0:
+            fps = 1000 / device_stats.average_time
+            fps_text = f"FPS: {fps:.2f}"
+            font_color = (0, 255, 255)
+            font_scale = 0.5
+            (text_width, text_height), baseline = cv2.getTextSize(fps_text, font, font_scale, line_type)
+            position_fps = (frame.shape[1] - text_width - 10, text_height + 10)
+
+            cv2.putText(frame, fps_text, position_fps, font, font_scale, font_color, line_type)
 
     def start_device_processor_threads(self):
         for device in self.devices:
-            self.frame_buffers[device.name] = Queue(maxsize=self.buffer_max_size)
-            device_processor_thread = threading.Thread(name=f"{device.name} Stream Processor", target=self.process_device,
+            self.device_stats[device.name] = DeviceStat(name=device.name)
+            device_processor_thread = threading.Thread(name=f"{device.name} Stream Processor",
+                                                       target=self.process_device,
                                                        args=(device,), daemon=True)
             self.log.info(f"Starting thread to process device: {device.name}")
             device_processor_thread.start()
             self.device_processor_threads.append(device_processor_thread)
-
 
     def run_process_detection(self):
         while self.running:
@@ -161,17 +175,13 @@ class Heimdall(Process):
                 self.log.exception(e)
             self.sleep()
 
-
     def load_image_data(self, device: Device):
         """
-        get the most recent frame for the device
+        get the most recent frame for the device (0s delay)
         """
         with self.latest_frame_lock:
-            latest_frame = self.latest_frame[device.name]
-        if latest_frame is None:
-            return None
+            latest_frame = self.latest_frame.get(device.name)
         return latest_frame
-
 
     def identify_objects(self, image_data) -> List[IdentifiedObject]:
         """ identify objects data from the image_data """
@@ -184,13 +194,12 @@ class Heimdall(Process):
 
             detected_class_names = [result.names[int(c)] for c in result.boxes.cls.tolist()]
             for detected_class_name in detected_class_names:
-                if detected_class_name == 'dog':  # yolo identifies my cat as a dog
+                if detected_class_name == 'dog' or detected_class_name == 'mouse':
                     detected_class_name = 'cat'
                 identified_objects.append(
                     IdentifiedObject(name=detected_class_name, location='apartment', tags=['heimdall', 'tracking']))
 
         return identified_objects
-
 
     def track_identified_objects(self, device, identified_objects_data):
         """ create events in the events db for identified objects """
@@ -203,7 +212,6 @@ class Heimdall(Process):
             self.event_service.create(Event(**tracker_event_dict))
 
         self.log.info(f"Identified {len(identified_objects_data)} objects")
-
 
     def sleep(self):
         self.log.info(f"Nothing to do, waiting for {self.sleep_time_sec}s")
