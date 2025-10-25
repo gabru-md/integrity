@@ -29,10 +29,10 @@ class Heimdall(Process):
         self.sleep_time_sec = 30
         self.classes_to_detect = items_to_detection_classes(items_to_detect=['cat', 'person', 'dog'])
         self.device_service = DeviceService()  # I can implement a app context to manage db conns
-        self.devices = self.device_service.get_devices_enabled_for(self.name)
         self.frame_buffers = {}
         self.latest_frame = {}
         self.latest_frame_lock = threading.Lock()
+        self.devices = []
 
         self.device_processor_threads = []
         self.delay_seconds = 30
@@ -41,98 +41,92 @@ class Heimdall(Process):
         self.device_frame_read_timeout_sec = 3
 
     def stream(self, device_name):
-        device_frame_buffers = self.frame_buffers[device_name]
-        if not device_frame_buffers:
-            return
-
-        max_empty_retries = 5
-        empty_retries = 0
         while True:
-            try:
-                frame = device_frame_buffers.get_nowait()
+            # safely retrieve the latest frame
+            with self.latest_frame_lock:
+                frame = self.latest_frame.get(device_name)
+
+            if frame is not None:
                 ret, frame_buffer = cv2.imencode('.jpg', frame)
                 frame_bytes = frame_buffer.tobytes()
 
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-                time.sleep(0.25) # we take 4 frames per second on average
-            except Empty:
-                # If the queue is empty during runtime, the consumer thread has failed.
-                self.log.warn(f"Stream buffer unexpectedly empty for {device_name}. Waiting...")
-                time.sleep(1)
-                empty_retries += 1
-                if empty_retries == max_empty_retries:
-                    break
-            except Exception as e:
-                self.log.exception(f"Stream generation error for {device_name}: {e}")
-                break
 
+            time.sleep(0.25)
 
     def process(self):
         self.log.info("Starting Heimdall")
+        self.devices = self.device_service.get_devices_enabled_for(self.name)
         if len(self.devices) == 0:
             self.log.info("No devices are configured, exiting.")
             return
         self.start_device_processor_threads()
         self.run_process_detection()
 
-
     def process_device(self, device: Device):
         """
         process from the device.url stream
         """
         device_streaming_url = device.url
-        device_capture = cv2.VideoCapture(device_streaming_url)
+        device_capture = None
 
         device_frame_buffer_queue: Queue = self.frame_buffers[device.name]
 
-        while not device_frame_buffer_queue.full() and self.running:
-            self.log.info("Filling for initial load from device")
-            ret, frame = device_capture.read()
-            if ret and frame is not None:
+        try:
+            device_capture = cv2.VideoCapture(device_streaming_url)
+            while not device_frame_buffer_queue.full() and self.running:
+                self.log.info("Filling for initial load from device")
+                ret, frame = device_capture.read()
+                if ret and frame is not None:
+                    timestamp = datetime.now()
+                    upscaled_frame = self.upscale_frame(frame, timestamp)
+                    device_frame_buffer_queue.put(upscaled_frame)
+                    with self.latest_frame_lock:
+                        self.latest_frame[device.name] = upscaled_frame.copy()
+                else:
+                    time.sleep(self.device_frame_read_timeout_sec)  # wait if frame is not ready yet
+            self.log.info(f"{device.name} frame buffer filling complete")
+            while self.running:
+                ret, frame = device_capture.read()
+                if not ret or frame is None:
+                    self.log.warning(f"Failed to read frame from {device.name}. Reconnecting in 3s...")
+                    time.sleep(self.device_frame_read_timeout_sec)
+                    device_capture = cv2.VideoCapture(device_streaming_url)  # Attempt to reconnect
+                    continue
+
                 timestamp = datetime.now()
                 upscaled_frame = self.upscale_frame(frame, timestamp)
+                if device_frame_buffer_queue.full():
+                    try:
+                        # Remove the oldest frame (the one that has completed the 30s delay)
+                        device_frame_buffer_queue.get_nowait()
+                    except Empty:
+                        # This should theoretically not happen if the queue is full,
+                        # but it handles rare race conditions during shutdown or unexpected drain.
+                        self.log.warning(f"{device.name} buffer reported full but was empty on get.")
+                else:
+                    # If the queue is not full, it's either the initial fill
+                    # or a refilling process after an outage. Just put the frame.
+                    pass
+
                 device_frame_buffer_queue.put(upscaled_frame)
+
                 with self.latest_frame_lock:
                     self.latest_frame[device.name] = upscaled_frame.copy()
-            else:
-                time.sleep(self.device_frame_read_timeout_sec)  # wait if frame is not ready yet
-
-        self.log.info(f"{device.name} frame buffer is now full")
-
-        while self.running:
-            ret, frame = device_capture.read()
-            if not ret or frame is None:
-                self.log.warning(f"Failed to read frame from {device.name}. Reconnecting in 3s...")
-                time.sleep(self.device_frame_read_timeout_sec)
-                device_capture = cv2.VideoCapture(device_streaming_url)  # Attempt to reconnect
-                continue
-
-            timestamp = datetime.now()
-            upscaled_frame = self.upscale_frame(frame, timestamp)
-            if device_frame_buffer_queue.full():
-                try:
-                    # Remove the oldest frame (the one that has completed the 30s delay)
-                    device_frame_buffer_queue.get_nowait()
-                except Empty:
-                    # This should theoretically not happen if the queue is full,
-                    # but it handles rare race conditions during shutdown or unexpected drain.
-                    self.log.warning(f"{device.name} buffer reported full but was empty on get.")
-            else:
-                # If the queue is not full, it's either the initial fill
-                # or a refilling process after an outage. Just put the frame.
-                pass
-
-            device_frame_buffer_queue.put(upscaled_frame)
-
-            with self.latest_frame_lock:
-                self.latest_frame[device.name] = upscaled_frame.copy()
+        except Exception as e:
+            self.log.exception(f"Exception in device processor thread for {device.name}: {e}")
+        finally:
+            if device_capture:
+                self.log.info(f"Releasing video capture for {device.name}")
+                device_capture.release()
 
 
     def upscale_frame(self, frame: cv2.typing.MatLike, timestamp: datetime = None) -> cv2.typing.MatLike:
         """ implement the upscaling logic in this, upscaling will depend on the device """
         if timestamp:
-            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]  # Truncate microseconds for millisecond precision
+            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")[
+                            :-3]  # Truncate microseconds for millisecond precision
             font = cv2.FONT_HERSHEY_SIMPLEX
             font_scale = 0.7
             font_color = (255, 255, 255)  # White
@@ -145,7 +139,8 @@ class Heimdall(Process):
     def start_device_processor_threads(self):
         for device in self.devices:
             self.frame_buffers[device.name] = Queue(maxsize=self.buffer_max_size)
-            device_processor_thread = threading.Thread(name=f"{device.name} Stream Processor", target=self.process_device, args=(device,), daemon=True)
+            device_processor_thread = threading.Thread(name=f"{device.name} Stream Processor", target=self.process_device,
+                                                       args=(device,), daemon=True)
             self.log.info(f"Starting thread to process device: {device.name}")
             device_processor_thread.start()
             self.device_processor_threads.append(device_processor_thread)
