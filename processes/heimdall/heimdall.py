@@ -218,9 +218,10 @@ class Heimdall(Process):
                 results = model(frame, classes=self.classes_to_detect, verbose=False)
 
                 # 2. Get Animal Bounding Box
-                animal_bbox = self._get_animal_bbox(results)
-                if animal_bbox:
-                    device_stats.bbox = animal_bbox
+                if self.bbox_enabled:
+                    animal_bbox = self._get_animal_bbox(results)
+                    if animal_bbox:
+                        device_stats.bbox = animal_bbox
 
                 timestamp = datetime.now()
 
