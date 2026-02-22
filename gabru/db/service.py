@@ -133,7 +133,7 @@ class CRUDService(ReadOnlyService[T]):
 
     def __init__(self, table_name: str, db: DB):
         super().__init__(table_name, db)
-        self.log = Logger.get_log(f"{table_name}:{db} Service")
+        self.log = Logger.get_log(f"{table_name}:{db.dbname} Service")
         self._create_table()
 
     @abstractmethod
