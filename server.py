@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-from flask import render_template
+from flask import render_template, redirect
 
 from apps.contracts import contracts_app
 from apps.devices import devices_app
@@ -20,6 +20,7 @@ class RasbhariServer(Server):
         self.setup_datetime_filter()
         self.setup_apps()
         self.setup_additional_routes()
+        self.open_webui_url = os.getenv('OPEN_WEBUI_URL')
 
     def setup_datetime_filter(self):
         @self.app.template_filter("datetimeformat")
@@ -48,6 +49,10 @@ class RasbhariServer(Server):
         @self.app.route('/heimdall')
         def show_heimdall_dashboard():
             return render_template('heimdall.html')
+
+        @self.app.route('/chat')
+        def show_open_webui():
+            return redirect(self.open_webui_url), 302
 
 
 if __name__ == '__main__':
