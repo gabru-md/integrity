@@ -5,3 +5,4 @@ google_rasbhari_creds.json
 *.json
 testing.py
 *.pt
+AGENTS.md
