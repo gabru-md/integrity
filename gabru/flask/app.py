@@ -175,7 +175,17 @@ class App(Generic[T]):
         if not self.widget_enabled:
             return [], None
         entities = self.service.get_recent_items(self.widget_recent_limit)
-        return [e.dict() for e in entities], self.model_class_attributes
+        
+        filtered_entities_data = []
+        for entity in entities:
+            entity_dict = entity.dict()
+            filtered_item = {}
+            for attr in self.model_class_attributes:
+                if attr["widget_enabled"] and attr["name"] in entity_dict:
+                    filtered_item[attr["name"]] = entity_dict[attr["name"]]
+            filtered_entities_data.append(filtered_item)
+            
+        return filtered_entities_data, self.model_class_attributes
 
     def set_widget_enabled(self, enabled: bool) -> bool:
         if self.widget_enabled != enabled:

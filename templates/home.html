@@ -74,11 +74,19 @@
     const { createApp, ref, onMounted } = Vue
 
     // Safely embed the dynamic data from Jinja2
-    const JINJA_WIDGETS_DATA = JSON.parse('{{ widgets_data | tojson | safe }}');
+    const JINJA_WIDGETS_DATA = JSON.parse('{{ widgets_data | tojson }}');
 
     const App = {
         setup() {
             const widgetsData = ref(JINJA_WIDGETS_DATA);
+
+            // Catch potential parsing errors explicitly
+            try {
+                widgetsData.value = JSON.parse('{{ widgets_data | tojson }}');
+            } catch (e) {
+                console.error("Error parsing widgets_data JSON:", e, 'Raw data:', '{{ widgets_data | tojson }}');
+                widgetsData.value = {}; // Fallback to empty data
+            }
 
             function formatKey(key) {
                 if (typeof key !== 'string') return '';
