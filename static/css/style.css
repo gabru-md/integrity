@@ -5,76 +5,225 @@
 /* 1. Global Font and Background */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-body {
-    font-family: 'Inter', sans-serif;
-    /* A very soft, light blue-gray background for a clean workspace */
-    background-color: #f7f9fc; /* Equivalent to a very light gray/blue-50 */
+:root {
+    /* Default Variables */
+    --font-primary: 'Inter', sans-serif;
+    
+    /* Radii */
+    --radius-sm: 0.125rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-full: 9999px;
 }
 
-/* 2. Scrollbar Styling (Optional but nice for UX) */
+/* --- THEME DEFINITIONS (Applied to HTML/Root) --- */
+
+/* 1. Nature (Light Base) */
+[data-theme='nature'] {
+    --bg-body: #e8f5e9;       /* Green 50 */
+    --bg-card: #ffffff;       /* White */
+    --bg-sidebar: #c8e6c9;    /* Green 100 */
+    --text-main: #1b5e20;     /* Green 900 */
+    --text-muted: #2e7d32;    /* Green 800 */
+    --accent-color: #43a047;  /* Green 600 */
+    --accent-bg: #a5d6a7;     /* Green 200 */
+    --border-color: #81c784;  /* Green 300 */
+    --font-primary: 'Inter', sans-serif;
+}
+
+/* 2. Twilight (Dark Base) */
+[data-theme='twilight'] {
+    --bg-body: #191b24;
+    --bg-card: #20222f;
+    --bg-sidebar: #1f2335;
+    --text-main: #a9b1d6;
+    --text-muted: #787c99;
+    --accent-color: #7aa2f7;
+    --accent-bg: #3b4261;
+    --border-color: #414868;
+    --font-primary: 'Inter', sans-serif;
+}
+
+/* 3. Dark (Standard Dark Mode) */
+[data-theme='dark'] {
+    --bg-body: #111827;       /* Gray 900 */
+    --bg-card: #1f2937;       /* Gray 800 */
+    --bg-sidebar: #1f2937;    /* Gray 800 */
+    --text-main: #f3f4f6;     /* Gray 100 */
+    --text-muted: #9ca3af;    /* Gray 400 */
+    --accent-color: #6366f1;  /* Indigo 500 */
+    --accent-bg: #374151;     /* Gray 700 */
+    --border-color: #374151;  /* Gray 700 */
+    --font-primary: 'Inter', sans-serif;
+}
+
+/* 4. Solarized (Light Base) */
+[data-theme='solarized'] {
+    --bg-body: #fdf6e3;
+    --bg-card: #eee8d5;
+    --bg-sidebar: #e0d7c6;
+    --text-main: #073642;
+    --text-muted: #586e75;
+    --accent-color: #268bd2;
+    --accent-bg: #d33682;     /* Magenta */
+    --border-color: #93a1a1;
+    --font-primary: 'Inter', sans-serif;
+}
+
+/* 5. Console (Dark Base, Monospace, High Contrast) */
+[data-theme='console'] {
+    --bg-body: #000000;
+    --bg-card: #0a0a0a;
+    --bg-sidebar: #000000;
+    --text-main: #00ff00;
+    --text-muted: #00aa00;
+    --accent-color: #00ff00;
+    --accent-bg: #003300;
+    --border-color: #00ff00;
+    --font-primary: 'Courier New', monospace;
+    
+    /* Console specific look and feel */
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+    --radius-xl: 0px;
+    --radius-2xl: 0px;
+    --radius-full: 0px;
+}
+
+/* --- OVERRIDES --- */
+
+body {
+    font-family: var(--font-primary) !important;
+    background-color: var(--bg-body) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Helper to map Tailwind classes to variables */
+[data-theme] .bg-white { background-color: var(--bg-card) !important; }
+[data-theme] .bg-slate-50 { background-color: var(--bg-body) !important; }
+[data-theme] .bg-slate-100 { background-color: var(--bg-sidebar) !important; }
+[data-theme] .bg-indigo-50 { background-color: var(--accent-bg) !important; }
+[data-theme] .bg-indigo-600 { background-color: var(--accent-color) !important; }
+[data-theme] .bg-gray-200 { background-color: var(--border-color) !important; }
+
+/* Dark mode specific overrides when theme is active */
+[data-theme] .dark .bg-gray-800 { background-color: var(--bg-card) !important; }
+[data-theme] .dark .bg-gray-900 { background-color: var(--bg-body) !important; }
+[data-theme] .dark .bg-gray-700 { background-color: var(--accent-bg) !important; }
+[data-theme] .dark .bg-indigo-600 { background-color: var(--accent-color) !important; }
+
+/* Text Overrides */
+[data-theme] .text-slate-800 { color: var(--text-main) !important; }
+[data-theme] .text-slate-700 { color: var(--text-main) !important; }
+[data-theme] .text-slate-600 { color: var(--text-muted) !important; }
+[data-theme] .text-slate-500 { color: var(--text-muted) !important; }
+[data-theme] .text-indigo-600 { color: var(--accent-color) !important; }
+
+[data-theme] .dark .text-gray-100 { color: var(--text-main) !important; }
+[data-theme] .dark .text-gray-300 { color: var(--text-muted) !important; }
+[data-theme] .dark .text-gray-400 { color: var(--text-muted) !important; }
+[data-theme] .dark .text-indigo-400 { color: var(--accent-color) !important; }
+
+/* Border Overrides */
+[data-theme] .border-slate-200 { border-color: var(--border-color) !important; }
+[data-theme] .border-slate-100 { border-color: var(--border-color) !important; }
+[data-theme] .dark .border-gray-700 { border-color: var(--border-color) !important; }
+
+/* Radius Overrides */
+[data-theme] .rounded-xl { border-radius: var(--radius-xl) !important; }
+[data-theme] .rounded-2xl { border-radius: var(--radius-2xl) !important; }
+[data-theme] .rounded-lg { border-radius: var(--radius-lg) !important; }
+[data-theme] .rounded-md { border-radius: var(--radius-md) !important; }
+[data-theme] .rounded-full { border-radius: var(--radius-full) !important; }
+
+/* Sidebar specific override */
+[data-theme] #sidebar {
+    background-color: var(--bg-sidebar) !important;
+    border-right-color: var(--border-color) !important;
+}
+
+
+/* 2. Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #e0e7ff; /* Light indigo track */
+    background: var(--bg-body, #e0e7ff);
 }
 ::-webkit-scrollbar-thumb {
-    background: #93c5fd; /* Soft blue thumb */
-    border-radius: 4px;
+    background: var(--accent-color, #93c5fd);
+    border-radius: var(--radius-lg, 4px);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #60a5fa; /* Darker blue on hover */
+    background: var(--accent-color, #60a5fa);
+    filter: brightness(0.8);
 }
 
-/* 3. Common Component Overrides (Forms & Inputs) */
+/* 3. Common Component Overrides */
 .app-input {
-    /* Base styles for all form inputs on both pages */
     @apply w-full p-3 border border-gray-300 rounded-xl shadow-sm
            focus:ring-indigo-500 focus:border-indigo-500 transition duration-200
            placeholder:text-gray-400;
+    
+    border-color: var(--border-color) !important;
+    border-radius: var(--radius-xl) !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
 }
 
-/* 4. Dashboard Widget Styling (Home Page) */
+/* 4. Dashboard Widget Styling */
 .widget-card {
     @apply bg-white shadow-xl rounded-2xl border border-gray-100 overflow-hidden
            transition duration-300 ease-in-out hover:shadow-2xl hover:border-indigo-200;
+           
+    background-color: var(--bg-card) !important;
+    border-radius: var(--radius-2xl) !important;
+    border-color: var(--border-color) !important;
 }
 
 .widget-header {
     @apply p-5 bg-indigo-50/50 border-b border-indigo-100 flex justify-between items-center;
+    
+    background-color: var(--bg-sidebar) !important;
+    border-bottom-color: var(--border-color) !important;
 }
 
 .widget-item-detail {
-    /* Styling for each key-value pair inside an item */
     @apply flex justify-between items-start border-b border-gray-50/50 py-1 last:border-b-0;
+    border-bottom-color: var(--border-color) !important;
 }
 
-/* 5. CRUD Table Styling (CRUD Home Page) */
+/* 5. CRUD Table Styling */
 .crud-table {
     @apply min-w-full divide-y divide-gray-200 shadow-lg rounded-xl overflow-hidden;
+    border-radius: var(--radius-xl) !important;
 }
 
 .crud-table thead th {
     @apply bg-indigo-600 text-white px-6 py-4 text-left text-sm font-bold uppercase tracking-wider;
+    background-color: var(--accent-color) !important;
+    color: var(--bg-card) !important; /* text on accent */
 }
 
 .crud-table tbody tr {
     @apply transition duration-100 ease-in-out;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
 }
 
 .crud-table tbody tr:nth-child(odd) {
-    background-color: #fcfcfc; /* Very light odd row */
-}
-
-.crud-table tbody tr:nth-child(even) {
-    background-color: #f7f9fc; /* Background color (gray-50 equivalent) for even row */
+    background-color: var(--bg-body) !important;
 }
 
 .crud-table tbody tr:hover {
-    background-color: #eef2ff; /* Light indigo hover */
+    filter: brightness(0.95);
 }
 
 .crud-action-btn {
     @apply font-semibold transition duration-150 hover:underline focus:outline-none;
+    color: var(--accent-color) !important;
 }

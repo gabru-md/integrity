@@ -119,6 +119,12 @@ Rasbhari runs on a **Raspberry Pi** and provides a comprehensive framework for b
 - **Queue Processing**: Database-backed queue for reliable event processing
 - **Auto-UI Generation**: Web interface generated from data models
 
+### 🎨 Theming System
+- **Multiple Themes**: Choose from Nature, Twilight, Dark, Solarized, and Console.
+- **Dark/Light Mode**: Intelligent switching based on theme selection.
+- **Persistence**: Remembers your preference across sessions.
+- **Console Mode**: High-contrast, monospace theme for the hacker aesthetic.
+
 ### 📊 Applications
 - **Events**: Event logging and querying system
 - **Contracts**: Behavioral rule validation (e.g., "Exercise before gaming")
@@ -274,7 +280,7 @@ Notification delivery service.
 📖 [Courier Documentation](processes/courier/readme.md)
 
 ### Heimdall
-Visual monitoring using YOLO object detection.
+Visual monitoring with YOLO object detection.
 
 - Streams from ESP32-CAM devices
 - Detects objects (people, cats, etc.)
