@@ -109,6 +109,21 @@ A simple personal note-taking system for recording ideas and important informati
   - Timestamped thoughts
   - Simple retrieval interface
 
+### 6. Promises
+**Location**: `apps/promises.py`
+
+A simple integrity tracking system for one-time and recurring commitments.
+
+- **Purpose**: Setup, track, and manage promises and commitments.
+- **Key Features**:
+  - Recurring promises (daily, weekly, monthly)
+  - One-time promises
+  - Tag and type based event matching
+  - Streak and completion rate tracking
+  - Automated fulfillment and violation detection
+- **Registered Processes**:
+  - PromiseProcessor (event-driven and scheduled checker)
+
 ## Creating a New App
 
 To create a new app in Rasbhari, follow these steps:
