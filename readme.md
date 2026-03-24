@@ -137,6 +137,7 @@ Rasbhari runs on a **Raspberry Pi** and provides a comprehensive framework for b
 - **Courier**: Notification delivery via email and iOS shortcuts
 - **Heimdall**: Visual monitoring with YOLO object detection
 - **Atmos**: BLE-based indoor location tracking
+- **Log Viewer**: Built-in real-time log monitoring for all active processes.
 
 ### 📱 IoT Integration
 - ESP32-CAM for video streaming
@@ -296,6 +297,11 @@ BLE-based indoor location tracking.
 - Generates presence events
 
 📖 [Atmos Documentation](processes/atmos/readme.md)
+
+### 📜 Log Monitoring
+View real-time logs for any active process directly from the dashboard.
+- **Live Logs**: Fetch the latest 100 lines of logs.
+- **Troubleshooting**: Instantly diagnose issues without SSH access.
 
 **Want to create your own process?** See the [QueueProcessor Guide](gabru/qprocessor/README.md)
 

@@ -111,6 +111,26 @@ class Server:
                 return jsonify({"message": f"Process {process_name} stopped successfully"}), 200
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
+        @self.app.route('/process_logs/<process_name>')
+        def get_process_logs(process_name):
+            log_dir = os.getenv('LOG_DIR')
+            if not log_dir:
+                return jsonify({"error": "LOG_DIR environment variable not set"}), 500
+
+            log_file_path = os.path.join(log_dir, f"{process_name}.log")
+
+            if not os.path.exists(log_file_path):
+                return jsonify({"error": "Log file not found", "logs": []}), 404
+
+            try:
+                with open(log_file_path, 'r') as f:
+                    # Read all lines and take the last 100
+                    lines = f.readlines()
+                    last_lines = lines[-100:] if len(lines) > 100 else lines
+                    return jsonify({"logs": last_lines})
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+
     def get_processes_data(self) -> list:
         processes_data = []
         process_manager: ProcessManager = self.process_manager
