@@ -3,6 +3,9 @@
 {% block title %}Promises - Integrity Dashboard{% endblock %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+
 <div class="p-6">
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 space-y-4 md:space-y-0">
         <div>
@@ -103,6 +106,9 @@
                     Next: {{ promise.next_check_at|datetimeformat }}
                 </div>
                 <div class="flex space-x-2">
+                    <button onclick="visualizePromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Circadian Chart">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                    </button>
                     <button onclick="refreshPromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" title="Sync Stats">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     </button>
@@ -168,6 +174,26 @@
                 <button type="submit" class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 dark:shadow-none transition-all">Save Promise</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Visualization Modal -->
+<div id="visualizer-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden transform transition-all">
+        <div class="px-8 py-6 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50">
+            <h2 id="viz-title" class="text-2xl font-extrabold text-slate-800 dark:text-gray-100">Consistency Chart</h2>
+            <button onclick="closeVisualizer()" class="text-slate-400 hover:text-slate-600 dark:hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="p-8">
+            <div class="mb-4 text-sm text-slate-500 dark:text-gray-400">
+                Dots show exactly when events occurred. Shaded areas represent night (10PM - 6AM).
+            </div>
+            <div class="h-96 w-full">
+                <canvas id="viz-chart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -248,6 +274,84 @@
         if (response.ok) {
             location.reload();
         }
+    }
+
+    let currentChart = null;
+
+    async function visualizePromise(id) {
+        const response = await fetch(`/promises/${id}/history`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+        document.getElementById('viz-title').innerText = `History: ${data.promise_name}`;
+        document.getElementById('visualizer-modal').classList.remove('hidden');
+
+        const ctx = document.getElementById('viz-chart').getContext('2d');
+        
+        if (currentChart) {
+            currentChart.destroy();
+        }
+
+        currentChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Event Activity',
+                    data: data.history,
+                    backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                    borderColor: 'rgb(79, 70, 229)',
+                    pointRadius: 8,
+                    pointHoverRadius: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'category',
+                        title: { display: true, text: 'Date' },
+                        grid: { display: false }
+                    },
+                    y: {
+                        min: 0,
+                        max: 24,
+                        title: { display: true, text: 'Time (24h)' },
+                        ticks: {
+                            stepSize: 2,
+                            callback: (val) => `${val}:00`
+                        }
+                    }
+                },
+                plugins: {
+                    annotation: {
+                        annotations: {
+                            night1: {
+                                type: 'box',
+                                yMin: 0,
+                                yMax: 6,
+                                backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            night2: {
+                                type: 'box',
+                                yMin: 22,
+                                yMax: 24,
+                                backgroundColor: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `Time: ${ctx.raw.time}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function closeVisualizer() {
+        document.getElementById('visualizer-modal').classList.add('hidden');
     }
 </script>
 {% endblock %}

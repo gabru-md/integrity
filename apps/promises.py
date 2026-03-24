@@ -87,4 +87,40 @@ class PromiseApp(App[Promise]):
                 "current_count": count
             }), 200
 
+        @self.blueprint.route('/<int:promise_id>/history', methods=['GET'])
+        def get_promise_history(promise_id):
+            promise = self.service.get_by_id(promise_id)
+            if not promise:
+                return jsonify({"error": "Promise not found"}), 404
+            
+            # Fetch last 14 days of events
+            end_time = datetime.now()
+            start_time = end_time - timedelta(days=14)
+            
+            filters = {
+                "timestamp": {"$gt": start_time, "$lt": end_time}
+            }
+            if promise.target_event_type:
+                filters["event_type"] = promise.target_event_type
+            
+            events = event_service.find_all(filters=filters)
+            
+            # Filter by tag if needed and format for chart
+            history_data = []
+            for e in events:
+                if not promise.target_event_tag or promise.target_event_tag in e.tags:
+                    # Convert to hours (e.g., 14.5 for 2:30 PM)
+                    ts = e.timestamp
+                    hour_val = ts.hour + (ts.minute / 60)
+                    history_data.append({
+                        "x": ts.strftime("%Y-%m-%d"),
+                        "y": round(hour_val, 2),
+                        "time": ts.strftime("%H:%M")
+                    })
+            
+            return jsonify({
+                "promise_name": promise.name,
+                "history": history_data
+            })
+
 promises_app = PromiseApp()
