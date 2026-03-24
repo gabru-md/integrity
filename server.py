@@ -3,7 +3,6 @@ from datetime import datetime
 
 from flask import render_template, redirect
 
-from apps.contracts import contracts_app
 from apps.devices import devices_app
 from apps.events import events_app
 from apps.shortcuts import shortcuts_app
@@ -37,7 +36,6 @@ class RasbhariServer(Server):
 
     def setup_apps(self):
         self.register_app(promises_app)
-        self.register_app(contracts_app)
         self.register_app(events_app)
         self.register_app(thoughts_app)
         self.register_app(shortcuts_app)

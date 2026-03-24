@@ -56,21 +56,7 @@ The backbone of Rasbhari's event-driven architecture. Stores all system events t
   - Event type classification
 - **Registered Processes**: Courier (notification service)
 
-### 2. Contracts
-**Location**: `apps/contracts.py`
-
-An integrity monitoring system that validates rules against the event stream.
-
-- **Purpose**: Define and validate behavioral rules/constraints
-- **Key Features**:
-  - Event-triggered contract validation
-  - Schedule-based contract checking
-  - Condition parsing and evaluation
-- **Registered Processes**:
-  - Sentinel (event-driven validator)
-  - SentinelOC (schedule-based validator)
-
-### 3. Devices
+### 2. Devices
 **Location**: `apps/devices.py`
 
 Manages hardware devices (ESP32-Cams, BLE beacons, etc.) used by the system.
@@ -83,6 +69,17 @@ Manages hardware devices (ESP32-Cams, BLE beacons, etc.) used by the system.
 - **Registered Processes**:
   - Heimdall (visual monitoring)
   - Atmos (BLE location tracking)
+
+### 3. Projects
+**Location**: `apps/projects.py`
+
+Manages long-term goals and projects, linking them to specific tasks and events.
+
+- **Purpose**: Structure and track progress on larger objectives.
+- **Key Features**:
+  - Project lifecycle management
+  - Task association
+  - Progress visualization
 
 ### 4. Shortcuts
 **Location**: `apps/shortcuts.py`

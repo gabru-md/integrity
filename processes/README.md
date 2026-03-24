@@ -34,30 +34,19 @@ The core logic for the Promises app. It monitors the event stream for tags or ty
   - Next check scheduling
   - Event-driven fulfillment detection
 
-### 2. Sentinel
-**Location**: `processes/sentinel/sentinel.py`
-**Trigger**: Events
-
-An advanced integrity monitoring system that validates complex rules (contracts) against the event stream. (Now considered a legacy system in favor of the simpler Promises system).
-
-- **Key Features**:
-  - Complex condition parsing (SCL)
-  - History-based checks (SINCE)
-  - Time-windowed counts (WITHIN)
-
-### 3. Heimdall
+### 2. Heimdall
 **Location**: `processes/heimdall/heimdall.py`
 **Trigger**: Continuous
 
 A visual monitoring process that handles camera streams and can perform computer vision tasks.
 
-### 4. Courier
+### 3. Courier
 **Location**: `processes/courier/courier.py`
 **Trigger**: Events
 
 A notification service that reacts to specific events and sends alerts (e.g., via Telegram or local notification).
 
-### 5. Atmos
+### 4. Atmos
 **Location**: `processes/atmos/atmos.py`
 **Trigger**: Continuous
 
