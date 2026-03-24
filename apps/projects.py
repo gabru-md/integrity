@@ -4,10 +4,13 @@ from model.project import Project
 from model.timeline import TimelineItem
 from services.projects import ProjectService
 from services.timeline import TimelineService
+from services.events import EventService
+from model.event import Event
 from processes.project_updater import ProjectUpdater
 from datetime import datetime
 
 timeline_service = TimelineService()
+event_service = EventService()
 
 project_app = App(
     'Projects',
@@ -51,6 +54,17 @@ def add_timeline_item(project_id):
             if item.item_type == 'Update':
                 project.progress_count += 1
             project_app.service.update(project)
+            
+            # Create a progress event
+            project_name_dashed = project.name.lower().replace(" ", "-")
+            event_type = f"project:{project_name_dashed}"
+            new_event = Event(
+                event_type=event_type,
+                timestamp=datetime.now(),
+                description=f"Timeline update for project: {project.name}",
+                tags=["progress"]
+            )
+            event_service.create(new_event)
             
         return jsonify({"message": "Timeline item added"}), 201
     except Exception as e:
