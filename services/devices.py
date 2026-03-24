@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from gabru.db.db import DB
 from gabru.db.service import CRUDService
