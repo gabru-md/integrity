@@ -1,0 +1,18 @@
+{% extends "crud.html" %}
+
+{% block xth %}
+    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-gray-300">
+        Timeline
+    </th>
+{% endblock %}
+
+{% block xtd %}
+    {% raw %}
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 dark:text-gray-200">
+        <a :href="`/projects/${item.id}/view`"
+           class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors">
+            View Progress
+        </a>
+    </td>
+    {% endraw %}
+{% endblock %}

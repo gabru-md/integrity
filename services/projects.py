@@ -6,7 +6,7 @@ from model.project import Project
 
 class ProjectService(CRUDService[Project]):
     def __init__(self):
-        super().__init__("projects", DB("main"))
+        super().__init__("projects", DB("rasbhari"))
 
     def _create_table(self):
         if self.db.conn:
