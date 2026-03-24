@@ -24,6 +24,7 @@ class PromiseService(CRUDService[Promise]):
                                 target_event_type VARCHAR(255),
                                 required_count INTEGER DEFAULT 1,
                                 status VARCHAR(50) DEFAULT 'active',
+                                current_count INTEGER DEFAULT 0,
                                 streak INTEGER DEFAULT 0,
                                 best_streak INTEGER DEFAULT 0,
                                 total_completions INTEGER DEFAULT 0,
@@ -51,7 +52,7 @@ class PromiseService(CRUDService[Promise]):
         return (
             promise.name, promise.description, promise.frequency,
             promise.target_event_tag, promise.target_event_type, promise.required_count,
-            promise.status, promise.streak, promise.best_streak,
+            promise.status, promise.current_count, promise.streak, promise.best_streak,
             promise.total_completions, promise.total_periods,
             promise.last_checked_at, promise.next_check_at,
             promise.created_at, promise.updated_at
@@ -67,20 +68,21 @@ class PromiseService(CRUDService[Promise]):
             "target_event_type": row[5],
             "required_count": row[6],
             "status": row[7],
-            "streak": row[8],
-            "best_streak": row[9],
-            "total_completions": row[10],
-            "total_periods": row[11],
-            "last_checked_at": row[12],
-            "next_check_at": row[13],
-            "created_at": row[14],
-            "updated_at": row[15]
+            "current_count": row[8],
+            "streak": row[9],
+            "best_streak": row[10],
+            "total_completions": row[11],
+            "total_periods": row[12],
+            "last_checked_at": row[13],
+            "next_check_at": row[14],
+            "created_at": row[15],
+            "updated_at": row[16]
         }
         return Promise(**promise_dict)
 
     def _get_columns_for_insert(self) -> List[str]:
         return ["name", "description", "frequency", "target_event_tag", "target_event_type", 
-                "required_count", "status", "streak", "best_streak", "total_completions", 
+                "required_count", "status", "current_count", "streak", "best_streak", "total_completions", 
                 "total_periods", "last_checked_at", "next_check_at", "created_at", "updated_at"]
 
     def _get_columns_for_update(self) -> List[str]:
@@ -88,5 +90,5 @@ class PromiseService(CRUDService[Promise]):
 
     def _get_columns_for_select(self) -> List[str]:
         return ["id", "name", "description", "frequency", "target_event_tag", "target_event_type", 
-                "required_count", "status", "streak", "best_streak", "total_completions", 
+                "required_count", "status", "current_count", "streak", "best_streak", "total_completions", 
                 "total_periods", "last_checked_at", "next_check_at", "created_at", "updated_at"]

@@ -22,6 +22,8 @@ class Promise(WidgetUIModel):
     # status: active, fulfilled, broken, pending, paused
     status: str = Field(default="active", edit_enabled=False, widget_enabled=True)
     
+    current_count: int = Field(default=0, edit_enabled=False, widget_enabled=True)
+    
     # Tracking
     streak: int = Field(default=0, edit_enabled=False, widget_enabled=True)
     best_streak: int = Field(default=0, edit_enabled=False, widget_enabled=True)

@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
-from flask import render_template
+from flask import render_template, jsonify
 from gabru.flask.app import App
 from model.promise import Promise
 from services.promises import PromiseService
+from services.events import EventService
 from processes.promise_processor import PromiseProcessor
 
 promise_service = PromiseService()
+event_service = EventService()
 
 def process_promise_data(data):
     # Initialize next_check_at if not provided
@@ -50,5 +52,39 @@ class PromiseApp(App[Promise]):
                                    app_name=self.name,
                                    promises=promises,
                                    stats=stats)
+
+        @self.blueprint.route('/<int:promise_id>/refresh', methods=['POST'])
+        def refresh_stats(promise_id):
+            promise = self.service.get_by_id(promise_id)
+            if not promise:
+                return jsonify({"error": "Promise not found"}), 404
+            
+            # Re-count events for current period
+            end_time = datetime.now()
+            last_check = promise.last_checked_at or promise.created_at
+            
+            # Simple window query
+            from services.events import EventService
+            ev_service = EventService()
+            
+            filters = {
+                "timestamp": {"$gt": last_check, "$lt": end_time}
+            }
+            if promise.target_event_type:
+                filters["event_type"] = promise.target_event_type
+            
+            events = ev_service.find_all(filters=filters)
+            if promise.target_event_tag:
+                count = sum(1 for e in events if promise.target_event_tag in e.tags)
+            else:
+                count = len(events)
+            
+            promise.current_count = count
+            self.service.update(promise)
+            
+            return jsonify({
+                "message": "Stats refreshed",
+                "current_count": count
+            }), 200
 
 promises_app = PromiseApp()

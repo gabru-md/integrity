@@ -29,11 +29,12 @@ class PromiseProcessor(QueueProcessor[Event]):
         active_promises = self.promise_service.get_promises_by_status("active")
         for promise in active_promises:
             if self._event_matches_promise(event, promise):
-                self.log.info(f"Event {event.id} matches promise: {promise.name}")
-                # We don't immediately fulfill it here because it might be a recurring promise
-                # that needs N events. We just log it or we could have a temporary counter.
-                # Actually, let's keep it simple: the periodic check will count events.
-                pass
+                # Check if event is within current period
+                start_time = self._get_start_time(promise, datetime.now())
+                if event.timestamp > start_time:
+                    promise.current_count += 1
+                    self.promise_service.update(promise)
+                    self.log.info(f"Event {event.id} incremented current_count for promise: {promise.name}")
         return True
 
     def _event_matches_promise(self, event: Event, promise: Promise) -> bool:
@@ -93,6 +94,7 @@ class PromiseProcessor(QueueProcessor[Event]):
                 self.log.info(f"One-time promise broken: {promise.name}")
 
         promise.total_periods += 1
+        promise.current_count = 0
         promise.last_checked_at = end_time
         promise.next_check_at = self._calculate_next_check(promise, end_time)
         
