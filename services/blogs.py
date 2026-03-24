@@ -6,7 +6,7 @@ from model.blog import BlogPost
 
 class BlogService(CRUDService[BlogPost]):
     def __init__(self):
-        super().__init__("blog_posts", DB("blogs"))
+        super().__init__("blog_posts", DB("rasbhari"))
 
     def _create_table(self):
         if self.db.conn:
@@ -48,7 +48,7 @@ class BlogService(CRUDService[BlogPost]):
         return ["title", "slug", "content", "tags", "status", "created_at", "updated_at"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["title", "slug", "content", "tags", "status", "updated_at"]
+        return ["title", "slug", "content", "tags", "status", "created_at", "updated_at"]
 
     def _get_columns_for_select(self) -> List[str]:
         return ["id", "title", "slug", "content", "tags", "status", "created_at", "updated_at"]

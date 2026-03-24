@@ -119,6 +119,11 @@ class ReadOnlyService(Generic[T]):
             rows = cursor.fetchall()
             return [self._to_object(row) for row in rows]
 
+    def find_one_by_field(self, field_name: str, value: Any) -> Optional[T]:
+        """Retrieves a single object by a specific field and value."""
+        results = self.find_all(filters={field_name: value})
+        return results[0] if results else None
+
     @abstractmethod
     def _get_columns_for_select(self) -> List[str]:
         """Returns the list of columns for a SELECT statement."""

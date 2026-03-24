@@ -195,9 +195,22 @@
 <style>
     .editor-toolbar { border-color: #e2e8f0; background: #f8fafc; border-radius: 12px 12px 0 0; }
     .CodeMirror { border-color: #e2e8f0; border-radius: 0 0 12px 12px; min-height: 300px; }
-    .dark .editor-toolbar { border-color: #374151; background: #1f2937; color: white; }
-    .dark .CodeMirror { border-color: #374151; background: #111827; color: #e5e7eb; }
-    .dark .editor-toolbar a { color: #9ca3af !important; }
-    .dark .editor-toolbar a.active, .dark .editor-toolbar a:hover { background: #374151; color: white !important; }
+    
+    [data-theme] .editor-toolbar { 
+        border-color: var(--border-color) !important; 
+        background: var(--bg-sidebar) !important; 
+        color: var(--text-main) !important; 
+    }
+    [data-theme] .CodeMirror { 
+        border-color: var(--border-color) !important; 
+        background: var(--bg-card) !important; 
+        color: var(--text-main) !important; 
+    }
+    [data-theme] .editor-toolbar a { color: var(--text-muted) !important; }
+    [data-theme] .editor-toolbar a.active, [data-theme] .editor-toolbar a:hover { 
+        background: var(--accent-bg) !important; 
+        color: var(--text-main) !important; 
+    }
+    [data-theme] .editor-statusbar { color: var(--text-muted) !important; }
 </style>
 {% endblock %}
