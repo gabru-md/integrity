@@ -154,21 +154,6 @@
     </ul>
 
     <div class="absolute bottom-4 left-4 right-4 p-3 border-t border-slate-100 dark:border-gray-700/50">
-        <button id="theme-toggle" onclick="toggleTheme()"
-                class="flex items-center justify-center w-full p-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors
-                           dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">
-            <svg id="sun-icon" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                 xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-            </svg>
-            <svg id="moon-icon" class="w-5 h-5 mr-2 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                 xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-            </svg>
-            <span id="theme-text">Light Mode</span>
-        </button>
         <div class="mt-4 p-0 text-center text-sm text-slate-500
         dark:text-gray-400">
             github: <a href="https://github.com/gabru-md" target="_blank">@gabru-md</a>
@@ -196,30 +181,6 @@
 </main>
 
 <script>
-    // Theme Toggle Logic (unchanged)
-    function toggleTheme() {
-        const html = document.documentElement;
-        const isDarkMode = html.classList.toggle('dark');
-        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-        updateThemeIcons(isDarkMode);
-    }
-
-    function updateThemeIcons(isDarkMode) {
-        const sunIcon = document.getElementById('sun-icon');
-        const moonIcon = document.getElementById('moon-icon');
-        const themeText = document.getElementById('theme-text');
-
-        if (isDarkMode) {
-            sunIcon.classList.remove('hidden');
-            moonIcon.classList.add('hidden');
-            themeText.textContent = 'Light Mode';
-        } else {
-            sunIcon.classList.add('hidden');
-            moonIcon.classList.remove('hidden');
-            themeText.textContent = 'Dark Mode';
-        }
-    }
-
     // Sidebar Toggle Logic (NEW)
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -228,12 +189,6 @@
         // For mobile, we use transform: translateX(-100%) to hide it, and translateX(0) to show it.
         sidebar.classList.toggle('open');
     }
-
-    // Initial setup for theme and sidebar
-    let theme = localStorage.getItem('theme') || 'dark'; // default dark
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    updateThemeIcons(theme === 'dark');
-
 </script>
 </body>
 </html>
