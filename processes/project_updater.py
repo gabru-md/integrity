@@ -19,7 +19,7 @@ class ProjectUpdater(QueueProcessor[Event]):
     def __init__(self, **kwargs):
         self.event_service = EventService()
         self.project_service = ProjectService()
-        super().__init__(name="ProjectUpdater", service=self.event_service, **kwargs)
+        super().__init__(service=self.event_service, **kwargs)
 
     def filter_item(self, event: Event) -> Event | None:
         # We only care about project events or state change tags
