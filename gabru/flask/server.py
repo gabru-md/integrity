@@ -1,8 +1,9 @@
 import threading
 
-from flask import Flask, render_template, redirect, send_from_directory, jsonify
+from flask import Flask, render_template, redirect, send_from_directory, jsonify, session, request, abort
 from gabru.log import Logger
 from gabru.flask.app import App
+from gabru.auth import PermissionManager, Role, admin_required
 import os
 
 from gabru.process import ProcessManager
@@ -19,12 +20,23 @@ class Server:
     def __init__(self, name: str, template_folder="templates", static_folder="static"):
         self.name = name
         self.app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+        self.app.secret_key = os.getenv("FLASK_SECRET_KEY", "super-secret-key-for-sessions")
         self.setup_default_routes()
+        self.setup_auth_context()
         self.not_allowed_app_names = []
         self.log = Logger.get_log(self.name)
         self.registered_apps = []
         self.process_manager = None
         self.process_manager_thread = None
+
+    def setup_auth_context(self):
+        @self.app.context_processor
+        def inject_permissions():
+            return dict(
+                PermissionManager=PermissionManager,
+                current_role=PermissionManager.get_current_role(),
+                Role=Role
+            )
 
     def register_app(self, app: App):
         if app.name.lower() in self.not_allowed_app_names:
@@ -47,151 +59,121 @@ class Server:
             widgets_data = self.get_widgets_data()
             return render_template('home.html', widgets_data=widgets_data)
 
+        @self.app.route('/set_role/<role_name>', methods=['POST'])
+        def set_role(role_name):
+            try:
+                role = Role(role_name.lower())
+                PermissionManager.set_role(role)
+                return jsonify({"message": f"Role set to {role_name}"}), 200
+            except ValueError:
+                return jsonify({"error": "Invalid role"}), 400
+
         @self.app.route('/apps')
+        @admin_required
         def apps():
             apps_data = self.get_apps_data()
             return render_template('apps.html', apps_data=apps_data)
 
         @self.app.route('/processes')
+        @admin_required
         def processes():
             processes_data = self.get_processes_data()
             return render_template('processes.html', processes_data=processes_data)
-
-        @self.app.route('/shortcuts')
-        def shortcuts():
-            return redirect('shortcuts/home'), 302
+        
+        @self.app.route('/heimdall')
+        @admin_required
+        def heimdall():
+            return render_template('heimdall.html')
 
         @self.app.route('/devices')
+        @admin_required
         def devices():
-            return redirect('devices/home'), 302
+            return redirect('/devices/home')
 
         @self.app.route('/download/<filename>')
         def download(filename):
             return send_from_directory(directory=SERVER_FILES_FOLDER, path=filename, as_attachment=True)
 
         @self.app.route('/enable_process/<process_name>', methods=['POST'])
+        @admin_required
         def enable_process(process_name):
             if self.process_manager:
-                process_manager: ProcessManager = self.process_manager
-                success = process_manager.enable_process(process_name)
+                success = self.process_manager.enable_process(process_name)
                 if success:
                     return jsonify({"message": f"Process {process_name} enabled successfully"}), 200
                 else:
-                    return jsonify({"error": f"Failed to enable process {process_name}. Check logs for details."}), 500
+                    return jsonify({"error": f"Failed to enable process {process_name}"}), 500
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
         @self.app.route('/disable_process/<process_name>', methods=['POST'])
+        @admin_required
         def disable_process(process_name):
             if self.process_manager:
-                process_manager: ProcessManager = self.process_manager
-                success = process_manager.disable_process(process_name)
+                success = self.process_manager.disable_process(process_name)
                 if success:
                     return jsonify({"message": f"Process {process_name} disabled successfully"}), 200
                 else:
-                    return jsonify({"error": f"Failed to disable process {process_name}. Check logs for details."}), 500
+                    return jsonify({"error": f"Failed to disable process {process_name}"}), 500
             return jsonify({"error": "Process Manager is not initialized"}), 500
-
+        
         @self.app.route('/start_process/<process_name>', methods=['POST'])
+        @admin_required
         def start_process(process_name):
             if self.process_manager:
-                process_manager: ProcessManager = self.process_manager
-                success = process_manager.run_process(process_name)
+                success = self.process_manager.run_process(process_name)
                 if success:
                     return jsonify({"message": f"Process {process_name} started successfully"}), 200
                 else:
-                    return jsonify({
-                                       "error": f"Failed to start process {process_name}. It might be disabled or already running."}), 500
+                    return jsonify({"error": f"Failed to start process {process_name}"}), 500
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
         @self.app.route('/stop_process/<process_name>', methods=['POST'])
+        @admin_required
         def stop_process(process_name):
             if self.process_manager:
-                process_manager: ProcessManager = self.process_manager
-                process_manager.pause_process(process_name)
+                self.process_manager.pause_process(process_name)
                 return jsonify({"message": f"Process {process_name} stopped successfully"}), 200
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
         @self.app.route('/process_logs/<process_name>')
+        @admin_required
         def get_process_logs(process_name):
             log_dir = os.getenv('LOG_DIR')
             if not log_dir:
-                return jsonify({"error": "LOG_DIR environment variable not set"}), 500
-
-            log_file_path = os.path.join(log_dir, f"{process_name}.log")
-
-            if not os.path.exists(log_file_path):
-                return jsonify({"error": "Log file not found", "logs": []}), 404
-
-            try:
-                with open(log_file_path, 'r') as f:
-                    # Read all lines and take the last 100
-                    lines = f.readlines()
-                    last_lines = lines[-100:] if len(lines) > 100 else lines
-                    return jsonify({"logs": last_lines})
-            except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return jsonify({"error": "LOG_DIR not set"}), 500
+            log_file = os.path.join(log_dir, f"{process_name}.log")
+            if not os.path.exists(log_file):
+                return jsonify({"logs": []}), 404
+            with open(log_file, 'r') as f:
+                lines = f.readlines()
+                return jsonify({"logs": lines[-100:]})
 
     def get_processes_data(self) -> list:
         processes_data = []
-        process_manager: ProcessManager = self.process_manager
-
+        if not self.process_manager: return []
         for app in self.registered_apps:
-            app: App = app
-
-            for blueprint in app.get_processes():
-
-                # Extract the process class and kwargs from the blueprint
-                process_class, args, kwargs = blueprint
-
-                process_name = kwargs.get('name', process_class.__name__)
-                is_alive = False
-                is_enabled = kwargs.get('enabled', False)
-
-                # Get the current INSTANCE from the ProcessManager's map
-                process_instance = process_manager.all_processes_map.get(process_name) if process_manager else None
-
-                # retrieve actual live status and enabled state from the instance/manager
-                if process_manager and process_instance:
-                    is_alive = process_manager.get_process_status(process_name)
-                    is_enabled = process_instance.enabled
-
-                # Check the *class* type, not the instance (which might not exist)
-                if issubclass(process_class, QueueProcessor):  # Assuming QueueProcessor is the class name
-
-                    last_consumed_id = process_instance.q_stats.last_consumed_id if process_instance and hasattr(
-                        process_instance, 'q_stats') else None
-
-                    process_data = {
-                        'name': process_name,
-                        'type': 'QueueProcessor',
-                        'is_alive': is_alive,
-                        'is_enabled': is_enabled,
-                        'last_consumed_id': last_consumed_id,
-                        'owner_app': app.name
-                    }
+            for p_class, args, kwargs in app.get_processes():
+                name = kwargs.get('name', p_class.__name__)
+                instance = self.process_manager.all_processes_map.get(name)
+                is_alive = self.process_manager.get_process_status(name) if instance else False
+                is_enabled = instance.enabled if instance else kwargs.get('enabled', False)
+                
+                p_data = { 'name': name, 'is_alive': is_alive, 'is_enabled': is_enabled, 'owner_app': app.name }
+                if issubclass(p_class, QueueProcessor) and instance:
+                    p_data.update({'type': 'QueueProcessor', 'last_consumed_id': getattr(instance.q_stats, 'last_consumed_id', None)})
                 else:
-                    process_data = {
-                        'name': process_name,
-                        'is_alive': is_alive,
-                        'is_enabled': is_enabled,
-                        'owner_app': app.name,
-                        'type': 'Process',
-                        'last_consumed_id': None
-                    }
-                processes_data.append(process_data)
-
+                    p_data.update({'type': 'Process', 'last_consumed_id': None})
+                processes_data.append(p_data)
         return processes_data
 
     def get_apps_data(self) -> []:
         apps_data = []
         for app in self.registered_apps:
-            app: App = app
             app_data = {
                 'name': app.name,
                 'model_class': app.model_class.__name__,
-                'processes': app.processes,
-                'widget_enabled': app.widget_enabled,
-                'model_class_attributes': app.model_class_attributes
+                'processes': [p[0].__name__ for p in app.processes],
+                'widget_enabled': app.widget_enabled
             }
             apps_data.append(app_data)
         return apps_data
@@ -199,32 +181,24 @@ class Server:
     def get_widgets_data(self) -> {}:
         widgets_data = {}
         for app in self.registered_apps:
-            app: App = app
-            widget_data, model_class_attributes = app.widget_data()
-            if widget_data:
-                widgets_data[app.name.capitalize()] = (widget_data, model_class_attributes)
+            # Check if the current role can view the app AND if the app has its widget functionality enabled
+            if PermissionManager.can_view_app(app.name):
+                widget_data, model_attributes = app.widget_data()
+                if widget_data:
+                    widgets_data[app.name.capitalize()] = (widget_data, model_attributes)
         return widgets_data
 
     def process_manager_init(self):
-        # Now pass ALL processes to the ProcessManager
         processes_to_manage = {}
         self.log.info(f"Starting process manager for {self.name}")
-
         for app in self.registered_apps:
-            app: App = app
-            # Get ALL processes, not just enabled ones
             app_processes = app.get_processes()
-            if len(app_processes) > 0:
+            if app_processes:
                 processes_to_manage[app.name] = app_processes
-
-        self.log.info(f"Loaded all processes to manage")
-
-        # Pass ALL processes to the ProcessManager
+        self.log.info("Loaded all processes to manage")
         self.process_manager = ProcessManager(processes_to_manage=processes_to_manage)
-
         self.process_manager.start()
         self.process_manager.join()
-
         self.log.info("All processes concluded.")
 
     def start_process_manager(self):

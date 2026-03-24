@@ -25,7 +25,7 @@ def process_blog_data(data):
 class BlogApp(App[BlogPost]):
     def __init__(self):
         super().__init__(
-            name="blogs",
+            name="Blogs",
             service=blog_service,
             model_class=BlogPost,
             home_template="blog.html",

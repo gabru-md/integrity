@@ -1,8 +1,9 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, abort
 from typing import TypeVar, Generic
 
 from gabru.log import Logger
 from gabru.db.service import CRUDService
+from gabru.auth import PermissionManager, write_access_required, Role
 
 T = TypeVar('T')
 
@@ -37,7 +38,13 @@ class App(Generic[T]):
 
     def setup_default_routes(self):
 
+        @self.blueprint.before_request
+        def check_access():
+            if not PermissionManager.can_view_app(self.name):
+                return abort(403)
+
         @self.blueprint.route('/', methods=['POST'])
+        @write_access_required
         def create():
             """ Create a new entity """
             data = request.json
@@ -70,6 +77,7 @@ class App(Generic[T]):
                 return jsonify({"error": f"{self.name.capitalize()} not found"}), 404
 
         @self.blueprint.route('/<int:entity_id>', methods=['PUT'])
+        @write_access_required
         def update(entity_id):
             """ Update an entity """
             data = request.json
@@ -86,6 +94,7 @@ class App(Generic[T]):
                 return jsonify({"error": str(e)}), 400
 
         @self.blueprint.route('/<int:entity_id>', methods=['DELETE'])
+        @write_access_required
         def delete(entity_id):
             """ Delete an entity """
             if self.service.delete(entity_id):
@@ -94,6 +103,7 @@ class App(Generic[T]):
                 return jsonify({"error": f"{self.name.capitalize()} not found"})
 
         @self.blueprint.route('/widget/<action>', methods=['POST'])
+        @write_access_required
         def toggle_widget(action):
             if action == 'enable':
                 success = self.set_widget_enabled(True)

@@ -27,7 +27,7 @@ def process_promise_data(data):
 class PromiseApp(App[Promise]):
     def __init__(self):
         super().__init__(
-            name="promises",
+            name="Promises",
             service=promise_service,
             model_class=Promise,
             home_template="promises.html",
