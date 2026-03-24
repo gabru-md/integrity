@@ -103,3 +103,25 @@ class DeviceService(CRUDService[Device]):
             rows = cursor.fetchall()
             devices = [self._to_object(row) for row in rows]
         return devices
+
+    def create(self, obj: Device) -> Optional[int]:
+        res = super().create(obj)
+        if res:
+            try:
+                from services.events import EventService
+                from model.event import Event
+                from datetime import datetime
+                event_service = EventService()
+                
+                device_name_dashed = obj.name.lower().replace(" ", "-")
+                event_type = f"device:{device_name_dashed}:created"
+                new_event = Event(
+                    event_type=event_type,
+                    timestamp=datetime.now(),
+                    description=f"New device added: {obj.name}",
+                    tags=["device"]
+                )
+                event_service.create(new_event)
+            except Exception:
+                pass 
+        return res

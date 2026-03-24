@@ -51,3 +51,22 @@ class ThoughtService(CRUDService[Thought]):
 
     def _get_columns_for_select(self) -> List[str]:
         return ["id", "message", "created_at"]
+
+    def create(self, obj: Thought) -> Optional[int]:
+        res = super().create(obj)
+        if res:
+            try:
+                from services.events import EventService
+                from model.event import Event
+                from datetime import datetime
+                event_service = EventService()
+                new_event = Event(
+                    event_type="thought:posted",
+                    timestamp=datetime.now(),
+                    description=f"New thought posted",
+                    tags=["thought"]
+                )
+                event_service.create(new_event)
+            except Exception:
+                pass
+        return res
