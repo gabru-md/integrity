@@ -8,6 +8,7 @@ from apps.events import events_app
 from apps.thoughts import thoughts_app
 from apps.projects import project_app
 from apps.promises import promises_app
+from apps.blogs import blog_app
 from gabru.flask.server import Server
 
 basedir = os.path.dirname(__file__)
@@ -34,6 +35,7 @@ class RasbhariServer(Server):
                 return value
 
     def setup_apps(self):
+        self.register_app(blog_app)
         self.register_app(promises_app)
         self.register_app(events_app)
         self.register_app(thoughts_app)

@@ -1,0 +1,203 @@
+{% extends "index.html" %}
+
+{% block title %}Personal Blog - Rasbhari{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+<div class="p-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 space-y-4 md:space-y-0">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-800 dark:text-gray-100 flex items-center">
+                <svg class="w-8 h-8 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2zM14 4v4h4"></path>
+                </svg>
+                Personal Blog
+            </h1>
+            <p class="text-slate-500 dark:text-gray-400 mt-1">Capture your thoughts in markdown.</p>
+        </div>
+        <button onclick="openBlogModal()" class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all duration-200 shadow-lg transform hover:-translate-y-0.5">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Write Post
+        </button>
+    </div>
+
+    <!-- Posts List -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% for post in posts %}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                            {% if post.status == 'published' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400
+                            {% else %}bg-slate-100 text-slate-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+                            {{ post.status|capitalize }}
+                        </span>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-400">{{ post.created_at|datetimeformat }}</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-gray-100 mb-2 hover:text-emerald-600 dark:hover:text-emerald-400">
+                    <a href="/blogs/p/{{ post.slug }}">{{ post.title }}</a>
+                </h3>
+                <div class="flex flex-wrap gap-2 mt-4">
+                    {% for tag in post.tags %}
+                    <span class="px-2 py-1 bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-400 text-[10px] rounded uppercase tracking-wider font-bold">#{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 dark:bg-gray-800/50 border-t border-slate-100 dark:border-gray-700 flex justify-between items-center">
+                <a href="/blogs/p/{{ post.slug }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">Read More &rarr;</a>
+                <div class="flex space-x-2">
+                    <button onclick="editBlog({{ post.id }})" class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    </button>
+                    <button onclick="deleteBlog({{ post.id }})" class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Blog Editor Modal -->
+<div id="blog-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+        <div class="px-8 py-6 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50">
+            <h2 id="blog-modal-title" class="text-2xl font-extrabold text-slate-800 dark:text-gray-100">Write New Post</h2>
+            <button onclick="closeBlogModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-8">
+            <form id="blog-form" class="space-y-6">
+                <input type="hidden" id="blog-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Title</label>
+                        <input type="text" id="title" required class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Slug</label>
+                        <input type="text" id="slug" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all" placeholder="my-awesome-post">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Tags (comma separated)</label>
+                        <input type="text" id="tags" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all" placeholder="tech, life, Rasbhari">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Status</label>
+                        <select id="status" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Content (Markdown)</label>
+                    <textarea id="blog-editor"></textarea>
+                </div>
+                <div class="pt-4 flex space-x-3">
+                    <button type="button" onclick="closeBlogModal()" class="flex-1 px-6 py-3 border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all">Save Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let simplemde = null;
+
+    function initEditor() {
+        if (!simplemde) {
+            simplemde = new SimpleMDE({ 
+                element: document.getElementById("blog-editor"),
+                spellChecker: false,
+                autosave: { enabled: true, uniqueId: "blog-editor- Rasbhari", delay: 1000 },
+                placeholder: "Write your masterpiece here...",
+                forceSync: true
+            });
+        }
+    }
+
+    function openBlogModal(post = null) {
+        initEditor();
+        if (post) {
+            document.getElementById('blog-modal-title').innerText = 'Edit Post';
+            document.getElementById('blog-id').value = post.id;
+            document.getElementById('title').value = post.title;
+            document.getElementById('slug').value = post.slug;
+            document.getElementById('tags').value = post.tags.join(', ');
+            document.getElementById('status').value = post.status;
+            simplemde.value(post.content);
+        } else {
+            document.getElementById('blog-modal-title').innerText = 'Write New Post';
+            document.getElementById('blog-form').reset();
+            document.getElementById('blog-id').value = '';
+            simplemde.value('');
+        }
+        document.getElementById('blog-modal').classList.remove('hidden');
+    }
+
+    function closeBlogModal() {
+        document.getElementById('blog-modal').classList.add('hidden');
+    }
+
+    document.getElementById('blog-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('blog-id').value;
+        const data = {
+            title: document.getElementById('title').value,
+            slug: document.getElementById('slug').value,
+            tags: document.getElementById('tags').value,
+            status: document.getElementById('status').value,
+            content: simplemde.value()
+        };
+
+        const url = id ? `/blogs/${id}` : '/blogs/';
+        const method = id ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Error saving post');
+        }
+    };
+
+    async function editBlog(id) {
+        const response = await fetch(`/blogs/${id}`);
+        if (response.ok) {
+            const post = await response.json();
+            openBlogModal(post);
+        }
+    }
+
+    async function deleteBlog(id) {
+        if (confirm('Delete this masterpiece?')) {
+            const response = await fetch(`/blogs/${id}`, { method: 'DELETE' });
+            if (response.ok) location.reload();
+        }
+    }
+</script>
+
+<style>
+    .editor-toolbar { border-color: #e2e8f0; background: #f8fafc; border-radius: 12px 12px 0 0; }
+    .CodeMirror { border-color: #e2e8f0; border-radius: 0 0 12px 12px; min-height: 300px; }
+    .dark .editor-toolbar { border-color: #374151; background: #1f2937; color: white; }
+    .dark .CodeMirror { border-color: #374151; background: #111827; color: #e5e7eb; }
+    .dark .editor-toolbar a { color: #9ca3af !important; }
+    .dark .editor-toolbar a.active, .dark .editor-toolbar a:hover { background: #374151; color: white !important; }
+</style>
+{% endblock %}

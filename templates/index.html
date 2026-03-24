@@ -153,6 +153,19 @@
                 </a>
             </li>
             <li>
+                <a href="/blogs/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
+                                     hover:bg-indigo-50 hover:text-indigo-600
+                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
+                                     {% if '/blogs' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2zM14 4v4h4"></path>
+                    </svg>
+                    Blog
+                </a>
+            </li>
+            <li>
                 <a href="/heimdall" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
                                      hover:bg-indigo-50 hover:text-indigo-600
                                      dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400

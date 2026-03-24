@@ -107,6 +107,19 @@ A simple integrity tracking system for one-time and recurring commitments.
 - **Registered Processes**:
   - PromiseProcessor (event-driven and scheduled checker)
 
+### 6. Blogging
+**Location**: `apps/blogs.py`
+
+A personal markdown-based blogging platform.
+
+- **Purpose**: Create and manage personal blog posts with rich formatting.
+- **Key Features**:
+  - Full Markdown editor (SimpleMDE)
+  - Code syntax highlighting (Highlight.js)
+  - Slug generation for SEO-friendly URLs
+  - Tagging and status management (Draft/Published)
+  - Event-driven notifications on new posts
+
 ## Creating a New App
 
 To create a new app in Rasbhari, follow these steps:
