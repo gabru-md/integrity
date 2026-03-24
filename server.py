@@ -5,7 +5,6 @@ from flask import render_template, redirect
 
 from apps.devices import devices_app
 from apps.events import events_app
-from apps.shortcuts import shortcuts_app
 from apps.thoughts import thoughts_app
 from apps.projects import project_app
 from apps.promises import promises_app
@@ -38,7 +37,6 @@ class RasbhariServer(Server):
         self.register_app(promises_app)
         self.register_app(events_app)
         self.register_app(thoughts_app)
-        self.register_app(shortcuts_app)
         self.register_app(devices_app)
         self.register_app(project_app)
 

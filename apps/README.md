@@ -81,21 +81,7 @@ Manages long-term goals and projects, linking them to specific tasks and events.
   - Task association
   - Progress visualization
 
-### 4. Shortcuts
-**Location**: `apps/shortcuts.py`
-
-Integrates with iOS/iWatch shortcuts to trigger events from mobile devices.
-
-- **Purpose**: Create and manage iOS shortcuts that generate events
-- **Key Features**:
-  - Shortcut file generation
-  - Apple signing service integration
-  - Event invocation via shortcuts
-- **Custom Routes**:
-  - `/sign/<id>` - Sign shortcut files for iOS import
-  - `/invoke/<id>` - Trigger event from shortcut
-
-### 5. Thoughts
+### 4. Thoughts
 **Location**: `apps/thoughts.py`
 
 A simple personal note-taking system for recording ideas and important information.
@@ -106,7 +92,7 @@ A simple personal note-taking system for recording ideas and important informati
   - Timestamped thoughts
   - Simple retrieval interface
 
-### 6. Promises
+### 5. Promises
 **Location**: `apps/promises.py`
 
 A simple integrity tracking system for one-time and recurring commitments.
