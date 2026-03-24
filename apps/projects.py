@@ -4,7 +4,7 @@ from services.projects import ProjectService
 from processes.project_updater import ProjectUpdater
 
 project_app = App(
-    'Project',
+    'Projects',
     service=ProjectService(),
     model_class=Project,
     widget_enabled=True,

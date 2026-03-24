@@ -15,8 +15,8 @@ class ProjectUpdater(Process):
     - 'project:state:{new_state}:{project_name}' to change a project's state.
     """
 
-    def __init__(self):
-        super().__init__(event_tag_pattern=["progress:*", "project:*"])
+    def __init__(self, **kwargs):
+        super().__init__(daemon=True, **kwargs)
         self.project_service = ProjectService()
 
     def handle(self, event: Event):
