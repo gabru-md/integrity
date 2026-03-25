@@ -263,6 +263,34 @@
 
 <main id="content-wrapper" class="min-h-screen transition-all duration-300 bg-slate-50 dark:bg-gray-900">
     {% block content %}{% endblock %}
+     <div id="chat-widget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-4">
+        <!-- Chat Button -->
+        <button id="chat-button"
+                class="bg-indigo-600 dark:bg-green-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-green-400 transition transform hover:-translate-y-1 chat-pulse">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                 xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+            </svg>
+        </button>
+
+        <!-- Chat Window -->
+        <div id="chat-window"
+             class="hidden flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden
+                    w-80 md:w-96 h-[60vh] max-h-[600px] border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center p-4 bg-indigo-600 dark:bg-green-600 text-white shadow-md">
+                <h3 class="text-lg font-semibold">Ollama Chat</h3>
+                <button id="close-chat-button" class="p-1 rounded-full hover:bg-white hover:text-indigo-600 dark:hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 w-full h-full relative">
+                <iframe id="chat-frame" src="" frameborder="0" class="w-full h-full opacity-0 transition-opacity duration-300"></iframe>
+            </div>
+        </div>
+    </div>
 </main>
 
 <script>
@@ -303,6 +331,50 @@
             location.href = '/'; // Go home to refresh state
         }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const chatButton = document.getElementById('chat-button');
+        const closeChatButton = document.getElementById('close-chat-button');
+        const chatWindow = document.getElementById('chat-window');
+        const chatFrame = document.getElementById('chat-frame');
+        // Get the OPEN_WEBUI_URL from the template context
+        const openWebuiUrl = "{{ open_webui_url }}";
+
+        let isChatLoaded = false;
+
+        chatButton.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+            chatWindow.classList.toggle('chat-window-active');
+
+            // Load the iframe content only on the first opening
+            if (!chatWindow.classList.contains('hidden') && !isChatLoaded && openWebuiUrl) {
+                chatFrame.src = openWebuiUrl;
+                chatFrame.onload = () => {
+                    chatFrame.classList.add('loaded');
+                };
+                isChatLoaded = true;
+            }
+            // Remove pulse animation after first click
+            chatButton.classList.remove('chat-pulse');
+        });
+
+        closeChatButton.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+            chatWindow.classList.remove('chat-window-active');
+        });
+
+        // Close chat window if clicked outside
+        document.addEventListener('click', (event) => {
+            if (!chatWindow.classList.contains('hidden') &&
+                !chatWindow.contains(event.target) &&
+                !chatButton.contains(event.target)) {
+                chatWindow.classList.add('hidden');
+                chatWindow.classList.remove('chat-window-active');
+            }
+        });
+    });
+
+
 </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-from flask import request, jsonify, render_template
+from flask import request, jsonify
 from gabru.flask.app import App
 from model.project import Project
 from model.timeline import TimelineItem
@@ -8,6 +8,7 @@ from services.events import EventService
 from model.event import Event
 from processes.project_updater import ProjectUpdater
 from datetime import datetime
+from gabru.flask.util import render_flask_template
 
 timeline_service = TimelineService()
 event_service = EventService()
@@ -28,7 +29,7 @@ def view_project(project_id):
     project = project_app.service.get_by_id(project_id)
     if not project:
         return "Project not found", 404
-    return render_template('project_details.html', project=project)
+    return render_flask_template('project_details.html', project=project)
 
 @project_app.blueprint.route('/<int:project_id>/timeline', methods=['GET'])
 def get_timeline(project_id):

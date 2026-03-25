@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify, render_template, abort
+from flask import Blueprint, request, jsonify, abort
 from typing import TypeVar, Generic
 
 from gabru.log import Logger
 from gabru.db.service import CRUDService
 from gabru.auth import PermissionManager, write_access_required, Role
+from gabru.flask.util import render_flask_template
 
 T = TypeVar('T')
 
@@ -153,7 +154,7 @@ class App(Generic[T]):
         @self.blueprint.route('/home')
         def home():
             """ Renders the home page """
-            return render_template(self.home_template,
+            return render_flask_template(self.home_template,
                                    model_class_attributes=self.model_class_attributes,
                                    model_class_name=self.model_class.__name__,
                                    app_name=self.name)

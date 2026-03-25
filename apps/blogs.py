@@ -1,10 +1,11 @@
-from flask import render_template, request, jsonify
+from flask import request, jsonify
 from gabru.flask.app import App
 from model.blog import BlogPost
 from services.blogs import BlogService
 from services.events import EventService
 from model.event import Event
 from datetime import datetime
+from gabru.flask.util import render_flask_template
 
 blog_service = BlogService()
 event_service = EventService()
@@ -36,7 +37,7 @@ class BlogApp(App[BlogPost]):
         @self.blueprint.route('/home')
         def home():
             posts = self.service.get_all()
-            return render_template(self.home_template, 
+            return render_flask_template(self.home_template, 
                                    posts=posts, 
                                    app_name=self.name)
 
@@ -45,7 +46,7 @@ class BlogApp(App[BlogPost]):
             post = self.service.get_by_slug(slug)
             if not post:
                 return "Post not found", 404
-            return render_template('blog_post.html', post=post)
+            return render_flask_template('blog_post.html', post=post)
 
         @self.blueprint.route('/', methods=['POST'])
         def create_post():

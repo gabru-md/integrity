@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
-from flask import render_template, jsonify
+from flask import jsonify
 from gabru.flask.app import App
 from model.promise import Promise
 from services.promises import PromiseService
 from services.events import EventService
 from processes.promise_processor import PromiseProcessor
+from gabru.flask.util import render_flask_template
 
 promise_service = PromiseService()
 event_service = EventService()
@@ -46,7 +47,7 @@ class PromiseApp(App[Promise]):
                 "fulfilled": len([p for p in promises if p.status == 'fulfilled']),
                 "broken": len([p for p in promises if p.status == 'broken']),
             }
-            return render_template(self.home_template,
+            return render_flask_template(self.home_template,
                                    model_class_attributes=self.model_class_attributes,
                                    model_class_name=self.model_class.__name__,
                                    app_name=self.name,

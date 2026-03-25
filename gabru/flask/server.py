@@ -1,6 +1,6 @@
 import threading
 
-from flask import Flask, render_template, redirect, send_from_directory, jsonify, session, request, abort
+from flask import Flask, redirect, send_from_directory, jsonify, session, request, abort
 from gabru.log import Logger
 from gabru.flask.app import App
 from gabru.auth import PermissionManager, Role, admin_required
@@ -8,6 +8,7 @@ import os
 
 from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
+from gabru.flask.util import render_flask_template
 
 from dotenv import load_dotenv
 
@@ -57,7 +58,7 @@ class Server:
         @self.app.route('/')
         def home():
             widgets_data = self.get_widgets_data()
-            return render_template('home.html', widgets_data=widgets_data)
+            return render_flask_template('home.html', widgets_data=widgets_data)
 
         @self.app.route('/set_role/<role_name>', methods=['POST'])
         def set_role(role_name):
@@ -72,18 +73,18 @@ class Server:
         @admin_required
         def apps():
             apps_data = self.get_apps_data()
-            return render_template('apps.html', apps_data=apps_data)
+            return render_flask_template('apps.html', apps_data=apps_data)
 
         @self.app.route('/processes')
         @admin_required
         def processes():
             processes_data = self.get_processes_data()
-            return render_template('processes.html', processes_data=processes_data)
+            return render_flask_template('processes.html', processes_data=processes_data)
         
         @self.app.route('/heimdall')
         @admin_required
         def heimdall():
-            return render_template('heimdall.html')
+            return render_flask_template('heimdall.html')
 
         @self.app.route('/devices')
         @admin_required

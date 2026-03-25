@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-from flask import render_template, redirect
+from flask import redirect
 
 from apps.devices import devices_app
 from apps.events import events_app
@@ -10,6 +10,7 @@ from apps.projects import project_app
 from apps.promises import promises_app
 from apps.blogs import blog_app
 from gabru.flask.server import Server
+from gabru.flask.util import render_flask_template
 
 basedir = os.path.dirname(__file__)
 
@@ -51,7 +52,7 @@ class RasbhariServer(Server):
     def setup_additional_routes(self):
         @self.app.route('/heimdall')
         def show_heimdall_dashboard():
-            return render_template('heimdall.html')
+            return render_flask_template('heimdall.html')
 
         @self.app.route('/chat')
         def show_open_webui():

@@ -180,9 +180,10 @@ Rasbhari runs on a **Raspberry Pi** and provides a comprehensive framework for b
 4. **Configure environment variables**
    ```bash
    cp .env.example .env
-   # Edit .env with your database credentials and API keys
-   nano .env
-   ```
+    # Add your Open WebUI URL for the AI chat overlay
+    # OPEN_WEBUI_URL="http://localhost:8080"
+    nano .env
+    ```
 
 5. **Run the server**
    ```bash
@@ -214,7 +215,16 @@ After installation:
    - See all apps and their recent data
    - Access individual app UIs
 
-3. **Explore the documentation**
+3. **Chat with AI**
+   - Click the floating chat button on the bottom right of the dashboard.
+   - Interact with your configured Ollama service via Open WebUI.
+
+4. **Configure the AI Chat**
+   - Ensure you have Ollama running and Open WebUI accessible.
+   - Set the `OPEN_WEBUI_URL` environment variable in your `.env` file.
+     Example: `OPEN_WEBUI_URL="http://localhost:8080"`
+
+5. **Explore the documentation**
    - [Gabru Framework Guide](gabru/readme.md)
    - [Creating Apps](apps/README.md)
    - [Background Processes](processes/)
