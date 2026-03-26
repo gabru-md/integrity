@@ -33,7 +33,7 @@ activities_app = App(
     Activity,
     _process_model_data_func=process_activity_data,
     home_template="activities.html",
-    widget_type="timeline"
+    widget_type="basic"
 )
 
 
