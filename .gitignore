@@ -6,3 +6,4 @@ google_rasbhari_creds.json
 testing.py
 *.pt
 AGENTS.md
+.aider*
