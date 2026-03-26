@@ -107,18 +107,18 @@ A simple integrity tracking system for one-time and recurring commitments.
 - **Registered Processes**:
   - PromiseProcessor (event-driven and scheduled checker)
 
-### 6. Blogging
-**Location**: `apps/blogs.py`
+### 7. Activities
+**Location**: `apps/activities.py`
 
-A personal markdown-based blogging platform.
+Provides a user-friendly interface to define and trigger custom activities, which then emit standardized events into the system. This helps ensure consistency and avoids manual, inconsistent event creation.
 
-- **Purpose**: Create and manage personal blog posts with rich formatting.
+- **Purpose**: Configure repeatable event emission for common tasks.
 - **Key Features**:
-  - Full Markdown editor (SimpleMDE)
-  - Code syntax highlighting (Highlight.js)
-  - Slug generation for SEO-friendly URLs
-  - Tagging and status management (Draft/Published)
-  - Event-driven notifications on new posts
+  - Define activities with a name, event type, description, and default JSON payload.
+  - Trigger activities via a UI button to automatically queue corresponding events.
+  - Ensures consistent event formatting and data.
+- **Custom Endpoints**:
+  - `POST /{app}/trigger/<activity_id>`: Triggers a specific activity by its ID, emitting its configured event.
 
 ## Creating a New App
 

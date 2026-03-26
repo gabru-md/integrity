@@ -9,6 +9,7 @@ from apps.thoughts import thoughts_app
 from apps.projects import project_app
 from apps.promises import promises_app
 from apps.blogs import blog_app
+from apps.activities import activities_app
 from gabru.flask.server import Server
 from gabru.flask.util import render_flask_template
 
@@ -42,6 +43,7 @@ class RasbhariServer(Server):
         self.register_app(thoughts_app)
         self.register_app(devices_app)
         self.register_app(project_app)
+        self.register_app(activities_app)
 
 
     def run_server(self):
