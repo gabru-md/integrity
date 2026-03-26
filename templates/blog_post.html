@@ -24,36 +24,89 @@
         </div>
     </div>
 
-    <div id="blog-content" class="prose prose-slate dark:prose-invert max-w-none 
-                                prose-headings:font-extrabold prose-a:text-emerald-600 
-                                prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800
-                                bg-white dark:bg-gray-900 p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800">
+    <div id="blog-content" class="markdown-body bg-white dark:bg-gray-900 p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100 dark:border-gray-800 text-slate-800 dark:text-gray-200">
         <!-- Markdown rendered here -->
     </div>
 </div>
 
+<style>
+    /* Basic Markdown Styling to ensure headings work even without tailwind-typography */
+    .markdown-body {
+        line-height: 1.6;
+        font-size: 1.125rem;
+    }
+    .markdown-body h1 { font-size: 2.25rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
+    .markdown-body h2 { font-size: 1.875rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
+    .markdown-body h3 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+    .markdown-body p { margin-bottom: 1.25rem; }
+    .markdown-body ul, .markdown-body ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+    .markdown-body ul { list-style-type: disc; }
+    .markdown-body ol { list-style-type: decimal; }
+    .markdown-body li { margin-bottom: 0.5rem; }
+    .markdown-body blockquote { 
+        border-left: 4px solid #10b981; 
+        background: rgba(16, 185, 129, 0.05); 
+        padding: 1rem 1.5rem; 
+        margin: 1.5rem 0;
+        font-style: italic;
+        border-radius: 0 0.5rem 0.5rem 0;
+    }
+    .markdown-body code {
+        background-color: rgba(0,0,0,0.05);
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+    .markdown-body pre {
+        background-color: #1a1a1a;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+    }
+    .markdown-body pre code {
+        background-color: transparent;
+        padding: 0;
+        color: #e5e7eb;
+    }
+    .markdown-body img {
+        max-width: 100%;
+        border-radius: 1rem;
+        margin: 2rem 0;
+    }
+    .markdown-body a {
+        color: #10b981;
+        text-decoration: underline;
+    }
+
+    /* Dark mode overrides */
+    .dark .markdown-body h1, .dark .markdown-body h2 { border-color: rgba(255,255,255,0.1); }
+    .dark .markdown-body code { background-color: rgba(255,255,255,0.1); }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
-        const content = {{ post.content|tojson }};
+        // Use |safe to avoid double escaping if needed, but tojson is safer for JS
+        const rawContent = {{ post.content|tojson }};
         
+        // Configure marked for the latest version API
         marked.setOptions({
-            highlight: function(code, lang) {
-                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-                return hljs.highlight(code, { language }).value;
-            },
-            langPrefix: 'hljs language-',
             breaks: true,
-            gfm: true
+            gfm: true,
+            headerIds: true,
+            mangle: false
         });
 
-        document.getElementById('blog-content').innerHTML = marked.parse(content);
-        hljs.highlightAll();
+        // Parse markdown and set HTML
+        const htmlContent = marked.parse(rawContent);
+        const contentArea = document.getElementById('blog-content');
+        contentArea.innerHTML = htmlContent;
+        
+        // Trigger highlight.js
+        contentArea.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
     });
 </script>
-
-<style>
-    #blog-content h1, #blog-content h2, #blog-content h3 { border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 0.5rem; margin-top: 2.5rem; }
-    .dark #blog-content h1, .dark #blog-content h2, .dark #blog-content h3 { border-bottom: 1px solid rgba(255,255,255,0.05); }
-    #blog-content blockquote { border-left-color: #10b981; background: rgba(16, 185, 129, 0.05); padding: 1rem 2rem; border-radius: 0 1rem 1rem 0; }
-</style>
 {% endblock %}
