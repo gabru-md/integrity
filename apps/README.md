@@ -11,6 +11,7 @@ An **App** in Rasbhari is a modular, self-contained component built on the `gabr
 - **Has a web interface** for viewing and managing data
 - **Can register background processes** that react to data changes
 - **Integrates with the event-driven architecture** of the system
+- **Provides a customizable Dashboard Widget**
 
 ## Architecture
 
@@ -46,195 +47,33 @@ Data Model (model/*.py) → Pydantic Models
 
 ### 1. Events
 **Location**: `apps/events.py`
-
-The backbone of Rasbhari's event-driven architecture. Stores all system events that trigger other apps and processes.
-
-- **Purpose**: Log and track all events in the system
-- **Key Features**:
-  - Tag-based event categorization
-  - Timestamped event tracking
-  - Event type classification
-- **Registered Processes**: Courier (notification service)
+- **Widget**: `count` (Shows total event count)
+- **Purpose**: Log and track all events in the system.
 
 ### 2. Devices
 **Location**: `apps/devices.py`
-
-Manages hardware devices (ESP32-Cams, BLE beacons, etc.) used by the system.
-
-- **Purpose**: Configure and access hardware devices
-- **Key Features**:
-  - Device registration and configuration
-  - Process-device association
-  - Video streaming endpoints for cameras
-- **Registered Processes**:
-  - Heimdall (visual monitoring)
-  - Atmos (BLE location tracking)
+- **Widget**: `basic` (Shows recently active devices)
+- **Purpose**: Configure and access hardware devices (ESP32-Cams, BLE beacons).
 
 ### 3. Projects
 **Location**: `apps/projects.py`
-
-Manages long-term goals and projects, linking them to specific tasks and events.
-
+- **Widget**: `kanban` (Shows status-based project cards)
 - **Purpose**: Structure and track progress on larger objectives.
-- **Key Features**:
-  - Project lifecycle management
-  - Task association
-  - Progress visualization
 
 ### 4. Thoughts
 **Location**: `apps/thoughts.py`
-
-A simple personal note-taking system for recording ideas and important information.
-
-- **Purpose**: Personal tweeting/note-taking engine
-- **Key Features**:
-  - Quick note creation
-  - Timestamped thoughts
-  - Simple retrieval interface
+- **Widget**: `count` (Shows total thoughts captured)
+- **Purpose**: Personal tweeting/note-taking engine.
 
 ### 5. Promises
 **Location**: `apps/promises.py`
-
-A simple integrity tracking system for one-time and recurring commitments.
-
+- **Widget**: `basic` (Shows recent commitments)
 - **Purpose**: Setup, track, and manage promises and commitments.
-- **Key Features**:
-  - Recurring promises (daily, weekly, monthly)
-  - One-time promises
-  - Tag and type based event matching
-  - Streak and completion rate tracking
-  - Automated fulfillment and violation detection
-- **Registered Processes**:
-  - PromiseProcessor (event-driven and scheduled checker)
 
 ### 7. Activities
 **Location**: `apps/activities.py`
-
-Provides a user-friendly interface to define and trigger custom activities, which then emit standardized events into the system. This helps ensure consistency and avoids manual, inconsistent event creation.
-
+- **Widget**: `timeline` (Shows a vertical timeline of recent activity triggers)
 - **Purpose**: Configure repeatable event emission for common tasks.
-- **Key Features**:
-  - Define activities with a name, event type, description, and default JSON payload.
-  - Trigger activities via a UI button to automatically queue corresponding events.
-  - Ensures consistent event formatting and data.
-- **Custom Endpoints**:
-  - `POST /{app}/trigger/<activity_id>`: Triggers a specific activity by its ID, emitting its configured event.
-
-## Creating a New App
-
-To create a new app in Rasbhari, follow these steps:
-
-### Step 1: Define the Data Model
-
-Create a new file in `model/` directory:
-
-```python
-# model/myentity.py
-from pydantic import Field
-from typing import Optional
-from gabru.flask.model import UIModel
-
-class MyEntity(UIModel):
-    id: Optional[int] = Field(default=None, edit_enabled=False)
-    name: str = Field(default=None)
-    description: Optional[str] = Field(default="")
-    created_at: Optional[int] = Field(default=None, edit_enabled=False)
-```
-
-### Step 2: Create the Service
-
-Create a new file in `services/` directory:
-
-```python
-# services/myentity.py
-from model.myentity import MyEntity
-from gabru.db.service import CRUDService
-from gabru.db.db import DB
-from typing import List
-
-class MyEntityService(CRUDService[MyEntity]):
-    def __init__(self):
-        super().__init__("myentities", DB("main"))
-
-    def _create_table(self):
-        if self.db.conn:
-            with self.db.conn.cursor() as cursor:
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS myentities (
-                        id SERIAL PRIMARY KEY,
-                        name VARCHAR(255) NOT NULL,
-                        description TEXT,
-                        created_at BIGINT
-                    )
-                """)
-                self.db.conn.commit()
-
-    def _to_tuple(self, entity: MyEntity) -> tuple:
-        return (entity.name, entity.description, entity.created_at)
-
-    def _to_object(self, row: tuple) -> MyEntity:
-        return MyEntity(
-            id=row[0],
-            name=row[1],
-            description=row[2],
-            created_at=row[3]
-        )
-
-    def _get_columns_for_insert(self) -> List[str]:
-        return ["name", "description", "created_at"]
-
-    def _get_columns_for_update(self) -> List[str]:
-        return ["name", "description", "created_at"]
-
-    def _get_columns_for_select(self) -> List[str]:
-        return ["id", "name", "description", "created_at"]
-```
-
-### Step 3: Create the App Definition
-
-Create a new file in `apps/` directory:
-
-```python
-# apps/myentity.py
-from datetime import datetime
-from gabru.flask.app import App
-from model.myentity import MyEntity
-from services.myentity import MyEntityService
-
-def process_data(json_data):
-    # Add timestamp if creating new entity
-    if 'id' not in json_data:
-        json_data["created_at"] = int(datetime.now().timestamp())
-    return json_data
-
-myentity_app = App(
-    'MyEntity',
-    MyEntityService(),
-    MyEntity,
-    _process_model_data_func=process_data,
-    get_recent_limit=10
-)
-
-# Optional: Register processes
-# myentity_app.register_process(MyProcess, enabled=True)
-```
-
-### Step 4: Register the App
-
-Add your app to the server in `server.py`:
-
-```python
-from apps.myentity import myentity_app
-
-class RasbhariServer(Server):
-    def setup_apps(self):
-        # ... existing apps ...
-        self.register_app(myentity_app)
-```
-
-### Step 5: Create UI Templates (Optional)
-
-If you want a custom UI, create templates in `templates/` directory. Otherwise, the default `crud.html` template will be used.
 
 ## App Configuration Options
 
@@ -248,6 +87,13 @@ When creating an `App` instance, you can configure:
 - `_process_model_data_func`: Custom function to process data before saving
 - `home_template`: Custom HTML template (default: "crud.html")
 - `widget_enabled`: Whether to show in dashboard (default: True)
+- `widget_type`: Type of dashboard widget. Options:
+    - `basic`: List of recent items (Default)
+    - `count`: Large number showing total items
+    - `timeline`: Vertical list with "time-ago" markers
+    - `kanban`: Grid of status-labeled cards
+    - `progress_ring`: Circular progress visualization
+- `widget_config`: Dictionary for additional widget settings (e.g., specific fields to use for progress)
 
 ## Standard API Endpoints
 
@@ -264,42 +110,9 @@ Every app automatically gets these RESTful endpoints:
 | `POST` | `/{app}/widget/enable` | Enable dashboard widget |
 | `POST` | `/{app}/widget/disable` | Disable dashboard widget |
 
-## Extending Apps
-
-You can extend the base `App` class to add custom functionality:
-
-```python
-from gabru.flask.app import App
-from flask import jsonify
-
-class MyCustomApp(App):
-    def __init__(self):
-        super().__init__('MyApp', MyService(), MyModel)
-        self.setup_custom_routes()
-
-    def setup_custom_routes(self):
-        @self.blueprint.route('/custom-action', methods=['POST'])
-        def custom_action():
-            # Your custom logic here
-            return jsonify({"message": "Custom action executed"})
-
-myapp = MyCustomApp()
-```
-
-See `apps/devices.py` for a real example of extending the App class.
-
 ## Best Practices
 
-1. **Keep apps focused**: Each app should manage a single domain
-2. **Use services for logic**: Keep database operations in the service layer
-3. **Validate with Pydantic**: Use model validation for data integrity
-4. **Register processes carefully**: Only enable processes that are needed
-5. **Document custom routes**: Add clear docstrings for any custom endpoints
-6. **Handle errors gracefully**: Use try-except blocks and return meaningful error messages
-
-## Related Documentation
-
-- [Gabru Framework](../gabru/readme.md) - Core framework documentation
-- [Processes](../processes/) - Background processes that work with apps
-- [Services](../services/) - Service layer implementation details
-- [Models](../model/) - Data model definitions
+1. **Choose the right widget**: Use `count` for high-volume data (Events), `timeline` for sequential logs (Activities), and `kanban` for state-driven items (Projects).
+2. **Keep apps focused**: Each app should manage a single domain.
+3. **Use services for logic**: Keep database operations in the service layer.
+4. **Validate with Pydantic**: Use model validation for data integrity.

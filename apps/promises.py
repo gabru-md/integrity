@@ -32,7 +32,9 @@ class PromiseApp(App[Promise]):
             service=promise_service,
             model_class=Promise,
             home_template="promises.html",
-            _process_model_data_func=process_promise_data
+            _process_model_data_func=process_promise_data,
+            widget_type="kanban",
+            widget_recent_limit=3
         )
         self.register_process(PromiseProcessor, enabled=True)
 

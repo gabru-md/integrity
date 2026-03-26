@@ -19,7 +19,9 @@ project_app = App(
     model_class=Project,
     widget_enabled=True,
     get_recent_limit=10,
-    home_template="project_crud.html"
+    home_template="project_crud.html",
+    widget_type="kanban",
+    widget_recent_limit=4
 )
 
 project_app.register_process(ProjectUpdater, enabled=True)

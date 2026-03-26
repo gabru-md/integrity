@@ -48,6 +48,24 @@ class ReadOnlyService(Generic[T]):
             rows = cursor.fetchall()
             return [self._to_object(row) for row in rows]
 
+    def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
+        """Returns the total count of items matching the filters."""
+        if not self.db.get_conn():
+            return 0
+        query = f"SELECT COUNT(*) FROM {self.table_name}"
+        where_clauses = []
+        params = []
+        if filters:
+            for column, filter_val in filters.items():
+                where_clauses.append(f"{column} = %s")
+                params.append(filter_val)
+            if where_clauses:
+                query += " WHERE " + " AND ".join(where_clauses)
+        with self.db.get_conn().cursor() as cursor:
+            cursor.execute(query, tuple(params))
+            row = cursor.fetchone()
+            return row[0] if row else 0
+
     def get_recent_items(self, limit: int = 10) -> List[T]:
         """Retrieves the most recently created items from the database."""
         if not self.db.get_conn():

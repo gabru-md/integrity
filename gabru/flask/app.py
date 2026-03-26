@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, abort
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Optional
 
 from gabru.log import Logger
 from gabru.db.service import CRUDService
@@ -20,7 +20,8 @@ class App(Generic[T]):
     """
 
     def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=10,
-                 widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html", widget_enabled=True):
+                 widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html", 
+                 widget_enabled=True, widget_type="basic", widget_config: Optional[dict] = None):
         self.name = name
         self.log = Logger.get_log(f"{self.name.capitalize()}")
         self.blueprint = Blueprint(self.name, __name__)
@@ -35,6 +36,8 @@ class App(Generic[T]):
         self.processes = []
         self.home_template = home_template
         self.widget_enabled = widget_enabled
+        self.widget_type = widget_type # basic, count, timeline, kanban, progress_ring
+        self.widget_config = widget_config or {}
         self.server_instance = None
 
     def setup_default_routes(self):
@@ -174,9 +177,27 @@ class App(Generic[T]):
 
     def widget_data(self):
         if not self.widget_enabled:
-            return [], None
-        entities = self.service.get_recent_items(self.widget_recent_limit)
+            return None, None
         
+        data = None
+        if self.widget_type == "count":
+            data = self.service.count()
+        elif self.widget_type == "timeline":
+            entities = self.service.get_recent_items(self.widget_recent_limit)
+            data = self._filter_entities(entities)
+        elif self.widget_type == "kanban":
+             entities = self.service.get_recent_items(self.widget_recent_limit)
+             data = self._filter_entities(entities)
+        elif self.widget_type == "progress_ring":
+             # Placeholder for progress ring data (maybe use a specific field or count)
+             data = self.service.count() 
+        else: # basic
+            entities = self.service.get_recent_items(self.widget_recent_limit)
+            data = self._filter_entities(entities)
+            
+        return data, self.model_class_attributes
+
+    def _filter_entities(self, entities):
         filtered_entities_data = []
         for entity in entities:
             entity_dict = entity.dict()
@@ -184,9 +205,10 @@ class App(Generic[T]):
             for attr in self.model_class_attributes:
                 if attr["widget_enabled"] and attr["name"] in entity_dict:
                     filtered_item[attr["name"]] = entity_dict[attr["name"]]
+            if "id" in entity_dict:
+                 filtered_item["id"] = entity_dict["id"]
             filtered_entities_data.append(filtered_item)
-            
-        return filtered_entities_data, self.model_class_attributes
+        return filtered_entities_data
 
     def set_widget_enabled(self, enabled: bool) -> bool:
         if self.widget_enabled != enabled:

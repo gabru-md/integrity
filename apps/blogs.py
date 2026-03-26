@@ -30,7 +30,8 @@ class BlogApp(App[BlogPost]):
             service=blog_service,
             model_class=BlogPost,
             home_template="blog.html",
-            _process_model_data_func=process_blog_data
+            _process_model_data_func=process_blog_data,
+            widget_type="timeline",
         )
 
     def setup_home_route(self):

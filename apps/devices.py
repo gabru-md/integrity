@@ -9,7 +9,7 @@ from services.devices import DeviceService
 
 class DeviceApp(App):
     def __init__(self):
-        super().__init__('Devices', DeviceService(), Device, get_recent_limit=10)
+        super().__init__('Devices', DeviceService(), Device, get_recent_limit=10, widget_type="kanban")
         self.register_process(Heimdall, enabled=False)
         self.register_process(Atmos, enabled=False)
         self.setup_heimdall_routes()

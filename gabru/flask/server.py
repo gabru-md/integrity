@@ -185,8 +185,13 @@ class Server:
             # Check if the current role can view the app AND if the app has its widget functionality enabled
             if PermissionManager.can_view_app(app.name):
                 widget_data, model_attributes = app.widget_data()
-                if widget_data:
-                    widgets_data[app.name.capitalize()] = (widget_data, model_attributes)
+                if widget_data is not None:
+                    widgets_data[app.name.capitalize()] = {
+                        "data": widget_data,
+                        "attributes": model_attributes,
+                        "type": app.widget_type,
+                        "config": app.widget_config
+                    }
         return widgets_data
 
     def process_manager_init(self):

@@ -15,10 +15,10 @@
     <main class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
         {% raw %}
-        <div v-for="(data, widgetName) in widgetsData" :key="widgetName"
+        <div v-for="(widget, widgetName) in widgetsData" :key="widgetName"
              class="bg-white rounded-2xl overflow-hidden border border-slate-100 transition duration-300
                     hover:shadow-lg hover:border-indigo-200
-                    dark:bg-gray-800 dark:border-gray-700 dark:hover:border-indigo-600">
+                    dark:bg-gray-800 dark:border-gray-700 dark:hover:border-indigo-600 flex flex-col">
 
             <header class="p-5 border-b border-slate-100 dark:border-gray-700/50 flex justify-between items-center">
                 <h2 class="text-xl font-bold text-slate-800 dark:text-gray-100 capitalize">
@@ -35,29 +35,78 @@
                 </a>
             </header>
 
-            <div class="p-5 space-y-3">
-                <div v-if="!data[0] || data[0].length === 0"
-                     class="text-center py-4 text-slate-500 italic dark:text-gray-400">
-                    No recent items found.
+            <div class="p-5 flex-grow">
+                <!-- COUNT WIDGET -->
+                <div v-if="widget.type === 'count'" class="flex flex-col items-center justify-center py-8">
+                    <span class="text-6xl font-black text-indigo-600 dark:text-indigo-400">{{ widget.data }}</span>
+                    <span class="text-slate-500 dark:text-gray-400 font-medium mt-2 uppercase tracking-wider text-sm">Total Items</span>
                 </div>
 
-                <div v-for="(item, itemIndex) in data[0]" :key="item.id || itemIndex"
-                     class="p-3 border border-slate-50 rounded-lg transition duration-150 cursor-pointer
-                            hover:bg-indigo-50/50 hover:border-indigo-100
-                            dark:border-gray-700/30 dark:hover:bg-gray-700">
+                <!-- PROGRESS RING WIDGET -->
+                <div v-else-if="widget.type === 'progress_ring'" class="flex flex-col items-center justify-center py-4">
+                    <div class="relative inline-flex items-center justify-center">
+                        <svg class="w-32 h-32 transform -rotate-90">
+                            <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent"
+                                    class="text-slate-100 dark:text-gray-700" />
+                            <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent"
+                                    :stroke-dasharray="364.4"
+                                    :stroke-dashoffset="364.4 - (364.4 * getProgress(widget) / 100)"
+                                    stroke-linecap="round"
+                                    class="text-indigo-600 dark:text-indigo-400 transition-all duration-1000 ease-out" />
+                        </svg>
+                        <span class="absolute text-2xl font-bold text-slate-800 dark:text-white">{{ getProgress(widget) }}%</span>
+                    </div>
+                </div>
 
-                    <dl class="space-y-0.5 text-sm">
-                        <template v-for="(value, key, index) in item">
-                            <div v-if="shouldShowItem(key, data[1])" :class="['flex justify-between items-start', `wdg-${widgetName.toLowerCase()}-${key}`]">
-                                <dt class="font-medium text-slate-500 capitalize pr-2 dark:text-gray-400">
-                                    {{ formatKey(key) }}:
-                                </dt>
-                                <dd class="text-slate-800 truncate max-w-[60%] text-right font-medium dark:text-gray-200">
-                                    {{ formatValue(value, key, data[1]) }}
-                                </dd>
-                            </div>
-                        </template>
-                    </dl>
+                <!-- TIMELINE WIDGET -->
+                <div v-else-if="widget.type === 'timeline'" class="space-y-4 relative before:absolute before:inset-y-0 before:left-3 before:w-0.5 before:bg-slate-100 dark:before:bg-gray-700">
+                    <div v-for="(item, idx) in widget.data" :key="item.id || idx" class="relative pl-8">
+                         <div class="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-indigo-500 border-2 border-white dark:border-gray-800"></div>
+                         <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">{{ getTimeAgo(item) }}</div>
+                         <div class="text-sm font-semibold text-slate-800 dark:text-gray-200">{{ getTimelineTitle(item) }}</div>
+                         <div class="text-xs text-slate-500 dark:text-gray-400 truncate">{{ getTimelineSubtitle(item) }}</div>
+                    </div>
+                </div>
+
+                <!-- KANBAN CARDS -->
+                <div v-else-if="widget.type === 'kanban'" class="grid grid-cols-1 gap-3">
+                    <div v-for="(item, idx) in widget.data" :key="item.id || idx" 
+                         class="p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-slate-100 dark:border-gray-600 shadow-sm">
+                        <div class="flex justify-between items-start mb-2">
+                             <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                {{ getStatus(item) }}
+                             </span>
+                        </div>
+                        <div class="text-sm font-bold text-slate-800 dark:text-gray-100 mb-1">{{ getTimelineTitle(item) }}</div>
+                        <div class="text-xs text-slate-500 dark:text-gray-400 line-clamp-2">{{ getTimelineSubtitle(item) }}</div>
+                    </div>
+                </div>
+
+                <!-- BASIC (CURRENT) -->
+                <div v-else class="space-y-3">
+                    <div v-if="!widget.data || widget.data.length === 0"
+                         class="text-center py-4 text-slate-500 italic dark:text-gray-400">
+                        No recent items found.
+                    </div>
+
+                    <div v-for="(item, itemIndex) in widget.data" :key="item.id || itemIndex"
+                         class="p-3 border border-slate-50 rounded-lg transition duration-150 cursor-pointer
+                                hover:bg-indigo-50/50 hover:border-indigo-100
+                                dark:border-gray-700/30 dark:hover:bg-gray-700">
+
+                        <dl class="space-y-0.5 text-sm">
+                            <template v-for="(value, key, index) in item">
+                                <div v-if="shouldShowItem(key, widget.attributes)" :class="['flex justify-between items-start', `wdg-${widgetName.toLowerCase()}-${key}`]">
+                                    <dt class="font-medium text-slate-500 capitalize pr-2 dark:text-gray-400">
+                                        {{ formatKey(key) }}:
+                                    </dt>
+                                    <dd class="text-slate-800 truncate max-w-[60%] text-right font-medium dark:text-gray-200">
+                                        {{ formatValue(value, key, widget.attributes) }}
+                                    </dd>
+                                </div>
+                            </template>
+                        </dl>
+                    </div>
                 </div>
             </div>
         </div>
@@ -73,20 +122,11 @@
 <script>
     const { createApp, ref, onMounted } = Vue
 
-    // Safely embed the dynamic data from Jinja2
     const JINJA_WIDGETS_DATA = JSON.parse('{{ widgets_data | tojson }}');
 
     const App = {
         setup() {
             const widgetsData = ref(JINJA_WIDGETS_DATA);
-
-            // Catch potential parsing errors explicitly
-            try {
-                widgetsData.value = JSON.parse('{{ widgets_data | tojson }}');
-            } catch (e) {
-                console.error("Error parsing widgets_data JSON:", e, 'Raw data:', '{{ widgets_data | tojson }}');
-                widgetsData.value = {}; // Fallback to empty data
-            }
 
             function formatKey(key) {
                 if (typeof key !== 'string') return '';
@@ -94,18 +134,13 @@
             }
 
             function shouldShowItem(key, attributes) {
-                if (typeof key !== 'string') return false;
-
-                // 1. Find the attribute definition
+                if (typeof key !== 'string' || key === 'id') return false;
                 const attrDef = attributes.find(attr => attr.name === key);
-
-                // 2. Check for existence and the 'widget_enabled' property
                 return attrDef && attrDef.widget_enabled;
             }
 
             function formatValue(value, key, attributes) {
                 if (value === null || value === undefined) return 'N/A';
-
                 const attrDef = attributes.find(attr => attr.name === key);
                 const type = attrDef ? attrDef.type : null;
                 let strValue = String(value);
@@ -115,20 +150,44 @@
                         return new Date(value).toLocaleString('en-US', {
                             year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
                         });
-                    } catch (e) {
-                        return strValue;
-                    }
+                    } catch (e) { return strValue; }
                 }
 
-                if (type === 'list' || Array.isArray(value)) {
-                    return value.join(', ');
-                }
-
-                if (strValue.length > 50) {
-                    return strValue.substring(0, 47) + '...';
-                }
-
+                if (type === 'list' || Array.isArray(value)) return value.join(', ');
+                if (strValue.length > 50) return strValue.substring(0, 47) + '...';
                 return strValue;
+            }
+
+            // Helpers for new widget types
+            function getProgress(widget) {
+                if (typeof widget.data === 'number') return Math.min(100, Math.max(0, widget.data));
+                return 0;
+            }
+
+            function getTimeAgo(item) {
+                const dateKey = Object.keys(item).find(k => k.includes('time') || k.includes('created'));
+                if (!dateKey || !item[dateKey]) return 'Recently';
+                const date = new Date(item[dateKey]);
+                const now = new Date();
+                const seconds = Math.floor((now - date) / 1000);
+                
+                if (seconds < 60) return 'Just now';
+                if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+                if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+                return Math.floor(seconds / 86400) + 'd ago';
+            }
+
+            function getTimelineTitle(item) {
+                // Try to find a 'name', 'title', 'event_type', or 'message'
+                return item.name || item.title || item.event_type || item.message || 'Activity';
+            }
+
+            function getTimelineSubtitle(item) {
+                return item.description || item.details || item.location || '';
+            }
+
+            function getStatus(item) {
+                return item.status || item.type || 'ACTIVE';
             }
 
             onMounted(() => {
@@ -139,7 +198,12 @@
                 widgetsData,
                 formatKey,
                 formatValue,
-                shouldShowItem
+                shouldShowItem,
+                getProgress,
+                getTimeAgo,
+                getTimelineTitle,
+                getTimelineSubtitle,
+                getStatus
             };
         }
     };
