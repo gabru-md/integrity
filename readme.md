@@ -134,7 +134,7 @@ Rasbhari runs on a **Raspberry Pi** and provides a comprehensive framework for b
 
 ### 🤖 Background Processes
 - **Sentinel**: Validates behavioral contracts against event history
-- **Courier**: Notification delivery via email and iOS shortcuts
+- **Courier**: Notification delivery via ntfy.sh (default) and SendGrid (email)
 - **Heimdall**: Visual monitoring with YOLO object detection
 - **Atmos**: BLE-based indoor location tracking
 - **Log Viewer**: Built-in real-time log monitoring for all active processes.

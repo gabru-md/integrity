@@ -1,5 +1,6 @@
 import os
 import time
+import requests
 from gabru.qprocessor.qprocessor import QueueProcessor
 from model.event import Event
 from model.notification import Notification
@@ -11,46 +12,76 @@ from sendgrid.helpers.mail import Mail
 
 class Courier(QueueProcessor[Event]):
     """
-    Courier class sending emails via SendGrid API
+    Courier class handles notification dispatch.
+    Supports:
+    - ntfy.sh (Default)
+    - Email (via SendGrid if 'email' tag is present)
     """
 
     def __init__(self, **kwargs):
         super().__init__("Courier", EventService())
         self.notification_service = NotificationService()
 
+        # Email Configuration
         self.sender_email = os.getenv("COURIER_SENDER_EMAIL")
         self.receiver_email = os.getenv("COURIER_RECEIVER_EMAIL")
         self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
 
+        # ntfy.sh Configuration
+        self.ntfy_topic = os.getenv("NTFY_TOPIC", "rasbhari-alerts")
+        self.ntfy_url = f"https://ntfy.sh/{self.ntfy_topic}"
+
+        # Processing Filter
         self.allowed_event_tag_types = ['notification']
 
     def filter_item(self, event: Event):
-        if event.tags:
-            for tag in self.allowed_event_tag_types:
-                if tag in event.tags:
-                    return event
+        """
+        Only process events that have the 'notification' tag.
+        """
+        if event.tags and 'notification' in event.tags:
+            return event
         return None
 
     def _process_item(self, event: Event) -> bool:
-        notification_dict = {
-            "notification_type": "email",
-            "notification_data": event.description,
-            "created_at": int(time.time())
-        }
-        notification = Notification(**notification_dict)
-        if self.create_email_notification(event):
+        """
+        Dispatch notification based on tags. 
+        If 'email' tag exists, send email. Otherwise, default to ntfy.sh.
+        """
+        success = False
+        notification_type = "ntfy"
+
+        if 'email' in (event.tags or []):
+            notification_type = "email"
+            success = self.create_email_notification(event)
+        else:
+            success = self.send_ntfy_notification(event)
+
+        if success:
+            notification_dict = {
+                "notification_type": notification_type,
+                "notification_data": event.description,
+                "created_at": int(time.time())
+            }
+            notification = Notification(**notification_dict)
             self.notification_service.create(notification)
             return True
         else:
-            self.log.warn("Could not send email notification")
+            self.log.warn(f"Could not send {notification_type} notification for event {event.id}")
             return False
 
     def create_email_notification(self, event: Event) -> bool:
+        """
+        Sends email via SendGrid.
+        """
         try:
+            if not self.sendgrid_api_key:
+                self.log.error("SENDGRID_API_KEY not configured")
+                return False
+
             message = Mail(
                 from_email=self.sender_email,
                 to_emails=self.receiver_email,
-                subject=f"Courier: {event.id}",
+                subject=f"Rasbhari Alert: {event.event_type}",
                 plain_text_content=event.description
             )
 
@@ -58,10 +89,44 @@ class Courier(QueueProcessor[Event]):
             response = sg.send(message)
 
             if response.status_code in (200, 202):
-                self.log.info(f"Email sent via SendGrid: {event.id}")
+                self.log.info(f"Email sent via SendGrid for event: {event.id}")
                 return True
             else:
                 self.log.warn(f"SendGrid failed: {response.status_code} {response.body}")
         except Exception as e:
-            self.log.exception(e)
+            self.log.exception(f"Exception during email notification: {e}")
+        return False
+
+    def send_ntfy_notification(self, event: Event) -> bool:
+        """
+        Dispatches a POST request to ntfy.sh
+        """
+        try:
+            headers = {
+                "Title": f"Rasbhari Alert: {event.event_type}",
+                "Priority": "high",
+                "Tags": "warning,robot"
+            }
+            
+            # Add event tags to ntfy tags
+            if event.tags:
+                other_tags = [t for t in event.tags if t not in ['notification', 'ntfy']]
+                if other_tags:
+                    headers["Tags"] += "," + ",".join(other_tags)
+
+            response = requests.post(
+                self.ntfy_url,
+                data=event.description.encode('utf-8'),
+                headers=headers,
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                self.log.info(f"ntfy notification sent for event {event.id}")
+                return True
+            else:
+                self.log.warn(f"ntfy server returned error: {response.status_code} {response.text}")
+        except Exception as e:
+            self.log.error(f"Failed to send ntfy notification: {str(e)}")
+            
         return False

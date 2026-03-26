@@ -18,5 +18,5 @@ def process_data(json_data):
 
 events_app = App('Events', EventService(), Event, _process_model_data_func=process_data, get_recent_limit=15)
 
-# disabled until I figure a reporting mechanism otherwise emails exhaust
-events_app.register_process(Courier, enabled=False)
+# Courier enabled to handle notifications (Default: ntfy.sh, Tag: 'email' for SendGrid)
+events_app.register_process(Courier, enabled=True)
