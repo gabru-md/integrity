@@ -37,7 +37,7 @@ class SkillXPProcessor(QueueProcessor[Event]):
 
         matched_skills = [
             skill for skill in skills
-            if self.skill_service.normalize_skill_tag(skill.name) in normalized_tags
+            if self.skill_service.get_match_keys(skill).intersection(normalized_tags)
         ]
         if not matched_skills:
             return True
@@ -79,7 +79,7 @@ class SkillXPProcessor(QueueProcessor[Event]):
                     "notification",
                     "skill",
                     "level_up",
-                    f"skill:{self.skill_service.normalize_skill_tag(skill.name)}",
+                    f"skill:{self.skill_service.normalize_skill_tag(skill.tag_key or skill.name)}",
                     f"skill:level:{new_level}",
                 ],
             )

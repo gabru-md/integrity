@@ -64,7 +64,7 @@ Queue progress is persisted in `queue.queuestats`.
 - Type: `QueueProcessor`
 - Input: `events`
 - Purpose:
-  - matches event tags like `#python` to skill names
+  - matches event tags like `#python` to each skill's `tag_key` and aliases
   - awards XP
   - recalculates levels
   - writes skill level-up history

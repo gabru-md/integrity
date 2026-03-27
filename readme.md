@@ -157,12 +157,20 @@ curl -X POST http://localhost:5000/skills/ \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Python",
+    "tag_key": "python",
+    "aliases": ["py"],
     "total_xp": 0,
     "requirement": "Complete 5 Python practice sessions"
   }'
 ```
 
 Once `SkillXPProcessor` is running, `#python` events award XP to the `Python` skill. Level-ups emit `skill:level_up` events, create skill history entries, and trigger Courier notifications because they are tagged with `notification`.
+
+For multi-word skills, use a stable `tag_key`. Example:
+
+- name: `Counter Strike`
+- tag_key: `counterstrike`
+- aliases: `["counter-strike", "cs2"]`
 
 ## Queue Processing Notes
 

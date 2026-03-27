@@ -7,6 +7,19 @@ from services.skill_level_history import SkillLevelHistoryService
 from services.skills import SkillService
 
 
+def process_skill_data(data):
+    aliases = data.get("aliases", [])
+    if isinstance(aliases, str):
+        data["aliases"] = [alias.strip() for alias in aliases.split(",") if alias.strip()]
+    elif aliases is None:
+        data["aliases"] = []
+
+    tag_key = (data.get("tag_key") or "").strip()
+    name = (data.get("name") or "").strip()
+    data["tag_key"] = tag_key or name
+    return data
+
+
 class SkillsApp(App[Skill]):
     def __init__(self):
         self.skill_service = SkillService()
@@ -17,6 +30,7 @@ class SkillsApp(App[Skill]):
             model_class=Skill,
             widget_type="skill_tree",
             widget_recent_limit=5,
+            _process_model_data_func=process_skill_data,
         )
 
     def widget_data(self):

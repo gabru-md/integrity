@@ -16,40 +16,58 @@ class SkillService(CRUDService[Skill]):
                     CREATE TABLE IF NOT EXISTS skills (
                         id SERIAL PRIMARY KEY,
                         name VARCHAR(255) NOT NULL UNIQUE,
+                        tag_key VARCHAR(255) DEFAULT '',
+                        aliases TEXT[] DEFAULT ARRAY[]::TEXT[],
                         level INTEGER NOT NULL DEFAULT 1,
                         total_xp INTEGER NOT NULL DEFAULT 0,
                         requirement TEXT DEFAULT ''
                     )
                 """)
+                cursor.execute("ALTER TABLE skills ADD COLUMN IF NOT EXISTS tag_key VARCHAR(255) DEFAULT ''")
+                cursor.execute("ALTER TABLE skills ADD COLUMN IF NOT EXISTS aliases TEXT[] DEFAULT ARRAY[]::TEXT[]")
+                cursor.execute("UPDATE skills SET tag_key = name WHERE tag_key IS NULL OR tag_key = ''")
                 self.db.conn.commit()
 
     def _to_tuple(self, entity: Skill) -> tuple:
-        return entity.name, entity.level, entity.total_xp, entity.requirement
+        tag_key = entity.tag_key or entity.name
+        aliases = entity.aliases or []
+        return entity.name, tag_key, aliases, entity.level, entity.total_xp, entity.requirement
 
     def _to_object(self, row: tuple) -> Skill:
         return Skill(
             id=row[0],
             name=row[1],
-            level=row[2],
-            total_xp=row[3],
-            requirement=row[4] or ""
+            tag_key=row[2] or row[1],
+            aliases=row[3] or [],
+            level=row[4],
+            total_xp=row[5],
+            requirement=row[6] or ""
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["name", "level", "total_xp", "requirement"]
+        return ["name", "tag_key", "aliases", "level", "total_xp", "requirement"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["name", "level", "total_xp", "requirement"]
+        return ["name", "tag_key", "aliases", "level", "total_xp", "requirement"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "name", "level", "total_xp", "requirement"]
+        return ["id", "name", "tag_key", "aliases", "level", "total_xp", "requirement"]
 
     def get_by_name(self, name: str) -> Optional[Skill]:
         return self.find_one_by_field("name", name)
 
     @staticmethod
     def normalize_skill_tag(value: str) -> str:
-        return value.strip().lower().lstrip("#")
+        value = value.strip().lower().lstrip("#")
+        return "".join(char for char in value if char.isalnum())
+
+    @classmethod
+    def get_match_keys(cls, skill: Skill) -> set[str]:
+        candidates = [skill.tag_key or skill.name, skill.name, *(skill.aliases or [])]
+        return {
+            normalized for normalized in (cls.normalize_skill_tag(candidate) for candidate in candidates)
+            if normalized
+        }
 
     @staticmethod
     def xp_floor_for_level(level: int) -> int:
@@ -79,6 +97,8 @@ class SkillService(CRUDService[Skill]):
         return {
             "id": skill.id,
             "name": skill.name,
+            "tag_key": skill.tag_key or skill.name,
+            "aliases": skill.aliases or [],
             "level": level,
             "total_xp": skill.total_xp,
             "requirement": skill.requirement,

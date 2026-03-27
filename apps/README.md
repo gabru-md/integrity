@@ -95,6 +95,7 @@ Most apps are built directly with `gabru.flask.app.App`. A few extend it when th
   - `SkillXPProcessor`
 - Notes:
   - dashboard widget combines progress rings and level-up history
+  - supports explicit `tag_key` and `aliases` for matching
   - exposes `/skills/history`
 
 ## Widget Types In Use
