@@ -1,125 +1,66 @@
 # Courier
 
-**Courier** is a notification delivery service that listens to the event stream and dispatches alerts via **ntfy.sh** (default) or **Email** (SendGrid). It enables real-time monitoring on iPhone, Apple Watch, and desktop.
+Courier is Rasbhari's notification delivery worker.
 
-## Overview
+## Current Behavior
 
-Courier operates as a `QueueProcessor` that monitors the events database. It filters for events tagged with `notification` and dispatches them through the appropriate channel based on additional tags.
+- consumes events from the events database
+- only processes events tagged with `notification`
+- sends ntfy.sh notifications by default
+- sends email through SendGrid when the event also includes the `email` tag
+- records successful deliveries in the notifications database
 
-**Key Features:**
-- **ntfy.sh Integration**: Default delivery method for instant push notifications on iOS/Android.
-- **Email Delivery**: Fallback or secondary delivery via SendGrid (triggered by `email` tag).
-- **Tag-Based Routing**: Intelligent dispatching based on event tags.
-- **Persistent History**: Every dispatched notification is logged in the `notifications` table.
-- **Configurable**: ntfy topics and email credentials managed via environment variables.
+## Retries
 
-## Architecture
+ntfy.sh delivery currently retries up to 3 times with delays:
 
-```
-┌─────────────┐      ┌──────────────┐      ┌─────────────────┐
-│   Events    │─────▶│   Courier    │─────▶│     ntfy.sh     │ (Default)
-│  Database   │      │ (Queue Proc) │      │      API        │
-└─────────────┘      └──────────────┘      └─────────────────┘
-                             │                       │
-                             │             ┌─────────────────┐
-                             ├────────────▶│    SendGrid     │ (If 'email' tag)
-                             │             │      API        │
-                             │             └─────────────────┘
-                             ▼                       
-                    ┌─────────────────┐     
-                    │  Notifications  │     
-                    │    Database     │     
-                    └─────────────────┘     
-```
+- immediate first attempt
+- retry after `2s`
+- retry after `5s`
 
-## How It Works
+If all attempts fail, the event is logged as a failed delivery.
 
-### Event Filtering
+## Queue Progress
 
-Courier only processes events tagged with `notification`:
+Courier is a `QueueProcessor` and stores progress in `queue.queuestats` under the name `Courier`.
 
-```python
-def filter_item(self, event: Event):
-    if event.tags and "notification" in event.tags:
-        return event
-    return None
-```
+Checkpointing is batched by the shared queue processor logic:
 
-### Routing Logic
+- flush every `10` consumed items
+- flush when idle
 
-Once an event passes the filter, Courier decides how to send it:
-1. **Email**: If the tags contain `email`, it uses SendGrid.
-2. **ntfy.sh**: If the `email` tag is absent, it defaults to ntfy.sh using the configured topic.
+## Required Variables
 
-### ntfy.sh Integration
-Courier sends a POST request to `https://ntfy.sh/{NTFY_TOPIC}`. 
-- **Title**: `Rasbhari Alert: {event_type}`
-- **Priority**: High
-- **Tags**: Includes `warning`, `robot`, and any custom tags from the event.
+- `EVENTS_POSTGRES_*`
+- `QUEUE_POSTGRES_*`
+- `NOTIFICATIONS_POSTGRES_*`
+- `LOG_DIR`
 
-## Configuration
+Optional:
 
-### Environment Variables
+- `NTFY_TOPIC`
+- `SENDGRID_API_KEY`
+- `COURIER_SENDER_EMAIL`
+- `COURIER_RECEIVER_EMAIL`
 
-Update your `.env` file:
+## Trigger Examples
 
-```bash
-# ntfy.sh Configuration
-NTFY_TOPIC=rasbhari-alert-7eh5b-5kja54-28nag3
+### ntfy.sh
 
-# SendGrid Configuration (Optional for email)
-COURIER_SENDER_EMAIL=notifications@yourdomain.com
-COURIER_RECEIVER_EMAIL=your-email@example.com
-SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```json
+{
+  "event_type": "system:alert",
+  "description": "Backup completed",
+  "tags": ["notification"]
+}
 ```
 
-### Process Registration
+### email
 
-Registered in `apps/events.py`:
-
-```python
-# Enabled by default as ntfy is lightweight
-events_app.register_process(Courier, enabled=True)
+```json
+{
+  "event_type": "report:daily",
+  "description": "Daily report ready",
+  "tags": ["notification", "email"]
+}
 ```
-
-## Usage Examples
-
-### Standard ntfy Notification (Default)
-
-```python
-event = Event(
-    event_type="security:motion",
-    description="Motion detected in living room",
-    tags=["notification", "security"]
-)
-# Result: Push notification sent to ntfy.sh topic
-```
-
-### Email Notification
-
-```python
-event = Event(
-    event_type="system:report",
-    description="Daily summary report...",
-    tags=["notification", "email"]
-)
-# Result: Email sent via SendGrid
-```
-
-## Monitoring
-
-### Logs
-```bash
-tail -f logs/Courier.log
-```
-
-### Database History
-```sql
-SELECT * FROM notifications ORDER BY created_at DESC LIMIT 10;
-```
-
-## Troubleshooting
-
-1. **ntfy not received**: Ensure the `NTFY_TOPIC` matches the one you are subscribed to in the ntfy app.
-2. **Email not received**: Check `SENDGRID_API_KEY` and ensure the sender email is verified in SendGrid.
-3. **Queue stuck**: Check `queuestats` table for the `Courier` entry and reset `last_consumed_id` to 0 if necessary.

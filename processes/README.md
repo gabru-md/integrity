@@ -1,90 +1,121 @@
 # Processes
 
-The `processes/` directory contains the **background worker layer** of Rasbhari. Each process represents a distinct background task that reacts to events, monitors sensors, or performs periodic maintenance.
-
-## What is a Process?
-
-A **Process** in Rasbhari is a background worker that runs in its own thread. Each process is built on the `gabru.process.Process` framework and can:
-
-- **React to events** in real-time
-- **Perform periodic checks** using a timer
-- **Update the state** of the database
-- **Emit new events** for other processes to handle
-- **Be enabled or disabled** from the dashboard
+The `processes/` directory contains Rasbhari's background workers. Some are plain daemon threads and some are queue processors that consume rows from the events database.
 
 ## Process Types
 
-### 1. Queue Processor
-Extends `gabru.qprocessor.QueueProcessor`. Designed to consume a stream of data (like events) from a database table and process them one by one.
+### Standard `Process`
 
-### 2. Standard Process
-Extends `gabru.process.Process`. A generic background thread for tasks like video streaming or periodic sensor polling.
+Used for long-running loops such as camera monitoring or BLE polling.
 
-## Available Processes
+Examples:
 
-### 1. Promise Processor
-**Location**: `processes/promise_processor.py`
-**Trigger**: Events or periodic schedule
+- `Atmos`
+- `Heimdall`
 
-The core logic for the Promises app. It monitors the event stream for tags or types that match active promises and performs periodic checks to determine if recurring promises (daily, weekly, monthly) were fulfilled or broken.
+### `QueueProcessor`
 
-- **Key Features**:
-  - Streak management
-  - Completion rate calculation
-  - Next check scheduling
-  - Event-driven fulfillment detection
+Used for event-driven background work with persisted progress.
 
-### 2. Heimdall
-**Location**: `processes/heimdall/heimdall.py`
-**Trigger**: Continuous
+Examples:
 
-A visual monitoring process that handles camera streams and can perform computer vision tasks.
+- `Courier`
+- `PromiseProcessor`
+- `ProjectUpdater`
+- `SkillXPProcessor`
 
-### 3. Courier
-**Location**: `processes/courier/courier.py`
-**Trigger**: Events
+Queue progress is persisted in `queue.queuestats`.
 
-A notification service that reacts to specific events and sends alerts (e.g., via Telegram or local notification).
+## Current Processes
 
-### 4. Atmos
-**Location**: `processes/atmos/atmos.py`
-**Trigger**: Continuous
+### Courier
 
-A Bluetooth Low Energy (BLE) scanning process for room-level location tracking.
+- File: `processes/courier/courier.py`
+- Type: `QueueProcessor`
+- Input: `events`
+- Purpose:
+  - listens for events tagged with `notification`
+  - sends ntfy.sh notifications by default
+  - routes to SendGrid when the event also has the `email` tag
+  - records sent notifications in the notifications database
 
-### 5. Skill XP Processor
-**Location**: `processes/skill_xp_processor.py`
-**Trigger**: Events
+### PromiseProcessor
 
-Consumes the event stream, matches tags like `#python` or `fitness` to configured skills, awards XP, recalculates levels, writes level-up history, and emits `skill:level_up` events for the rest of the system to react to.
+- File: `processes/promise_processor.py`
+- Type: `QueueProcessor`
+- Input: `events`
+- Purpose:
+  - updates promise counters from matching events
+  - performs periodic due checks
+  - tracks streaks, completions, and next-check windows
 
-## Implementation Details
+### ProjectUpdater
 
-### Creating a New Process
+- File: `processes/project_updater.py`
+- Type: `QueueProcessor`
+- Input: `events`
+- Purpose:
+  - increments project progress from project/progress events
+  - applies state changes from `project:state:*` tags
 
-To create a new process, extend either `Process` or `QueueProcessor`:
+### SkillXPProcessor
 
-```python
-from gabru.process import Process
-import time
+- File: `processes/skill_xp_processor.py`
+- Type: `QueueProcessor`
+- Input: `events`
+- Purpose:
+  - matches event tags like `#python` to skill names
+  - awards XP
+  - recalculates levels
+  - writes skill level-up history
+  - emits `skill:level_up` events
 
-class MyProcess(Process):
-    def __init__(self, **kwargs):
-        super().__init__(name="MyProcess", **kwargs)
+### Atmos
 
-    def process(self):
-        while self.running:
-            self.log.info("Processing...")
-            time.sleep(60)
-```
+- File: `processes/atmos/atmos.py`
+- Type: `Process`
+- Purpose:
+  - fetches BLE data from enabled device URLs
+  - triangulates approximate beacon locations using RSSI
+  - emits `atmos:*` events
 
-### Registering a Process
+### Heimdall
 
-Processes are typically registered within an App definition:
+- File: `processes/heimdall/heimdall.py`
+- Type: `Process`
+- Purpose:
+  - pulls frames from enabled devices
+  - runs YOLO11n detection
+  - emits `tracking:*` events
+  - supports a streaming endpoint for the dashboard
 
-```python
-# apps/my_app.py
-my_app.register_process(MyProcess, enabled=True)
-```
+## Queue Checkpointing
 
-The `ProcessManager` will then automatically start the process when the server runs.
+Queue processors now use batched checkpointing:
+
+- fetched records are processed in memory
+- `last_consumed_id` is updated in memory for every consumed row
+- queue stats are flushed every `10` items by default
+- queue stats are also flushed when the queue becomes idle
+
+This keeps DB writes lower than per-item persistence while preventing large replays after restarts.
+
+## Runtime Control
+
+The process manager is exposed by the server:
+
+- `POST /enable_process/<name>`
+- `POST /disable_process/<name>`
+- `POST /start_process/<name>`
+- `POST /stop_process/<name>`
+- `GET /process_logs/<name>`
+
+The dashboard's reliability row also summarizes process, queue, notification, and device health.
+
+## When Adding a Process
+
+1. Pick `Process` or `QueueProcessor`.
+2. Register it from the owning app.
+3. Decide whether it should be enabled by default.
+4. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
+5. Document any env requirements in [ENVIRONMENT.md](/Users/manish/PycharmProjects/integrity/ENVIRONMENT.md) and [.env.example](/Users/manish/PycharmProjects/integrity/.env.example).

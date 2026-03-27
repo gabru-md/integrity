@@ -1,276 +1,34 @@
 # Heimdall
 
-**Heimdall** is a visual monitoring daemon that uses YOLO11 object detection to identify and track objects from camera streams. It watches over your space and records tracking events to the database.
+Heimdall is Rasbhari's camera and object-tracking worker.
 
-## Overview
+## Current Behavior
 
-Heimdall runs as a continuous background process that captures images from a camera source, identifies objects using the YOLO11 deep learning model, and creates tracking events in the events database.
+- loads devices enabled for `Heimdall`
+- spawns one frame-processing thread per device
+- reads frames from `device.url`
+- runs YOLO11n detection
+- detects `cat`, `person`, `dog`, and `mouse`
+- normalizes `dog` and `mouse` detections into `tracking:cat` events
+- emits `tracking:*` events tagged with `heimdall` and `tracking`
+- serves recent frames to the dashboard stream endpoint
 
-**Key Features:**
-- Real-time object detection using YOLO11
-- Configurable object classes (person, cat, etc.)
-- Automatic tracking event creation
-- Lightweight daemon process
-- Integration with event-driven architecture
+## Notes
 
-## Architecture
+- the periodic event-tracking loop sleeps for `30s`
+- streaming uses the latest processed frame rather than pulling directly from the source on each client request
+- bounding-box zoom exists but is disabled by default (`bbox_enabled = False`)
 
-```
-┌─────────────┐      ┌──────────────┐      ┌─────────────────┐
-│   Camera    │─────▶│   Heimdall   │─────▶│     Events      │
-│   Stream    │      │  (YOLO11)    │      │    Database     │
-└─────────────┘      └──────────────┘      └─────────────────┘
-                             │                       │
-                             ▼                       ▼
-                    ┌─────────────────┐     ┌───────────────┐
-                    │ Object Detection│     │ Tracking      │
-                    │  (person, cat)  │     │ Events        │
-                    └─────────────────┘     └───────────────┘
-```
+## Device Requirements
 
-## How It Works
+Each device used by Heimdall should have:
 
-### Detection Loop
+- `enabled=True`
+- `authorized_apps` including `Heimdall`
+- `url` pointing to a readable camera/video source
 
-Heimdall runs continuously every 5 seconds (processes/heimdall/heimdall.py:36):
-1. Load all devices authorized for `Heimdall`
-2. Load image from each device's camera stream
-3. Run object detection (YOLO11) on the image to get object coordinates and classes (person, cat)
-4. For each detected object:
-   - Create an **IdentifiedObject** instance
-   - Dispatch a tracking event to the event service
-5. Logs what was detected or sleeps for 5 seconds
+## Dependencies
 
-### Object Identification
-
-Detection is configured for specific object classes (processes/heimdall/heimdall.py:24):
-
-```python
-self.classes_to_detect = items_to_detection_classes(
-    items_to_detect=['cat', 'person']
-)
-```
-
-When objects are detected, tracking events are created:
-
-```python
-# Example tracking event
-{
-  "event_type": "tracking:person",
-  "timestamp": 1737037810,
-  "description": "person identified in apartment by KitchenCam",
-  "tags": ["heimdall", "tracking"]
-}
-```
-
-### Load Image Data
-
-```python
-# Loads image data from a device, such as a camera stream (processes/heimdall/heimdall.py:46)
-def load_image_data(self, device):
-    """ load image data from a device, such as a camera stream """
-    # Current simple implementation uses the device's URL as the image source
-    return device.url
-```
-
-## Configuration
-
-### Process Registration
-
-Heimdall should be registered in your app (similar to other processes):
-
-```python
-app.register_process(Heimdall, enabled=False)
-```
-
-### Environment Variables
-
-Required in `.env`:
-
-```bash
-# Database connection (PostgreSQL)
-EVENTS_POSTGRES_DB=events
-EVENTS_POSTGRES_USER=postgres
-EVENTS_POSTGRES_PASSWORD=yourpassword
-EVENTS_POSTGRES_HOST=localhost
-EVENTS_POSTGRES_PORT=5432
-
-RASBHARI_POSTGRES_DB=rasbhari
-RASBHARI_POSTGRES_USER=postgres
-RASBHARI_POSTGRES_PASSWORD=yourpassword
-RASBHARI_POSTGRES_HOST=localhost
-RASBHARI_POSTGRES_PORT=5432
-```
-
-### Detection Settings
-
-Customize in `processes/heimdall/heimdall.py`:
-
-```python
-# Objects to detect
-items_to_detect = ['cat', 'person']  # Line 24
-
-# Detection interval
-self.sleep_time_sec = 5  # Line 23
-```
-
-Available YOLO11 object classes include: person, cat, dog, car, bicycle, etc.
-
-### YOLO Model
-
-Heimdall uses `yolo11n.pt` (nano model) for fast detection (processes/heimdall/heimdall.py:12):
-- Model auto-downloads on first run
-- Stored in local directory
-- Lightweight and optimized for Raspberry Pi
-
-## Database Schema
-
-### Events Table
-```sql
-CREATE TABLE IF NOT EXISTS events (
-    id SERIAL PRIMARY KEY,
-    event_type VARCHAR(255) NOT NULL,  -- e.g., "tracking:person"
-    timestamp TIMESTAMP NOT NULL,
-    description TEXT,                  -- e.g., "person identified in apartment by KitchenCam"
-    tags TEXT[]                        -- ["heimdall", "tracking"]
-);
-```
-
-## Usage Examples
-
-### Basic Implementation
-
-Complete the camera integration:
-
-```python
-from processes.heimdall.heimdall import Heimdall
-
-class MyHeimdall(Heimdall):
-    def load_image_data(self, device) -> str:
-        # Return camera stream URL
-        return device.url
-```
-
-### Custom Detection Classes
-
-Modify to detect different objects:
-
-```python
-def __init__(self, **kwargs):
-    super().__init__(**kwargs)
-    self.classes_to_detect = items_to_detection_classes(
-        items_to_detect=['dog', 'car', 'bicycle']
-    )
-```
-
-### Query Tracking Events
-
-```sql
--- Recent tracking events
-SELECT * FROM events
-WHERE event_type LIKE 'tracking:%'
-ORDER BY timestamp DESC
-LIMIT 10;
-
--- Person detections today
-SELECT * FROM events
-WHERE event_type = 'tracking:person'
-  AND timestamp >= CURRENT_DATE;
-```
-
-## Camera Setup
-
-### Raspberry Pi Camera Module
-
-```python
-from picamera2 import Picamera2
-
-def load_image_data(self, device) -> str:
-    picam2 = Picamera2()
-    picam2.start()
-    return picam2.capture_file("temp.jpg")
-```
-
-### IP Camera / RTSP Stream
-
-```python
-def load_image_data(self, device) -> str:
-    return "http://192.168.1.100:8080/video/stream.jpg"
-```
-
-### USB Webcam
-
-```python
-import cv2
-
-def load_image_data(self, device):
-    cap = cv2.VideoCapture(0)
-    ret, frame = cap.read()
-    cv2.imwrite("temp.jpg", frame)
-    cap.release()
-    return "temp.jpg"
-```
-
-## Monitoring
-
-### Logs
-
-```bash
-tail -f logs/Heimdall.log
-```
-
-Example output:
-```
-2025-01-15 14:30:05 - Heimdall - INFO - Nothing to do, waiting for 5s
-2025-01-15 14:30:10 - Heimdall - INFO - Detected: person
-2025-01-15 14:30:10 - Heimdall - INFO - Created tracking event
-```
-
-### Check Recent Detections
-
-```sql
-SELECT event_type, COUNT(*) as count, MAX(timestamp) as last_seen
-FROM events
-WHERE tags @> ARRAY['heimdall']
-GROUP BY event_type;
-```
-
-## Troubleshooting
-
-### No detections happening
-
-1. **Check Heimdall is running** in process manager
-2. **Implement `load_image_data()`** method for your camera
-3. **Verify camera stream** is accessible
-4. **Check detection classes** match available YOLO classes
-
-### YOLO model errors
-
-- Model downloads automatically on first run
-- Requires internet connection initially
-- Check disk space for model file (~6MB for yolo11n.pt)
-
-### Camera connection issues
-
-- Verify camera URL is reachable: `curl http://camera-ip:port/stream.jpg`
-- Check camera permissions on Raspberry Pi
-- Test camera independently before integrating
-
-### Performance issues
-
-- Use nano model (`yolo11n.pt`) for Raspberry Pi
-- Increase `sleep_time_sec` to reduce CPU usage
-- Limit detection classes to needed objects only
-- Consider reducing image resolution
-
-## Related Components
-
-- **Events App** (`apps/events.py`): Manages event storage
-- **Event Service** (`services/events.py`): Event database operations
-- **Process** (`gabru/process.py`): Base daemon class
-- **Sentinel** (`processes/sentinel/`): Can create contracts based on tracking events
-- **Courier** (`processes/courier/`): Can send notifications for tracking events
-
-## License
-
-See main project [license](../../license.md)
+- OpenCV
+- `ultralytics`
+- the `yolo11n.pt` model file, which is auto-loaded by the current implementation

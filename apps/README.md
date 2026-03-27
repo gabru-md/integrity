@@ -1,124 +1,142 @@
 # Apps
 
-The `apps/` directory contains the **application layer** of Rasbhari. Each app represents a distinct domain or feature and provides a RESTful API and web interface for managing specific types of data.
+The `apps/` directory contains Rasbhari's application layer. Each app exposes a Flask blueprint, a service-backed CRUD API, a UI view, and optionally one or more background processes.
 
-## What is an App?
+## How Apps Fit Together
 
-An **App** in Rasbhari is a modular, self-contained component built on the `gabru.flask.app.App` framework. Each app:
-
-- **Manages a specific domain** (e.g., Events, Contracts, Devices)
-- **Provides a RESTful API** with standard CRUD operations
-- **Has a web interface** for viewing and managing data
-- **Can register background processes** that react to data changes
-- **Integrates with the event-driven architecture** of the system
-- **Provides a customizable Dashboard Widget**
-
-## Architecture
-
-Each app consists of three main components:
-
-```
-App Definition (apps/*.py)
-    ↓
-Service Layer (services/*.py) → Database (PostgreSQL)
-    ↓
-Data Model (model/*.py) → Pydantic Models
+```text
+apps/*.py
+    -> service instance
+    -> Pydantic model
+    -> optional custom routes
+    -> optional registered background processes
 ```
 
-### Key Components
+Most apps are built directly with `gabru.flask.app.App`. A few extend it when they need a custom home page or extra routes.
 
-1. **App Definition** (`apps/*.py`)
-   - Creates an instance of `App` or extends it
-   - Configures the app with a service and model
-   - Registers background processes
-   - Adds custom routes if needed
+## Currently Registered Apps
 
-2. **Service Layer** (`services/*.py`)
-   - Extends `CRUDService` or `ReadOnlyService`
-   - Handles all database operations
-   - Implements custom queries and business logic
+### 1. Blogs
 
-3. **Data Model** (`model/*.py`)
-   - Extends `UIModel` or `WidgetUIModel`
-   - Defines the data structure using Pydantic
-   - Configures UI behavior (edit/widget enabled fields)
+- File: `apps/blogs.py`
+- Model: `BlogPost`
+- Widget: `timeline`
+- Notes:
+  - uses a custom blog home page
+  - creates a `blog:posted` event on successful post creation
 
-## Available Apps
+### 2. Promises
 
-### 1. Events
-**Location**: `apps/events.py`
-- **Widget**: `count` (Shows total event count)
-- **Purpose**: Log and track all events in the system.
+- File: `apps/promises.py`
+- Model: `Promise`
+- Widget: `kanban`
+- Processes:
+  - `PromiseProcessor`
+- Notes:
+  - custom home page with summary stats
+  - includes refresh and history routes per promise
 
-### 2. Devices
-**Location**: `apps/devices.py`
-- **Widget**: `basic` (Shows recently active devices)
-- **Purpose**: Configure and access hardware devices (ESP32-Cams, BLE beacons).
+### 3. Events
 
-### 3. Projects
-**Location**: `apps/projects.py`
-- **Widget**: `kanban` (Shows status-based project cards)
-- **Purpose**: Structure and track progress on larger objectives.
+- File: `apps/events.py`
+- Model: `Event`
+- Widget: `timeline`
+- Processes:
+  - `Courier`
+- Notes:
+  - incoming form tags are normalized to a tag list
+  - timestamps are set on create
 
 ### 4. Thoughts
-**Location**: `apps/thoughts.py`
-- **Widget**: `count` (Shows total thoughts captured)
-- **Purpose**: Personal tweeting/note-taking engine.
 
-### 5. Promises
-**Location**: `apps/promises.py`
-- **Widget**: `basic` (Shows recent commitments)
-- **Purpose**: Setup, track, and manage promises and commitments.
+- File: `apps/thoughts.py`
+- Model: `Thought`
+- Widget: `timeline`
+- Notes:
+  - creates a `thought:posted` event when a thought is saved
+
+### 5. Devices
+
+- File: `apps/devices.py`
+- Model: `Device`
+- Widget: `kanban`
+- Processes:
+  - `Heimdall`
+  - `Atmos`
+- Notes:
+  - adds Heimdall video and device-list routes
+
+### 6. Projects
+
+- File: `apps/projects.py`
+- Model: `Project`
+- Widget: `kanban`
+- Processes:
+  - `ProjectUpdater`
+- Notes:
+  - includes project detail and timeline routes
+  - creates project progress events when timeline items are added
 
 ### 7. Activities
-**Location**: `apps/activities.py`
-- **Widget**: `timeline` (Shows a vertical timeline of recent activity triggers)
-- **Purpose**: Configure repeatable event emission for common tasks.
+
+- File: `apps/activities.py`
+- Model: `Activity`
+- Widget: `timeline`
+- Notes:
+  - supports `/activities/trigger/<id>` to emit activity-backed events
+  - normalizes `tags` and `default_payload`
 
 ### 8. Skills
-**Location**: `apps/skills.py`
-- **Widget**: `skill_tree` (Shows multi-skill XP progress rings and recent level-up timeline)
-- **Purpose**: Turns tagged activities into XP, levels, and unlock requirements for personal growth tracking.
 
-## App Configuration Options
+- File: `apps/skills.py`
+- Model: `Skill`
+- Widget: `skill_tree`
+- Processes:
+  - `SkillXPProcessor`
+- Notes:
+  - dashboard widget combines progress rings and level-up history
+  - exposes `/skills/history`
 
-When creating an `App` instance, you can configure:
+## Widget Types In Use
 
-- `name`: The app name (used for routes and logging)
-- `service`: The service instance for data operations
-- `model_class`: The Pydantic model class
-- `get_recent_limit`: Number of recent items to show (default: 10)
-- `widget_recent_limit`: Number of items in dashboard widget (default: 3)
-- `_process_model_data_func`: Custom function to process data before saving
-- `home_template`: Custom HTML template (default: "crud.html")
-- `widget_enabled`: Whether to show in dashboard (default: True)
-- `widget_type`: Type of dashboard widget. Options:
-    - `basic`: List of recent items (Default)
-    - `count`: Large number showing total items
-    - `timeline`: Vertical list with "time-ago" markers
-    - `kanban`: Grid of status-labeled cards
-    - `progress_ring`: Circular progress visualization
-    - `skill_tree`: Multiple progress rings plus embedded level-up history
-- `widget_config`: Dictionary for additional widget settings (e.g., specific fields to use for progress)
+The current dashboard uses these widget types:
+
+- `timeline`
+- `kanban`
+- `skill_tree`
+
+The framework still supports the generic widget types exposed by `App.widget_data()`:
+
+- `basic`
+- `count`
+- `timeline`
+- `kanban`
+- `progress_ring`
+
+The dashboard home template also has a custom `skill_tree` rendering path for the Skills app.
 
 ## Standard API Endpoints
 
-Every app automatically gets these RESTful endpoints:
+Every `App` instance provides these endpoints unless explicitly overridden:
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/{app}/` | Create a new entity |
-| `GET` | `/{app}/` | Get recent entities |
-| `GET` | `/{app}/<id>` | Get entity by ID |
-| `PUT` | `/{app}/<id>` | Update entity |
-| `DELETE` | `/{app}/<id>` | Delete entity |
-| `GET` | `/{app}/home` | Web interface |
+|---|---|---|
+| `POST` | `/{app}/` | Create a record |
+| `GET` | `/{app}/` | Fetch recent records |
+| `GET` | `/{app}/<id>` | Fetch a single record |
+| `PUT` | `/{app}/<id>` | Update a record |
+| `DELETE` | `/{app}/<id>` | Delete a record |
+| `GET` | `/{app}/home` | Render the app UI |
 | `POST` | `/{app}/widget/enable` | Enable dashboard widget |
 | `POST` | `/{app}/widget/disable` | Disable dashboard widget |
 
-## Best Practices
+## App Authoring Checklist
 
-1. **Choose the right widget**: Use `count` for high-volume data (Events), `timeline` for sequential logs (Activities), `kanban` for state-driven items (Projects), and `skill_tree` when progress and milestones both matter.
-2. **Keep apps focused**: Each app should manage a single domain.
-3. **Use services for logic**: Keep database operations in the service layer.
-4. **Validate with Pydantic**: Use model validation for data integrity.
+When adding a new app:
+
+1. Create a model in `model/`.
+2. Create a service in `services/`.
+3. Create the app in `apps/`.
+4. Register it in [server.py](/Users/manish/PycharmProjects/integrity/server.py).
+5. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
+6. Update [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) if the app adds environment requirements.
