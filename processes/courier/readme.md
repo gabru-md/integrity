@@ -38,10 +38,13 @@ Checkpointing is batched by the shared queue processor logic:
 
 Optional:
 
+- `NTFY_BASE_URL`
 - `NTFY_TOPIC`
 - `SENDGRID_API_KEY`
 - `COURIER_SENDER_EMAIL`
 - `COURIER_RECEIVER_EMAIL`
+
+If `NTFY_BASE_URL` is unset, Courier defaults to `https://ntfy.sh`.
 
 ## Trigger Examples
 

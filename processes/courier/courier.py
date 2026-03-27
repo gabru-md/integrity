@@ -28,8 +28,9 @@ class Courier(QueueProcessor[Event]):
         self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
 
         # ntfy.sh Configuration
+        self.ntfy_base_url = os.getenv("NTFY_BASE_URL", "https://ntfy.sh").rstrip("/")
         self.ntfy_topic = os.getenv("NTFY_TOPIC", "rasbhari-alerts")
-        self.ntfy_url = f"https://ntfy.sh/{self.ntfy_topic}"
+        self.ntfy_url = f"{self.ntfy_base_url}/{self.ntfy_topic}"
         self.ntfy_retry_attempts = 3
         self.ntfy_retry_delays_sec = [2, 5, 10]
 

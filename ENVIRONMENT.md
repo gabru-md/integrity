@@ -103,6 +103,7 @@ Gabru writes:
 
 ## Courier / Notifications
 
+- `NTFY_BASE_URL`
 - `NTFY_TOPIC`
 - `COURIER_SENDER_EMAIL`
 - `COURIER_RECEIVER_EMAIL`
@@ -111,6 +112,7 @@ Gabru writes:
 Notes:
 
 - ntfy.sh is the default delivery path
+- `NTFY_BASE_URL` lets you point Courier to a self-hosted ntfy instance
 - SendGrid is only used when the event has the `email` tag
 
 ## Example Minimal Local Setup
@@ -151,5 +153,6 @@ SERVER_FILES_FOLDER=/tmp/rasbhari/files
 SERVER_PORT=5000
 SERVER_DEBUG=False
 FLASK_SECRET_KEY=replace-me
+NTFY_BASE_URL=https://ntfy.sh
 NTFY_TOPIC=rasbhari-alerts
 ```
