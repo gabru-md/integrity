@@ -30,6 +30,8 @@ class Courier(QueueProcessor[Event]):
         # ntfy.sh Configuration
         self.ntfy_topic = os.getenv("NTFY_TOPIC", "rasbhari-alerts")
         self.ntfy_url = f"https://ntfy.sh/{self.ntfy_topic}"
+        self.ntfy_retry_attempts = 3
+        self.ntfy_retry_delays_sec = [2, 5, 10]
 
         # Processing Filter
         self.allowed_event_tag_types = ['notification']
@@ -101,32 +103,43 @@ class Courier(QueueProcessor[Event]):
         """
         Dispatches a POST request to ntfy.sh
         """
-        try:
-            headers = {
-                "Title": f"Rasbhari Alert: {event.event_type}",
-                "Priority": "high",
-                "Tags": "warning,robot"
-            }
-            
-            # Add event tags to ntfy tags
-            if event.tags:
-                other_tags = [t for t in event.tags if t not in ['notification', 'ntfy']]
-                if other_tags:
-                    headers["Tags"] += "," + ",".join(other_tags)
+        headers = {
+            "Title": f"Rasbhari Alert: {event.event_type}",
+            "Priority": "high",
+            "Tags": "warning,robot"
+        }
 
-            response = requests.post(
-                self.ntfy_url,
-                data=event.description.encode('utf-8'),
-                headers=headers,
-                timeout=10
-            )
+        # Add event tags to ntfy tags
+        if event.tags:
+            other_tags = [t for t in event.tags if t not in ['notification', 'ntfy']]
+            if other_tags:
+                headers["Tags"] += "," + ",".join(other_tags)
 
-            if response.status_code == 200:
-                self.log.info(f"ntfy notification sent for event {event.id}")
-                return True
-            else:
-                self.log.warn(f"ntfy server returned error: {response.status_code} {response.text}")
-        except Exception as e:
-            self.log.error(f"Failed to send ntfy notification: {str(e)}")
-            
+        for attempt in range(1, self.ntfy_retry_attempts + 1):
+            try:
+                response = requests.post(
+                    self.ntfy_url,
+                    data=event.description.encode('utf-8'),
+                    headers=headers,
+                    timeout=10
+                )
+
+                if response.status_code == 200:
+                    self.log.info(f"ntfy notification sent for event {event.id} on attempt {attempt}")
+                    return True
+
+                self.log.warn(
+                    f"ntfy server returned error on attempt {attempt}/{self.ntfy_retry_attempts}: "
+                    f"{response.status_code} {response.text}"
+                )
+            except Exception as e:
+                self.log.error(
+                    f"Failed to send ntfy notification on attempt {attempt}/{self.ntfy_retry_attempts}: {str(e)}"
+                )
+
+            if attempt < self.ntfy_retry_attempts:
+                delay = self.ntfy_retry_delays_sec[min(attempt - 1, len(self.ntfy_retry_delays_sec) - 1)]
+                self.log.info(f"Retrying ntfy notification for event {event.id} in {delay}s")
+                time.sleep(delay)
+
         return False

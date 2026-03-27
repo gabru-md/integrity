@@ -75,6 +75,11 @@ Data Model (model/*.py) → Pydantic Models
 - **Widget**: `timeline` (Shows a vertical timeline of recent activity triggers)
 - **Purpose**: Configure repeatable event emission for common tasks.
 
+### 8. Skills
+**Location**: `apps/skills.py`
+- **Widget**: `skill_tree` (Shows multi-skill XP progress rings and recent level-up timeline)
+- **Purpose**: Turns tagged activities into XP, levels, and unlock requirements for personal growth tracking.
+
 ## App Configuration Options
 
 When creating an `App` instance, you can configure:
@@ -93,6 +98,7 @@ When creating an `App` instance, you can configure:
     - `timeline`: Vertical list with "time-ago" markers
     - `kanban`: Grid of status-labeled cards
     - `progress_ring`: Circular progress visualization
+    - `skill_tree`: Multiple progress rings plus embedded level-up history
 - `widget_config`: Dictionary for additional widget settings (e.g., specific fields to use for progress)
 
 ## Standard API Endpoints
@@ -112,7 +118,7 @@ Every app automatically gets these RESTful endpoints:
 
 ## Best Practices
 
-1. **Choose the right widget**: Use `count` for high-volume data (Events), `timeline` for sequential logs (Activities), and `kanban` for state-driven items (Projects).
+1. **Choose the right widget**: Use `count` for high-volume data (Events), `timeline` for sequential logs (Activities), `kanban` for state-driven items (Projects), and `skill_tree` when progress and milestones both matter.
 2. **Keep apps focused**: Each app should manage a single domain.
 3. **Use services for logic**: Keep database operations in the service layer.
 4. **Validate with Pydantic**: Use model validation for data integrity.

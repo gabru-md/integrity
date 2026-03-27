@@ -52,6 +52,12 @@ A notification service that reacts to specific events and sends alerts (e.g., vi
 
 A Bluetooth Low Energy (BLE) scanning process for room-level location tracking.
 
+### 5. Skill XP Processor
+**Location**: `processes/skill_xp_processor.py`
+**Trigger**: Events
+
+Consumes the event stream, matches tags like `#python` or `fitness` to configured skills, awards XP, recalculates levels, writes level-up history, and emits `skill:level_up` events for the rest of the system to react to.
+
 ## Implementation Details
 
 ### Creating a New Process

@@ -131,12 +131,14 @@ Rasbhari runs on a **Raspberry Pi** and provides a comprehensive framework for b
 - **Devices**: Hardware device management (cameras, sensors, beacons)
 - **Shortcuts**: iOS/iWatch shortcut integration
 - **Thoughts**: Personal note-taking system
+- **Skills**: Gamified XP and leveling tied to tagged activities
 
 ### 🤖 Background Processes
 - **Sentinel**: Validates behavioral contracts against event history
 - **Courier**: Notification delivery via ntfy.sh (default) and SendGrid (email)
 - **Heimdall**: Visual monitoring with YOLO object detection
 - **Atmos**: BLE-based indoor location tracking
+- **SkillXPProcessor**: Converts skill tags on events into XP and level-up milestones
 - **Log Viewer**: Built-in real-time log monitoring for all active processes.
 
 ### 📱 IoT Integration
@@ -252,6 +254,13 @@ Manage IoT hardware devices (cameras, sensors, beacons).
 - **Supported**: ESP32-CAM, BLE beacons, ESP32, Arduino
 - **Processes**: Heimdall (vision), Atmos (location)
 - **Documentation**: [Apps README](apps/README.md#3-devices)
+
+### Skills App
+Gamify deliberate practice by linking event tags to skill progression.
+
+- **Example**: Trigger an activity with `#python` and gain +20 XP in the `Python` skill.
+- **Widget**: Multi-ring dashboard view plus recent level-up timeline.
+- **Process**: SkillXPProcessor consumes event tags and updates skill state.
 
 ### Shortcuts App
 Create iOS/iWatch shortcuts that generate events.
