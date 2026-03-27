@@ -125,6 +125,13 @@ Rasbhari runs on a **Raspberry Pi** and provides a comprehensive framework for b
 - **Persistence**: Remembers your preference across sessions.
 - **Console Mode**: High-contrast, monospace theme for the hacker aesthetic.
 
+### 🧭 Dashboard Control Surface
+- **Reliability Row**: Quick health view for processes, queues, notifications, devices, and event flow.
+- **Pinned Widgets**: Keep the most important widgets fixed at the top.
+- **Drag Reorder**: Arrange dashboard widgets to match how you actually use the system.
+- **Universal Timeline**: One feed for skills, projects, notifications, and system events.
+- **Action-First Widgets**: Trigger common actions directly from the dashboard.
+
 ### 📊 Applications
 - **Events**: Event logging and querying system
 - **Contracts**: Behavioral rule validation (e.g., "Exercise before gaming")

@@ -7,35 +7,290 @@
 <div id="vue-dashboard-app" class="p-4 sm:p-8">
 
     <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
-        <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100">Rasbhari Apps Dashboard</h1>
-        <p class="text-slate-500 mt-1 dark:text-gray-400">Overview of key metrics and recent items from all
-            applications.</p>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100">Rasbhari Apps Dashboard</h1>
+                <p class="text-slate-500 mt-1 dark:text-gray-400">One control surface for health, action, and what changed across the system.</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button @click="quickLogEvent"
+                        class="inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700">
+                    Quick Event
+                </button>
+                <button @click="captureThought"
+                        class="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
+                    Capture Thought
+                </button>
+                <button @click="refreshPage"
+                        class="inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
+                    Refresh
+                </button>
+            </div>
+        </div>
     </header>
+
+    <section class="mb-8">
+        <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-sm font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-gray-400">Reliability</h2>
+            <a href="/processes" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Inspect processes</a>
+        </div>
+        {% raw %}
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <a v-for="card in reliabilityData" :key="card.name" :href="card.href"
+               class="group rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                <div class="mb-3 flex items-center justify-between">
+                    <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">{{ card.name }}</div>
+                    <span :class="['rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider', getReliabilityStatusClass(card.status)]">
+                        {{ card.status }}
+                    </span>
+                </div>
+                <div class="text-lg font-bold text-slate-800 dark:text-gray-100">{{ card.summary }}</div>
+                <div class="mt-2 text-xs leading-5 text-slate-500 dark:text-gray-400">{{ card.detail }}</div>
+            </a>
+        </div>
+        {% endraw %}
+    </section>
+
+    {% raw %}
+    <section v-if="pinnedWidgets.length" class="mb-8">
+        <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-sm font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-gray-400">Pinned</h2>
+            <div class="text-xs text-slate-500 dark:text-gray-400">Pin important widgets to keep them above the fold.</div>
+        </div>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div v-for="widget in pinnedWidgets" :key="widget.name"
+                 draggable="true"
+                 @dragstart="startDrag(widget.name, 'pinned')"
+                 @dragover.prevent
+                 @drop="dropWidget(widget.name, 'pinned')"
+                 class="min-h-[240px]">
+                <div class="h-full">
+                    <div class="bg-white rounded-2xl overflow-hidden border border-slate-100 transition duration-300 hover:shadow-lg hover:border-indigo-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-indigo-600 flex flex-col h-full">
+                        <header class="p-5 border-b border-slate-100 dark:border-gray-700/50 flex justify-between items-start gap-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <button @click="togglePin(widget.name)" class="text-amber-500 transition hover:text-amber-600" title="Unpin widget">★</button>
+                                    <h2 class="text-xl font-bold text-slate-800 dark:text-gray-100 capitalize">{{ widget.name }}</h2>
+                                </div>
+                                <div class="mt-1 text-xs text-slate-500 dark:text-gray-400">Drag to reorder pinned widgets.</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button @click="toggleCollapse(widget.name)"
+                                        class="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
+                                    {{ isCollapsed(widget.name) ? 'Expand' : 'Collapse' }}
+                                </button>
+                                <a v-for="action in getWidgetActions(widget)" :key="action.label"
+                                   :href="action.type === 'link' ? action.href : null"
+                                   @click.prevent="runWidgetAction(action, widget)"
+                                   class="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                    {{ action.label }}
+                                </a>
+                            </div>
+                        </header>
+                        <div v-if="!isCollapsed(widget.name)" class="p-5 flex-grow">
+                            <!-- COUNT WIDGET -->
+                            <div v-if="widget.type === 'count'" class="flex flex-col items-center justify-center py-8">
+                                <span class="text-6xl font-black text-indigo-600 dark:text-indigo-400">{{ widget.data }}</span>
+                                <span class="text-slate-500 dark:text-gray-400 font-medium mt-2 uppercase tracking-wider text-sm">Total Items</span>
+                            </div>
+
+                            <!-- PROGRESS RING WIDGET -->
+                            <div v-else-if="widget.type === 'progress_ring'" class="flex flex-col items-center justify-center py-4">
+                                <div class="relative inline-flex items-center justify-center">
+                                    <svg class="w-32 h-32 transform -rotate-90">
+                                        <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent"
+                                                class="text-slate-100 dark:text-gray-700" />
+                                        <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent"
+                                                :stroke-dasharray="364.4"
+                                                :stroke-dashoffset="364.4 - (364.4 * getProgress(widget) / 100)"
+                                                stroke-linecap="round"
+                                                class="text-indigo-600 dark:text-indigo-400 transition-all duration-1000 ease-out" />
+                                    </svg>
+                                    <span class="absolute text-2xl font-bold text-slate-800 dark:text-white">{{ getProgress(widget) }}%</span>
+                                </div>
+                            </div>
+
+                            <!-- SKILL TREE WIDGET -->
+                            <div v-else-if="widget.type === 'skill_tree'" class="space-y-5">
+                                <div v-if="!widget.data.progress_rings || widget.data.progress_rings.length === 0"
+                                     class="text-center py-4 text-slate-500 italic dark:text-gray-400">
+                                    No skills configured yet.
+                                </div>
+
+                                <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div v-for="ring in widget.data.progress_rings" :key="ring.id || ring.name"
+                                         class="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 dark:border-gray-700 dark:bg-gray-700/30">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div>
+                                                <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">{{ ring.name }}</div>
+                                                <div class="text-xs text-slate-500 dark:text-gray-400">Level {{ ring.level }}</div>
+                                            </div>
+                                            <div class="text-xs font-medium text-slate-500 dark:text-gray-400">{{ ring.total_xp }} XP</div>
+                                        </div>
+                                        <div class="flex items-center justify-center">
+                                            <div class="relative inline-flex items-center justify-center">
+                                                <svg class="w-24 h-24 transform -rotate-90">
+                                                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="7" fill="transparent"
+                                                            class="text-slate-200 dark:text-gray-700" />
+                                                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="7" fill="transparent"
+                                                            :stroke-dasharray="251.2"
+                                                            :stroke-dashoffset="251.2 - (251.2 * ring.progress_percent / 100)"
+                                                            stroke-linecap="round"
+                                                            class="text-indigo-600 dark:text-indigo-400 transition-all duration-1000 ease-out" />
+                                                </svg>
+                                                <span class="absolute text-sm font-bold text-slate-800 dark:text-white">{{ ring.progress_percent }}%</span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 text-center text-xs text-slate-500 dark:text-gray-400">
+                                            {{ ring.xp_into_level }} / {{ ring.xp_for_next_level }} XP to next level
+                                        </div>
+                                        <div v-if="ring.requirement" class="mt-2 text-xs text-slate-600 dark:text-gray-300">
+                                            Next unlock: {{ ring.requirement }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-slate-100 pt-4 dark:border-gray-700/50">
+                                    <div class="mb-3 text-sm font-semibold text-slate-800 dark:text-gray-100">Level Up Timeline</div>
+                                    <div v-if="!widget.data.history || widget.data.history.length === 0"
+                                         class="text-xs text-slate-500 italic dark:text-gray-400">
+                                        No level-up history yet.
+                                    </div>
+                                    <div v-else class="space-y-3 relative before:absolute before:inset-y-0 before:left-2 before:w-0.5 before:bg-slate-100 dark:before:bg-gray-700">
+                                        <div v-for="(item, idx) in widget.data.history" :key="item.id || idx" class="relative pl-7">
+                                            <div class="absolute left-0.5 top-1.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-gray-800"></div>
+                                            <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">{{ item.summary }}</div>
+                                            <div class="text-xs text-slate-500 dark:text-gray-400">{{ formatAbsoluteDate(item.reached_at) }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TIMELINE WIDGET -->
+                            <div v-else-if="widget.type === 'timeline'" class="space-y-4 relative before:absolute before:inset-y-0 before:left-3 before:w-0.5 before:bg-slate-100 dark:before:bg-gray-700">
+                                <div v-for="(item, idx) in widget.data" :key="item.id || idx" class="relative pl-8">
+                                    <div class="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-indigo-500 border-2 border-white dark:border-gray-800"></div>
+                                    <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">{{ getTimeAgo(item) }}</div>
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-semibold text-slate-800 dark:text-gray-200">{{ getTimelineTitle(item) }}</div>
+                                            <div class="text-xs text-slate-500 dark:text-gray-400 truncate">{{ getTimelineSubtitle(item) }}</div>
+                                        </div>
+                                        <button v-if="widget.slug === 'activities' && item.id" @click="triggerActivityItem(item.id)"
+                                                class="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
+                                            Trigger
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- KANBAN CARDS -->
+                            <div v-else-if="widget.type === 'kanban'" class="grid grid-cols-1 gap-3">
+                                <div v-for="(item, idx) in widget.data" :key="item.id || idx"
+                                     @click="navigateToItem(widget, item)"
+                                     class="p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-slate-100 dark:border-gray-600 shadow-sm cursor-pointer">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                            {{ getStatus(item) }}
+                                        </span>
+                                    </div>
+                                    <div class="text-sm font-bold text-slate-800 dark:text-gray-100 mb-1">{{ getTimelineTitle(item) }}</div>
+                                    <div class="text-xs text-slate-500 dark:text-gray-400 line-clamp-2">{{ getTimelineSubtitle(item) }}</div>
+                                </div>
+                            </div>
+
+                            <!-- BASIC -->
+                            <div v-else class="space-y-3">
+                                <div v-if="!widget.data || widget.data.length === 0"
+                                     class="text-center py-4 text-slate-500 italic dark:text-gray-400">
+                                    No recent items found.
+                                </div>
+
+                                <div v-for="(item, itemIndex) in widget.data" :key="item.id || itemIndex"
+                                     @click="navigateToItem(widget, item)"
+                                     class="p-3 border border-slate-50 rounded-lg transition duration-150 cursor-pointer
+                                            hover:bg-indigo-50/50 hover:border-indigo-100
+                                            dark:border-gray-700/30 dark:hover:bg-gray-700">
+
+                                    <dl class="space-y-0.5 text-sm">
+                                        <template v-for="(value, key, index) in item">
+                                            <div v-if="shouldShowItem(key, widget.attributes)" class="flex justify-between items-start gap-3">
+                                                <dt class="font-medium text-slate-500 capitalize pr-2 dark:text-gray-400">
+                                                    {{ formatKey(key) }}:
+                                                </dt>
+                                                <dd class="text-slate-800 truncate max-w-[60%] text-right font-medium dark:text-gray-200">
+                                                    {{ formatValue(value, key, widget.attributes) }}
+                                                </dd>
+                                            </div>
+                                        </template>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-8">
+        <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-sm font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-gray-400">Workspace</h2>
+            <div class="text-xs text-slate-500 dark:text-gray-400">Drag widgets to reorder. Use pin to keep important ones fixed.</div>
+        </div>
+    </section>
+    {% endraw %}
 
     <main class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
         {% raw %}
-        <div v-for="(widget, widgetName) in widgetsData" :key="widgetName"
+        <div v-for="widget in mainWidgets" :key="widget.name"
+             draggable="true"
+             @dragstart="startDrag(widget.name, 'main')"
+             @dragover.prevent
+             @drop="dropWidget(widget.name, 'main')"
              class="bg-white rounded-2xl overflow-hidden border border-slate-100 transition duration-300
                     hover:shadow-lg hover:border-indigo-200
                     dark:bg-gray-800 dark:border-gray-700 dark:hover:border-indigo-600 flex flex-col">
 
-            <header class="p-5 border-b border-slate-100 dark:border-gray-700/50 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-slate-800 dark:text-gray-100 capitalize">
-                    {{ widgetName }}
-                </h2>
-                <a :href="`/${widgetName.toLowerCase().replace(' ', '-')}/home`"
-                   class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition duration-150"
-                   title="Manage All Items">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                    </svg>
-                </a>
+            <header class="p-5 border-b border-slate-100 dark:border-gray-700/50 flex justify-between items-start gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <button @click="togglePin(widget.name)"
+                                class="text-slate-300 transition hover:text-amber-500"
+                                title="Pin widget">
+                            ☆
+                        </button>
+                        <h2 class="text-xl font-bold text-slate-800 dark:text-gray-100 capitalize">
+                            {{ widget.name }}
+                        </h2>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-500 dark:text-gray-400">Action-first widget for {{ widget.name.toLowerCase() }}.</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button @click="toggleCollapse(widget.name)"
+                            class="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
+                        {{ isCollapsed(widget.name) ? 'Expand' : 'Collapse' }}
+                    </button>
+                    <a v-for="action in getWidgetActions(widget)" :key="action.label"
+                       :href="action.type === 'link' ? action.href : null"
+                       @click.prevent="runWidgetAction(action, widget)"
+                       class="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-300">
+                        {{ action.label }}
+                    </a>
+                    <a :href="`/${widget.slug}/home`"
+                       class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition duration-150"
+                       title="Manage All Items">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </a>
+                </div>
             </header>
 
-            <div class="p-5 flex-grow">
+            <div v-if="!isCollapsed(widget.name)" class="p-5 flex-grow">
                 <!-- COUNT WIDGET -->
                 <div v-if="widget.type === 'count'" class="flex flex-col items-center justify-center py-8">
                     <span class="text-6xl font-black text-indigo-600 dark:text-indigo-400">{{ widget.data }}</span>
@@ -119,15 +374,24 @@
                     <div v-for="(item, idx) in widget.data" :key="item.id || idx" class="relative pl-8">
                          <div class="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-indigo-500 border-2 border-white dark:border-gray-800"></div>
                          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">{{ getTimeAgo(item) }}</div>
-                         <div class="text-sm font-semibold text-slate-800 dark:text-gray-200">{{ getTimelineTitle(item) }}</div>
-                         <div class="text-xs text-slate-500 dark:text-gray-400 truncate">{{ getTimelineSubtitle(item) }}</div>
+                         <div class="flex items-start justify-between gap-3">
+                             <div class="min-w-0">
+                                 <div class="text-sm font-semibold text-slate-800 dark:text-gray-200">{{ getTimelineTitle(item) }}</div>
+                                 <div class="text-xs text-slate-500 dark:text-gray-400 truncate">{{ getTimelineSubtitle(item) }}</div>
+                             </div>
+                             <button v-if="widget.slug === 'activities' && item.id" @click="triggerActivityItem(item.id)"
+                                     class="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
+                                 Trigger
+                             </button>
+                         </div>
                     </div>
                 </div>
 
                 <!-- KANBAN CARDS -->
                 <div v-else-if="widget.type === 'kanban'" class="grid grid-cols-1 gap-3">
-                    <div v-for="(item, idx) in widget.data" :key="item.id || idx" 
-                         class="p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-slate-100 dark:border-gray-600 shadow-sm">
+                    <div v-for="(item, idx) in widget.data" :key="item.id || idx"
+                         @click="navigateToItem(widget, item)"
+                         class="p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-slate-100 dark:border-gray-600 shadow-sm cursor-pointer">
                         <div class="flex justify-between items-start mb-2">
                              <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
                                 {{ getStatus(item) }}
@@ -139,20 +403,21 @@
                 </div>
 
                 <!-- BASIC (CURRENT) -->
-                <div v-else class="space-y-3">
-                    <div v-if="!widget.data || widget.data.length === 0"
-                         class="text-center py-4 text-slate-500 italic dark:text-gray-400">
+                    <div v-else class="space-y-3">
+                        <div v-if="!widget.data || widget.data.length === 0"
+                             class="text-center py-4 text-slate-500 italic dark:text-gray-400">
                         No recent items found.
                     </div>
 
                     <div v-for="(item, itemIndex) in widget.data" :key="item.id || itemIndex"
+                         @click="navigateToItem(widget, item)"
                          class="p-3 border border-slate-50 rounded-lg transition duration-150 cursor-pointer
                                 hover:bg-indigo-50/50 hover:border-indigo-100
                                 dark:border-gray-700/30 dark:hover:bg-gray-700">
 
                         <dl class="space-y-0.5 text-sm">
                             <template v-for="(value, key, index) in item">
-                                <div v-if="shouldShowItem(key, widget.attributes)" :class="['flex justify-between items-start', `wdg-${widgetName.toLowerCase()}-${key}`]">
+                                <div v-if="shouldShowItem(key, widget.attributes)" class="flex justify-between items-start gap-3">
                                     <dt class="font-medium text-slate-500 capitalize pr-2 dark:text-gray-400">
                                         {{ formatKey(key) }}:
                                     </dt>
@@ -169,6 +434,49 @@
         {% endraw %}
     </main>
 
+    <section class="mt-10">
+        <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Universal Timeline</h2>
+                <p class="text-sm text-slate-500 dark:text-gray-400">A single cross-system feed for growth, projects, notifications, devices, and events.</p>
+            </div>
+            {% raw %}
+            <div class="flex flex-wrap gap-2">
+                <button v-for="filter in timelineFilters" :key="filter"
+                        @click="activeTimelineFilter = filter"
+                        :class="['rounded-full px-3 py-1 text-xs font-semibold transition',
+                                 activeTimelineFilter === filter
+                                   ? 'bg-indigo-600 text-white'
+                                   : 'bg-white text-slate-600 border border-slate-200 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300']">
+                    {{ filter }}
+                </button>
+            </div>
+            {% endraw %}
+        </div>
+        {% raw %}
+        <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <div v-if="filteredTimeline.length === 0" class="py-10 text-center text-sm italic text-slate-500 dark:text-gray-400">
+                No timeline entries for this filter yet.
+            </div>
+            <div v-else class="space-y-4">
+                <a v-for="(item, idx) in filteredTimeline" :key="`${item.source}-${idx}`"
+                   :href="item.href"
+                   class="flex gap-4 rounded-xl border border-slate-100 p-4 transition hover:border-indigo-200 hover:bg-slate-50 dark:border-gray-700 dark:hover:border-indigo-600 dark:hover:bg-gray-700/40">
+                    <div class="mt-1 h-3 w-3 flex-none rounded-full" :class="getTimelineDotClass(item.category)"></div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                            <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">{{ item.title }}</div>
+                            <div class="text-xs text-slate-500 dark:text-gray-400">{{ formatAbsoluteDate(item.timestamp) }}</div>
+                        </div>
+                        <div class="mt-1 text-xs uppercase tracking-wider text-slate-400 dark:text-gray-500">{{ item.category }} · {{ item.source }}</div>
+                        <div class="mt-2 text-sm text-slate-600 dark:text-gray-300">{{ item.subtitle }}</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        {% endraw %}
+    </section>
+
     <div v-if="Object.keys(widgetsData).length === 0" class="text-center py-20 text-slate-500 dark:text-gray-400">
         <p class="text-2xl font-bold mb-2">No widgets configured.</p>
         <p>Please check your backend configuration.</p>
@@ -176,13 +484,70 @@
 </div>
 
 <script>
-    const { createApp, ref, onMounted } = Vue
+    const { createApp, ref, onMounted, computed } = Vue
 
     const JINJA_WIDGETS_DATA = JSON.parse('{{ widgets_data | tojson }}');
+    const JINJA_RELIABILITY_DATA = JSON.parse('{{ reliability_data | tojson }}');
+    const JINJA_UNIVERSAL_TIMELINE = JSON.parse('{{ universal_timeline | tojson }}');
 
     const App = {
         setup() {
             const widgetsData = ref(JINJA_WIDGETS_DATA);
+            const reliabilityData = ref(JINJA_RELIABILITY_DATA);
+            const universalTimeline = ref(JINJA_UNIVERSAL_TIMELINE);
+            const widgetEntries = ref(
+                Object.entries(JINJA_WIDGETS_DATA).map(([name, widget]) => ({
+                    ...widget,
+                    name,
+                    slug: name.toLowerCase().replace(/\s+/g, '-')
+                }))
+            );
+            const pinnedWidgetNames = ref(JSON.parse(localStorage.getItem('dashboard:pinned') || '[]'));
+            const collapsedWidgetNames = ref(JSON.parse(localStorage.getItem('dashboard:collapsed') || '[]'));
+            const mainWidgetOrder = ref(JSON.parse(localStorage.getItem('dashboard:main-order') || '[]'));
+            const pinnedWidgetOrder = ref(JSON.parse(localStorage.getItem('dashboard:pinned-order') || '[]'));
+            const dragState = ref({ name: null, zone: null });
+            const activeTimelineFilter = ref('All');
+            const timelineFilters = ['All', 'Growth', 'Projects', 'Notifications', 'Devices', 'Events', 'Activity'];
+
+            const orderedWidgets = computed(() => {
+                const byName = Object.fromEntries(widgetEntries.value.map(widget => [widget.name, widget]));
+                const pinned = applyOrder(
+                    widgetEntries.value.filter(widget => pinnedWidgetNames.value.includes(widget.name)),
+                    pinnedWidgetOrder.value
+                );
+                const main = applyOrder(
+                    widgetEntries.value.filter(widget => !pinnedWidgetNames.value.includes(widget.name)),
+                    mainWidgetOrder.value
+                );
+                return { pinned, main, byName };
+            });
+
+            const pinnedWidgets = computed(() => orderedWidgets.value.pinned);
+            const mainWidgets = computed(() => orderedWidgets.value.main);
+            const filteredTimeline = computed(() => {
+                if (activeTimelineFilter.value === 'All') {
+                    return universalTimeline.value;
+                }
+                return universalTimeline.value.filter(item => item.category === activeTimelineFilter.value);
+            });
+
+            function applyOrder(items, order) {
+                const rank = new Map(order.map((name, index) => [name, index]));
+                return [...items].sort((left, right) => {
+                    const leftRank = rank.has(left.name) ? rank.get(left.name) : Number.MAX_SAFE_INTEGER;
+                    const rightRank = rank.has(right.name) ? rank.get(right.name) : Number.MAX_SAFE_INTEGER;
+                    if (leftRank !== rightRank) return leftRank - rightRank;
+                    return left.name.localeCompare(right.name);
+                });
+            }
+
+            function persistLayout() {
+                localStorage.setItem('dashboard:pinned', JSON.stringify(pinnedWidgetNames.value));
+                localStorage.setItem('dashboard:collapsed', JSON.stringify(collapsedWidgetNames.value));
+                localStorage.setItem('dashboard:main-order', JSON.stringify(mainWidgetOrder.value));
+                localStorage.setItem('dashboard:pinned-order', JSON.stringify(pinnedWidgetOrder.value));
+            }
 
             function formatKey(key) {
                 if (typeof key !== 'string') return '';
@@ -246,6 +611,28 @@
                 return item.status || item.type || 'ACTIVE';
             }
 
+            function getReliabilityStatusClass(status) {
+                const classes = {
+                    Healthy: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+                    Delayed: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                    Broken: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+                    Paused: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                };
+                return classes[status] || classes.Paused;
+            }
+
+            function getTimelineDotClass(category) {
+                const classes = {
+                    Growth: 'bg-emerald-500',
+                    Projects: 'bg-indigo-500',
+                    Notifications: 'bg-amber-500',
+                    Devices: 'bg-cyan-500',
+                    Activity: 'bg-fuchsia-500',
+                    Events: 'bg-slate-400'
+                };
+                return classes[category] || classes.Events;
+            }
+
             function formatAbsoluteDate(value) {
                 if (!value) return 'Recently';
                 try {
@@ -261,12 +648,195 @@
                 }
             }
 
+            function isCollapsed(widgetName) {
+                return collapsedWidgetNames.value.includes(widgetName);
+            }
+
+            function toggleCollapse(widgetName) {
+                if (isCollapsed(widgetName)) {
+                    collapsedWidgetNames.value = collapsedWidgetNames.value.filter(name => name !== widgetName);
+                } else {
+                    collapsedWidgetNames.value = [...collapsedWidgetNames.value, widgetName];
+                }
+                persistLayout();
+            }
+
+            function togglePin(widgetName) {
+                const isPinned = pinnedWidgetNames.value.includes(widgetName);
+                if (isPinned) {
+                    pinnedWidgetNames.value = pinnedWidgetNames.value.filter(name => name !== widgetName);
+                    mainWidgetOrder.value = [widgetName, ...mainWidgetOrder.value.filter(name => name !== widgetName)];
+                    pinnedWidgetOrder.value = pinnedWidgetOrder.value.filter(name => name !== widgetName);
+                } else {
+                    pinnedWidgetNames.value = [...pinnedWidgetNames.value, widgetName];
+                    pinnedWidgetOrder.value = [widgetName, ...pinnedWidgetOrder.value.filter(name => name !== widgetName)];
+                    mainWidgetOrder.value = mainWidgetOrder.value.filter(name => name !== widgetName);
+                }
+                persistLayout();
+            }
+
+            function startDrag(widgetName, zone) {
+                dragState.value = { name: widgetName, zone };
+            }
+
+            function dropWidget(targetWidgetName, zone) {
+                if (!dragState.value.name || dragState.value.name === targetWidgetName) return;
+
+                if (dragState.value.zone !== zone) {
+                    togglePin(dragState.value.name);
+                }
+
+                const currentOrder = zone === 'pinned'
+                    ? pinnedWidgets.value.map(widget => widget.name)
+                    : mainWidgets.value.map(widget => widget.name);
+                const sourceName = dragState.value.name;
+                const reordered = currentOrder.filter(name => name !== sourceName);
+                const targetIndex = reordered.indexOf(targetWidgetName);
+                reordered.splice(targetIndex, 0, sourceName);
+
+                if (zone === 'pinned') {
+                    pinnedWidgetOrder.value = reordered;
+                } else {
+                    mainWidgetOrder.value = reordered;
+                }
+                dragState.value = { name: null, zone: null };
+                persistLayout();
+            }
+
+            function refreshPage() {
+                window.location.reload();
+            }
+
+            async function postJson(url, body) {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body || {})
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(payload.error || payload.message || `Request failed for ${url}`);
+                }
+                return payload;
+            }
+
+            async function quickLogEvent(defaultTag = '') {
+                const description = window.prompt('Event description');
+                if (!description) return;
+                const eventType = window.prompt('Event type', 'dashboard:quick-log') || 'dashboard:quick-log';
+                const tags = (window.prompt('Comma-separated tags', defaultTag) || '').trim();
+                await postJson('/events/', {
+                    event_type: eventType,
+                    description,
+                    tags
+                });
+                refreshPage();
+            }
+
+            async function captureThought() {
+                const message = window.prompt('Thought');
+                if (!message) return;
+                await postJson('/thoughts/', { message });
+                refreshPage();
+            }
+
+            async function logSkillPractice() {
+                const skillName = window.prompt('Skill name');
+                if (!skillName) return;
+                const description = window.prompt(`What did you do for ${skillName}?`) || `Practiced ${skillName}`;
+                await postJson('/events/', {
+                    event_type: 'skill:practice',
+                    description,
+                    tags: `#${skillName.trim().toLowerCase()}`
+                });
+                refreshPage();
+            }
+
+            async function triggerActivityItem(activityId) {
+                await postJson(`/activities/trigger/${activityId}`, {});
+                refreshPage();
+            }
+
+            function navigateToItem(widget, item) {
+                const link = getItemLink(widget, item);
+                if (link) {
+                    window.location.href = link;
+                }
+            }
+
+            function getItemLink(widget, item) {
+                if (widget.slug === 'projects' && item.id) {
+                    return `/projects/${item.id}/view`;
+                }
+                if (widget.slug === 'blogs' && item.slug) {
+                    return `/blogs/p/${item.slug}`;
+                }
+                return null;
+            }
+
+            function getWidgetActions(widget) {
+                const actions = {
+                    activities: [
+                        { label: 'Open', type: 'link', href: '/activities/home' }
+                    ],
+                    events: [
+                        { label: 'Quick Log', type: 'event' }
+                    ],
+                    thoughts: [
+                        { label: 'Capture', type: 'thought' }
+                    ],
+                    skills: [
+                        { label: 'Log Practice', type: 'skill' }
+                    ],
+                    projects: [
+                        { label: 'Open', type: 'link', href: '/projects/home' }
+                    ],
+                    promises: [
+                        { label: 'Review', type: 'link', href: '/promises/home' }
+                    ],
+                    devices: [
+                        { label: 'Devices', type: 'link', href: '/devices/home' }
+                    ],
+                    blogs: [
+                        { label: 'Open', type: 'link', href: '/blogs/home' }
+                    ]
+                };
+                return actions[widget.slug] || [{ label: 'Open', type: 'link', href: `/${widget.slug}/home` }];
+            }
+
+            function runWidgetAction(action, widget) {
+                if (action.type === 'link') {
+                    window.location.href = action.href;
+                    return;
+                }
+                if (action.type === 'event') {
+                    quickLogEvent(widget.slug === 'skills' ? '#skill' : '');
+                    return;
+                }
+                if (action.type === 'thought') {
+                    captureThought();
+                    return;
+                }
+                if (action.type === 'skill') {
+                    logSkillPractice();
+                }
+            }
+
             onMounted(() => {
-                console.log('Dashboard mounted with widgets:', widgetsData.value);
+                console.log('Dashboard mounted with widgets:', widgetEntries.value);
+                mainWidgetOrder.value = applyOrder(mainWidgets.value, mainWidgetOrder.value.map(name => name)).map(widget => widget.name);
+                pinnedWidgetOrder.value = applyOrder(pinnedWidgets.value, pinnedWidgetOrder.value.map(name => name)).map(widget => widget.name);
+                persistLayout();
             });
 
             return {
                 widgetsData,
+                reliabilityData,
+                pinnedWidgets,
+                mainWidgets,
+                filteredTimeline,
+                activeTimelineFilter,
+                timelineFilters,
                 formatKey,
                 formatValue,
                 shouldShowItem,
@@ -275,7 +845,21 @@
                 getTimelineTitle,
                 getTimelineSubtitle,
                 getStatus,
-                formatAbsoluteDate
+                getReliabilityStatusClass,
+                getTimelineDotClass,
+                formatAbsoluteDate,
+                toggleCollapse,
+                isCollapsed,
+                togglePin,
+                startDrag,
+                dropWidget,
+                refreshPage,
+                quickLogEvent,
+                captureThought,
+                getWidgetActions,
+                runWidgetAction,
+                navigateToItem,
+                triggerActivityItem
             };
         }
     };

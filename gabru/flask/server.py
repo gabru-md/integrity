@@ -1,10 +1,13 @@
+from __future__ import annotations
+
+import os
 import threading
+from datetime import datetime, timezone
 
 from flask import Flask, redirect, send_from_directory, jsonify, session, request, abort
 from gabru.log import Logger
 from gabru.flask.app import App
 from gabru.auth import PermissionManager, Role, admin_required
-import os
 
 from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
@@ -58,7 +61,14 @@ class Server:
         @self.app.route('/')
         def home():
             widgets_data = self.get_widgets_data()
-            return render_flask_template('home.html', widgets_data=widgets_data)
+            reliability_data = self.get_reliability_data()
+            universal_timeline = self.get_universal_timeline_data()
+            return render_flask_template(
+                'home.html',
+                widgets_data=widgets_data,
+                reliability_data=reliability_data,
+                universal_timeline=universal_timeline
+            )
 
         @self.app.route('/set_role/<role_name>', methods=['POST'])
         def set_role(role_name):
@@ -193,6 +203,229 @@ class Server:
                         "config": app.widget_config
                     }
         return widgets_data
+
+    def get_reliability_data(self) -> list[dict]:
+        from gabru.qprocessor.qservice import QueueService
+        from services.devices import DeviceService
+        from services.events import EventService
+        from services.notifications import NotificationService
+
+        processes_data = self.get_processes_data()
+        event_service = EventService()
+        notification_service = NotificationService()
+        device_service = DeviceService()
+        queue_service = QueueService()
+
+        latest_event = next(iter(event_service.get_recent_items(1)), None)
+        latest_event_id = latest_event.id if latest_event else 0
+        latest_event_age = self._format_age(latest_event.timestamp if latest_event else None)
+
+        running_processes = sum(1 for process in processes_data if process.get('is_alive'))
+        total_processes = len(processes_data)
+        process_status = "Healthy"
+        if total_processes == 0:
+            process_status = "Paused"
+        elif running_processes == 0:
+            process_status = "Broken"
+        elif running_processes < total_processes:
+            process_status = "Delayed"
+
+        queue_stats = queue_service.get_all()
+        queue_lags = [max(0, latest_event_id - (stat.last_consumed_id or 0)) for stat in queue_stats]
+        max_queue_lag = max(queue_lags) if queue_lags else 0
+        queue_status = "Healthy"
+        if max_queue_lag > 100:
+            queue_status = "Broken"
+        elif max_queue_lag > 20:
+            queue_status = "Delayed"
+        elif not queue_stats:
+            queue_status = "Paused"
+
+        recent_notifications = notification_service.get_recent_items(5)
+        courier_failures = self._count_recent_log_failures("Courier.log")
+        notification_status = "Healthy"
+        if courier_failures > 0:
+            notification_status = "Delayed"
+        if not any(process['name'] == 'Courier' and process['is_alive'] for process in processes_data):
+            notification_status = "Broken"
+
+        enabled_devices = device_service.count(filters={"enabled": True})
+        device_processes = [process for process in processes_data if process["owner_app"] == "Devices"]
+        active_device_processes = sum(1 for process in device_processes if process.get("is_alive"))
+        device_status = "Healthy" if enabled_devices > 0 else "Paused"
+        if enabled_devices > 0 and active_device_processes == 0:
+            device_status = "Delayed"
+
+        return [
+            {
+                "name": "Process Health",
+                "status": process_status,
+                "summary": f"{running_processes}/{total_processes} processes running" if total_processes else "No processes registered",
+                "detail": "Background workers that power event handling and automation.",
+                "href": "/processes",
+            },
+            {
+                "name": "Event Flow",
+                "status": "Healthy" if latest_event else "Paused",
+                "summary": f"Last event {latest_event_age}" if latest_event else "No events recorded yet",
+                "detail": f"Latest event id: {latest_event_id}" if latest_event else "The event stream is currently empty.",
+                "href": "/events/home",
+            },
+            {
+                "name": "Queue Health",
+                "status": queue_status,
+                "summary": f"Max backlog: {max_queue_lag} events",
+                "detail": f"Tracking {len(queue_stats)} queue processors against event stream id {latest_event_id}.",
+                "href": "/processes",
+            },
+            {
+                "name": "Notifications",
+                "status": notification_status,
+                "summary": f"{len(recent_notifications)} recent deliveries, {courier_failures} recent failures",
+                "detail": "Courier sends ntfy.sh by default and email when the event carries the email tag.",
+                "href": "/processes",
+            },
+            {
+                "name": "Devices",
+                "status": device_status,
+                "summary": f"{enabled_devices} enabled devices, {active_device_processes}/{len(device_processes)} device processes active",
+                "detail": "Tracks sensor/device availability and the workers that monitor them.",
+                "href": "/devices",
+            },
+        ]
+
+    def get_universal_timeline_data(self, limit: int = 20) -> list[dict]:
+        from services.events import EventService
+        from services.notifications import NotificationService
+        from services.skill_level_history import SkillLevelHistoryService
+        from services.timeline import TimelineService
+
+        event_service = EventService()
+        notification_service = NotificationService()
+        skill_history_service = SkillLevelHistoryService()
+        project_timeline_service = TimelineService()
+
+        items = []
+
+        for item in skill_history_service.get_recent_history(limit=6):
+            items.append({
+                "source": "Skills",
+                "category": "Growth",
+                "title": item.summary,
+                "subtitle": f"{item.total_xp} XP total",
+                "timestamp": item.reached_at,
+                "href": "/skills/home",
+            })
+
+        for item in project_timeline_service.get_recent_items(6):
+            items.append({
+                "source": "Projects",
+                "category": "Projects",
+                "title": item.content[:80] + ("..." if len(item.content) > 80 else ""),
+                "subtitle": f"{item.item_type} on project #{item.project_id}",
+                "timestamp": item.timestamp,
+                "href": f"/projects/{item.project_id}/view",
+            })
+
+        for item in notification_service.get_recent_items(6):
+            items.append({
+                "source": "Courier",
+                "category": "Notifications",
+                "title": f"{item.notification_type.upper()} notification sent",
+                "subtitle": item.notification_data,
+                "timestamp": item.created_at,
+                "href": "/processes",
+            })
+
+        for item in event_service.get_recent_items(20):
+            if item.event_type == "skill:level_up":
+                continue
+
+            items.append({
+                "source": "Events",
+                "category": self._categorize_event(item),
+                "title": item.description or item.event_type,
+                "subtitle": item.event_type,
+                "timestamp": item.timestamp,
+                "href": "/events/home",
+            })
+
+        items.sort(key=lambda item: self._normalize_datetime(item.get("timestamp")), reverse=True)
+        return [
+            {
+                **item,
+                "timestamp": self._normalize_datetime(item.get("timestamp")).isoformat() if self._normalize_datetime(item.get("timestamp")) else None
+            }
+            for item in items[:limit]
+        ]
+
+    def _categorize_event(self, event) -> str:
+        tags = set(event.tags or [])
+        if event.event_type.startswith("project:") or "progress" in tags:
+            return "Projects"
+        if event.event_type.startswith("device:") or "device" in tags:
+            return "Devices"
+        if event.event_type.startswith("skill:") or "skill" in tags:
+            return "Growth"
+        if "notification" in tags or "email" in tags:
+            return "Notifications"
+        if "activity" in event.event_type or any(tag.startswith("triggered_by:activity:") for tag in tags):
+            return "Activity"
+        return "Events"
+
+    def _normalize_datetime(self, value) -> datetime | None:
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+                return value.replace(tzinfo=timezone.utc)
+            return value.astimezone(timezone.utc)
+        if isinstance(value, (int, float)):
+            return datetime.fromtimestamp(value, tz=timezone.utc)
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+            if parsed.tzinfo is None or parsed.tzinfo.utcoffset(parsed) is None:
+                return parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(timezone.utc)
+        except Exception:
+            return None
+
+    def _format_age(self, value) -> str:
+        dt_value = self._normalize_datetime(value)
+        if not dt_value:
+            return "unknown"
+
+        delta = datetime.now(timezone.utc) - dt_value
+        seconds = max(0, int(delta.total_seconds()))
+        if seconds < 60:
+            return f"{seconds}s ago"
+        if seconds < 3600:
+            return f"{seconds // 60}m ago"
+        if seconds < 86400:
+            return f"{seconds // 3600}h ago"
+        return f"{seconds // 86400}d ago"
+
+    def _count_recent_log_failures(self, filename: str, line_limit: int = 200) -> int:
+        log_dir = os.getenv('LOG_DIR')
+        if not log_dir:
+            return 0
+
+        log_path = os.path.join(log_dir, filename)
+        if not os.path.exists(log_path):
+            return 0
+
+        try:
+            with open(log_path, 'r') as log_file:
+                lines = log_file.readlines()[-line_limit:]
+        except Exception:
+            return 0
+
+        failure_markers = (
+            "returned error",
+            "Could not send",
+            "Failed to send",
+        )
+        return sum(1 for line in lines if any(marker in line for marker in failure_markers))
 
     def process_manager_init(self):
         processes_to_manage = {}

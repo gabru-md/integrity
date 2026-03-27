@@ -19,7 +19,7 @@ class Courier(QueueProcessor[Event]):
     """
 
     def __init__(self, **kwargs):
-        super().__init__("Courier", EventService())
+        super().__init__(service=EventService(), **kwargs)
         self.notification_service = NotificationService()
 
         # Email Configuration

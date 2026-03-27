@@ -30,6 +30,8 @@ class QueueProcessor(Generic[T], Process):
         self.queue = []
         self.max_queue_size = 10
         self.sleep_time_sec = 5
+        self.checkpoint_every = 10
+        self._items_since_persist = 0
         self.q_stats: QueueStats
 
     def _set_up_queue_stats(self):
@@ -58,6 +60,7 @@ class QueueProcessor(Generic[T], Process):
         while self.running:
             next_item = self.get_next_item()
             if not next_item:
+                self._persist_queue_stats()
                 # no item to process, sleep for a bit
                 self.qprocessor_sleep()
             else:
@@ -68,6 +71,7 @@ class QueueProcessor(Generic[T], Process):
                 else:
                     # nothing to do since this item is filtered, just update id
                     self.q_stats.last_consumed_id = next_item.id
+                    self._mark_checkpoint_progress()
 
     def process_item(self, item: T) -> bool:
         result = self._process_item(item)
@@ -78,6 +82,7 @@ class QueueProcessor(Generic[T], Process):
 
         # update the id in any case to keep things moving
         self.q_stats.last_consumed_id = item.id
+        self._mark_checkpoint_progress()
 
         return result
 
@@ -86,8 +91,7 @@ class QueueProcessor(Generic[T], Process):
             return self.queue.pop(0)
 
         # if in-memory queue length is 0 then first update qstats
-        if self.q_service.update(self.q_stats):
-            self.log.info("Updated up-to-date stats")
+        self._persist_queue_stats()
 
         # then fetch next batch of items from db
         items_from_queue = self.service.get_all_items_after(self.q_stats.last_consumed_id, limit=self.max_queue_size)
@@ -95,6 +99,24 @@ class QueueProcessor(Generic[T], Process):
             self.queue.extend(items_from_queue)
             return self.get_next_item()
         return None
+
+    def _persist_queue_stats(self):
+        if not getattr(self.q_stats, "id", None):
+            self.log.warning("QueueStats missing id; cannot persist queue progress.")
+            return
+
+        if self.q_service.update(self.q_stats):
+            self.log.info(f"Persisted queue progress at id {self.q_stats.last_consumed_id}")
+            self._items_since_persist = 0
+        else:
+            self.log.warning(f"Failed to persist queue progress at id {self.q_stats.last_consumed_id}")
+
+    def _mark_checkpoint_progress(self):
+        self._items_since_persist += 1
+
+        # Flush batched progress once the checkpoint window is reached.
+        if self._items_since_persist >= self.checkpoint_every:
+            self._persist_queue_stats()
 
     @abstractmethod
     def filter_item(self, item: T):
