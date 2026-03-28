@@ -90,7 +90,7 @@ Each app should now also expose user-facing instructions in the web UI via `user
 
 ### 8. Skills
 
-- File: `apps/skills.py`
+- File: `apps/skills.py"
 - Model: `Skill`
 - Widget: `skill_tree`
 - Processes:
@@ -133,6 +133,7 @@ Each app should now also expose user-facing instructions in the web UI via `user
   - admin-only account management surface
   - creates and updates real Rasbhari login accounts
   - supports personal workspace ownership without giving admins access to other users' private app data
+  - **Signup & Approval**: Users can self-signup at `/signup`. New accounts are disabled (`is_approved=False`) until an admin approves them in the Users panel. Accounts created directly by admins are auto-approved.
 
 ## User-Facing Instructions
 
@@ -176,7 +177,7 @@ Every `App` instance provides these endpoints unless explicitly overridden:
 | `PUT` | `/{app}/<id>` | Update a record |
 | `DELETE` | `/{app}/<id>` | Delete a record |
 | `GET` | `/{app}/home` | Render the app UI |
-| `POST` | `/{app}/widget/enable` | Enable dashboard widget |
+| `POST" | `/{app}/widget/enable` | Enable dashboard widget |
 | `POST` | `/{app}/widget/disable` | Disable dashboard widget |
 
 ## App Authoring Checklist
@@ -189,5 +190,5 @@ When adding a new app:
 4. Register it in [server.py](/Users/manish/PycharmProjects/integrity/server.py).
 5. Add or update `user_guidance` so the app home page explains the app to end users.
 6. Add user-friendly `description=` text to important Pydantic fields.
-7. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
+7. Update this file and the root [readme.md](/Users/manish/PychariProjects/integrity/readme.md).
 8. Update [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) if the app adds environment requirements.

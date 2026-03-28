@@ -13,6 +13,7 @@ class User(WidgetUIModel):
     password: Optional[str] = Field(default=None, widget_enabled=False, ui_enabled=False, description="Temporary plain password used only when creating or resetting a user.")
     is_admin: bool = Field(default=False, widget_enabled=True, description="Whether this account can access Rasbhari admin panels.")
     is_active: bool = Field(default=True, widget_enabled=True, description="Whether this account can sign in.")
+    is_approved: bool = Field(default=False, widget_enabled=True, description="Whether this account has been approved by an admin.")
     encrypted_data_key: Optional[str] = Field(default=None, edit_enabled=False, ui_enabled=False)
     key_version: int = Field(default=1, edit_enabled=False, ui_enabled=False)
     created_at: datetime = Field(default_factory=datetime.now, edit_enabled=False, description="When this account was created.")

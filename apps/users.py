@@ -9,6 +9,11 @@ def process_user_data(data):
     data["display_name"] = (data.get("display_name") or data.get("username") or "").strip()
     if not data.get("password"):
         data["password"] = None
+    
+    # Users created through the Admin Users App are automatically approved
+    if "is_approved" not in data:
+        data["is_approved"] = True
+        
     return data
 
 

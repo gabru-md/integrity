@@ -12,6 +12,7 @@ from gabru.auth import PermissionManager, Role, admin_required, login_required
 from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
 from gabru.flask.util import render_flask_template
+from model.user import User
 from services.users import UserService
 
 from dotenv import load_dotenv
@@ -90,14 +91,64 @@ class Server:
             user_service = UserService()
             user = user_service.authenticate(username, password)
             if not user:
+                # check if user exists but not approved
+                existing_user = user_service.get_by_username(username)
+                error_msg = "Invalid username or password"
+                if existing_user and not existing_user.is_approved:
+                    error_msg = "Your account is pending admin approval."
+                elif existing_user and not existing_user.is_active:
+                    error_msg = "Your account has been deactivated."
+                
                 if request.is_json:
-                    return jsonify({"error": "Invalid username or password"}), 401
-                return render_flask_template('login.html', next_url=next_url, error="Invalid username or password"), 401
+                    return jsonify({"error": error_msg}), 401
+                return render_flask_template('login.html', next_url=next_url, error=error_msg), 401
 
             PermissionManager.login(user)
             if request.is_json:
                 return jsonify({"message": "Login successful", "redirect": next_url or "/"})
             return redirect(next_url or '/')
+
+        @self.app.route('/signup', methods=['GET', 'POST'])
+        def signup():
+            if request.method == 'GET':
+                if PermissionManager.is_authenticated():
+                    return redirect('/')
+                return render_flask_template('signup.html')
+
+            data = request.json if request.is_json else request.form
+            username = (data.get('username') or '').strip().lower()
+            display_name = (data.get('display_name') or '').strip()
+            password = data.get('password') or ''
+
+            if not username or not password:
+                error = "Username and password are required."
+                if request.is_json: return jsonify({"error": error}), 400
+                return render_flask_template('signup.html', error=error), 400
+
+            user_service = UserService()
+            if user_service.get_by_username(username):
+                error = "Username already exists."
+                if request.is_json: return jsonify({"error": error}), 400
+                return render_flask_template('signup.html', error=error), 400
+
+            new_user = User(
+                username=username,
+                display_name=display_name or username,
+                password=password,
+                is_admin=False,
+                is_active=True,
+                is_approved=False # Requires admin approval
+            )
+            
+            user_id = user_service.create(new_user)
+            if user_id:
+                if request.is_json:
+                    return jsonify({"message": "Signup successful, pending approval", "redirect": "/login"}), 201
+                return render_flask_template('signup.html', success=True)
+            
+            error = "Failed to create account. Please try again."
+            if request.is_json: return jsonify({"error": error}), 500
+            return render_flask_template('signup.html', error=error), 500
 
         @self.app.route('/logout', methods=['POST'])
         @login_required

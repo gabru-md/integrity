@@ -23,11 +23,22 @@ class UserService(CRUDService[User]):
                         password_hash TEXT NOT NULL,
                         is_admin BOOLEAN NOT NULL DEFAULT FALSE,
                         is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                        is_approved BOOLEAN NOT NULL DEFAULT FALSE,
                         encrypted_data_key TEXT,
                         key_version INTEGER NOT NULL DEFAULT 1,
                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
+                """)
+                # Check if is_approved column exists, if not add it (for migrations)
+                cursor.execute("""
+                    DO $$ 
+                    BEGIN 
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                       WHERE table_name='users' AND column_name='is_approved') THEN
+                            ALTER TABLE users ADD COLUMN is_approved BOOLEAN NOT NULL DEFAULT FALSE;
+                        END IF;
+                    END $$;
                 """)
                 self.db.conn.commit()
 
@@ -46,10 +57,11 @@ class UserService(CRUDService[User]):
             display_name=row[2],
             is_admin=row[3],
             is_active=row[4],
-            encrypted_data_key=row[5],
-            key_version=row[6],
-            created_at=row[7],
-            updated_at=row[8],
+            is_approved=row[5],
+            encrypted_data_key=row[6],
+            key_version=row[7],
+            created_at=row[8],
+            updated_at=row[9],
         )
 
     def _get_columns_for_insert(self) -> List[str]:
@@ -59,6 +71,7 @@ class UserService(CRUDService[User]):
             "password_hash",
             "is_admin",
             "is_active",
+            "is_approved",
             "encrypted_data_key",
             "key_version",
             "created_at",
@@ -75,6 +88,7 @@ class UserService(CRUDService[User]):
             "display_name",
             "is_admin",
             "is_active",
+            "is_approved",
             "encrypted_data_key",
             "key_version",
             "created_at",
@@ -89,10 +103,10 @@ class UserService(CRUDService[User]):
         password_hash = self._hash_password(obj.password)
         query = """
             INSERT INTO users (
-                username, display_name, password_hash, is_admin, is_active,
+                username, display_name, password_hash, is_admin, is_active, is_approved,
                 encrypted_data_key, key_version, created_at, updated_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
         params = (
@@ -101,6 +115,7 @@ class UserService(CRUDService[User]):
             password_hash,
             obj.is_admin,
             obj.is_active,
+            obj.is_approved,
             obj.encrypted_data_key,
             obj.key_version,
             obj.created_at or now,
@@ -131,6 +146,7 @@ class UserService(CRUDService[User]):
                 password_hash=%s,
                 is_admin=%s,
                 is_active=%s,
+                is_approved=%s,
                 encrypted_data_key=%s,
                 key_version=%s,
                 created_at=%s,
@@ -143,6 +159,7 @@ class UserService(CRUDService[User]):
             password_hash,
             obj.is_admin,
             obj.is_active,
+            obj.is_approved,
             obj.encrypted_data_key,
             obj.key_version,
             obj.created_at or existing["created_at"],
@@ -161,7 +178,7 @@ class UserService(CRUDService[User]):
         if not self.db.get_conn():
             return None
         query = """
-            SELECT id, username, display_name, password_hash, is_admin, is_active,
+            SELECT id, username, display_name, password_hash, is_admin, is_active, is_approved,
                    encrypted_data_key, key_version, created_at, updated_at
             FROM users
             WHERE id = %s
@@ -178,17 +195,18 @@ class UserService(CRUDService[User]):
                 "password_hash": row[3],
                 "is_admin": row[4],
                 "is_active": row[5],
-                "encrypted_data_key": row[6],
-                "key_version": row[7],
-                "created_at": row[8],
-                "updated_at": row[9],
+                "is_approved": row[6],
+                "encrypted_data_key": row[7],
+                "key_version": row[8],
+                "created_at": row[9],
+                "updated_at": row[10],
             }
 
     def authenticate(self, username: str, password: str) -> Optional[User]:
         if not self.db.get_conn():
             return None
         query = """
-            SELECT id, username, display_name, password_hash, is_admin, is_active,
+            SELECT id, username, display_name, password_hash, is_admin, is_active, is_approved,
                    encrypted_data_key, key_version, created_at, updated_at
             FROM users
             WHERE username = %s
@@ -198,7 +216,9 @@ class UserService(CRUDService[User]):
             row = cursor.fetchone()
             if not row:
                 return None
-            if not row[5]:
+            if not row[5]: # is_active
+                return None
+            if not row[6]: # is_approved
                 return None
             if not check_password_hash(row[3], password):
                 return None
@@ -208,8 +228,9 @@ class UserService(CRUDService[User]):
                 display_name=row[2],
                 is_admin=row[4],
                 is_active=row[5],
-                encrypted_data_key=row[6],
-                key_version=row[7],
-                created_at=row[8],
-                updated_at=row[9],
+                is_approved=row[6],
+                encrypted_data_key=row[7],
+                key_version=row[8],
+                created_at=row[9],
+                updated_at=row[10],
             )

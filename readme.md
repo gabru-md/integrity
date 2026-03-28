@@ -78,15 +78,16 @@ The `Reports` app adds a local-first behavioral mirror. It currently computes:
 
 If no connections are configured yet, the report explicitly marks social balance as a data gap instead of inventing certainty.
 
-## Authentication And Ownership
+## Authentication, Signup, and Ownership
 
-Rasbhari now supports real sign-in accounts instead of the old session role switcher.
+Rasbhari supports real sign-in accounts and a managed signup flow.
 
-- every personal record is owned by a specific `user_id`
-- normal users can only read and write their own app data
-- admin users can access system panels like `Processes`, `Devices`, and `Users`
-- admin access does not automatically bypass private data ownership checks
-- global processes still run once for the whole system, but they process user-scoped work items by `user_id`
+- **Signup & Approval**: New users can request access via the `/signup` page. These accounts are created in a pending state (`is_approved=False`) and cannot log in until an administrator approves them in the `Users` app.
+- **Admin Creation**: Users created directly by administrators through the `Users` dashboard are automatically approved.
+- **Data Ownership**: Every personal record is owned by a specific `user_id`.
+- **Permissions**: Normal users can only read and write their own app data. Admin users can access system panels like `Processes`, `Devices`, and `Users`.
+- **Private Data**: Admin access does not automatically bypass private data ownership checks.
+- **Global Processes**: Global processes still run once for the whole system, but they process user-scoped work items by `user_id`.
 
 ## Architecture
 
