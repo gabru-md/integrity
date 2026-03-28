@@ -69,7 +69,8 @@ class PermissionManager:
         if not PermissionManager.is_authenticated():
             return False
 
-        admin_apps = {"devices", "processes", "heimdall", "apps", "users", "events"}
+        # 'events' removed from admin_apps to allow user access
+        admin_apps = {"devices", "processes", "heimdall", "apps", "users"}
         safe_app_name = (app_name or "").lower()
         if safe_app_name in admin_apps:
             return PermissionManager.is_admin()

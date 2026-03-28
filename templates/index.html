@@ -181,6 +181,22 @@
             </li>
             {% endif %}
 
+            {% if PermissionManager.can_view_app('events') %}
+            <li>
+                <a href="/events/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
+                                     hover:bg-indigo-50 hover:text-indigo-600
+                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
+                                     {% if '/events' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Events
+                </a>
+            </li>
+            {% endif %}
+
             {% if PermissionManager.can_access_admin_panel() %}
             <div class="pt-4 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-t border-slate-100 dark:border-gray-700/50 mt-4">
                 Admin Panel

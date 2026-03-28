@@ -9,7 +9,7 @@ from typing import List, Optional
 class EventService(CRUDService[Event]):
     def __init__(self):
         super().__init__(
-            "events", DB("events")
+            "events", DB("events"), user_scoped=True
         )
 
     def _create_table(self):
