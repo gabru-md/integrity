@@ -51,10 +51,12 @@ class Server:
         self.app.register_blueprint(app.blueprint, url_prefix=f"/{app.name.lower()}")
 
     def run(self):
+        debug_enabled = self._env_flag("SERVER_DEBUG")
         self.app.run(
-            debug=os.getenv("SERVER_DEBUG", False),
+            debug=debug_enabled,
+            use_reloader=debug_enabled,
             host='0.0.0.0',
-            port=os.getenv("SERVER_PORT", 5000)
+            port=int(os.getenv("SERVER_PORT", 5000))
         )
 
     def setup_default_routes(self):
@@ -441,5 +443,14 @@ class Server:
         self.log.info("All processes concluded.")
 
     def start_process_manager(self):
+        if self._env_flag("SERVER_DEBUG") and os.getenv("WERKZEUG_RUN_MAIN") != "true":
+            self.log.info("Skipping process manager startup in Werkzeug reloader parent process.")
+            return
         self.process_manager_thread = threading.Thread(target=self.process_manager_init, daemon=True)
         self.process_manager_thread.start()
+
+    def _env_flag(self, key: str, default: bool = False) -> bool:
+        value = os.getenv(key)
+        if value is None:
+            return default
+        return value.strip().lower() in {"1", "true", "yes", "on"}

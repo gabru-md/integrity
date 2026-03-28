@@ -89,7 +89,10 @@ class DeviceService(CRUDService[Device]):
 
     # Add specific methods here, e.g., get_enabled_devices_by_location
     def get_devices_by_type(self, device_type: str) -> List[Device]:
-        with self.db.conn.cursor() as cursor:
+        conn = self.db.get_conn()
+        if not conn:
+            return []
+        with conn.cursor() as cursor:
             query = "SELECT * FROM device WHERE device_type = %s;"
             cursor.execute(query, (device_type,))
             rows = cursor.fetchall()
@@ -97,7 +100,10 @@ class DeviceService(CRUDService[Device]):
         return devices
 
     def get_devices_enabled_for(self, key):
-        with self.db.conn.cursor() as cursor:
+        conn = self.db.get_conn()
+        if not conn:
+            return []
+        with conn.cursor() as cursor:
             query = "SELECT * FROM devices WHERE  enabled = TRUE AND %s = ANY(string_to_array(authorized_apps, ','))"
             cursor.execute(query, (key,))
             rows = cursor.fetchall()

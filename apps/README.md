@@ -14,6 +14,8 @@ apps/*.py
 
 Most apps are built directly with `gabru.flask.app.App`. A few extend it when they need a custom home page or extra routes.
 
+Each app should now also expose user-facing instructions in the web UI via `user_guidance`. This is separate from developer documentation and should explain what the app is for, what important terms mean, and how a user should fill in the main fields.
+
 ## Currently Registered Apps
 
 ### 1. Blogs
@@ -98,6 +100,18 @@ Most apps are built directly with `gabru.flask.app.App`. A few extend it when th
   - supports explicit `tag_key` and `aliases` for matching
   - exposes `/skills/history`
 
+## User-Facing Instructions
+
+`gabru.flask.app.App` now passes `user_guidance` into the app home template. The shared instructions panel can render:
+
+- `overview`
+- `how_to_use`
+- `glossary`
+- `examples`
+- `fields`
+
+Field descriptions are also derived automatically from Pydantic `Field(..., description="...")` metadata, so app authors should keep those descriptions user-friendly.
+
 ## Widget Types In Use
 
 The current dashboard uses these widget types:
@@ -139,5 +153,7 @@ When adding a new app:
 2. Create a service in `services/`.
 3. Create the app in `apps/`.
 4. Register it in [server.py](/Users/manish/PycharmProjects/integrity/server.py).
-5. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
-6. Update [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) if the app adds environment requirements.
+5. Add or update `user_guidance` so the app home page explains the app to end users.
+6. Add user-friendly `description=` text to important Pydantic fields.
+7. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
+8. Update [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) if the app adds environment requirements.

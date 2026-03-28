@@ -1,5 +1,6 @@
 from flask import jsonify
 
+from apps.user_docs import build_app_user_guidance
 from gabru.flask.app import App
 from model.skill import Skill
 from processes.skill_xp_processor import SkillXPProcessor
@@ -31,6 +32,7 @@ class SkillsApp(App[Skill]):
             widget_type="skill_tree",
             widget_recent_limit=5,
             _process_model_data_func=process_skill_data,
+            user_guidance=build_app_user_guidance("Skills"),
         )
 
     def widget_data(self):

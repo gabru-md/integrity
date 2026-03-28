@@ -2,6 +2,7 @@ import json
 from flask import request, jsonify
 
 from gabru.flask.app import App
+from apps.user_docs import build_app_user_guidance
 from model.activity import Activity
 from services.activities import ActivityService
 
@@ -33,7 +34,8 @@ activities_app = App(
     Activity,
     _process_model_data_func=process_activity_data,
     home_template="activities.html",
-    widget_type="basic"
+    widget_type="basic",
+    user_guidance=build_app_user_guidance("Activities")
 )
 
 

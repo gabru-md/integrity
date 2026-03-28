@@ -1,4 +1,5 @@
 from flask import request, jsonify
+from apps.user_docs import build_app_user_guidance
 from gabru.flask.app import App
 from model.project import Project
 from model.timeline import TimelineItem
@@ -21,7 +22,8 @@ project_app = App(
     get_recent_limit=10,
     home_template="project_crud.html",
     widget_type="kanban",
-    widget_recent_limit=4
+    widget_recent_limit=4,
+    user_guidance=build_app_user_guidance("Projects")
 )
 
 project_app.register_process(ProjectUpdater, enabled=True)

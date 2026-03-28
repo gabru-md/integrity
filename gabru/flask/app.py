@@ -20,8 +20,9 @@ class App(Generic[T]):
     """
 
     def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=10,
-                 widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html", 
-                 widget_enabled=True, widget_type="basic", widget_config: Optional[dict] = None):
+                 widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html",
+                 widget_enabled=True, widget_type="basic", widget_config: Optional[dict] = None,
+                 user_guidance: Optional[dict] = None):
         self.name = name
         self.log = Logger.get_log(f"{self.name.capitalize()}")
         self.blueprint = Blueprint(self.name, __name__)
@@ -30,6 +31,7 @@ class App(Generic[T]):
         self.widget_recent_limit = widget_recent_limit
         self.model_class = model_class
         self.model_class_attributes = self.get_model_class_attributes()
+        self.user_guidance = self.build_user_guidance(user_guidance)
         self._process_model_data_func = _process_model_data_func
         self.setup_default_routes()
         self.setup_home_route()
@@ -140,10 +142,14 @@ class App(Generic[T]):
             download_enabled = extra.get("download_enabled", False)
             widget_enabled = extra.get("widget_enabled", False)
             ui_enabled = extra.get("ui_enabled", edit_enabled or widget_enabled)
+            label = name.replace("_", " ").title()
+            description = getattr(field, "description", None) or ""
 
             attributes.append({
                 "name": name,
+                "label": label,
                 "type": attr_type_str,
+                "description": description,
                 "required": is_required,
                 "edit_enabled": edit_enabled,
                 "widget_enabled": widget_enabled,
@@ -151,6 +157,28 @@ class App(Generic[T]):
                 "ui_enabled": ui_enabled
             })
         return attributes
+
+    def build_user_guidance(self, guidance: Optional[dict] = None):
+        guidance = guidance or {}
+        described_fields = []
+        for attr in self.model_class_attributes:
+            if attr["description"] and attr["name"] != "id":
+                described_fields.append({
+                    "name": attr["name"],
+                    "label": attr["label"],
+                    "description": attr["description"],
+                    "required": attr["required"],
+                    "edit_enabled": attr["edit_enabled"],
+                    "ui_enabled": attr["ui_enabled"],
+                })
+
+        return {
+            "overview": guidance.get("overview", ""),
+            "how_to_use": guidance.get("how_to_use", []),
+            "glossary": guidance.get("glossary", []),
+            "examples": guidance.get("examples", []),
+            "fields": guidance.get("fields", described_fields),
+        }
 
     def setup_home_route(self):
 
@@ -160,7 +188,8 @@ class App(Generic[T]):
             return render_flask_template(self.home_template,
                                    model_class_attributes=self.model_class_attributes,
                                    model_class_name=self.model_class.__name__,
-                                   app_name=self.name)
+                                   app_name=self.name,
+                                   user_guidance=self.user_guidance)
 
     def process_model_data(self, data):
         if self._process_model_data_func:

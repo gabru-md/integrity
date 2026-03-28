@@ -5,14 +5,23 @@
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <div id="vue-crud-app" class="p-4 sm:p-8">
+    <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                {% raw %}
+                <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100 capitalize">{{ modelClassName }}s
+                    Management</h1>
+                <p class="text-slate-500 mt-1 dark:text-gray-400">Manage and view all <span class="lowercase">{{ modelClassName }}</span>
+                    entries.</p>
+                {% endraw %}
+            </div>
+            <div class="shrink-0">
+                {% include "_app_instructions.html" %}
+            </div>
+        </div>
+    </header>
 
     {% raw %}
-    <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
-        <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100 capitalize">{{ modelClassName }}s
-            Management</h1>
-        <p class="text-slate-500 mt-1 dark:text-gray-400">Manage and view all <span class="lowercase">{{ modelClassName }}</span>
-            entries.</p>
-    </header>
 
     <div id="data-view">
         <div id="view-data-card"
@@ -153,6 +162,9 @@
                                     {{ formatKey(attr.name) }}
                                     <span v-if="attr.required" class="text-red-500">*</span>
                                 </label>
+                                <p v-if="attr.description" class="text-xs leading-5 text-slate-500 dark:text-gray-400">
+                                    {{ attr.description }}
+                                </p>
                             </template>
 
                             <template v-else>
@@ -161,6 +173,9 @@
                                     {{ formatKey(attr.name) }}
                                     <span v-if="attr.required" class="text-red-500">*</span>
                                 </label>
+                                <p v-if="attr.description" class="text-xs leading-5 text-slate-500 dark:text-gray-400">
+                                    {{ attr.description }}
+                                </p>
 
                                 <input :type="getInputType(attr.type)"
                                        :id="attr.name"

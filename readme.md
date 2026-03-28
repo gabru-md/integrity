@@ -12,6 +12,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Stores everything important as events.
 - Uses queue processors to react to those events in the background.
 - Exposes CRUD-style apps for core domains such as projects, promises, activities, and skills.
+- Includes user-facing instructions inside each app UI so non-developers can understand the meaning of fields and terms.
 - Provides a dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
 - Runs comfortably on a Raspberry Pi while staying inspectable and hackable.
 
@@ -54,6 +55,8 @@ The dashboard is now a control surface rather than a passive summary page. The h
 - a `Universal Timeline` that merges skills, projects, notifications, and recent events
 
 Widget pinning, collapsing, and ordering are persisted locally in the browser.
+
+Each app home page also includes an `Instructions` block for end users. These in-app explanations are intentionally separate from developer docs and should explain what an app does, what important terms mean, and how to fill in the main fields.
 
 ## Architecture
 

@@ -1,5 +1,6 @@
 from flask import Response, jsonify
 
+from apps.user_docs import build_app_user_guidance
 from gabru.flask.app import App
 from model.device import Device
 from processes.atmos.atmos import Atmos
@@ -9,7 +10,8 @@ from services.devices import DeviceService
 
 class DeviceApp(App):
     def __init__(self):
-        super().__init__('Devices', DeviceService(), Device, get_recent_limit=10, widget_type="kanban")
+        super().__init__('Devices', DeviceService(), Device, get_recent_limit=10, widget_type="kanban",
+                         user_guidance=build_app_user_guidance("Devices"))
         self.register_process(Heimdall, enabled=False)
         self.register_process(Atmos, enabled=False)
         self.setup_heimdall_routes()

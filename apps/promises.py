@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from flask import jsonify
+from apps.user_docs import build_app_user_guidance
 from gabru.flask.app import App
 from model.promise import Promise
 from services.promises import PromiseService
@@ -34,7 +35,8 @@ class PromiseApp(App[Promise]):
             home_template="promises.html",
             _process_model_data_func=process_promise_data,
             widget_type="kanban",
-            widget_recent_limit=3
+            widget_recent_limit=3,
+            user_guidance=build_app_user_guidance("Promises")
         )
         self.register_process(PromiseProcessor, enabled=True)
 
@@ -53,6 +55,7 @@ class PromiseApp(App[Promise]):
                                    model_class_attributes=self.model_class_attributes,
                                    model_class_name=self.model_class.__name__,
                                    app_name=self.name,
+                                   user_guidance=self.user_guidance,
                                    promises=promises,
                                    stats=stats)
 

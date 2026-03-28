@@ -1,5 +1,6 @@
 from flask import request, jsonify
 from gabru.flask.app import App
+from apps.user_docs import build_app_user_guidance
 from model.blog import BlogPost
 from services.blogs import BlogService
 from services.events import EventService
@@ -32,6 +33,7 @@ class BlogApp(App[BlogPost]):
             home_template="blog.html",
             _process_model_data_func=process_blog_data,
             widget_type="timeline",
+            user_guidance=build_app_user_guidance("Blogs"),
         )
 
     def setup_home_route(self):
@@ -40,7 +42,8 @@ class BlogApp(App[BlogPost]):
             posts = self.service.get_all()
             return render_flask_template(self.home_template, 
                                    posts=posts, 
-                                   app_name=self.name)
+                                   app_name=self.name,
+                                   user_guidance=self.user_guidance)
 
         @self.blueprint.route('/p/<slug>')
         def view_post(slug):

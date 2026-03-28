@@ -22,19 +22,22 @@ class Project(WidgetUIModel):
     )
     project_type: Literal["Code", "DIY", "Other"] = Field(
         default="Other",
-        widget_enabled=True
+        widget_enabled=True,
+        description="Broad category for the project"
     )
-    start_date: datetime = Field(default_factory=datetime.now)
+    start_date: datetime = Field(default_factory=datetime.now, description="When the project started")
 
     state: ProjectState = Field(
         default=ProjectState.ACTIVE,
         edit_enabled=False,
-        widget_enabled=True
+        widget_enabled=True,
+        description="Current lifecycle state of the project"
     )
     last_updated: Optional[datetime] = Field(
         default=None,
         edit_enabled=False,
-        widget_enabled=True
+        widget_enabled=True,
+        description="Most recent time the project timeline was updated"
     )
     progress_count: int = Field(
         default=0,
