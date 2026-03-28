@@ -30,9 +30,9 @@ class Project(WidgetUIModel):
 
     state: ProjectState = Field(
         default=ProjectState.ACTIVE,
-        edit_enabled=False,
+        edit_enabled=True,
         widget_enabled=True,
-        description="Current lifecycle state of the project"
+        description="Current lifecycle state of the project: Active, On Hold, Completed, Archived"
     )
     last_updated: Optional[datetime] = Field(
         default=None,
