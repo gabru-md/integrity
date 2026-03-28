@@ -1,49 +1,33 @@
 #!/bin/bash
-# Global Database Cleanup Script for Rasbhari / Integrity
+# Global Database Cleanup (Superuser Version)
 
-# 1. Source the .env file if it exists
-# Check current directory and parent directory
+# 1. Try to load .env to get actual database names
 if [ -f .env ]; then
-    echo "Sourcing .env from current directory..."
     export $(grep -v '^#' .env | xargs)
 elif [ -f ../.env ]; then
-    echo "Sourcing .env from parent directory..."
     export $(grep -v '^#' ../.env | xargs)
-else
-    echo "Warning: .env file not found in . or .."
 fi
 
-# Function to clear idle connections for a given DB
-clear_db() {
-    local PREFIX=$1
-    local DB_VAR="${PREFIX}_POSTGRES_DB"
-    local USER_VAR="${PREFIX}_POSTGRES_USER"
-    local PASSWORD_VAR="${PREFIX}_POSTGRES_PASSWORD"
-    local HOST_VAR="${PREFIX}_POSTGRES_HOST"
-    
-    # Get values from variables (with defaults)
-    local DB_NAME="${!DB_VAR}"
-    local DB_USER="${!USER_VAR:-postgres}"
-    local DB_PASS="${!PASSWORD_VAR}"
-    local DB_HOST="${!HOST_VAR:-localhost}"
+# 2. Define the list of databases to clear (based on your project prefixes)
+DB_LIST=(
+    "${RASBHARI_POSTGRES_DB:-rasbhari_main}"
+    "${EVENTS_POSTGRES_DB:-rasbhari_events}"
+    "${THOUGHTS_POSTGRES_DB:-rasbhari_thoughts}"
+    "${QUEUE_POSTGRES_DB:-rasbhari_queue}"
+    "${NOTIFICATIONS_POSTGRES_DB:-rasbhari_notifications}"
+)
 
-    if [ -n "$DB_NAME" ]; then
-        echo "------------------------------------------------"
-        echo "Clearing idle connections for: $DB_NAME ($PREFIX)"
-        
-        # Use PGPASSWORD locally for the command
-        PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -U "$DB_USER" -d postgres -t -c \
-        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity 
-         WHERE datname = '$DB_NAME' AND pid <> pg_backend_pid() AND state = 'idle';" | sed '/^\s*$/d' | wc -l | xargs echo "Connections closed:"
-    fi
-}
+echo "Starting cleanup as postgres superuser..."
 
-# List of prefixes
-PREFIXES=("RASBHARI" "EVENTS" "THOUGHTS" "QUEUE" "NOTIFICATIONS")
-
-for p in "${PREFIXES[@]}"; do
-    clear_db "$p"
+# 3. Loop through each database and clear idle connections
+for db in "${DB_LIST[@]}"; do
+    echo "Processing $db..."
+    # We connect to 'postgres' (maintenance DB) to kill connections in '$db'
+    # This prevents 'too many connections' errors when trying to connect to $db itself.
+    sudo -u postgres psql -d postgres -t -c \
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+     WHERE datname = '$db' AND state = 'idle';" | grep -v "^$" | wc -l | xargs echo " -> Idle connections closed:"
 done
 
 echo "------------------------------------------------"
-echo "Done."
+echo "Cleanup complete."
