@@ -25,9 +25,6 @@ class SkillService(CRUDService[Skill]):
                         UNIQUE(user_id, name)
                     )
                 """)
-                cursor.execute("ALTER TABLE skills ADD COLUMN IF NOT EXISTS tag_key VARCHAR(255) DEFAULT ''")
-                cursor.execute("ALTER TABLE skills ADD COLUMN IF NOT EXISTS aliases TEXT[] DEFAULT ARRAY[]::TEXT[]")
-                cursor.execute("UPDATE skills SET tag_key = name WHERE tag_key IS NULL OR tag_key = ''")
                 self.db.conn.commit()
 
     def _to_tuple(self, entity: Skill) -> tuple:

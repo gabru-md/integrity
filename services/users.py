@@ -30,16 +30,6 @@ class UserService(CRUDService[User]):
                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
-                # Check if is_approved column exists, if not add it (for migrations)
-                cursor.execute("""
-                    DO $$ 
-                    BEGIN 
-                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                                       WHERE table_name='users' AND column_name='is_approved') THEN
-                            ALTER TABLE users ADD COLUMN is_approved BOOLEAN NOT NULL DEFAULT FALSE;
-                        END IF;
-                    END $$;
-                """)
                 self.db.conn.commit()
 
     def _hash_password(self, password: Optional[str]) -> str:
