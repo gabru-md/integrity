@@ -87,6 +87,15 @@
                                    class="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-300">
                                     {{ action.label }}
                                 </a>
+                                <a :href="`/${widget.slug}/home`"
+                                   class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition duration-150"
+                                   title="Manage All Items">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                    </svg>
+                                </a>
                             </div>
                         </header>
                         <div v-if="!isCollapsed(widget.name)" class="p-5 flex-grow">

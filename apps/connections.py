@@ -31,7 +31,7 @@ class ConnectionsApp(App[Connection]):
             model_class=Connection,
             home_template="connections.html",
             _process_model_data_func=process_connection_data,
-            widget_type="basic",
+            widget_type="kanban",
             widget_recent_limit=4,
             user_guidance=build_app_user_guidance("Connections")
         )
