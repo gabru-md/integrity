@@ -5,6 +5,7 @@ from gabru.flask.model import WidgetUIModel
 
 class BlogPost(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     title: str = Field(..., widget_enabled=True, description="Title shown in the blog list and on the post page")
     slug: str = Field(..., description="URL-friendly identifier", widget_enabled=False)
     content: str = Field(..., description="Markdown content",widget_enabled=False)

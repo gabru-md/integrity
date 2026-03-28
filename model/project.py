@@ -16,6 +16,7 @@ class ProjectState(str, Enum):
 class Project(WidgetUIModel):
     """Data model for a project, including its state and progress."""
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     name: str = Field(
         description="A unique name for the project, used in event tags.",
         widget_enabled=True

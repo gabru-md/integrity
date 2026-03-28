@@ -20,7 +20,10 @@ class PromiseProcessor(QueueProcessor[Event]):
 
     def _process_item(self, event: Event) -> bool:
         """Checks if the event fulfills any active promises."""
-        active_promises = self.promise_service.get_promises_by_status("active")
+        if not event.user_id:
+            return True
+
+        active_promises = self.promise_service.find_all(filters={"user_id": event.user_id, "status": "active"})
         
         # Ensure event.timestamp is timezone-aware (UTC) for comparison
         event_ts_aware = self._make_datetime_utc_aware(event.timestamp)
@@ -156,6 +159,7 @@ class PromiseProcessor(QueueProcessor[Event]):
             filters["event_type"] = promise.target_event_type
         
         # Fetch events. `event.timestamp` needs to be made consistent.
+        filters["user_id"] = promise.user_id
         events = self.event_service.find_all(filters=filters)
         
         count = 0

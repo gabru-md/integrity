@@ -1,6 +1,7 @@
 import json
 from flask import request, jsonify
 
+from gabru.auth import write_access_required
 from gabru.flask.app import App
 from apps.user_docs import build_app_user_guidance
 from model.activity import Activity
@@ -40,6 +41,7 @@ activities_app = App(
 
 
 @activities_app.blueprint.route('/trigger/<int:activity_id>', methods=['POST'])
+@write_access_required
 def trigger_activity_endpoint(activity_id):
     """ Endpoint to trigger an activity and emit its corresponding event. """
     # The override_payload can come from the request body and might contain event-specific data

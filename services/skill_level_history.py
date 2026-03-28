@@ -7,7 +7,7 @@ from model.skill_level_history import SkillLevelHistory
 
 class SkillLevelHistoryService(CRUDService[SkillLevelHistory]):
     def __init__(self):
-        super().__init__("skill_level_history", DB("rasbhari"))
+        super().__init__("skill_level_history", DB("rasbhari"), user_scoped=True)
 
     def _create_table(self):
         if self.db.conn:
@@ -15,6 +15,7 @@ class SkillLevelHistoryService(CRUDService[SkillLevelHistory]):
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS skill_level_history (
                         id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
                         skill_id INTEGER NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
                         skill_name VARCHAR(255) NOT NULL,
                         level INTEGER NOT NULL,
@@ -27,6 +28,7 @@ class SkillLevelHistoryService(CRUDService[SkillLevelHistory]):
 
     def _to_tuple(self, entity: SkillLevelHistory) -> tuple:
         return (
+            entity.user_id,
             entity.skill_id,
             entity.skill_name,
             entity.level,
@@ -38,29 +40,23 @@ class SkillLevelHistoryService(CRUDService[SkillLevelHistory]):
     def _to_object(self, row: tuple) -> SkillLevelHistory:
         return SkillLevelHistory(
             id=row[0],
-            skill_id=row[1],
-            skill_name=row[2],
-            level=row[3],
-            total_xp=row[4],
-            reached_at=row[5],
-            summary=row[6],
+            user_id=row[1],
+            skill_id=row[2],
+            skill_name=row[3],
+            level=row[4],
+            total_xp=row[5],
+            reached_at=row[6],
+            summary=row[7],
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["skill_id", "skill_name", "level", "total_xp", "reached_at", "summary"]
+        return ["user_id", "skill_id", "skill_name", "level", "total_xp", "reached_at", "summary"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["skill_id", "skill_name", "level", "total_xp", "reached_at", "summary"]
+        return ["user_id", "skill_id", "skill_name", "level", "total_xp", "reached_at", "summary"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "skill_id", "skill_name", "level", "total_xp", "reached_at", "summary"]
+        return ["id", "user_id", "skill_id", "skill_name", "level", "total_xp", "reached_at", "summary"]
 
     def get_recent_history(self, limit: int = 10) -> List[SkillLevelHistory]:
-        if not self.db.get_conn():
-            return []
-
-        columns = ", ".join(self._get_columns_for_select())
-        query = f"SELECT {columns} FROM {self.table_name} ORDER BY reached_at DESC LIMIT %s"
-        with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, (limit,))
-            return [self._to_object(row) for row in cursor.fetchall()]
+        return self.find_all(sort_by={"reached_at": "DESC"})[:limit]

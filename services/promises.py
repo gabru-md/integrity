@@ -8,7 +8,7 @@ from typing import List, Optional
 class PromiseService(CRUDService[Promise]):
     def __init__(self):
         super().__init__(
-            "promises", DB("rasbhari")
+            "promises", DB("rasbhari"), user_scoped=True
         )
 
     def _create_table(self):
@@ -17,6 +17,7 @@ class PromiseService(CRUDService[Promise]):
                 cursor.execute("""
                             CREATE TABLE IF NOT EXISTS promises (
                                 id SERIAL PRIMARY KEY,
+                                user_id INTEGER NOT NULL,
                                 name VARCHAR(255) NOT NULL,
                                 description TEXT,
                                 frequency VARCHAR(50) NOT NULL,
@@ -50,7 +51,7 @@ class PromiseService(CRUDService[Promise]):
 
     def _to_tuple(self, promise: Promise) -> tuple:
         return (
-            promise.name, promise.description, promise.frequency,
+            promise.user_id, promise.name, promise.description, promise.frequency,
             promise.target_event_tag, promise.target_event_type, promise.required_count,
             promise.status, promise.current_count, promise.streak, promise.best_streak,
             promise.total_completions, promise.total_periods,
@@ -61,27 +62,28 @@ class PromiseService(CRUDService[Promise]):
     def _to_object(self, row: tuple) -> Promise:
         promise_dict = {
             "id": row[0],
-            "name": row[1],
-            "description": row[2],
-            "frequency": row[3],
-            "target_event_tag": row[4],
-            "target_event_type": row[5],
-            "required_count": row[6],
-            "status": row[7],
-            "current_count": row[8],
-            "streak": row[9],
-            "best_streak": row[10],
-            "total_completions": row[11],
-            "total_periods": row[12],
-            "last_checked_at": row[13],
-            "next_check_at": row[14],
-            "created_at": row[15],
-            "updated_at": row[16]
+            "user_id": row[1],
+            "name": row[2],
+            "description": row[3],
+            "frequency": row[4],
+            "target_event_tag": row[5],
+            "target_event_type": row[6],
+            "required_count": row[7],
+            "status": row[8],
+            "current_count": row[9],
+            "streak": row[10],
+            "best_streak": row[11],
+            "total_completions": row[12],
+            "total_periods": row[13],
+            "last_checked_at": row[14],
+            "next_check_at": row[15],
+            "created_at": row[16],
+            "updated_at": row[17]
         }
         return Promise(**promise_dict)
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["name", "description", "frequency", "target_event_tag", "target_event_type", 
+        return ["user_id", "name", "description", "frequency", "target_event_tag", "target_event_type", 
                 "required_count", "status", "current_count", "streak", "best_streak", "total_completions", 
                 "total_periods", "last_checked_at", "next_check_at", "created_at", "updated_at"]
 
@@ -89,6 +91,6 @@ class PromiseService(CRUDService[Promise]):
         return self._get_columns_for_insert()
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "name", "description", "frequency", "target_event_tag", "target_event_type", 
+        return ["id", "user_id", "name", "description", "frequency", "target_event_tag", "target_event_type", 
                 "required_count", "status", "current_count", "streak", "best_streak", "total_completions", 
                 "total_periods", "last_checked_at", "next_check_at", "created_at", "updated_at"]

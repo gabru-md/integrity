@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import jsonify, request
 
 from apps.user_docs import build_app_user_guidance
+from gabru.auth import write_access_required
 from gabru.flask.app import App
 from gabru.flask.util import render_flask_template
 from model.connection import Connection
@@ -91,6 +92,7 @@ def _process_interaction_data(data, connection_id=None):
 
     data["connection_id"] = safe_connection_id
     data["connection_name"] = connection.name
+    data["user_id"] = connection.user_id
     return data
 
 
@@ -101,6 +103,7 @@ def get_connection_ledger(connection_id):
 
 
 @connections_app.blueprint.route('/<int:connection_id>/ledger', methods=['POST'])
+@write_access_required
 def create_connection_ledger_item(connection_id):
     data = request.json or {}
     try:
@@ -129,6 +132,7 @@ def get_connection_interaction(interaction_id):
 
 
 @connections_app.blueprint.route('/ledger/<int:interaction_id>', methods=['PUT'])
+@write_access_required
 def update_connection_interaction(interaction_id):
     item = connections_app.connection_interaction_service.get_by_id(interaction_id)
     if not item:
@@ -146,6 +150,7 @@ def update_connection_interaction(interaction_id):
 
 
 @connections_app.blueprint.route('/ledger/<int:interaction_id>', methods=['DELETE'])
+@write_access_required
 def delete_connection_interaction(interaction_id):
     item = connections_app.connection_interaction_service.get_by_id(interaction_id)
     if not item:

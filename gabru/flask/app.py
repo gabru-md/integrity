@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, abort
+from flask import Blueprint, request, jsonify, abort, redirect
 from typing import TypeVar, Generic, Optional
 
 from gabru.log import Logger
@@ -46,6 +46,11 @@ class App(Generic[T]):
 
         @self.blueprint.before_request
         def check_access():
+            if not PermissionManager.is_authenticated():
+                if request.method == "GET":
+                    next_path = request.full_path if request.query_string else request.path
+                    return redirect(f"/login?next={next_path}")
+                return abort(401)
             if not PermissionManager.can_view_app(self.name):
                 return abort(403)
 
@@ -89,8 +94,15 @@ class App(Generic[T]):
             data = request.json
             data = dict(data)
             try:
-                data = self.process_model_data(data)
-                updated_entity = self.model_class(id=entity_id, **data)
+                existing_entity = self.service.get_by_id(entity_id)
+                if not existing_entity:
+                    return jsonify({"error": f"{self.name.capitalize()} not found or failed to update"}), 404
+
+                existing_data = existing_entity.dict()
+                existing_data.update(data)
+                existing_data["id"] = entity_id
+                processed_data = self.process_model_data(existing_data)
+                updated_entity = self.model_class(**processed_data)
                 if self.service.update(updated_entity):
                     return jsonify({"message": f"{self.name.capitalize()} updated successfully"}), 200
                 else:

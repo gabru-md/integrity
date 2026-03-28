@@ -5,6 +5,7 @@ from gabru.flask.model import WidgetUIModel
 
 class Activity(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     name: str = Field(default=None, widget_enabled=True, description="Display name for the activity (e.g., 'Clean Kitchen')")
     event_type: str = Field(default=None, widget_enabled=True, description="The type of event to emit (e.g., 'kitchen:cleaned')")
     description: Optional[str] = Field(default="", widget_enabled=True,

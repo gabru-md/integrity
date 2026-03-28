@@ -7,11 +7,12 @@ from datetime import datetime, timezone
 from flask import Flask, redirect, send_from_directory, jsonify, session, request, abort
 from gabru.log import Logger
 from gabru.flask.app import App
-from gabru.auth import PermissionManager, Role, admin_required
+from gabru.auth import PermissionManager, Role, admin_required, login_required
 
 from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
 from gabru.flask.util import render_flask_template
+from services.users import UserService
 
 from dotenv import load_dotenv
 
@@ -39,6 +40,7 @@ class Server:
             return dict(
                 PermissionManager=PermissionManager,
                 current_role=PermissionManager.get_current_role(),
+                current_user=PermissionManager.get_current_user(),
                 Role=Role
             )
 
@@ -61,10 +63,11 @@ class Server:
 
     def setup_default_routes(self):
         @self.app.route('/')
+        @login_required
         def home():
             widgets_data = self.get_widgets_data()
-            reliability_data = self.get_reliability_data()
-            universal_timeline = self.get_universal_timeline_data()
+            reliability_data = self.get_reliability_data() if PermissionManager.is_admin() else []
+            universal_timeline = self.get_universal_timeline_data() if PermissionManager.is_admin() else []
             return render_flask_template(
                 'home.html',
                 widgets_data=widgets_data,
@@ -72,14 +75,37 @@ class Server:
                 universal_timeline=universal_timeline
             )
 
-        @self.app.route('/set_role/<role_name>', methods=['POST'])
-        def set_role(role_name):
-            try:
-                role = Role(role_name.lower())
-                PermissionManager.set_role(role)
-                return jsonify({"message": f"Role set to {role_name}"}), 200
-            except ValueError:
-                return jsonify({"error": "Invalid role"}), 400
+        @self.app.route('/login', methods=['GET', 'POST'])
+        def login():
+            if request.method == 'GET':
+                if PermissionManager.is_authenticated():
+                    return redirect('/')
+                return render_flask_template('login.html', next_url=request.args.get('next', '/'))
+
+            data = request.json if request.is_json else request.form
+            username = (data.get('username') or '').strip().lower()
+            password = data.get('password') or ''
+            next_url = data.get('next') or '/'
+
+            user_service = UserService()
+            user = user_service.authenticate(username, password)
+            if not user:
+                if request.is_json:
+                    return jsonify({"error": "Invalid username or password"}), 401
+                return render_flask_template('login.html', next_url=next_url, error="Invalid username or password"), 401
+
+            PermissionManager.login(user)
+            if request.is_json:
+                return jsonify({"message": "Login successful", "redirect": next_url or "/"})
+            return redirect(next_url or '/')
+
+        @self.app.route('/logout', methods=['POST'])
+        @login_required
+        def logout():
+            PermissionManager.logout()
+            if request.is_json:
+                return jsonify({"message": "Logged out"}), 200
+            return redirect('/login')
 
         @self.app.route('/apps')
         @admin_required
@@ -105,6 +131,7 @@ class Server:
             return redirect('/devices/home')
 
         @self.app.route('/download/<filename>')
+        @login_required
         def download(filename):
             return send_from_directory(directory=SERVER_FILES_FOLDER, path=filename, as_attachment=True)
 

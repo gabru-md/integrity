@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import jsonify, request
 
 from apps.user_docs import build_app_user_guidance
+from gabru.auth import PermissionManager, write_access_required
 from gabru.flask.app import App
 from gabru.flask.util import render_flask_template
 from model.event import Event
@@ -45,21 +46,25 @@ class ReportsApp(App[Report]):
             )
 
         @self.blueprint.route('/generate', methods=['POST'])
+        @write_access_required
         def generate_report():
             data = request.json or {}
             report_type = (data.get("report_type") or "daily").lower()
             anchor_date = data.get("anchor_date")
             async_mode = data.get("async_mode", True)
+            user_id = PermissionManager.get_current_user_id()
 
             if async_mode:
                 request_event = Event(
+                    user_id=user_id,
                     event_type="report:generate_requested",
                     timestamp=datetime.now(),
-                    description=self.report_aggregator.build_request_payload(report_type, anchor_date),
+                    description=self.report_aggregator.build_request_payload(report_type, anchor_date, user_id=user_id),
                     tags=[
                         "report",
                         f"report_type:{report_type}",
                         f"anchor_date:{anchor_date or datetime.now().date().isoformat()}",
+                        f"user_id:{user_id}",
                     ],
                 )
                 event_id = self.event_service.create(request_event)
@@ -70,8 +75,9 @@ class ReportsApp(App[Report]):
                     "anchor_date": anchor_date,
                 }), 202
 
-            report = self.report_aggregator.build_and_store_report(report_type, anchor_date)
+            report = self.report_aggregator.build_and_store_report(report_type, anchor_date, user_id=user_id)
             self.event_service.create(Event(
+                user_id=user_id,
                 event_type="report:generated",
                 timestamp=report.generated_at,
                 description=f"{report.title} generated with integrity score {report.integrity_score}",
@@ -79,6 +85,7 @@ class ReportsApp(App[Report]):
                     "report",
                     f"report_type:{report.report_type}",
                     f"anchor_date:{report.anchor_date}",
+                    f"user_id:{user_id}",
                 ],
             ))
             return jsonify(report.dict()), 201

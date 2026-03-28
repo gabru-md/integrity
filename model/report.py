@@ -8,6 +8,7 @@ from gabru.flask.model import WidgetUIModel
 
 class Report(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     report_type: Literal["daily", "weekly", "monthly"] = Field(
         default="daily",
         widget_enabled=True,

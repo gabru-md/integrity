@@ -31,6 +31,7 @@ Rasbhari currently registers these apps in [server.py](/Users/manish/PycharmProj
 - `Skills`
 - `Connections`
 - `Reports`
+- `Users`
 
 See [apps/README.md](apps/README.md) for details.
 
@@ -76,6 +77,16 @@ The `Reports` app adds a local-first behavioral mirror. It currently computes:
 - mood hints from thought keywords
 
 If no connections are configured yet, the report explicitly marks social balance as a data gap instead of inventing certainty.
+
+## Authentication And Ownership
+
+Rasbhari now supports real sign-in accounts instead of the old session role switcher.
+
+- every personal record is owned by a specific `user_id`
+- normal users can only read and write their own app data
+- admin users can access system panels like `Processes`, `Devices`, and `Users`
+- admin access does not automatically bypass private data ownership checks
+- global processes still run once for the whole system, but they process user-scoped work items by `user_id`
 
 ## Architecture
 

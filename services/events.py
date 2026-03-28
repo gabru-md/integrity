@@ -18,6 +18,7 @@ class EventService(CRUDService[Event]):
                 cursor.execute("""
                             CREATE TABLE IF NOT EXISTS events (
                                 id SERIAL PRIMARY KEY,
+                                user_id INTEGER,
                                 event_type VARCHAR(255) NOT NULL,
                                 timestamp TIMESTAMP NOT NULL,
                                 description TEXT,
@@ -65,23 +66,24 @@ class EventService(CRUDService[Event]):
 
     def _to_tuple(self, event: Event) -> tuple:
         return (
-            event.event_type, event.timestamp, event.description, event.tags)
+            event.user_id, event.event_type, event.timestamp, event.description, event.tags)
 
     def _to_object(self, row: tuple) -> Event:
         event_dict = {
             "id": row[0],
-            "event_type": row[1],
-            "timestamp": row[2],
-            "description": row[3],
-            "tags": row[4] if row[4] else []
+            "user_id": row[1],
+            "event_type": row[2],
+            "timestamp": row[3],
+            "description": row[4],
+            "tags": row[5] if row[5] else []
         }
         return Event(**event_dict)
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["event_type", "timestamp", "description", "tags"]
+        return ["user_id", "event_type", "timestamp", "description", "tags"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["event_type", "timestamp", "description", "tags"]
+        return ["user_id", "event_type", "timestamp", "description", "tags"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "event_type", "timestamp", "description", "tags"]
+        return ["id", "user_id", "event_type", "timestamp", "description", "tags"]

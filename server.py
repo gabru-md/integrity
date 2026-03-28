@@ -13,6 +13,8 @@ from apps.activities import activities_app
 from apps.connections import connections_app
 from apps.reports import reports_app
 from apps.skills import skills_app
+from apps.users import users_app
+from gabru.auth import login_required
 from gabru.flask.server import Server
 from gabru.flask.util import render_flask_template
 
@@ -50,6 +52,7 @@ class RasbhariServer(Server):
         self.register_app(skills_app)
         self.register_app(connections_app)
         self.register_app(reports_app)
+        self.register_app(users_app)
 
 
     def run_server(self):
@@ -59,10 +62,12 @@ class RasbhariServer(Server):
 
     def setup_additional_routes(self):
         @self.app.route('/heimdall')
+        @login_required
         def show_heimdall_dashboard():
             return render_flask_template('heimdall.html')
 
         @self.app.route('/chat')
+        @login_required
         def show_open_webui():
             return redirect(self.open_webui_url), 302
 

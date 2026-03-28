@@ -8,6 +8,7 @@ from gabru.flask.model import WidgetUIModel
 
 class Connection(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     name: str = Field(default="", widget_enabled=True, description="Display name for the person or relationship you want to track.")
     relationship_type: Literal["Family", "Friend", "Partner", "Colleague", "Mentor", "Community", "Other"] = Field(
         default="Friend",

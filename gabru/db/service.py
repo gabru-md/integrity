@@ -1,6 +1,9 @@
 from abc import abstractmethod
 from typing import Optional, List, TypeVar, Generic, Dict, Any
 
+from flask import has_request_context
+
+from gabru.auth import PermissionManager
 from gabru.db.db import DB
 from gabru.log import Logger
 
@@ -11,9 +14,11 @@ log = Logger.get_log('ReadOnlyService')
 class ReadOnlyService(Generic[T]):
     """ ReadOnlyService also useful for queue processor """
 
-    def __init__(self, table_name: str, db: DB):
+    def __init__(self, table_name: str, db: DB, user_scoped: bool = False, user_scope_column: str = "user_id"):
         self.table_name = table_name
         self.db = db
+        self.user_scoped = user_scoped
+        self.user_scope_column = user_scope_column
 
     @abstractmethod
     def _to_object(self, row: tuple) -> T:
@@ -28,9 +33,15 @@ class ReadOnlyService(Generic[T]):
             return None
         columns = ", ".join(self._get_columns_for_select())
         query = f"SELECT {columns} FROM {self.table_name} WHERE id = %s"
+        params = [obj_id]
+
+        user_scope = self._get_request_user_scope()
+        if user_scope is not None:
+            query += f" AND {self.user_scope_column} = %s"
+            params.append(user_scope)
 
         with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, (obj_id,))
+            cursor.execute(query, tuple(params))
             row = cursor.fetchone()
             if row:
                 return self._to_object(row)
@@ -38,15 +49,7 @@ class ReadOnlyService(Generic[T]):
 
     def get_all(self) -> List[T]:
         """Retrieves all objects from the database."""
-        if not self.db.get_conn():
-            return []
-        columns = ", ".join(self._get_columns_for_select())
-        query = f"SELECT {columns} FROM {self.table_name}"
-
-        with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            return [self._to_object(row) for row in rows]
+        return self.find_all()
 
     def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
         """Returns the total count of items matching the filters."""
@@ -55,6 +58,7 @@ class ReadOnlyService(Generic[T]):
         query = f"SELECT COUNT(*) FROM {self.table_name}"
         where_clauses = []
         params = []
+        filters = self._with_request_user_scope(filters)
         if filters:
             for column, filter_val in filters.items():
                 where_clauses.append(f"{column} = %s")
@@ -72,8 +76,16 @@ class ReadOnlyService(Generic[T]):
             return []
         columns = ", ".join(self._get_columns_for_select())
         query = f"SELECT {columns} FROM {self.table_name} ORDER BY id DESC LIMIT %s"
+        params = [limit]
+
+        filters = self._with_request_user_scope()
+        if filters:
+            where_clauses = [f"{column} = %s" for column in filters.keys()]
+            filter_params = list(filters.values())
+            query = f"SELECT {columns} FROM {self.table_name} WHERE {' AND '.join(where_clauses)} ORDER BY id DESC LIMIT %s"
+            params = filter_params + params
         with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, (limit,))
+            cursor.execute(query, tuple(params))
             rows = cursor.fetchall()
             return [self._to_object(row) for row in rows]
 
@@ -86,9 +98,15 @@ class ReadOnlyService(Generic[T]):
 
         columns = ", ".join(self._get_columns_for_select())
         query = f"SELECT {columns} FROM {self.table_name} WHERE id > %s ORDER BY id ASC LIMIT %s"
+        params = [last_id, limit]
+
+        user_scope = self._get_request_user_scope()
+        if user_scope is not None:
+            query = f"SELECT {columns} FROM {self.table_name} WHERE id > %s AND {self.user_scope_column} = %s ORDER BY id ASC LIMIT %s"
+            params = [last_id, user_scope, limit]
 
         with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, (last_id, limit, ))
+            cursor.execute(query, tuple(params))
             rows = cursor.fetchall()
             return [self._to_object(row) for row in rows]
 
@@ -104,6 +122,8 @@ class ReadOnlyService(Generic[T]):
         query = f"SELECT {columns} FROM {self.table_name}"
         where_clauses = []
         params = []
+
+        filters = self._with_request_user_scope(filters)
 
         if filters:
             for column, filter_val in filters.items():
@@ -142,6 +162,20 @@ class ReadOnlyService(Generic[T]):
         results = self.find_all(filters={field_name: value})
         return results[0] if results else None
 
+    def _get_request_user_scope(self) -> Optional[int]:
+        if not self.user_scoped:
+            return None
+        if not has_request_context():
+            return None
+        return PermissionManager.get_current_user_id()
+
+    def _with_request_user_scope(self, filters: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+        user_scope = self._get_request_user_scope()
+        scoped_filters = dict(filters or {})
+        if user_scope is not None and self.user_scope_column not in scoped_filters:
+            scoped_filters[self.user_scope_column] = user_scope
+        return scoped_filters or None
+
     @abstractmethod
     def _get_columns_for_select(self) -> List[str]:
         """Returns the list of columns for a SELECT statement."""
@@ -154,8 +188,8 @@ class CRUDService(ReadOnlyService[T]):
     It extends DB to handle database connections.
     """
 
-    def __init__(self, table_name: str, db: DB):
-        super().__init__(table_name, db)
+    def __init__(self, table_name: str, db: DB, user_scoped: bool = False, user_scope_column: str = "user_id"):
+        super().__init__(table_name, db, user_scoped=user_scoped, user_scope_column=user_scope_column)
         self.log = Logger.get_log(f"{table_name}:{db.dbname} Service")
         self._create_table()
 
@@ -177,6 +211,7 @@ class CRUDService(ReadOnlyService[T]):
         """Creates a new object in the database."""
         if not self.db.get_conn():
             return None
+        self._apply_request_user_scope_to_object(obj)
         columns = ", ".join(self._get_columns_for_insert())
         placeholders = ", ".join(["%s"] * len(self._get_columns_for_insert()))
         query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders}) RETURNING id"
@@ -195,6 +230,10 @@ class CRUDService(ReadOnlyService[T]):
         """Updates an existing object."""
         if not self.db.get_conn() or obj.id is None:
             return False
+        self._apply_request_user_scope_to_object(obj)
+        existing = self.get_by_id(obj.id)
+        if self.user_scoped and self._get_request_user_scope() is not None and not existing:
+            return False
 
         columns_and_placeholders = [f"{col}=%s" for col in self._get_columns_for_update()]
         set_clause = ", ".join(columns_and_placeholders)
@@ -210,11 +249,24 @@ class CRUDService(ReadOnlyService[T]):
         """Deletes an object by its ID."""
         if not self.db.get_conn():
             return False
+        if self.user_scoped and self._get_request_user_scope() is not None and not self.get_by_id(obj_id):
+            return False
         query = f"DELETE FROM {self.table_name} WHERE id=%s"
+        params = [obj_id]
+        user_scope = self._get_request_user_scope()
+        if user_scope is not None:
+            query += f" AND {self.user_scope_column} = %s"
+            params.append(user_scope)
         with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, (obj_id,))
+            cursor.execute(query, tuple(params))
             self.db.get_conn().commit()
             return cursor.rowcount > 0
+
+    def _apply_request_user_scope_to_object(self, obj: T):
+        user_scope = self._get_request_user_scope()
+        if user_scope is None or not hasattr(obj, self.user_scope_column):
+            return
+        setattr(obj, self.user_scope_column, user_scope)
 
     @abstractmethod
     def _get_columns_for_insert(self) -> List[str]:

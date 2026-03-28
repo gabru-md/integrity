@@ -8,6 +8,7 @@ from gabru.flask.model import WidgetUIModel
 
 class ConnectionInteraction(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     connection_id: int = Field(default=0, widget_enabled=False, description="ID of the connection this interaction belongs to.")
     connection_name: str = Field(default="", widget_enabled=True, description="Display name copied from the linked connection for easier scanning.")
     interaction_type: Literal["Call", "Text", "Meetup", "Video", "Email", "Gift", "Support", "Other"] = Field(

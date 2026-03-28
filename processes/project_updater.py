@@ -19,6 +19,7 @@ class ProjectUpdater(QueueProcessor[Event]):
     def __init__(self, **kwargs):
         self.event_service = EventService()
         self.project_service = ProjectService()
+        self._active_event_user_id = None
         super().__init__(service=self.event_service, **kwargs)
 
     def filter_item(self, event: Event) -> Event | None:
@@ -31,6 +32,7 @@ class ProjectUpdater(QueueProcessor[Event]):
 
     def _process_item(self, event: Event) -> bool:
         try:
+            self._active_event_user_id = event.user_id
             # 1. Try to get project name from event_type or tags
             project_name_dashed = self._get_project_name(event)
             if not project_name_dashed:
@@ -58,9 +60,12 @@ class ProjectUpdater(QueueProcessor[Event]):
         except Exception as e:
             self.log.exception(e)
             return False
+        finally:
+            self._active_event_user_id = None
 
     def _find_project(self, dashed_name: str) -> Project | None:
-        all_projects = self.project_service.get_all()
+        filters = {"user_id": self._active_event_user_id} if self._active_event_user_id is not None else None
+        all_projects = self.project_service.find_all(filters=filters)
         for p in all_projects:
             if p.name.lower().replace(" ", "-") == dashed_name.lower():
                 return p

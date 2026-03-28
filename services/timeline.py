@@ -6,7 +6,7 @@ from model.timeline import TimelineItem
 
 class TimelineService(CRUDService[TimelineItem]):
     def __init__(self):
-        super().__init__("timeline_items", DB("rasbhari"))
+        super().__init__("timeline_items", DB("rasbhari"), user_scoped=True)
         self._create_table()
 
     def _create_table(self):
@@ -15,6 +15,7 @@ class TimelineService(CRUDService[TimelineItem]):
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS timeline_items (
                         id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
                         project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
                         content TEXT NOT NULL,
                         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -25,29 +26,24 @@ class TimelineService(CRUDService[TimelineItem]):
 
     def _to_tuple(self, entity: TimelineItem) -> tuple:
         return (
-            entity.project_id, entity.content, entity.timestamp, entity.item_type
+            entity.user_id, entity.project_id, entity.content, entity.timestamp, entity.item_type
         )
 
     def _to_object(self, row: tuple) -> TimelineItem:
         return TimelineItem(
-            id=row[0], project_id=row[1], content=row[2],
-            timestamp=row[3], item_type=row[4]
+            id=row[0], user_id=row[1], project_id=row[2], content=row[3],
+            timestamp=row[4], item_type=row[5]
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["project_id", "content", "timestamp", "item_type"]
+        return ["user_id", "project_id", "content", "timestamp", "item_type"]
 
     def _get_columns_for_update(self) -> List[str]:
         # Usually updates change content but not project_id or timestamp (unless editing history)
-        return ["project_id", "content", "timestamp", "item_type"]
+        return ["user_id", "project_id", "content", "timestamp", "item_type"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "project_id", "content", "timestamp", "item_type"]
+        return ["id", "user_id", "project_id", "content", "timestamp", "item_type"]
 
     def get_by_project_id(self, project_id: int) -> List[TimelineItem]:
-        """Fetches all timeline items for a given project, ordered by newest first."""
-        query = f"SELECT {', '.join(self._get_columns_for_select())} FROM {self.table_name} WHERE project_id = %s ORDER BY timestamp DESC"
-        with self.db.conn.cursor() as cursor:
-            cursor.execute(query, (project_id,))
-            rows = cursor.fetchall()
-            return [self._to_object(row) for row in rows]
+        return self.find_all(filters={"project_id": project_id}, sort_by={"timestamp": "DESC"})

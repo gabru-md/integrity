@@ -29,6 +29,7 @@
         </div>
     </header>
 
+    {% if current_user and current_user.is_admin %}
     <section class="mb-8">
         <div class="mb-3 flex items-center justify-between">
             <h2 class="text-sm font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-gray-400">Reliability</h2>
@@ -50,6 +51,7 @@
         </div>
         {% endraw %}
     </section>
+    {% endif %}
 
     {% raw %}
     <section v-if="pinnedWidgets.length" class="mb-8">
@@ -434,6 +436,7 @@
         {% endraw %}
     </main>
 
+    {% if current_user and current_user.is_admin %}
     <section class="mt-10">
         <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
@@ -476,6 +479,7 @@
         </div>
         {% endraw %}
     </section>
+    {% endif %}
 
     <div v-if="Object.keys(widgetsData).length === 0" class="text-center py-20 text-slate-500 dark:text-gray-400">
         <p class="text-2xl font-bold mb-2">No widgets configured.</p>

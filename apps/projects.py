@@ -1,5 +1,6 @@
 from flask import request, jsonify
 from apps.user_docs import build_app_user_guidance
+from gabru.auth import write_access_required
 from gabru.flask.app import App
 from model.project import Project
 from model.timeline import TimelineItem
@@ -41,11 +42,17 @@ def get_timeline(project_id):
     return jsonify([item.dict() for item in items])
 
 @project_app.blueprint.route('/<int:project_id>/timeline', methods=['POST'])
+@write_access_required
 def add_timeline_item(project_id):
     data = request.json
     try:
+        project = project_app.service.get_by_id(project_id)
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
+
         # Validate and create
         item = TimelineItem(
+            user_id=project.user_id,
             project_id=project_id,
             content=data.get('content'),
             item_type=data.get('item_type', 'Update')
@@ -53,23 +60,22 @@ def add_timeline_item(project_id):
         timeline_service.create(item)
         
         # Update project's last_updated time and progress count
-        project = project_app.service.get_by_id(project_id)
-        if project:
-            project.last_updated = datetime.now()
-            if item.item_type == 'Update':
-                project.progress_count += 1
-            project_app.service.update(project)
-            
-            # Create a progress event
-            project_name_dashed = project.name.lower().replace(" ", "-")
-            event_type = f"project:{project_name_dashed}"
-            new_event = Event(
-                event_type=event_type,
-                timestamp=datetime.now(),
-                description=f"Timeline update for project: {project.name}",
-                tags=["progress"]
-            )
-            event_service.create(new_event)
+        project.last_updated = datetime.now()
+        if item.item_type == 'Update':
+            project.progress_count += 1
+        project_app.service.update(project)
+
+        # Create a progress event
+        project_name_dashed = project.name.lower().replace(" ", "-")
+        event_type = f"project:{project_name_dashed}"
+        new_event = Event(
+            user_id=project.user_id,
+            event_type=event_type,
+            timestamp=datetime.now(),
+            description=f"Timeline update for project: {project.name}",
+            tags=["progress"]
+        )
+        event_service.create(new_event)
             
         return jsonify({"message": "Timeline item added"}), 201
     except Exception as e:

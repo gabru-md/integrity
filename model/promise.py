@@ -7,6 +7,7 @@ from gabru.flask.model import WidgetUIModel
 
 class Promise(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     name: str = Field(default=None, widget_enabled=True, description="Short name for the commitment")
     description: Optional[str] = Field(default=None, widget_enabled=True, description="Optional context explaining the promise")
     

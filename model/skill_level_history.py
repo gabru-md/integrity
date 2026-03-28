@@ -8,6 +8,7 @@ from gabru.flask.model import WidgetUIModel
 
 class SkillLevelHistory(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     skill_id: int = Field(default=0, widget_enabled=False, description="Skill id linked to the level-up event")
     skill_name: str = Field(default="", widget_enabled=True, description="Display name of the skill")
     level: int = Field(default=1, widget_enabled=True, description="Level reached")

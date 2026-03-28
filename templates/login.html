@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Sign In | Rasbhari</title>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+    <main class="flex min-h-screen items-center justify-center px-4">
+        <section class="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl">
+            <div class="mb-8">
+                <div class="text-sm font-bold uppercase tracking-[0.3em] text-amber-400">Rasbhari</div>
+                <h1 class="mt-3 text-3xl font-extrabold">Sign In</h1>
+                <p class="mt-2 text-sm text-slate-400">Use your household account to open your own Rasbhari workspace.</p>
+            </div>
+
+            {% if error %}
+            <div class="mb-4 rounded-2xl border border-rose-900 bg-rose-950/50 px-4 py-3 text-sm text-rose-300">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post" action="/login" class="space-y-4">
+                <input type="hidden" name="next" value="{{ next_url or '/' }}">
+
+                <div>
+                    <label for="username" class="mb-2 block text-sm font-semibold text-slate-200">Username</label>
+                    <input id="username" name="username" type="text" required
+                           class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="password" class="mb-2 block text-sm font-semibold text-slate-200">Password</label>
+                    <input id="password" name="password" type="password" required
+                           class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500">
+                </div>
+
+                <button type="submit"
+                        class="w-full rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-indigo-500">
+                    Open Rasbhari
+                </button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

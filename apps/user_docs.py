@@ -155,5 +155,18 @@ def build_app_user_guidance(app_name: str) -> dict:
                 {"term": "Thought", "meaning": "A quick note captured with minimal structure."},
             ],
         },
+        "Users": {
+            "overview": "Users manage who can sign into this Rasbhari instance. Each person gets their own private workspace, while admin access only unlocks system panels.",
+            "how_to_use": [
+                "Create one account per family member or operator who should use this Rasbhari installation.",
+                "Only mark trusted operator accounts as admin. Admins can manage the system but do not automatically see other users' personal records.",
+                "Set a password when creating a user. Enter a new password later only when you want to rotate or reset it.",
+            ],
+            "glossary": [
+                {"term": "Admin", "meaning": "An operator who can access system panels like Processes, Devices, and dependency health."},
+                {"term": "Personal Workspace", "meaning": "The private set of app records owned by a specific user account."},
+                {"term": "Active", "meaning": "Whether the account is allowed to sign in."},
+            ],
+        },
     }
     return docs.get(app_name, {})

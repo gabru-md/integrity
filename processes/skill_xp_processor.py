@@ -23,6 +23,9 @@ class SkillXPProcessor(QueueProcessor[Event]):
         return event if event.tags else None
 
     def _process_item(self, event: Event) -> bool:
+        if not event.user_id:
+            return True
+
         normalized_tags = {
             self.skill_service.normalize_skill_tag(tag)
             for tag in (event.tags or [])
@@ -31,7 +34,7 @@ class SkillXPProcessor(QueueProcessor[Event]):
         if not normalized_tags:
             return True
 
-        skills = self.skill_service.get_all()
+        skills = self.skill_service.find_all(filters={"user_id": event.user_id})
         if not skills:
             return True
 
@@ -62,6 +65,7 @@ class SkillXPProcessor(QueueProcessor[Event]):
         for new_level in range(old_level + 1, skill.level + 1):
             summary = f"Reached Level {new_level} in {skill.name}"
             history_item = SkillLevelHistory(
+                user_id=skill.user_id,
                 skill_id=skill.id,
                 skill_name=skill.name,
                 level=new_level,
@@ -72,6 +76,7 @@ class SkillXPProcessor(QueueProcessor[Event]):
             self.skill_history_service.create(history_item)
 
             level_up_event = Event(
+                user_id=skill.user_id,
                 event_type="skill:level_up",
                 timestamp=reached_at,
                 description=summary,

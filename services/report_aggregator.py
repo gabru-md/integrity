@@ -55,31 +55,33 @@ class ReportAggregator:
         self.report_service = ReportService()
         self.xp_per_match = xp_per_match
 
-    def build_and_store_report(self, report_type: str, anchor_date: Optional[str] = None) -> Report:
+    def build_and_store_report(self, report_type: str, anchor_date: Optional[str] = None, user_id: Optional[int] = None) -> Report:
+        if user_id is None:
+            raise ValueError("user_id is required to build a report")
         window = self._resolve_window(report_type, anchor_date)
-        report = self.build_report(window)
+        report = self.build_report(window, user_id=user_id)
         report_id = self.report_service.upsert(report)
         stored = self.report_service.get_by_id(report_id)
         return stored or report
 
-    def build_report(self, window: ReportWindow) -> Report:
+    def build_report(self, window: ReportWindow, user_id: int) -> Report:
         events = self.event_service.find_all(
-            filters={"timestamp": {"$gt": window.start, "$lt": window.end}},
+            filters={"user_id": user_id, "timestamp": {"$gt": window.start, "$lt": window.end}},
             sort_by={"timestamp": "ASC"}
         )
         thoughts = self.thought_service.find_all(
-            filters={"created_at": {"$gt": window.start, "$lt": window.end}},
+            filters={"user_id": user_id, "created_at": {"$gt": window.start, "$lt": window.end}},
             sort_by={"created_at": "ASC"}
         )
-        connections = self.connection_service.get_active()
+        connections = self.connection_service.find_all(filters={"user_id": user_id, "active": True}, sort_by={"last_contact_at": "ASC"})
         interactions = self.connection_interaction_service.find_all(
-            filters={"created_at": {"$gt": window.start, "$lt": window.end}},
+            filters={"user_id": user_id, "created_at": {"$gt": window.start, "$lt": window.end}},
             sort_by={"created_at": "ASC"}
         )
-        projects = self.project_service.get_all()
-        skills = self.skill_service.get_all()
+        projects = self.project_service.find_all(filters={"user_id": user_id})
+        skills = self.skill_service.find_all(filters={"user_id": user_id})
         skill_history = self.skill_history_service.find_all(
-            filters={"reached_at": {"$gt": window.start, "$lt": window.end}},
+            filters={"user_id": user_id, "reached_at": {"$gt": window.start, "$lt": window.end}},
             sort_by={"reached_at": "ASC"}
         )
 
@@ -163,6 +165,7 @@ class ReportAggregator:
         }
 
         return Report(
+            user_id=user_id,
             report_type=window.report_type,
             anchor_date=window.anchor_date.isoformat(),
             period_start=window.start,
@@ -176,29 +179,36 @@ class ReportAggregator:
             sections=sections,
         )
 
-    def build_request_payload(self, report_type: str, anchor_date: Optional[str] = None) -> str:
+    def build_request_payload(self, report_type: str, anchor_date: Optional[str] = None, user_id: Optional[int] = None) -> str:
         return json.dumps({
+            "user_id": user_id,
             "report_type": report_type,
             "anchor_date": anchor_date or date.today().isoformat(),
         })
 
-    def parse_request_payload(self, description: Optional[str], tags: Optional[List[str]] = None) -> Tuple[str, Optional[str]]:
+    def parse_request_payload(self, description: Optional[str], tags: Optional[List[str]] = None) -> Tuple[Optional[int], str, Optional[str]]:
         if description:
             try:
                 payload = json.loads(description)
-                return payload.get("report_type", "daily"), payload.get("anchor_date")
+                return payload.get("user_id"), payload.get("report_type", "daily"), payload.get("anchor_date")
             except json.JSONDecodeError:
                 pass
 
         tags = tags or []
         report_type = "daily"
         anchor_date = None
+        user_id = None
         for tag in tags:
             if tag.startswith("report_type:"):
                 report_type = tag.split(":", 1)[1]
             elif tag.startswith("anchor_date:"):
                 anchor_date = tag.split(":", 1)[1]
-        return report_type, anchor_date
+            elif tag.startswith("user_id:"):
+                try:
+                    user_id = int(tag.split(":", 1)[1])
+                except ValueError:
+                    user_id = None
+        return user_id, report_type, anchor_date
 
     def _resolve_window(self, report_type: str, anchor_date: Optional[str]) -> ReportWindow:
         safe_type = (report_type or "daily").lower()

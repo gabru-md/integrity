@@ -8,7 +8,7 @@ from model.connection_interaction import ConnectionInteraction
 
 class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
     def __init__(self):
-        super().__init__("connection_interactions", DB("rasbhari"))
+        super().__init__("connection_interactions", DB("rasbhari"), user_scoped=True)
 
     def _create_table(self):
         if self.db.conn:
@@ -16,6 +16,7 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS connection_interactions (
                         id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
                         connection_id INTEGER NOT NULL REFERENCES connections(id) ON DELETE CASCADE,
                         connection_name VARCHAR(255) NOT NULL,
                         interaction_type VARCHAR(50) NOT NULL,
@@ -31,6 +32,7 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
 
     def _to_tuple(self, entity: ConnectionInteraction) -> tuple:
         return (
+            entity.user_id,
             entity.connection_id,
             entity.connection_name,
             entity.interaction_type,
@@ -45,25 +47,26 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
     def _to_object(self, row: tuple) -> ConnectionInteraction:
         return ConnectionInteraction(
             id=row[0],
-            connection_id=row[1],
-            connection_name=row[2],
-            interaction_type=row[3],
-            medium=row[4] or "",
-            duration_minutes=row[5] or 0,
-            quality_score=row[6] or 3,
-            notes=row[7] or "",
-            tags=row[8] or [],
-            created_at=row[9],
+            user_id=row[1],
+            connection_id=row[2],
+            connection_name=row[3],
+            interaction_type=row[4],
+            medium=row[5] or "",
+            duration_minutes=row[6] or 0,
+            quality_score=row[7] or 3,
+            notes=row[8] or "",
+            tags=row[9] or [],
+            created_at=row[10],
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["connection_id", "connection_name", "interaction_type", "medium", "duration_minutes", "quality_score", "notes", "tags", "created_at"]
+        return ["user_id", "connection_id", "connection_name", "interaction_type", "medium", "duration_minutes", "quality_score", "notes", "tags", "created_at"]
 
     def _get_columns_for_update(self) -> List[str]:
         return self._get_columns_for_insert()
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "connection_id", "connection_name", "interaction_type", "medium", "duration_minutes", "quality_score", "notes", "tags", "created_at"]
+        return ["id", "user_id", "connection_id", "connection_name", "interaction_type", "medium", "duration_minutes", "quality_score", "notes", "tags", "created_at"]
 
     def get_by_connection_id(self, connection_id: int, limit: Optional[int] = None) -> List[ConnectionInteraction]:
         interactions = self.find_all(filters={"connection_id": connection_id}, sort_by={"created_at": "DESC"})
@@ -97,6 +100,7 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
             ]))
 
             event_service.create(Event(
+                user_id=obj.user_id,
                 event_type="connection:interaction_logged",
                 timestamp=obj.created_at or datetime.now(),
                 description=f"Connected with {obj.connection_name} via {obj.interaction_type}",

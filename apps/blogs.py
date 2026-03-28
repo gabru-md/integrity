@@ -1,4 +1,5 @@
 from flask import request, jsonify
+from gabru.auth import write_access_required
 from gabru.flask.app import App
 from apps.user_docs import build_app_user_guidance
 from model.blog import BlogPost
@@ -53,6 +54,7 @@ class BlogApp(App[BlogPost]):
             return render_flask_template('blog_post.html', post=post)
 
         @self.blueprint.route('/', methods=['POST'])
+        @write_access_required
         def create_post():
             data = request.json
             try:
@@ -63,6 +65,7 @@ class BlogApp(App[BlogPost]):
                 if new_id:
                     # Trigger event
                     event = Event(
+                        user_id=new_post.user_id,
                         event_type="blog:posted",
                         timestamp=datetime.now(),
                         description=f"New blog post: {new_post.title}",

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from flask import jsonify
 from apps.user_docs import build_app_user_guidance
+from gabru.auth import write_access_required
 from gabru.flask.app import App
 from model.promise import Promise
 from services.promises import PromiseService
@@ -60,6 +61,7 @@ class PromiseApp(App[Promise]):
                                    stats=stats)
 
         @self.blueprint.route('/<int:promise_id>/refresh', methods=['POST'])
+        @write_access_required
         def refresh_stats(promise_id):
             promise = self.service.get_by_id(promise_id)
             if not promise:
@@ -74,6 +76,7 @@ class PromiseApp(App[Promise]):
             ev_service = EventService()
             
             filters = {
+                "user_id": promise.user_id,
                 "timestamp": {"$gt": last_check, "$lt": end_time}
             }
             if promise.target_event_type:
@@ -104,6 +107,7 @@ class PromiseApp(App[Promise]):
             start_time = end_time - timedelta(days=14)
             
             filters = {
+                "user_id": promise.user_id,
                 "timestamp": {"$gt": start_time, "$lt": end_time}
             }
             if promise.target_event_type:

@@ -9,7 +9,7 @@ from model.report import Report
 
 class ReportService(CRUDService[Report]):
     def __init__(self):
-        super().__init__("reports", DB("rasbhari"))
+        super().__init__("reports", DB("rasbhari"), user_scoped=True)
 
     @staticmethod
     def _json_default(value):
@@ -25,6 +25,7 @@ class ReportService(CRUDService[Report]):
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS reports (
                         id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
                         report_type VARCHAR(32) NOT NULL,
                         anchor_date VARCHAR(20) NOT NULL,
                         period_start TIMESTAMP NOT NULL,
@@ -40,12 +41,13 @@ class ReportService(CRUDService[Report]):
                 """)
                 cursor.execute("""
                     CREATE UNIQUE INDEX IF NOT EXISTS reports_type_anchor_idx
-                    ON reports (report_type, anchor_date)
+                    ON reports (user_id, report_type, anchor_date)
                 """)
                 self.db.conn.commit()
 
     def _to_tuple(self, report: Report) -> tuple:
         return (
+            report.user_id,
             report.report_type,
             report.anchor_date,
             report.period_start,
@@ -62,22 +64,23 @@ class ReportService(CRUDService[Report]):
     def _to_object(self, row: tuple) -> Report:
         return Report(
             id=row[0],
-            report_type=row[1],
-            anchor_date=row[2],
-            period_start=row[3],
-            period_end=row[4],
-            generated_at=row[5],
-            title=row[6],
-            integrity_score=row[7],
-            headline=row[8] or "",
-            observations=row[9] or [],
-            metrics=row[10] or {},
-            sections=row[11] or {},
+            user_id=row[1],
+            report_type=row[2],
+            anchor_date=row[3],
+            period_start=row[4],
+            period_end=row[5],
+            generated_at=row[6],
+            title=row[7],
+            integrity_score=row[8],
+            headline=row[9] or "",
+            observations=row[10] or [],
+            metrics=row[11] or {},
+            sections=row[12] or {},
         )
 
     def _get_columns_for_insert(self) -> List[str]:
         return [
-            "report_type", "anchor_date", "period_start", "period_end", "generated_at",
+            "user_id", "report_type", "anchor_date", "period_start", "period_end", "generated_at",
             "title", "integrity_score", "headline", "observations", "metrics", "sections"
         ]
 
@@ -86,16 +89,16 @@ class ReportService(CRUDService[Report]):
 
     def _get_columns_for_select(self) -> List[str]:
         return [
-            "id", "report_type", "anchor_date", "period_start", "period_end", "generated_at",
+            "id", "user_id", "report_type", "anchor_date", "period_start", "period_end", "generated_at",
             "title", "integrity_score", "headline", "observations", "metrics", "sections"
         ]
 
-    def get_by_type_and_anchor(self, report_type: str, anchor_date: str) -> Optional[Report]:
-        reports = self.find_all(filters={"report_type": report_type, "anchor_date": anchor_date})
+    def get_by_type_and_anchor(self, user_id: int, report_type: str, anchor_date: str) -> Optional[Report]:
+        reports = self.find_all(filters={"user_id": user_id, "report_type": report_type, "anchor_date": anchor_date})
         return reports[0] if reports else None
 
     def upsert(self, report: Report) -> int:
-        existing = self.get_by_type_and_anchor(report.report_type, report.anchor_date)
+        existing = self.get_by_type_and_anchor(report.user_id, report.report_type, report.anchor_date)
         if existing:
             report.id = existing.id
             self.update(report)

@@ -124,6 +124,16 @@ Each app should now also expose user-facing instructions in the web UI via `user
   - updates `last_contact_at` and emits social events when interactions are logged
   - feeds overdue-contact checks in behavioral reports
 
+### 11. Users
+
+- File: `apps/users.py`
+- Model: `User`
+- Widget: disabled
+- Notes:
+  - admin-only account management surface
+  - creates and updates real Rasbhari login accounts
+  - supports personal workspace ownership without giving admins access to other users' private app data
+
 ## User-Facing Instructions
 
 `gabru.flask.app.App` now passes `user_guidance` into the app home template. The shared instructions panel can render:

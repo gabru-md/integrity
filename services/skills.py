@@ -7,7 +7,7 @@ from model.skill import Skill
 
 class SkillService(CRUDService[Skill]):
     def __init__(self):
-        super().__init__("skills", DB("rasbhari"))
+        super().__init__("skills", DB("rasbhari"), user_scoped=True)
 
     def _create_table(self):
         if self.db.conn:
@@ -15,12 +15,14 @@ class SkillService(CRUDService[Skill]):
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS skills (
                         id SERIAL PRIMARY KEY,
-                        name VARCHAR(255) NOT NULL UNIQUE,
+                        user_id INTEGER NOT NULL,
+                        name VARCHAR(255) NOT NULL,
                         tag_key VARCHAR(255) DEFAULT '',
                         aliases TEXT[] DEFAULT ARRAY[]::TEXT[],
                         level INTEGER NOT NULL DEFAULT 1,
                         total_xp INTEGER NOT NULL DEFAULT 0,
-                        requirement TEXT DEFAULT ''
+                        requirement TEXT DEFAULT '',
+                        UNIQUE(user_id, name)
                     )
                 """)
                 cursor.execute("ALTER TABLE skills ADD COLUMN IF NOT EXISTS tag_key VARCHAR(255) DEFAULT ''")
@@ -31,27 +33,28 @@ class SkillService(CRUDService[Skill]):
     def _to_tuple(self, entity: Skill) -> tuple:
         tag_key = entity.tag_key or entity.name
         aliases = entity.aliases or []
-        return entity.name, tag_key, aliases, entity.level, entity.total_xp, entity.requirement
+        return entity.user_id, entity.name, tag_key, aliases, entity.level, entity.total_xp, entity.requirement
 
     def _to_object(self, row: tuple) -> Skill:
         return Skill(
             id=row[0],
-            name=row[1],
-            tag_key=row[2] or row[1],
-            aliases=row[3] or [],
-            level=row[4],
-            total_xp=row[5],
-            requirement=row[6] or ""
+            user_id=row[1],
+            name=row[2],
+            tag_key=row[3] or row[2],
+            aliases=row[4] or [],
+            level=row[5],
+            total_xp=row[6],
+            requirement=row[7] or ""
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["name", "tag_key", "aliases", "level", "total_xp", "requirement"]
+        return ["user_id", "name", "tag_key", "aliases", "level", "total_xp", "requirement"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["name", "tag_key", "aliases", "level", "total_xp", "requirement"]
+        return ["user_id", "name", "tag_key", "aliases", "level", "total_xp", "requirement"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "name", "tag_key", "aliases", "level", "total_xp", "requirement"]
+        return ["id", "user_id", "name", "tag_key", "aliases", "level", "total_xp", "requirement"]
 
     def get_by_name(self, name: str) -> Optional[Skill]:
         return self.find_one_by_field("name", name)

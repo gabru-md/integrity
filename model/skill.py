@@ -7,6 +7,7 @@ from gabru.flask.model import WidgetUIModel
 
 class Skill(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
+    user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     name: str = Field(default="", widget_enabled=True, description="Display name for the skill, e.g. Python")
     tag_key: str = Field(default="", widget_enabled=True, description="Primary tag key used for matching, e.g. python or counterstrike")
     aliases: List[str] = Field(default_factory=list, widget_enabled=True, description="Optional comma-separated aliases such as cs2, counter-strike")
