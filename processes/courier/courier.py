@@ -6,6 +6,7 @@ from model.event import Event
 from model.notification import Notification
 from services.events import EventService
 from services.notifications import NotificationService
+from services.users import UserService
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -21,16 +22,16 @@ class Courier(QueueProcessor[Event]):
     def __init__(self, **kwargs):
         super().__init__(service=EventService(), **kwargs)
         self.notification_service = NotificationService()
+        self.user_service = UserService()
 
         # Email Configuration
         self.sender_email = os.getenv("COURIER_SENDER_EMAIL")
         self.receiver_email = os.getenv("COURIER_RECEIVER_EMAIL")
         self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY")
 
-        # ntfy.sh Configuration
+        # ntfy.sh Configuration (System Defaults)
         self.ntfy_base_url = os.getenv("NTFY_BASE_URL", "https://ntfy.sh").rstrip("/")
-        self.ntfy_topic = os.getenv("NTFY_TOPIC", "rasbhari-alerts")
-        self.ntfy_url = f"{self.ntfy_base_url}/{self.ntfy_topic}"
+        self.default_ntfy_topic = os.getenv("NTFY_TOPIC", "rasbhari-alerts")
         self.ntfy_retry_attempts = 3
         self.ntfy_retry_delays_sec = [2, 5, 10]
 
@@ -100,10 +101,26 @@ class Courier(QueueProcessor[Event]):
             self.log.exception(f"Exception during email notification: {e}")
         return False
 
+    def get_ntfy_url_for_event(self, event: Event) -> str:
+        """
+        Determines the ntfy URL based on event user_id or system default.
+        """
+        topic = self.default_ntfy_topic
+        
+        if event.user_id:
+            user = self.user_service.get(event.user_id)
+            if user and user.ntfy_topic:
+                topic = user.ntfy_topic
+                self.log.debug(f"Using personal ntfy topic '{topic}' for user {user.username}")
+
+        return f"{self.ntfy_base_url}/{topic}"
+
     def send_ntfy_notification(self, event: Event) -> bool:
         """
         Dispatches a POST request to ntfy.sh
         """
+        ntfy_url = self.get_ntfy_url_for_event(event)
+        
         headers = {
             "Title": f"Rasbhari Alert: {event.event_type}",
             "Priority": "high",
@@ -119,14 +136,14 @@ class Courier(QueueProcessor[Event]):
         for attempt in range(1, self.ntfy_retry_attempts + 1):
             try:
                 response = requests.post(
-                    self.ntfy_url,
+                    ntfy_url,
                     data=event.description.encode('utf-8'),
                     headers=headers,
                     timeout=10
                 )
 
                 if response.status_code == 200:
-                    self.log.info(f"ntfy notification sent for event {event.id} on attempt {attempt}")
+                    self.log.info(f"ntfy notification sent to {ntfy_url} for event {event.id} on attempt {attempt}")
                     return True
 
                 self.log.warn(
@@ -135,7 +152,7 @@ class Courier(QueueProcessor[Event]):
                 )
             except Exception as e:
                 self.log.error(
-                    f"Failed to send ntfy notification on attempt {attempt}/{self.ntfy_retry_attempts}: {str(e)}"
+                    f"Failed to send ntfy notification to {ntfy_url} on attempt {attempt}/{self.ntfy_retry_attempts}: {str(e)}"
                 )
 
             if attempt < self.ntfy_retry_attempts:
