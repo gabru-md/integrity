@@ -131,17 +131,28 @@ class Server:
                 if request.is_json: return jsonify({"error": error}), 400
                 return render_flask_template('signup.html', error=error), 400
 
+            # The first user in the system is automatically an admin and approved
+            is_first_user = user_service.count() == 0
+            
             new_user = User(
                 username=username,
                 display_name=display_name or username,
                 password=password,
-                is_admin=False,
+                is_admin=is_first_user,
                 is_active=True,
-                is_approved=False # Requires admin approval
+                is_approved=is_first_user
             )
             
             user_id = user_service.create(new_user)
             if user_id:
+                if is_first_user:
+                    # Log them in immediately if they are the first user/admin
+                    PermissionManager.login(new_user)
+                    new_user.id = user_id
+                    if request.is_json:
+                        return jsonify({"message": "Admin account created successfully", "redirect": "/"}), 201
+                    return redirect('/')
+                
                 if request.is_json:
                     return jsonify({"message": "Signup successful, pending approval", "redirect": "/login"}), 201
                 return render_flask_template('signup.html', success=True)
