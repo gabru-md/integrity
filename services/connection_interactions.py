@@ -83,7 +83,9 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
             event_service = EventService()
             connection = connection_service.get_by_id(obj.connection_id)
             if connection:
-                connection.last_contact_at = obj.created_at or datetime.now()
+                interaction_time = obj.created_at or datetime.now()
+                if not connection.last_contact_at or interaction_time > connection.last_contact_at:
+                    connection.last_contact_at = interaction_time
                 connection_service.update(connection)
 
             normalized_name = (obj.connection_name or "").strip().lower().replace(" ", "_")
@@ -104,3 +106,34 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
             pass
 
         return created_id
+
+    def update(self, obj: ConnectionInteraction) -> bool:
+        updated = super().update(obj)
+        if updated:
+            self._refresh_connection_last_contact(obj.connection_id)
+        return updated
+
+    def delete(self, obj_id: int) -> bool:
+        interaction = self.get_by_id(obj_id)
+        if not interaction:
+            return False
+
+        deleted = super().delete(obj_id)
+        if deleted:
+            self._refresh_connection_last_contact(interaction.connection_id)
+        return deleted
+
+    def _refresh_connection_last_contact(self, connection_id: int):
+        try:
+            from services.connections import ConnectionService
+
+            connection_service = ConnectionService()
+            connection = connection_service.get_by_id(connection_id)
+            if not connection:
+                return
+
+            interactions = self.get_by_connection_id(connection_id, limit=1)
+            connection.last_contact_at = interactions[0].created_at if interactions else None
+            connection_service.update(connection)
+        except Exception:
+            pass

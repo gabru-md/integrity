@@ -225,6 +225,11 @@
                     <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Quality Score</label>
                     <input id="interaction-quality" type="number" min="1" max="5" value="3" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
                 </div>
+                <div class="md:col-span-2">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">When It Happened</label>
+                    <input id="interaction-created-at" type="datetime-local" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                    <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Use this to backfill an interaction from the past. Leave it as the current time for a live log.</p>
+                </div>
             </div>
             <div>
                 <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Tags</label>
@@ -259,13 +264,15 @@
     }
 
     function getInteractionPayload() {
+        const createdAt = document.getElementById('interaction-created-at').value;
         return {
             interaction_type: document.getElementById('interaction-type').value,
             medium: document.getElementById('interaction-medium').value,
             duration_minutes: parseInt(document.getElementById('interaction-duration').value, 10),
             quality_score: parseInt(document.getElementById('interaction-quality').value, 10),
             tags: document.getElementById('interaction-tags').value,
-            notes: document.getElementById('interaction-notes').value
+            notes: document.getElementById('interaction-notes').value,
+            created_at: createdAt ? new Date(createdAt).toISOString() : null
         };
     }
 
@@ -294,6 +301,7 @@
         document.getElementById('interaction-medium').value = interaction?.medium || '';
         document.getElementById('interaction-duration').value = interaction?.duration_minutes || 0;
         document.getElementById('interaction-quality').value = interaction?.quality_score || 3;
+        document.getElementById('interaction-created-at').value = toDateTimeLocalValue(interaction?.created_at) || toDateTimeLocalValue(new Date().toISOString());
         document.getElementById('interaction-tags').value = interaction?.tags?.join?.(', ') || interaction?.tags || '';
         document.getElementById('interaction-notes').value = interaction?.notes || '';
         document.getElementById('interaction-modal').classList.remove('hidden');
@@ -442,6 +450,18 @@
         } catch (_error) {
             return value;
         }
+    }
+
+    function toDateTimeLocalValue(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        const year = date.getFullYear();
+        const month = `${date.getMonth() + 1}`.padStart(2, '0');
+        const day = `${date.getDate()}`.padStart(2, '0');
+        const hours = `${date.getHours()}`.padStart(2, '0');
+        const minutes = `${date.getMinutes()}`.padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
     document.querySelectorAll('.connection-card').forEach(card => {
