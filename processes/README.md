@@ -122,6 +122,7 @@ The process manager is exposed by the server:
 - `GET /process_logs/<name>`
 
 The dashboard's reliability row also summarizes process, queue, notification, and device health.
+The admin `Processes` page now also runs lightweight dependency probes for external services like OpenWebUI, ntfy, and SendGrid.
 
 ## When Adding a Process
 

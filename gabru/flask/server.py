@@ -91,7 +91,8 @@ class Server:
         @admin_required
         def processes():
             processes_data = self.get_processes_data()
-            return render_flask_template('processes.html', processes_data=processes_data)
+            dependency_health_data = self.get_dependency_health_data()
+            return render_flask_template('processes.html', processes_data=processes_data, dependency_health_data=dependency_health_data)
         
         @self.app.route('/heimdall')
         @admin_required
@@ -178,6 +179,19 @@ class Server:
                     p_data.update({'type': 'Process', 'last_consumed_id': None})
                 processes_data.append(p_data)
         return processes_data
+
+    def get_dependency_health_data(self) -> list[dict]:
+        from services.dependency_health import DependencyHealthService
+
+        try:
+            return DependencyHealthService().get_checks()
+        except Exception as exc:
+            return [{
+                "name": "Dependency Health",
+                "status": "Broken",
+                "summary": "Health checks failed",
+                "detail": str(exc),
+            }]
 
     def get_apps_data(self) -> []:
         apps_data = []

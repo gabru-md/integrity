@@ -62,6 +62,8 @@ Widget pinning, collapsing, and ordering are persisted locally in the browser.
 
 Each app home page also includes an `Instructions` block for end users. These in-app explanations are intentionally separate from developer docs and should explain what an app does, what important terms mean, and how to fill in the main fields.
 
+The admin `Processes` page also includes dependency health cards for configured external services such as OpenWebUI, ntfy, and SendGrid so operator mistakes and external outages are easier to spot.
+
 The `Reports` app adds a local-first behavioral mirror. It currently computes:
 
 - an `Integrity Score`
