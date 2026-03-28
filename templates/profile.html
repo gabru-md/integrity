@@ -1,0 +1,58 @@
+{% extends "index.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="p-4 sm:p-8 max-w-2xl mx-auto">
+    <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
+        <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100">My Profile</h1>
+        <p class="text-slate-500 mt-1 dark:text-gray-400">View and update your personal information.</p>
+    </header>
+
+    <div class="p-6 bg-white shadow-xl rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
+        <form action="{{ url_for('Users.update_profile') }}" method="POST" class="space-y-6">
+            <div>
+                <label for="username" class="block text-sm font-medium text-slate-700 dark:text-gray-300">Username</label>
+                <input type="text" id="username" name="username" value="{{ user.username }}" readonly
+                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
+                       aria-describedby="username-help">
+                <p id="username-help" class="mt-1 text-xs text-slate-500 dark:text-gray-400">Your username cannot be changed.</p>
+            </div>
+
+            <div>
+                <label for="display_name" class="block text-sm font-medium text-slate-700 dark:text-gray-300">Display Name</label>
+                <input type="text" id="display_name" name="display_name" value="{{ user.display_name }}" required
+                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+            </div>
+
+            <div>
+                <label for="ntfy_topic" class="block text-sm font-medium text-slate-700 dark:text-gray-300">Ntfy Topic</label>
+                <input type="text" id="ntfy_topic" name="ntfy_topic" value="{{ user.ntfy_topic or '' }}"
+                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                       placeholder="e.g., my-personal-alerts">
+                <p class="mt-1 text-xs text-slate-500 dark:text-gray-400">Your personal topic for ntfy.sh notifications. Leave blank to use the default.</p>
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-700 dark:text-gray-300">New Password</label>
+                <input type="password" id="password" name="password"
+                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                       placeholder="Leave blank to keep current password">
+            </div>
+
+            <div>
+                <label for="confirm_password" class="block text-sm font-medium text-slate-700 dark:text-gray-300">Confirm New Password</label>
+                <input type="password" id="confirm_password" name="confirm_password"
+                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                       placeholder="Re-enter new password">
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-100 dark:border-gray-700/50">
+                <button type="submit"
+                        class="py-2 px-4 bg-indigo-600 text-white font-medium rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 focus:ring-4 focus:ring-indigo-300">
+                    Update Profile
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

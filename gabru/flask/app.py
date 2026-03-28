@@ -51,7 +51,9 @@ class App(Generic[T]):
                     next_path = request.full_path if request.query_string else request.path
                     return redirect(f"/login?next={next_path}")
                 return abort(401)
-            if not PermissionManager.can_view_app(self.name):
+            
+            # Use refined route-level permission check
+            if not PermissionManager.can_access_route(self.name, request.path):
                 return abort(403)
 
         @self.blueprint.route('/', methods=['POST'])

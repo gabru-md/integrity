@@ -66,15 +66,41 @@ class PermissionManager:
 
     @staticmethod
     def can_view_app(app_name: str) -> bool:
+        """ 
+        Checks if the user has permission to view the app's base UI.
+        Apps like 'users' are viewable but restricted by route-level logic.
+        """
         if not PermissionManager.is_authenticated():
             return False
 
-        # 'events' removed from admin_apps to allow user access
-        admin_apps = {"devices", "processes", "heimdall", "apps", "users"}
+        # Admin-only structural apps
+        admin_apps = {"devices", "processes", "heimdall", "apps"}
         safe_app_name = (app_name or "").lower()
         if safe_app_name in admin_apps:
             return PermissionManager.is_admin()
         return True
+
+    @staticmethod
+    def can_access_route(app_name: str, path: str) -> bool:
+        """
+        Refined Gabru Framework permission check.
+        Decides if the current user can access a specific route within an app.
+        """
+        if not PermissionManager.is_authenticated():
+            return False
+
+        is_admin = PermissionManager.is_admin()
+        safe_app_name = (app_name or "").lower()
+        path = path.rstrip('/') or '/'
+
+        # Users App Logic: Everyone can see profile, only admins can manage others
+        if safe_app_name == "users":
+            if "/profile" in path:
+                return True
+            return is_admin
+
+        # Fallback to can_view_app for general apps
+        return PermissionManager.can_view_app(app_name)
 
     @staticmethod
     def can_access_record(record) -> bool:
