@@ -212,7 +212,7 @@
     const { createApp, ref, onMounted, computed, watch } = Vue
 
     // Safely embed the dynamic data from Jinja2
-    const JINJA_ATTRIBUTES = JSON.parse('{{ model_class_attributes | tojson | safe }}');
+    const JINJA_ATTRIBUTES = {{ model_class_attributes | tojson | safe }};
     const JINJA_MODEL_NAME = '{{ model_class_name }}';
     const JINJA_APP_NAME = '{{ app_name.lower() }}';
 

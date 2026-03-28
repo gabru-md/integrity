@@ -486,9 +486,9 @@
 <script>
     const { createApp, ref, onMounted, computed } = Vue
 
-    const JINJA_WIDGETS_DATA = JSON.parse('{{ widgets_data | tojson }}');
-    const JINJA_RELIABILITY_DATA = JSON.parse('{{ reliability_data | tojson }}');
-    const JINJA_UNIVERSAL_TIMELINE = JSON.parse('{{ universal_timeline | tojson }}');
+    const JINJA_WIDGETS_DATA = {{ widgets_data | tojson | safe }};
+    const JINJA_RELIABILITY_DATA = {{ reliability_data | tojson | safe }};
+    const JINJA_UNIVERSAL_TIMELINE = {{ universal_timeline | tojson | safe }};
 
     const App = {
         setup() {
@@ -799,6 +799,12 @@
                     ],
                     blogs: [
                         { label: 'Open', type: 'link', href: '/blogs/home' }
+                    ],
+                    connections: [
+                        { label: 'Open', type: 'link', href: '/connections/home' }
+                    ],
+                    reports: [
+                        { label: 'Open', type: 'link', href: '/reports/home' }
                     ]
                 };
                 return actions[widget.slug] || [{ label: 'Open', type: 'link', href: `/${widget.slug}/home` }];

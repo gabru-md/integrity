@@ -12,6 +12,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Stores everything important as events.
 - Uses queue processors to react to those events in the background.
 - Exposes CRUD-style apps for core domains such as projects, promises, activities, and skills.
+- Generates daily, weekly, and monthly behavioral mirror reports from current activity, thought, project, and skill signals.
 - Includes user-facing instructions inside each app UI so non-developers can understand the meaning of fields and terms.
 - Provides a dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
 - Runs comfortably on a Raspberry Pi while staying inspectable and hackable.
@@ -28,6 +29,8 @@ Rasbhari currently registers these apps in [server.py](/Users/manish/PycharmProj
 - `Projects`
 - `Activities`
 - `Skills`
+- `Connections`
+- `Reports`
 
 See [apps/README.md](apps/README.md) for details.
 
@@ -39,6 +42,7 @@ Rasbhari currently uses these background processes:
 - `PromiseProcessor`
 - `ProjectUpdater`
 - `SkillXPProcessor`
+- `ReportProcessor`
 - `Atmos`
 - `Heimdall`
 
@@ -57,6 +61,19 @@ The dashboard is now a control surface rather than a passive summary page. The h
 Widget pinning, collapsing, and ordering are persisted locally in the browser.
 
 Each app home page also includes an `Instructions` block for end users. These in-app explanations are intentionally separate from developer docs and should explain what an app does, what important terms mean, and how to fill in the main fields.
+
+The `Reports` app adds a local-first behavioral mirror. It currently computes:
+
+- an `Integrity Score`
+- `Stalled Intent` detection for active projects without matching progress signals
+- neglected relationships based on connection cadence and last contact
+- social balance based on interactions logged inside the Connections ledger
+- event-weighted tag allocation
+- skill XP earned from matched tagged events
+- unfinished loop heuristics based on start/finish event patterns
+- mood hints from thought keywords
+
+If no connections are configured yet, the report explicitly marks social balance as a data gap instead of inventing certainty.
 
 ## Architecture
 
@@ -168,6 +185,60 @@ curl -X POST http://localhost:5000/skills/ \
 ```
 
 Once `SkillXPProcessor` is running, `#python` events award XP to the `Python` skill. Level-ups emit `skill:level_up` events, create skill history entries, and trigger Courier notifications because they are tagged with `notification`.
+
+### Create a connection
+
+```bash
+curl -X POST http://localhost:5000/connections/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Mom",
+    "relationship_type": "Family",
+    "cadence_days": 7,
+    "priority": "High",
+    "tags": ["family", "core"]
+  }'
+```
+
+### Log a connection interaction
+
+```bash
+curl -X POST http://localhost:5000/connections/1/ledger \
+  -H "Content-Type: application/json" \
+  -d '{
+    "interaction_type": "Call",
+    "medium": "Phone",
+    "duration_minutes": 35,
+    "quality_score": 4,
+    "tags": ["family", "support"]
+  }'
+```
+
+### Generate a report
+
+Queue report generation through the event pipeline:
+
+```bash
+curl -X POST http://localhost:5000/reports/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "report_type": "daily",
+    "anchor_date": "2026-03-28",
+    "async_mode": true
+  }'
+```
+
+Generate one immediately and inspect the JSON response:
+
+```bash
+curl -X POST http://localhost:5000/reports/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "report_type": "weekly",
+    "anchor_date": "2026-03-28",
+    "async_mode": false
+  }'
+```
 
 For multi-word skills, use a stable `tag_key`. Example:
 

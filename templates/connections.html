@@ -1,0 +1,460 @@
+{% extends "index.html" %}
+{% block title %}Connections{% endblock %}
+
+{% block content %}
+<div class="p-4 sm:p-8 space-y-8">
+    <header class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div class="flex items-start gap-3">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100">Connections</h1>
+                    <p class="mt-2 text-slate-500 dark:text-gray-400">
+                        Track the people who matter, log real touchpoints, and keep cadence visible without splitting the workflow across apps.
+                    </p>
+                </div>
+                <div class="pt-1 shrink-0">
+                    {% include "_app_instructions.html" %}
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button onclick="openConnectionModal()" class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700">New Connection</button>
+                <button onclick="openInteractionModal()" id="quick-log-button" class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Log Interaction</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-gray-500">Connections</div>
+            <div class="mt-2 text-3xl font-black text-slate-800 dark:text-gray-100">{{ stats.total }}</div>
+        </div>
+        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-gray-500">Active</div>
+            <div class="mt-2 text-3xl font-black text-emerald-600 dark:text-emerald-400">{{ stats.active }}</div>
+        </div>
+        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-gray-500">Overdue</div>
+            <div class="mt-2 text-3xl font-black text-rose-600 dark:text-rose-400">{{ stats.overdue }}</div>
+        </div>
+        <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-gray-500">Recent Logs</div>
+            <div class="mt-2 text-3xl font-black text-indigo-600 dark:text-indigo-400">{{ stats.recent_interactions }}</div>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <div class="mb-5 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">People</h2>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-gray-400">Select a connection to inspect or log the ledger.</p>
+                </div>
+            </div>
+            <div id="connections-list" class="space-y-3">
+                {% for connection in connections %}
+                <button
+                    type="button"
+                    class="connection-card w-full rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/40 dark:border-gray-700 dark:bg-gray-700/30 dark:hover:border-indigo-500"
+                    data-id="{{ connection.id }}"
+                    data-name="{{ connection.name }}"
+                    data-relationship-type="{{ connection.relationship_type }}"
+                    data-cadence-days="{{ connection.cadence_days }}"
+                    data-priority="{{ connection.priority }}"
+                    data-notes="{{ connection.notes }}"
+                    data-tags="{{ (connection.tags or []) | join(', ') }}"
+                    data-active="{{ 'true' if connection.active else 'false' }}"
+                >
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-lg font-bold text-slate-800 dark:text-gray-100">{{ connection.name }}</div>
+                            <div class="mt-1 text-sm text-slate-500 dark:text-gray-400">{{ connection.relationship_type }} · cadence {{ connection.cadence_days }} days · {{ connection.priority }}</div>
+                        </div>
+                        <div class="text-xs font-semibold {% if connection.active %}text-emerald-600 dark:text-emerald-400{% else %}text-slate-400 dark:text-gray-500{% endif %}">
+                            {{ 'Active' if connection.active else 'Paused' }}
+                        </div>
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        {% for tag in connection.tags or [] %}
+                        <span class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-gray-600 dark:text-gray-300">Last contact: {{ connection.last_contact_at.strftime("%Y-%m-%d %H:%M") if connection.last_contact_at else "Never" }}</span>
+                    </div>
+                </button>
+                {% else %}
+                <div class="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500 dark:border-gray-700 dark:text-gray-400">
+                    No connections yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 id="detail-name" class="text-2xl font-bold text-slate-800 dark:text-gray-100">Select a connection</h2>
+                    <p id="detail-meta" class="mt-1 text-sm text-slate-500 dark:text-gray-400">The ledger will appear here as a timeline.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" id="edit-connection-button" onclick="editSelectedConnection()" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Edit</button>
+                    <button type="button" id="delete-connection-button" onclick="deleteSelectedConnection()" class="rounded-xl border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/20">Delete</button>
+                    <button type="button" id="log-interaction-button" onclick="openInteractionModal()" class="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">Log Interaction</button>
+                </div>
+            </div>
+            <div id="detail-notes" class="mt-4 text-sm text-slate-600 dark:text-gray-300"></div>
+            <div id="ledger-timeline" class="mt-6 space-y-3">
+                {% for item in recent_interactions %}
+                <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-4 dark:border-gray-700 dark:bg-gray-700/30">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">{{ item.connection_name }} · {{ item.interaction_type }}</div>
+                            <div class="mt-1 text-xs text-slate-500 dark:text-gray-400">{{ item.created_at.strftime("%Y-%m-%d %H:%M") if item.created_at else "" }}</div>
+                        </div>
+                        <button type="button" onclick="deleteInteraction({{ item.id }})" class="text-xs font-semibold text-rose-600 dark:text-rose-300">Delete</button>
+                    </div>
+                    <div class="mt-2 text-sm text-slate-600 dark:text-gray-300">{{ item.notes or 'No notes recorded.' }}</div>
+                </div>
+                {% else %}
+                <div class="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500 dark:border-gray-700 dark:text-gray-400">
+                    No interaction history yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="connection-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+    <div class="w-full max-w-2xl rounded-3xl bg-white p-8 shadow-2xl dark:bg-gray-800">
+        <div class="mb-6 flex items-center justify-between gap-3">
+            <h2 id="connection-modal-title" class="text-2xl font-bold text-slate-800 dark:text-gray-100">New Connection</h2>
+            <button type="button" onclick="closeConnectionModal()" class="rounded-lg border border-slate-200 px-3 py-2 text-slate-500 dark:border-gray-600 dark:text-gray-300">Close</button>
+        </div>
+        <form id="connection-form" class="space-y-4">
+            <input type="hidden" id="connection-id">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Name</label>
+                    <input id="connection-name" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" required>
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Relationship Type</label>
+                    <select id="connection-relationship-type" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                        <option>Family</option>
+                        <option>Friend</option>
+                        <option>Partner</option>
+                        <option>Colleague</option>
+                        <option>Mentor</option>
+                        <option>Community</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Cadence Days</label>
+                    <input id="connection-cadence-days" type="number" min="1" value="14" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Priority</label>
+                    <select id="connection-priority" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                        <option>High</option>
+                        <option selected>Medium</option>
+                        <option>Low</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Tags</label>
+                <input id="connection-tags" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" placeholder="family, close, local">
+            </div>
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Notes</label>
+                <textarea id="connection-notes" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" rows="4"></textarea>
+            </div>
+            <label class="flex items-center gap-3">
+                <input id="connection-active" type="checkbox" checked class="h-4 w-4">
+                <span class="text-sm text-slate-600 dark:text-gray-300">Active in cadence checks</span>
+            </label>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeConnectionModal()" class="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 dark:border-gray-600 dark:text-gray-200">Cancel</button>
+                <button type="submit" class="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white">Save Connection</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="interaction-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+    <div class="w-full max-w-2xl rounded-3xl bg-white p-8 shadow-2xl dark:bg-gray-800">
+        <div class="mb-6 flex items-center justify-between gap-3">
+            <h2 id="interaction-modal-title" class="text-2xl font-bold text-slate-800 dark:text-gray-100">Log Interaction</h2>
+            <button type="button" onclick="closeInteractionModal()" class="rounded-lg border border-slate-200 px-3 py-2 text-slate-500 dark:border-gray-600 dark:text-gray-300">Close</button>
+        </div>
+        <form id="interaction-form" class="space-y-4">
+            <input type="hidden" id="interaction-id">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Connection</label>
+                <select id="interaction-connection-id" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                    {% for connection in connections %}
+                    <option value="{{ connection.id }}">{{ connection.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Interaction Type</label>
+                    <select id="interaction-type" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                        <option>Call</option>
+                        <option>Text</option>
+                        <option>Meetup</option>
+                        <option>Video</option>
+                        <option>Email</option>
+                        <option>Gift</option>
+                        <option>Support</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Medium</label>
+                    <input id="interaction-medium" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" placeholder="Phone, WhatsApp, In person">
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Duration Minutes</label>
+                    <input id="interaction-duration" type="number" min="0" value="0" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Quality Score</label>
+                    <input id="interaction-quality" type="number" min="1" max="5" value="3" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                </div>
+            </div>
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Tags</label>
+                <input id="interaction-tags" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" placeholder="support, family">
+            </div>
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-300">Notes</label>
+                <textarea id="interaction-notes" class="w-full rounded-xl border border-slate-300 p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" rows="4"></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeInteractionModal()" class="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 dark:border-gray-600 dark:text-gray-200">Cancel</button>
+                <button type="submit" class="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white">Save Interaction</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let selectedConnectionId = null;
+    let selectedConnectionData = null;
+
+    function getConnectionPayload() {
+        return {
+            name: document.getElementById('connection-name').value,
+            relationship_type: document.getElementById('connection-relationship-type').value,
+            cadence_days: parseInt(document.getElementById('connection-cadence-days').value, 10),
+            priority: document.getElementById('connection-priority').value,
+            tags: document.getElementById('connection-tags').value,
+            notes: document.getElementById('connection-notes').value,
+            active: document.getElementById('connection-active').checked
+        };
+    }
+
+    function getInteractionPayload() {
+        return {
+            interaction_type: document.getElementById('interaction-type').value,
+            medium: document.getElementById('interaction-medium').value,
+            duration_minutes: parseInt(document.getElementById('interaction-duration').value, 10),
+            quality_score: parseInt(document.getElementById('interaction-quality').value, 10),
+            tags: document.getElementById('interaction-tags').value,
+            notes: document.getElementById('interaction-notes').value
+        };
+    }
+
+    function openConnectionModal(connection = null) {
+        document.getElementById('connection-modal-title').textContent = connection ? 'Edit Connection' : 'New Connection';
+        document.getElementById('connection-id').value = connection?.id || '';
+        document.getElementById('connection-name').value = connection?.name || '';
+        document.getElementById('connection-relationship-type').value = connection?.relationship_type || 'Friend';
+        document.getElementById('connection-cadence-days').value = connection?.cadence_days || 14;
+        document.getElementById('connection-priority').value = connection?.priority || 'Medium';
+        document.getElementById('connection-tags').value = connection?.tags || '';
+        document.getElementById('connection-notes').value = connection?.notes || '';
+        document.getElementById('connection-active').checked = connection ? connection.active === true || connection.active === 'true' : true;
+        document.getElementById('connection-modal').classList.remove('hidden');
+    }
+
+    function closeConnectionModal() {
+        document.getElementById('connection-modal').classList.add('hidden');
+    }
+
+    function openInteractionModal(interaction = null) {
+        document.getElementById('interaction-modal-title').textContent = interaction ? 'Edit Interaction' : 'Log Interaction';
+        document.getElementById('interaction-id').value = interaction?.id || '';
+        document.getElementById('interaction-connection-id').value = interaction?.connection_id || selectedConnectionId || '';
+        document.getElementById('interaction-type').value = interaction?.interaction_type || 'Text';
+        document.getElementById('interaction-medium').value = interaction?.medium || '';
+        document.getElementById('interaction-duration').value = interaction?.duration_minutes || 0;
+        document.getElementById('interaction-quality').value = interaction?.quality_score || 3;
+        document.getElementById('interaction-tags').value = interaction?.tags?.join?.(', ') || interaction?.tags || '';
+        document.getElementById('interaction-notes').value = interaction?.notes || '';
+        document.getElementById('interaction-modal').classList.remove('hidden');
+    }
+
+    function closeInteractionModal() {
+        document.getElementById('interaction-modal').classList.add('hidden');
+    }
+
+    async function refreshConnections() {
+        const response = await fetch('/connections/');
+        if (!response.ok) return;
+        const items = await response.json();
+        window.location.reload();
+    }
+
+    async function loadLedger(connectionId) {
+        const response = await fetch(`/connections/${connectionId}/ledger`);
+        if (!response.ok) return;
+        const items = await response.json();
+        const timeline = document.getElementById('ledger-timeline');
+        if (!items.length) {
+            timeline.innerHTML = '<div class="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500 dark:border-gray-700 dark:text-gray-400">No interaction history yet.</div>';
+            return;
+        }
+
+        timeline.innerHTML = items.map(item => `
+            <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-4 dark:border-gray-700 dark:bg-gray-700/30">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">${item.connection_name} · ${item.interaction_type}</div>
+                        <div class="mt-1 text-xs text-slate-500 dark:text-gray-400">${formatDate(item.created_at)}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="editInteraction(${item.id})" class="text-xs font-semibold text-indigo-600 dark:text-indigo-300">Edit</button>
+                        <button type="button" onclick="deleteInteraction(${item.id})" class="text-xs font-semibold text-rose-600 dark:text-rose-300">Delete</button>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs text-slate-500 dark:text-gray-400">${item.medium || 'No medium'} · ${item.duration_minutes || 0} min · quality ${item.quality_score || 0}/5</div>
+                <div class="mt-2 text-sm text-slate-600 dark:text-gray-300">${item.notes || 'No notes recorded.'}</div>
+            </div>
+        `).join('');
+    }
+
+    function selectConnectionFromCard(card) {
+        document.querySelectorAll('.connection-card').forEach(item => item.classList.remove('ring-2', 'ring-indigo-500'));
+        card.classList.add('ring-2', 'ring-indigo-500');
+
+        selectedConnectionId = card.dataset.id;
+        selectedConnectionData = {
+            id: card.dataset.id,
+            name: card.dataset.name,
+            relationship_type: card.dataset.relationshipType,
+            cadence_days: parseInt(card.dataset.cadenceDays, 10),
+            priority: card.dataset.priority,
+            notes: card.dataset.notes,
+            tags: card.dataset.tags,
+            active: card.dataset.active
+        };
+
+        document.getElementById('detail-name').textContent = selectedConnectionData.name;
+        document.getElementById('detail-meta').textContent = `${selectedConnectionData.relationship_type} · cadence ${selectedConnectionData.cadence_days} days · ${selectedConnectionData.priority}`;
+        document.getElementById('detail-notes').textContent = selectedConnectionData.notes || 'No notes yet.';
+        document.getElementById('interaction-connection-id').value = selectedConnectionId;
+        loadLedger(selectedConnectionId);
+    }
+
+    function editSelectedConnection() {
+        if (!selectedConnectionData) return;
+        openConnectionModal(selectedConnectionData);
+    }
+
+    async function deleteSelectedConnection() {
+        if (!selectedConnectionId) return;
+        if (!confirm('Delete this connection and its interaction history?')) return;
+        const response = await fetch(`/connections/${selectedConnectionId}`, { method: 'DELETE' });
+        if (response.ok) {
+            window.location.reload();
+        }
+    }
+
+    async function editInteraction(interactionId) {
+        const response = await fetch(`/connections/ledger/${interactionId}`);
+        if (!response.ok) return;
+        const interaction = await response.json();
+        openInteractionModal(interaction);
+    }
+
+    async function deleteInteraction(interactionId) {
+        if (!confirm('Delete this interaction?')) return;
+        const response = await fetch(`/connections/ledger/${interactionId}`, { method: 'DELETE' });
+        if (response.ok) {
+            if (selectedConnectionId) {
+                loadLedger(selectedConnectionId);
+            } else {
+                window.location.reload();
+            }
+        }
+    }
+
+    document.getElementById('connection-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = document.getElementById('connection-id').value;
+        const response = await fetch(id ? `/connections/${id}` : '/connections/', {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(getConnectionPayload())
+        });
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+        const error = await response.json();
+        alert(error.error || 'Failed to save connection');
+    });
+
+    document.getElementById('interaction-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const interactionId = document.getElementById('interaction-id').value;
+        const connectionId = document.getElementById('interaction-connection-id').value;
+        const url = interactionId ? `/connections/ledger/${interactionId}` : `/connections/${connectionId}/ledger`;
+        const method = interactionId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(getInteractionPayload())
+        });
+        if (response.ok) {
+            closeInteractionModal();
+            if (selectedConnectionId && `${selectedConnectionId}` === `${connectionId}`) {
+                loadLedger(connectionId);
+            } else {
+                window.location.reload();
+            }
+            return;
+        }
+        const error = await response.json();
+        alert(error.error || 'Failed to save interaction');
+    });
+
+    function formatDate(value) {
+        if (!value) return '';
+        try {
+            return new Date(value).toLocaleString();
+        } catch (_error) {
+            return value;
+        }
+    }
+
+    document.querySelectorAll('.connection-card').forEach(card => {
+        card.addEventListener('click', () => selectConnectionFromCard(card));
+    });
+
+    const firstCard = document.querySelector('.connection-card');
+    if (firstCard) {
+        selectConnectionFromCard(firstCard);
+    } else {
+        document.getElementById('log-interaction-button').disabled = true;
+        document.getElementById('edit-connection-button').disabled = true;
+        document.getElementById('delete-connection-button').disabled = true;
+    }
+</script>
+{% endblock %}

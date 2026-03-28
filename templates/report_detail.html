@@ -1,0 +1,173 @@
+{% extends "index.html" %}
+{% block title %}{{ report.title }}{% endblock %}
+
+{% block content %}
+<div class="p-4 sm:p-8 space-y-8">
+    <header class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div class="max-w-3xl">
+                <div class="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 dark:text-gray-500">{{ report.report_type }} mirror</div>
+                <h1 class="mt-2 text-4xl font-extrabold text-slate-800 dark:text-gray-100">{{ report.title }}</h1>
+                <p class="mt-3 text-lg text-slate-600 dark:text-gray-300">{{ report.headline }}</p>
+            </div>
+            <div class="rounded-3xl bg-indigo-50 px-6 py-5 text-center dark:bg-indigo-900/30">
+                <div class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-500 dark:text-indigo-300">Integrity Score</div>
+                <div class="mt-2 text-5xl font-black text-indigo-600 dark:text-indigo-400">{{ report.integrity_score }}</div>
+                <div class="mt-2 text-xs text-slate-500 dark:text-gray-400">{{ report.anchor_date }}</div>
+            </div>
+        </div>
+        <div class="mt-5 flex flex-wrap gap-3">
+            <a href="/reports/{{ report.id }}/print" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">Print View</a>
+            <a href="/reports/home" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Back to Reports</a>
+        </div>
+    </header>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <article class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800 xl:col-span-2">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Observations</h2>
+            <div class="mt-5 space-y-3">
+                {% for observation in report.observations %}
+                <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-4 text-sm text-slate-700 dark:border-gray-700 dark:bg-gray-700/30 dark:text-gray-200">
+                    {{ observation }}
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Snapshot</h2>
+            <dl class="mt-5 space-y-4 text-sm">
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Events</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.event_count }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Thoughts</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.thought_count }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">XP Earned</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.xp_earned.total }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Stalled Intents</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.stalled_intent_count }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Unfinished Loops</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.unfinished_loop_count }}</dd>
+                </div>
+            </dl>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <article class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Time Allocation</h2>
+            <div class="mt-5 space-y-3">
+                {% for item in report.metrics.time_allocation %}
+                <div>
+                    <div class="mb-1 flex items-center justify-between text-sm">
+                        <span class="font-semibold text-slate-700 dark:text-gray-200">{{ item.tag }}</span>
+                        <span class="text-slate-500 dark:text-gray-400">{{ item.percent }}%</span>
+                    </div>
+                    <div class="h-3 rounded-full bg-slate-100 dark:bg-gray-700">
+                        <div class="h-3 rounded-full bg-indigo-600 dark:bg-indigo-400" style="width: {{ item.percent }}%"></div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-sm text-slate-500 dark:text-gray-400">No tagged events were available in this window.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Social Coverage</h2>
+            <dl class="mt-5 space-y-4 text-sm">
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Interactions</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.social_summary.interaction_count }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Minutes</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.social_summary.total_minutes }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Unique people</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.social_summary.unique_people }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Overdue connections</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.social_summary.overdue_connections }}</dd>
+                </div>
+            </dl>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <article class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Skill Growth</h2>
+            <div class="mt-5 space-y-3">
+                {% for item in report.metrics.xp_earned.skills %}
+                <div class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm dark:border-gray-700 dark:bg-gray-700/30">
+                    <div>
+                        <div class="font-semibold text-slate-800 dark:text-gray-100">{{ item.skill }}</div>
+                        <div class="text-slate-500 dark:text-gray-400">Current level {{ item.level }}</div>
+                    </div>
+                    <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">+{{ item.xp }} XP</div>
+                </div>
+                {% else %}
+                <p class="text-sm text-slate-500 dark:text-gray-400">No skill-linked events were matched in this window.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <article class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">One Big Thing</h2>
+            <p class="mt-4 text-sm text-slate-600 dark:text-gray-300">{{ report.sections.snapshot.one_big_thing.detail }}</p>
+        </article>
+
+        <article class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Neglected Connections</h2>
+            <div class="mt-5 space-y-3">
+                {% for item in report.sections.snapshot.neglected_connections %}
+                <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-4 text-sm dark:border-gray-700 dark:bg-gray-700/30">
+                    <div class="font-semibold text-slate-800 dark:text-gray-100">{{ item.name }}</div>
+                    <div class="mt-1 text-slate-500 dark:text-gray-400">
+                        {{ item.relationship_type }} · {{ item.status }}
+                        {% if item.days_since_contact is not none %}
+                        · {{ item.days_since_contact }} days since contact
+                        {% endif %}
+                        · cadence {{ item.cadence_days }} days
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-sm text-slate-500 dark:text-gray-400">No overdue relationships detected in this window.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <article class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Mood Mapping</h2>
+            <dl class="mt-5 space-y-3 text-sm">
+                <div class="flex items-center justify-between">
+                    <dt class="text-slate-500 dark:text-gray-400">Dominant mood</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.mood_summary.dominant_mood }}</dd>
+                </div>
+                <div class="flex items-center justify-between">
+                    <dt class="text-slate-500 dark:text-gray-400">Negative markers</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.mood_summary.negative_thoughts }}</dd>
+                </div>
+                <div class="flex items-center justify-between">
+                    <dt class="text-slate-500 dark:text-gray-400">Positive markers</dt>
+                    <dd class="font-semibold text-slate-800 dark:text-gray-100">{{ report.metrics.mood_summary.positive_thoughts }}</dd>
+                </div>
+            </dl>
+        </article>
+    </section>
+</div>
+{% endblock %}

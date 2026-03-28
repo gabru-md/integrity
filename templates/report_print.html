@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ report.title }}</title>
+    <style>
+        body {
+            font-family: Georgia, "Times New Roman", serif;
+            margin: 0;
+            color: #1f2937;
+            background: #f8fafc;
+        }
+        .page {
+            max-width: 920px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px 48px 56px;
+        }
+        .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        h1 {
+            margin: 12px 0 8px;
+            font-size: 38px;
+            line-height: 1.1;
+        }
+        .headline {
+            font-size: 19px;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 24px;
+        }
+        .score {
+            display: inline-block;
+            margin: 16px 0 28px;
+            padding: 18px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 18px;
+            background: #eef2ff;
+        }
+        .score strong {
+            display: block;
+            font-size: 32px;
+            color: #4338ca;
+        }
+        h2 {
+            margin-top: 28px;
+            font-size: 21px;
+        }
+        ul {
+            padding-left: 20px;
+            line-height: 1.7;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .card {
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 18px 20px;
+            background: #f8fafc;
+        }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .metric-row:last-child {
+            border-bottom: 0;
+        }
+        .muted {
+            color: #64748b;
+        }
+        @media print {
+            body {
+                background: #ffffff;
+            }
+            .page {
+                max-width: none;
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <div class="eyebrow">{{ report.report_type }} behavioral mirror</div>
+    <h1>{{ report.title }}</h1>
+    <p class="headline">{{ report.headline }}</p>
+
+    <div class="score">
+        Integrity Score
+        <strong>{{ report.integrity_score }}</strong>
+        <span class="muted">{{ report.anchor_date }} · generated {{ report.generated_at.strftime("%Y-%m-%d %H:%M") if report.generated_at else "" }}</span>
+    </div>
+
+    <h2>Observations</h2>
+    <ul>
+        {% for observation in report.observations %}
+        <li>{{ observation }}</li>
+        {% endfor %}
+    </ul>
+
+    <div class="grid">
+        <section class="card">
+            <h2>Snapshot</h2>
+            <div class="metric-row"><span class="muted">Events</span><strong>{{ report.metrics.event_count }}</strong></div>
+            <div class="metric-row"><span class="muted">Thoughts</span><strong>{{ report.metrics.thought_count }}</strong></div>
+            <div class="metric-row"><span class="muted">XP Earned</span><strong>{{ report.metrics.xp_earned.total }}</strong></div>
+            <div class="metric-row"><span class="muted">Stalled Intents</span><strong>{{ report.metrics.stalled_intent_count }}</strong></div>
+            <div class="metric-row"><span class="muted">Unfinished Loops</span><strong>{{ report.metrics.unfinished_loop_count }}</strong></div>
+        </section>
+
+        <section class="card">
+            <h2>One Big Thing</h2>
+            <p>{{ report.sections.snapshot.one_big_thing.detail }}</p>
+            <h2>Social Coverage</h2>
+            <div class="metric-row"><span class="muted">Interactions</span><strong>{{ report.metrics.social_summary.interaction_count }}</strong></div>
+            <div class="metric-row"><span class="muted">Minutes</span><strong>{{ report.metrics.social_summary.total_minutes }}</strong></div>
+            <div class="metric-row"><span class="muted">Unique people</span><strong>{{ report.metrics.social_summary.unique_people }}</strong></div>
+            <div class="metric-row"><span class="muted">Overdue</span><strong>{{ report.metrics.social_summary.overdue_connections }}</strong></div>
+            <h2>Mood Mapping</h2>
+            <div class="metric-row"><span class="muted">Dominant mood</span><strong>{{ report.metrics.mood_summary.dominant_mood }}</strong></div>
+            <div class="metric-row"><span class="muted">Negative markers</span><strong>{{ report.metrics.mood_summary.negative_thoughts }}</strong></div>
+            <div class="metric-row"><span class="muted">Positive markers</span><strong>{{ report.metrics.mood_summary.positive_thoughts }}</strong></div>
+        </section>
+    </div>
+
+    <h2>Time Allocation</h2>
+    <ul>
+        {% for item in report.metrics.time_allocation %}
+        <li>{{ item.tag }}: {{ item.percent }}% ({{ item.count }} tagged event signals)</li>
+        {% else %}
+        <li>No tagged event allocation was available in this window.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Skill Growth</h2>
+    <ul>
+        {% for item in report.metrics.xp_earned.skills %}
+        <li>{{ item.skill }}: +{{ item.xp }} XP, current level {{ item.level }}</li>
+        {% else %}
+        <li>No skill-linked growth was detected in this window.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Neglected Connections</h2>
+    <ul>
+        {% for item in report.sections.snapshot.neglected_connections %}
+        <li>{{ item.name }}: {{ item.status }}{% if item.days_since_contact is not none %}, {{ item.days_since_contact }} days since contact{% endif %}, cadence {{ item.cadence_days }} days</li>
+        {% else %}
+        <li>No overdue relationships detected.</li>
+        {% endfor %}
+    </ul>
+</main>
+</body>
+</html>

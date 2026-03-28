@@ -70,6 +70,17 @@ Queue progress is persisted in `queue.queuestats`.
   - writes skill level-up history
   - emits `skill:level_up` events
 
+### ReportProcessor
+
+- File: `processes/report_processor.py`
+- Type: `QueueProcessor`
+- Input: `events`
+- Purpose:
+  - listens for `report:generate_requested`
+  - builds daily, weekly, or monthly reports through the aggregator
+  - stores the generated mirror in the `reports` table
+  - emits `report:generated` after completion
+
 ### Atmos
 
 - File: `processes/atmos/atmos.py`

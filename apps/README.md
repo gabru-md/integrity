@@ -100,6 +100,30 @@ Each app should now also expose user-facing instructions in the web UI via `user
   - supports explicit `tag_key` and `aliases` for matching
   - exposes `/skills/history`
 
+### 9. Reports
+
+- File: `apps/reports.py`
+- Model: `Report`
+- Widget: `basic`
+- Processes:
+  - `ReportProcessor`
+- Notes:
+  - exposes `/reports/generate` for synchronous or event-driven report generation
+  - includes detail and print routes for local review and PDF export through the browser
+  - aggregates current signals from projects, events, thoughts, skills, connections, and the interaction ledger inside Connections into a behavioral mirror
+
+### 10. Connections
+
+- File: `apps/connections.py`
+- Model: `Connection`
+- Widget: `basic`
+- Notes:
+  - stores people and relationship cadence targets
+  - renders relationship records and their interaction timeline in one app surface
+  - exposes `/connections/<id>/ledger` to create and inspect linked interactions
+  - updates `last_contact_at` and emits social events when interactions are logged
+  - feeds overdue-contact checks in behavioral reports
+
 ## User-Facing Instructions
 
 `gabru.flask.app.App` now passes `user_guidance` into the app home template. The shared instructions panel can render:

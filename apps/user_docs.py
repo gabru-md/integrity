@@ -46,6 +46,24 @@ def build_app_user_guidance(app_name: str) -> dict:
                 {"term": "Authorized Apps", "meaning": "The Rasbhari apps or processes that are allowed to use this device."},
             ],
         },
+        "Connections": {
+            "overview": "Connections represent people or relationships you want Rasbhari to help you maintain with intention.",
+            "how_to_use": [
+                "Create one record per person or relationship that matters enough to track.",
+                "Set cadence days to the maximum gap you want between meaningful touchpoints.",
+                "Use priority to distinguish relationships that should affect integrity scoring more strongly in your own review process.",
+                "Log interactions directly inside the Connections page so the relationship record and its timeline stay together.",
+            ],
+            "glossary": [
+                {"term": "Cadence", "meaning": "How many days can pass before the relationship is considered overdue for contact."},
+                {"term": "Priority", "meaning": "A simple importance flag to help you visually separate core relationships from lighter ties."},
+                {"term": "Ledger", "meaning": "The timeline of calls, texts, meetups, and other interactions logged under a connection."},
+                {"term": "Last Contact", "meaning": "The latest timestamp automatically updated when a connection interaction is created."},
+            ],
+            "examples": [
+                "Example: create Mom with cadence 7 days and priority High to make overdue contact obvious in reports.",
+            ],
+        },
         "Events": {
             "overview": "Events are the shared language of Rasbhari. Most automation, tracking, and history features work by creating or consuming events.",
             "how_to_use": [
@@ -106,6 +124,24 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
             "examples": [
                 "Example: skill Python with tag key python and alias py will gain XP from events tagged python or py.",
+            ],
+        },
+        "Reports": {
+            "overview": "Reports turn raw activity into a behavioral mirror. They compare projects, events, skills, and thoughts to surface integrity gaps instead of only listing what happened.",
+            "how_to_use": [
+                "Generate daily, weekly, or monthly mirrors from the Reports page.",
+                "Use the asynchronous option when you want generation to happen through the event pipeline and background processor.",
+                "Use the print view when you want a clean local page that can be saved as PDF without uploading data anywhere.",
+                "Add Connections and log interactions inside their ledger if you want the report to score social balance and neglected relationships.",
+            ],
+            "glossary": [
+                {"term": "Integrity Score", "meaning": "A 0 to 100 score estimating how closely your behavior matched your visible commitments and growth signals."},
+                {"term": "Stalled Intent", "meaning": "An active project with no matching progress evidence in the selected time window."},
+                {"term": "Behavioral Mirror", "meaning": "A report that reflects both logged action and missing action, not just completed items."},
+                {"term": "Neglected Connection", "meaning": "A tracked relationship whose last contact is older than the cadence you set in Connections."},
+            ],
+            "examples": [
+                "Example: a daily report can flag that a project stayed active while no project-linked events or updates were logged.",
             ],
         },
         "Thoughts": {
