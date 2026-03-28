@@ -1,139 +1,94 @@
-# Setup Guide
+# Rasbhari Setup Guide
 
-This guide reflects the current codebase and environment model.
+Rasbhari is a modular, event-driven Application OS built on the Gabru Framework. This guide will help you set up the environment from scratch.
 
-## System Requirements
+## 1. System Requirements
 
-- Python `3.8+`
-- PostgreSQL `12+`
-- Linux or Raspberry Pi OS
-- enough disk for logs, PostgreSQL, and optional YOLO model downloads
+- **Python**: `3.9+`
+- **PostgreSQL**: `12+` (Ensure `pg_config` is in your PATH for `psycopg2` installation)
+- **OS**: Linux (Ubuntu/Debian/Raspberry Pi OS) or macOS.
 
-Optional hardware:
-
-- ESP32-CAM or other IP cameras for Heimdall
-- BLE scanners/beacons for Atmos
-
-## 1. Clone And Install
+## 2. Installation
 
 ```bash
+# Clone the repository
 git clone <your-repo-url> integrity
 cd integrity
+
+# Create and activate virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
+
+# Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## 2. Create Databases
+## 3. Database Configuration
 
-The current code expects these logical DB namespaces:
-
-- `events`
-- `queue`
-- `rasbhari`
-- `notifications`
-- `thoughts`
-
-Example:
+Rasbhari uses a multi-tenant database architecture. You need to create 5 distinct databases:
 
 ```sql
-CREATE DATABASE rasbhari_events;
-CREATE DATABASE rasbhari_queue;
-CREATE DATABASE rasbhari_main;
-CREATE DATABASE rasbhari_notifications;
-CREATE DATABASE rasbhari_thoughts;
+-- Run these as postgres superuser
+CREATE DATABASE rasbhari;
+CREATE DATABASE events;
+CREATE DATABASE queue;
+CREATE DATABASE notifications;
+CREATE DATABASE thoughts;
 ```
 
-## 3. Configure Environment
+## 4. Environment Setup
+
+Copy the example environment file and configure it:
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in:
+### Essential Variables to Set:
+- **DB Settings**: Update `*_POSTGRES_DB`, `*_POSTGRES_USER`, and `*_POSTGRES_PASSWORD` for all 5 databases.
+- **Security**: Set a strong `FLASK_SECRET_KEY`.
+- **Paths**: Set `LOG_DIR` and `SERVER_FILES_FOLDER` to valid absolute paths.
 
-- `EVENTS_POSTGRES_*`
-- `QUEUE_POSTGRES_*`
-- `RASBHARI_POSTGRES_*`
-- `NOTIFICATIONS_POSTGRES_*`
-- `THOUGHTS_POSTGRES_*`
-- `LOG_DIR`
-- `SERVER_FILES_FOLDER`
+## 5. First Run & User Approval
 
-Optional:
+1. **Start the server**:
+   ```bash
+   python server.py
+   ```
+2. **Create your account**:
+   - Navigate to `http://localhost:5000/signup`.
+   - The first user created in the system is automatically considered an admin.
+3. **Approval Flow**:
+   - Subsequent users who sign up will see a "Pending Approval" message.
+   - Admins can approve users via the database (setting `is_active = True` in the `users` table) or via the Admin dashboard (if enabled).
 
-- `NTFY_TOPIC`
-- `SENDGRID_API_KEY`
-- `COURIER_SENDER_EMAIL`
-- `COURIER_RECEIVER_EMAIL`
-- `OPEN_WEBUI_URL`
-- `FLASK_SECRET_KEY`
-
-## 4. Start Rasbhari
-
-```bash
-python server.py
+### Claiming Existing Events
+If you have events that were created before user-scoping was enabled, run this SQL to associate them with your account:
+```sql
+UPDATE events SET user_id = (SELECT id FROM users WHERE username = 'your_username') WHERE user_id IS NULL;
 ```
 
-Open:
+## 6. Public Access (Optional)
 
-- `http://localhost:5000/`
+To access your Rasbhari instance from outside your local network using ngrok:
 
-## 5. Verify
+1. Install ngrok: `brew install ngrok/ngrok/ngrok` (macOS) or follow Linux instructions.
+2. Authenticate: `ngrok config add-authtoken <YOUR_TOKEN>`
+3. Start tunnel: `ngrok http 5000`
 
-### Verify events
+## 7. Verification
 
+### Test Event Creation
 ```bash
 curl -X POST http://localhost:5000/events/ \
   -H "Content-Type: application/json" \
   -d '{
-    "event_type": "setup:test",
-    "description": "Rasbhari setup verification",
-    "tags": "notification"
+    "event_type": "system:ping",
+    "description": "Rasbhari Heartbeat",
+    "tags": "setup, test"
   }'
 ```
 
-### Verify skills
-
-```bash
-curl -X POST http://localhost:5000/skills/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Python",
-    "total_xp": 0,
-    "requirement": "Complete 5 Python practice sessions"
-  }'
-```
-
-## Optional Components
-
-### Courier
-
-Works with ntfy.sh by default.
-
-For email delivery also set:
-
-- `SENDGRID_API_KEY`
-- `COURIER_SENDER_EMAIL`
-- `COURIER_RECEIVER_EMAIL`
-
-### Heimdall
-
-Requires:
-
-- camera devices enabled for `Heimdall`
-- working `device.url` values
-- `ultralytics` runtime dependencies
-
-### Atmos
-
-Requires:
-
-- at least three devices with `coordinates`
-- `device.url` endpoints returning BLE RSSI JSON
-
-## Notes
-
-- Queue processors checkpoint progress in `queue.queuestats`.
-- The dashboard home page includes reliability cards and a universal timeline.
-- Dashboard layout customization is persisted in browser local storage, not in PostgreSQL.
+---
+**Note**: Rasbhari is designed for the **Gabru Framework**. For architectural details, refer to `agents.md`.
