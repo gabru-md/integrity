@@ -1,18 +1,18 @@
 # Apps
 
-The `apps/` directory contains Rasbhari's application layer. Each app exposes a Flask blueprint, a service-backed CRUD API, a UI view, and optionally one or more background processes.
+The `apps/` directory contains Rasbhari's application layer. Each app exposes a Flask blueprint, a contract-backed CRUD API, a UI view, and optionally one or more background processes.
 
 ## How Apps Fit Together
 
 ```text
 apps/*.py
-    -> service instance
+    -> concrete service instance from services/
     -> Pydantic model
     -> optional custom routes
     -> optional registered background processes
 ```
 
-Most apps are built directly with `gabru.flask.app.App`. A few extend it when they need a custom home page or extra routes.
+Most apps are built directly with `gabru.flask.app.App`. A few extend it when they need a custom home page or extra routes. The app layer is where Rasbhari chooses concrete implementations; the framework itself only knows about contracts.
 
 Each app should now also expose user-facing instructions in the web UI via `user_guidance`. This is separate from developer documentation and should explain what the app is for, what important terms mean, and how a user should fill in the main fields.
 
@@ -203,9 +203,10 @@ When adding a new app:
 
 1. Create a model in `model/`.
 2. Create a service in `services/`.
-3. Create the app in `apps/`.
-4. Register it in [server.py](/Users/manish/PycharmProjects/integrity/server.py).
-5. Add or update `user_guidance` so the app home page explains the app to end users.
-6. Add user-friendly `description=` text to important Pydantic fields.
-7. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
-8. Update [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) if the app adds environment requirements.
+3. If the feature needs app-wide framework composition, wire it through `runtime/providers.py`.
+4. Create the app in `apps/`.
+5. Register it in [server.py](/Users/manish/PycharmProjects/integrity/server.py).
+6. Add or update `user_guidance` so the app home page explains the app to end users.
+7. Add user-friendly `description=` text to important Pydantic fields.
+8. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
+9. Update [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) if the app adds environment requirements.

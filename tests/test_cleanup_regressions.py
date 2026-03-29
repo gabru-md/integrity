@@ -10,6 +10,7 @@ os.environ.setdefault("LOG_DIR", "/tmp/rasbhari-test-logs")
 os.environ.setdefault("FLASK_SECRET_KEY", "test-secret")
 
 from gabru.auth import PermissionManager
+from gabru.contracts import AuthenticatedUser
 from gabru.flask.app import App
 from gabru.flask.server import Server
 from gabru.flask.model import WidgetUIModel
@@ -24,9 +25,16 @@ class FakeUser:
         self.api_key = api_key
 
 
-class FakeAuthUserService:
+class FakeAuthProvider:
     def __init__(self, user=None):
-        self.user = user or FakeUser()
+        base_user = user or FakeUser()
+        self.user = AuthenticatedUser(
+            id=base_user.id,
+            username=base_user.username,
+            display_name=base_user.display_name,
+            is_admin=base_user.is_admin,
+            api_key=base_user.api_key,
+        )
         self.calls = 0
 
     def authenticate_api_key(self, api_key):
@@ -34,6 +42,18 @@ class FakeAuthUserService:
         if api_key == self.user.api_key:
             return self.user
         return None
+
+    def authenticate_credentials(self, username, password):
+        return None
+
+    def get_by_username(self, username):
+        return None
+
+    def create_user(self, **kwargs):
+        return None
+
+    def count_users(self):
+        return 0
 
 
 class DemoModel(WidgetUIModel):
@@ -65,44 +85,54 @@ class FakeCrudService:
         return 0
 
 
-class FakeApplicationService:
-    def get_by_name(self, name):
+class FakeAppStatusStore:
+    def get_app_state(self, name):
         return None
 
-    def set_active_status(self, name, active):
+    def set_app_state(self, name, active):
         return True
 
 
-class FakeSignupUserService:
+class FakeSignupAuthProvider:
     def __init__(self):
         self.created_users = []
 
-    def authenticate(self, username, password):
+    def authenticate_credentials(self, username, password):
         return None
 
     def get_by_username(self, username):
         return None
 
-    def count(self):
+    def count_users(self):
         return 0
 
-    def create(self, user):
+    def authenticate_api_key(self, api_key):
+        return None
+
+    def create_user(self, username, display_name, password, is_admin, is_active, is_approved):
+        user = AuthenticatedUser(
+            id=123,
+            username=username,
+            display_name=display_name,
+            is_admin=is_admin,
+            api_key=None,
+        )
         self.created_users.append(user)
-        return 123
+        return user
 
 
 class PermissionManagerTests(unittest.TestCase):
     def setUp(self):
-        PermissionManager._user_service = None
+        PermissionManager._auth_provider = None
 
     def tearDown(self):
-        PermissionManager._user_service = None
+        PermissionManager._auth_provider = None
 
     def test_api_key_auth_is_cached_per_request(self):
         app = Flask(__name__)
         app.secret_key = "test-secret"
-        fake_service = FakeAuthUserService(FakeUser(user_id=7, api_key="qDdyg"))
-        PermissionManager._user_service = fake_service
+        fake_service = FakeAuthProvider(FakeUser(user_id=7, api_key="qDdyg"))
+        PermissionManager.configure(fake_service)
 
         with app.test_request_context("/", headers={"X-API-Key": "qDdyg"}):
             self.assertTrue(PermissionManager.is_authenticated())
@@ -114,8 +144,8 @@ class PermissionManagerTests(unittest.TestCase):
     def test_session_auth_takes_precedence(self):
         app = Flask(__name__)
         app.secret_key = "test-secret"
-        fake_service = FakeAuthUserService(FakeUser(user_id=9, api_key="qDdyg"))
-        PermissionManager._user_service = fake_service
+        fake_service = FakeAuthProvider(FakeUser(user_id=9, api_key="qDdyg"))
+        PermissionManager.configure(fake_service)
 
         with app.test_request_context("/", headers={"X-API-Key": "qDdyg"}):
             from flask import session
@@ -157,17 +187,19 @@ class AppRequestParsingTests(unittest.TestCase):
 
 class SignupFlowTests(unittest.TestCase):
     def test_first_signup_sets_session_user_id(self):
-        fake_user_service = FakeSignupUserService()
-        with mock.patch("gabru.flask.server.ApplicationService", return_value=FakeApplicationService()), \
-             mock.patch("gabru.flask.server.UserService", return_value=fake_user_service):
-            server = Server("TestServer")
-            client = server.app.test_client()
-            response = client.post("/signup", json={"username": "admin", "password": "secret"})
+        fake_auth_provider = FakeSignupAuthProvider()
+        server = Server(
+            "TestServer",
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+        )
+        client = server.app.test_client()
+        response = client.post("/signup", json={"username": "admin", "password": "secret"})
 
-            self.assertEqual(response.status_code, 201)
-            with client.session_transaction() as session:
-                self.assertEqual(session["user_id"], 123)
-                self.assertEqual(session["username"], "admin")
+        self.assertEqual(response.status_code, 201)
+        with client.session_transaction() as session:
+            self.assertEqual(session["user_id"], 123)
+            self.assertEqual(session["username"], "admin")
 
 
 if __name__ == "__main__":

@@ -17,14 +17,21 @@ from apps.users import users_app
 from apps.network_signatures import network_signatures_app
 from gabru.auth import login_required
 from gabru.flask.server import Server
+from runtime.providers import RasbhariAppStatusStore, RasbhariAuthProvider, RasbhariDashboardDataProvider
 
 basedir = os.path.dirname(__file__)
 
 
 class RasbhariServer(Server):
     def __init__(self):
-        super().__init__("Rasbhari", template_folder=os.path.join(basedir, "templates"),
-                         static_folder=os.path.join(basedir, "static"))
+        super().__init__(
+            "Rasbhari",
+            template_folder=os.path.join(basedir, "templates"),
+            static_folder=os.path.join(basedir, "static"),
+            auth_provider=RasbhariAuthProvider(),
+            app_status_store=RasbhariAppStatusStore(),
+            dashboard_provider=RasbhariDashboardDataProvider(),
+        )
         self.setup_datetime_filter()
         self.setup_apps()
         self.setup_additional_routes()

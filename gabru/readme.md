@@ -1,12 +1,13 @@
 # Gabru Framework
 
-Gabru is the small framework that powers Rasbhari. It provides the database layer, Flask abstractions, process management, and queue processing that the app code builds on top of.
+Gabru is the small framework that powers Rasbhari. It provides framework contracts, database primitives, Flask abstractions, process management, and queue processing that the app code builds on top of.
 
 ## Main Pieces
 
 ```text
 gabru/
-  db/          PostgreSQL connection + CRUD helpers
+  contracts.py framework contracts for auth, resource services, app state, and dashboard data
+  db/          PostgreSQL connection + low-level CRUD primitives
   flask/       server, app, model, and template helpers
   qprocessor/  database-backed queue processing
   process.py   daemon and process manager primitives
@@ -38,7 +39,7 @@ That resolves to variables such as:
 
 ### `ReadOnlyService` and `CRUDService`
 
-These generic services provide:
+These are low-level DB-backed primitives used by the current Rasbhari runtime implementation. They provide:
 
 - `get_by_id`
 - `get_all`
@@ -49,12 +50,20 @@ These generic services provide:
 - `update`
 - `delete`
 
-Current codebase examples:
+Gabru itself does not require app code to use these classes directly. In the current repository, concrete runtime services in `services/` build on them.
 
-- `EventService` uses `DB("events")`
-- `SkillService`, `ProjectService`, `PromiseService`, `ActivityService` use `DB("rasbhari")`
-- `NotificationService` uses `DB("notifications")`
-- `ThoughtService` uses `DB("thoughts")`
+## Contracts Layer
+
+`gabru.contracts` defines the framework-facing interfaces that keep the reusable framework separate from Rasbhari-specific implementations.
+
+The current contract set includes:
+
+- `ResourceService` for CRUD-capable app backends
+- `AuthProvider` and `AuthenticatedUser` for login and API-key auth
+- `AppStatusStore` for app enable/disable state
+- `DashboardDataProvider` for reliability cards and universal timeline data
+
+Rasbhari binds these contracts to concrete implementations in [runtime/providers.py](/Users/manish/PycharmProjects/integrity/runtime/providers.py).
 
 ## Flask Layer
 
@@ -67,11 +76,15 @@ Current codebase examples:
 - process control routes
 - dashboard aggregation
 
-Rasbhari extends this in [server.py](/Users/manish/PycharmProjects/integrity/server.py) to register all current apps and add the `/chat` and `/heimdall` routes.
+`Server` no longer imports Rasbhari services directly. It accepts provider implementations for auth, app status, and dashboard data, and the application bootstrap composes those at runtime.
+
+Rasbhari extends this in [server.py](/Users/manish/PycharmProjects/integrity/server.py) to register all current apps and supply concrete providers from `runtime/`.
 
 ### `App`
 
-`gabru.flask.app.App` is the default way to define a CRUD-backed app.
+`gabru.flask.app.App` is the default way to define a CRUD-style app.
+
+It depends on the `ResourceService` contract instead of a specific database service class, so the framework does not need to know whether the backing implementation is PostgreSQL, an API client, or an in-memory adapter.
 
 It generates:
 
@@ -146,7 +159,7 @@ This matches the current replay/performance tradeoff in the code.
 
 ## Current Rasbhari-Specific Extensions
 
-Gabru is generic, but the current project extends it with:
+Gabru is generic, but the current project composes it with Rasbhari-specific runtime providers and adds:
 
 - a dashboard reliability row
 - a universal timeline

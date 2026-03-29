@@ -4,7 +4,7 @@ from enum import Enum
 import typing
 
 from gabru.log import Logger
-from gabru.db.service import CRUDService
+from gabru.contracts import ResourceService
 from gabru.auth import PermissionManager, write_access_required, Role
 from gabru.flask.util import render_flask_template
 
@@ -21,7 +21,7 @@ class App(Generic[T]):
     entities in the database via a provided service.
     """
 
-    def __init__(self, name: str, service: CRUDService[T], model_class: type, get_recent_limit=10,
+    def __init__(self, name: str, service: ResourceService, model_class: type, get_recent_limit=10,
                  widget_recent_limit=3, _process_model_data_func=None, home_template="crud.html",
                  widget_enabled=True, widget_type="basic", widget_config: Optional[dict] = None,
                  user_guidance: Optional[dict] = None):

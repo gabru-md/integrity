@@ -19,9 +19,9 @@ class Habit(WidgetUIModel):
     status: str = Field(default="active", widget_enabled=True)
 ```
 
-## 2. Create the service
+## 2. Create the concrete runtime service
 
-Add a CRUD service in `services/`.
+Add a concrete service in `services/`.
 
 Point it at the correct database namespace:
 
@@ -32,6 +32,8 @@ Point it at the correct database namespace:
 - `DB("thoughts")`
 
 Most new app data should live in `DB("rasbhari")`.
+
+If the app is part of the reusable framework rather than Rasbhari specifically, define it against a framework contract instead of importing Rasbhari services directly.
 
 ## 3. Create the app
 
@@ -52,7 +54,7 @@ habits_app = App(
 )
 ```
 
-If you need custom routes or widget output, subclass `App`.
+`App` only requires that `service` satisfies the `ResourceService` contract. If you need custom routes or widget output, subclass `App`.
 
 ## 4. Register background processes if needed
 
@@ -69,6 +71,8 @@ Update [server.py](/Users/manish/PycharmProjects/integrity/server.py):
 ```python
 self.register_app(habits_app)
 ```
+
+If your app needs new app-wide services for auth, app state, or dashboard aggregation, wire those into `runtime/providers.py` rather than making `gabru/` import them directly.
 
 ## 6. Update docs
 

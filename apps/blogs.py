@@ -1,10 +1,10 @@
 from flask import request, jsonify
 from gabru.auth import write_access_required
-from gabru.eventing import emit_event_safely
 from gabru.flask.app import App
 from apps.user_docs import build_app_user_guidance
 from model.blog import BlogPost
 from services.blogs import BlogService
+from services.eventing import emit_event_safely
 from datetime import datetime
 from gabru.flask.util import render_flask_template
 

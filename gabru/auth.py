@@ -4,6 +4,8 @@ from typing import Optional, Dict, Any
 
 from flask import abort, g, redirect, request, session
 
+from gabru.contracts import AuthProvider
+
 class Role(str, Enum):
     ADMIN = "admin"
     USER = "user"
@@ -11,14 +13,11 @@ class Role(str, Enum):
 
 
 class PermissionManager:
-    _user_service = None
+    _auth_provider: Optional[AuthProvider] = None
 
     @staticmethod
-    def _get_user_service():
-        if PermissionManager._user_service is None:
-            from services.users import UserService
-            PermissionManager._user_service = UserService()
-        return PermissionManager._user_service
+    def configure(auth_provider: AuthProvider):
+        PermissionManager._auth_provider = auth_provider
 
     @staticmethod
     def _get_request_api_key() -> str:
@@ -53,7 +52,10 @@ class PermissionManager:
             g._authenticated_user_resolved = True
             return None
 
-        user = PermissionManager._get_user_service().authenticate_api_key(api_key)
+        if PermissionManager._auth_provider is None:
+            raise RuntimeError("PermissionManager auth provider is not configured")
+
+        user = PermissionManager._auth_provider.authenticate_api_key(api_key)
         if not user:
             g._authenticated_user = None
             g._authenticated_user_resolved = True

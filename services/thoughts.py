@@ -1,10 +1,10 @@
 from typing import List, Optional
 from datetime import datetime
 
-from gabru.eventing import emit_event_safely
 from gabru.db.db import DB
 from gabru.db.service import CRUDService
 from model.thought import Thought
+from services.eventing import emit_event_safely
 
 
 class ThoughtService(CRUDService[Thought]):

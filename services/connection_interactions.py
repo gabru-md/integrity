@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from gabru.db.db import DB
 from gabru.db.service import CRUDService
-from gabru.eventing import emit_event_safely
 from model.connection_interaction import ConnectionInteraction
+from services.eventing import emit_event_safely
 
 
 class ConnectionInteractionService(CRUDService[ConnectionInteraction]):

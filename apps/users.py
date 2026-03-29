@@ -3,10 +3,10 @@ from datetime import datetime
 from flask import request, redirect, url_for, flash, session
 from apps.user_docs import build_app_user_guidance
 from gabru.auth import PermissionManager
-from gabru.eventing import emit_event_safely
 from gabru.flask.app import App
 from gabru.flask.util import render_flask_template
 from model.user import User
+from services.eventing import emit_event_safely
 from services.users import UserService
 
 

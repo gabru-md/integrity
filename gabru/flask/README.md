@@ -1,6 +1,6 @@
 # Gabru Flask Layer
 
-The Flask layer turns models and services into usable web apps with very little boilerplate.
+The Flask layer turns models and contract-backed services into usable web apps with very little boilerplate.
 
 ## Components
 
@@ -13,6 +13,12 @@ The Flask layer turns models and services into usable web apps with very little 
 - process manager startup
 - dashboard routes
 - process control routes
+
+The base server expects runtime providers for:
+
+- auth (`AuthProvider`)
+- app status persistence (`AppStatusStore`)
+- dashboard/reliability data (`DashboardDataProvider`)
 
 Built-in routes include:
 
@@ -37,6 +43,8 @@ into the `home.html` template.
 ### `App`
 
 `gabru.flask.app.App` is the standard CRUD app abstraction.
+
+It is intentionally framework-level and depends on the generic `ResourceService` contract rather than a concrete implementation class from `services/`.
 
 Constructor knobs that matter in the current codebase:
 
@@ -103,6 +111,20 @@ The project-specific `home.html` currently supports:
 - universal timeline filters
 
 That behavior lives at the template layer rather than in generic Gabru framework code.
+
+## Composition Pattern
+
+The current recommended structure in this repository is:
+
+```text
+gabru/            framework primitives and contracts
+runtime/          app-wide provider composition for Rasbhari
+services/         concrete runtime implementations
+apps/             route and UI composition
+model/            Pydantic schemas for the current app
+```
+
+That keeps `gabru/` reusable while letting Rasbhari keep its concrete PostgreSQL- and dashboard-specific logic in `runtime/` and `services/`.
 
 ## Current Rasbhari Apps Built on This Layer
 

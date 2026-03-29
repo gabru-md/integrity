@@ -1,6 +1,6 @@
 # Rasbhari
 
-Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts. It combines a Flask dashboard, PostgreSQL-backed services, and background workers to track activities, projects, promises, notifications, devices, and skill progression.
+Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts. It combines a Flask dashboard, contract-based framework primitives, PostgreSQL-backed runtime services, and background workers to track activities, projects, promises, notifications, devices, and skill progression.
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.1%2B-green)](https://flask.palletsprojects.com/)
@@ -96,17 +96,20 @@ Rasbhari supports real sign-in accounts and a managed signup flow.
 
 ```text
 Dashboard / Web UI
-    -> Flask Server and App blueprints
-    -> Services and Pydantic models
-    -> PostgreSQL databases
+    -> Rasbhari app modules in apps/
+    -> Gabru framework contracts and Flask primitives
+    -> Runtime providers and service implementations
+    -> Pydantic models and PostgreSQL databases
     -> Background processes and queue processors
     -> Events emitted back into the system
 ```
 
 Key building blocks:
 
-- `gabru/flask/` for server, app, model, and template helpers
-- `gabru/db/` for DB connections and CRUD services
+- `gabru/` for framework contracts, Flask primitives, DB primitives, process management, and queue processing
+- `runtime/` for Rasbhari-specific provider wiring that binds framework contracts to concrete services
+- `services/` for concrete PostgreSQL-backed implementations and domain-side orchestration
+- `model/` for Pydantic schemas used by the current Rasbhari implementation
 - `gabru/process.py` for daemon-style workers
 - `gabru/qprocessor/` for database-backed queue processors
 
