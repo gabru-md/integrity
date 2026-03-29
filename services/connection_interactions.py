@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from gabru.db.db import DB
 from gabru.db.service import CRUDService
+from gabru.eventing import emit_event_safely
 from model.connection_interaction import ConnectionInteraction
 
 
@@ -78,12 +79,9 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
             return created_id
 
         try:
-            from model.event import Event
             from services.connections import ConnectionService
-            from services.events import EventService
 
             connection_service = ConnectionService()
-            event_service = EventService()
             connection = connection_service.get_by_id(obj.connection_id)
             if connection:
                 interaction_time = obj.created_at or datetime.now()
@@ -99,15 +97,16 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
                 *(obj.tags or []),
             ]))
 
-            event_service.create(Event(
+            emit_event_safely(
+                self.log,
                 user_id=obj.user_id,
                 event_type="connection:interaction_logged",
                 timestamp=obj.created_at or datetime.now(),
                 description=f"Connected with {obj.connection_name} via {obj.interaction_type}",
-                tags=tags
-            ))
-        except Exception:
-            pass
+                tags=tags,
+            )
+        except Exception as exc:
+            self.log.warning("Interaction logged but social event emission failed for connection %s: %s", obj.connection_id, exc)
 
         return created_id
 
@@ -139,5 +138,5 @@ class ConnectionInteractionService(CRUDService[ConnectionInteraction]):
             interactions = self.get_by_connection_id(connection_id, limit=1)
             connection.last_contact_at = interactions[0].created_at if interactions else None
             connection_service.update(connection)
-        except Exception:
-            pass
+        except Exception as exc:
+            self.log.warning("Failed to refresh last_contact_at for connection %s: %s", connection_id, exc)

@@ -67,8 +67,9 @@ class App(Generic[T]):
         @write_access_required
         def create():
             """ Create a new entity """
-            data = request.json
-            data = dict(data)
+            data = self.get_request_payload()
+            if data is None:
+                return jsonify({"error": "JSON request body is required"}), 400
             try:
                 data = self.process_model_data(data)
                 new_entity = self.model_class(**data)
@@ -100,8 +101,9 @@ class App(Generic[T]):
         @write_access_required
         def update(entity_id):
             """ Update an entity """
-            data = request.json
-            data = dict(data)
+            data = self.get_request_payload()
+            if data is None:
+                return jsonify({"error": "JSON request body is required"}), 400
             try:
                 existing_entity = self.service.get_by_id(entity_id)
                 if not existing_entity:
@@ -145,6 +147,11 @@ class App(Generic[T]):
                 else:
                     return jsonify({"message": f"Widget for {self.name} was already disabled"}), 200
 
+    def get_request_payload(self):
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return None
+        return dict(data)
 
     def get_model_class_attributes(self):
         clazz = self.model_class

@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional, Union
 
 from gabru.db.db import DB
 from gabru.db.service import CRUDService
@@ -46,5 +47,16 @@ class NotificationService(CRUDService[Notification]):
     def _get_columns_for_select(self) -> List[str]:
         return ["id", "notification_type", "notification_data", "created_at"]
 
-    def queue_email_notification(self, notification):
-        pass
+    def queue_email_notification(self, notification: Union[Notification, str]) -> Optional[int]:
+        if isinstance(notification, Notification):
+            notification_obj = notification
+            notification_obj.notification_type = "email"
+            if notification_obj.created_at is None:
+                notification_obj.created_at = datetime.now()
+        else:
+            notification_obj = Notification(
+                notification_type="email",
+                notification_data=str(notification),
+                created_at=datetime.now(),
+            )
+        return self.create(notification_obj)

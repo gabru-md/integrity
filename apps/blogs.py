@@ -1,16 +1,14 @@
 from flask import request, jsonify
 from gabru.auth import write_access_required
+from gabru.eventing import emit_event_safely
 from gabru.flask.app import App
 from apps.user_docs import build_app_user_guidance
 from model.blog import BlogPost
 from services.blogs import BlogService
-from services.events import EventService
-from model.event import Event
 from datetime import datetime
 from gabru.flask.util import render_flask_template
 
 blog_service = BlogService()
-event_service = EventService()
 
 def process_blog_data(data):
     # Ensure tags is a list
@@ -63,18 +61,18 @@ class BlogApp(App[BlogPost]):
                 new_id = self.service.create(new_post)
                 
                 if new_id:
-                    # Trigger event
-                    event = Event(
+                    emit_event_safely(
+                        self.log,
                         user_id=new_post.user_id,
                         event_type="blog:posted",
                         timestamp=datetime.now(),
                         description=f"New blog post: {new_post.title}",
-                        tags=["blog", "content"]
+                        tags=["blog", "content"],
                     )
-                    event_service.create(event)
                     return jsonify({"message": "Blog post created", "id": new_id}), 201
                 return jsonify({"error": "Failed to create post"}), 500
             except Exception as e:
+                self.log.exception(e)
                 return jsonify({"error": str(e)}), 400
 
 blog_app = BlogApp()

@@ -1,8 +1,11 @@
 .venv/
 .env
 .idea/
+.gemini/
+.DS_Store
+.pycache/
+__pycache__/
 google_rasbhari_creds.json
-*.json
 testing.py
 *.pt
 AGENTS.md

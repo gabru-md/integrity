@@ -1,6 +1,7 @@
 from typing import List, Optional
 from datetime import datetime
 
+from gabru.eventing import emit_event_safely
 from gabru.db.db import DB
 from gabru.db.service import CRUDService
 from model.thought import Thought
@@ -58,19 +59,12 @@ class ThoughtService(CRUDService[Thought]):
     def create(self, obj: Thought) -> Optional[int]:
         res = super().create(obj)
         if res:
-            try:
-                from services.events import EventService
-                from model.event import Event
-                from datetime import datetime
-                event_service = EventService()
-                new_event = Event(
-                    user_id=obj.user_id,
-                    event_type="thought:posted",
-                    timestamp=datetime.now(),
-                    description=f"New thought posted",
-                    tags=["thought"]
-                )
-                event_service.create(new_event)
-            except Exception:
-                pass
+            emit_event_safely(
+                self.log,
+                user_id=obj.user_id,
+                event_type="thought:posted",
+                timestamp=datetime.now(),
+                description="New thought posted",
+                tags=["thought"],
+            )
         return res

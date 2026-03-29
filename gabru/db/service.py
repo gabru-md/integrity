@@ -191,7 +191,21 @@ class CRUDService(ReadOnlyService[T]):
     def __init__(self, table_name: str, db: DB, user_scoped: bool = False, user_scope_column: str = "user_id"):
         super().__init__(table_name, db, user_scoped=user_scoped, user_scope_column=user_scope_column)
         self.log = Logger.get_log(f"{table_name}:{db.dbname} Service")
+        self._ensure_schema()
+
+    @classmethod
+    def _schema_initialized_classes(cls) -> set[type]:
+        if not hasattr(CRUDService, "_schema_initialized_cache"):
+            CRUDService._schema_initialized_cache = set()
+        return CRUDService._schema_initialized_cache
+
+    def _ensure_schema(self):
+        initialized = self._schema_initialized_classes()
+        concrete_cls = self.__class__
+        if concrete_cls in initialized:
+            return
         self._create_table()
+        initialized.add(concrete_cls)
 
     @abstractmethod
     def _create_table(self):
@@ -222,8 +236,10 @@ class CRUDService(ReadOnlyService[T]):
                 self.db.get_conn().commit()
                 return cursor.fetchone()[0]
             except Exception as e:
-                log.exception(e)
-                log.warn(self._to_tuple(obj))
+                self.db.get_conn().rollback()
+                self.log.exception(e)
+                self.log.warning("Create failed for %s with payload %s", self.table_name, self._to_tuple(obj))
+                return None
 
 
     def update(self, obj: T) -> bool:
@@ -241,9 +257,15 @@ class CRUDService(ReadOnlyService[T]):
 
         values = self._to_tuple(obj) + (obj.id,)
         with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, values)
-            self.db.get_conn().commit()
-            return cursor.rowcount > 0
+            try:
+                cursor.execute(query, values)
+                self.db.get_conn().commit()
+                return cursor.rowcount > 0
+            except Exception as e:
+                self.db.get_conn().rollback()
+                self.log.exception(e)
+                self.log.warning("Update failed for %s id=%s", self.table_name, obj.id)
+                return False
 
     def delete(self, obj_id: int) -> bool:
         """Deletes an object by its ID."""
@@ -258,9 +280,15 @@ class CRUDService(ReadOnlyService[T]):
             query += f" AND {self.user_scope_column} = %s"
             params.append(user_scope)
         with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, tuple(params))
-            self.db.get_conn().commit()
-            return cursor.rowcount > 0
+            try:
+                cursor.execute(query, tuple(params))
+                self.db.get_conn().commit()
+                return cursor.rowcount > 0
+            except Exception as e:
+                self.db.get_conn().rollback()
+                self.log.exception(e)
+                self.log.warning("Delete failed for %s id=%s", self.table_name, obj_id)
+                return False
 
     def _apply_request_user_scope_to_object(self, obj: T):
         user_scope = self._get_request_user_scope()

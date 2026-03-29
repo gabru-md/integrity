@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import request, redirect, url_for, flash, session
 from apps.user_docs import build_app_user_guidance
 from gabru.auth import PermissionManager
+from gabru.eventing import emit_event_safely
 from gabru.flask.app import App
-from model.event import Event
+from gabru.flask.util import render_flask_template
 from model.user import User
-from services.events import EventService
 from services.users import UserService
 
 
@@ -44,7 +44,7 @@ def profile():
         flash("User not found.", "error")
         return redirect(url_for("home"))
     
-    return render_template("profile.html", user=user)
+    return render_flask_template("profile.html", user=user)
 
 
 @users_app.blueprint.route("/profile/update", methods=["POST"])
@@ -99,15 +99,13 @@ def regenerate_api_key():
         flash("Failed to regenerate API key.", "error")
         return redirect(url_for("Users.profile"))
 
-    try:
-        EventService().create(Event(
-            event_type="user:api_key_regenerated",
-            timestamp=datetime.now(),
-            description=f"API key regenerated for {user.username}",
-            tags=["security", "user"],
-        ))
-    except Exception:
-        pass
+    emit_event_safely(
+        users_app.log,
+        event_type="user:api_key_regenerated",
+        timestamp=datetime.now(),
+        description=f"API key regenerated for {user.username}",
+        tags=["security", "user"],
+    )
 
     flash("API key regenerated successfully.", "success")
     return redirect(url_for("Users.profile"))

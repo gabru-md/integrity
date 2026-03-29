@@ -17,7 +17,6 @@ from apps.users import users_app
 from apps.network_signatures import network_signatures_app
 from gabru.auth import login_required
 from gabru.flask.server import Server
-from gabru.flask.util import render_flask_template
 
 basedir = os.path.dirname(__file__)
 
@@ -63,11 +62,6 @@ class RasbhariServer(Server):
         self.run()
 
     def setup_additional_routes(self):
-        @self.app.route('/heimdall')
-        @login_required
-        def show_heimdall_dashboard():
-            return render_flask_template('heimdall.html')
-
         @self.app.route('/chat')
         @login_required
         def show_open_webui():

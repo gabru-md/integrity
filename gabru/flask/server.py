@@ -4,7 +4,7 @@ import os
 import threading
 from datetime import datetime, timezone
 
-from flask import Flask, redirect, send_from_directory, jsonify, session, request, abort
+from flask import Flask, redirect, send_from_directory, jsonify, request
 from gabru.log import Logger
 from gabru.flask.app import App
 from gabru.auth import PermissionManager, Role, admin_required, login_required
@@ -34,6 +34,7 @@ class Server:
         self.log = Logger.get_log(self.name)
         self.registered_apps = []
         self.application_service = ApplicationService()
+        self.user_service = UserService()
         self.process_manager = None
         self.process_manager_thread = None
 
@@ -99,11 +100,10 @@ class Server:
             password = data.get('password') or ''
             next_url = data.get('next') or '/'
 
-            user_service = UserService()
-            user = user_service.authenticate(username, password)
+            user = self.user_service.authenticate(username, password)
             if not user:
                 # check if user exists but not approved
-                existing_user = user_service.get_by_username(username)
+                existing_user = self.user_service.get_by_username(username)
                 error_msg = "Invalid username or password"
                 if existing_user and not existing_user.is_approved:
                     error_msg = "Your account is pending admin approval."
@@ -136,14 +136,13 @@ class Server:
                 if request.is_json: return jsonify({"error": error}), 400
                 return render_flask_template('signup.html', error=error), 400
 
-            user_service = UserService()
-            if user_service.get_by_username(username):
+            if self.user_service.get_by_username(username):
                 error = "Username already exists."
                 if request.is_json: return jsonify({"error": error}), 400
                 return render_flask_template('signup.html', error=error), 400
 
             # The first user in the system is automatically an admin and approved
-            is_first_user = user_service.count() == 0
+            is_first_user = self.user_service.count() == 0
             
             new_user = User(
                 username=username,
@@ -154,12 +153,12 @@ class Server:
                 is_approved=is_first_user
             )
             
-            user_id = user_service.create(new_user)
+            user_id = self.user_service.create(new_user)
             if user_id:
                 if is_first_user:
                     # Log them in immediately if they are the first user/admin
-                    PermissionManager.login(new_user)
                     new_user.id = user_id
+                    PermissionManager.login(new_user)
                     if request.is_json:
                         return jsonify({"message": "Admin account created successfully", "redirect": "/"}), 201
                     return redirect('/')

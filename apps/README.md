@@ -91,7 +91,7 @@ Each app should now also expose user-facing instructions in the web UI via `user
 
 ### 8. Skills
 
-- File: `apps/skills.py"
+- File: `apps/skills.py`
 - Model: `Skill`
 - Widget: `skill_tree`
 - Processes:

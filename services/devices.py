@@ -1,7 +1,9 @@
+from datetime import datetime
 from typing import List, Optional
 
 from gabru.db.db import DB
 from gabru.db.service import CRUDService
+from gabru.eventing import emit_event_safely
 from model.device import Device
 
 
@@ -93,13 +95,13 @@ class DeviceService(CRUDService[Device]):
         if not conn:
             return []
         with conn.cursor() as cursor:
-            query = "SELECT * FROM device WHERE device_type = %s;"
+            query = "SELECT id, name, enabled, location, type, vendor, model, coordinates, url, config_json, authorized_apps, description FROM devices WHERE type = %s"
             cursor.execute(query, (device_type,))
             rows = cursor.fetchall()
             devices = [self._to_object(row) for row in rows]
         return devices
 
-    def get_devices_enabled_for(self, key):
+    def get_devices_enabled_for(self, key: str) -> List[Device]:
         conn = self.db.get_conn()
         if not conn:
             return []
@@ -113,21 +115,12 @@ class DeviceService(CRUDService[Device]):
     def create(self, obj: Device) -> Optional[int]:
         res = super().create(obj)
         if res:
-            try:
-                from services.events import EventService
-                from model.event import Event
-                from datetime import datetime
-                event_service = EventService()
-                
-                device_name_dashed = obj.name.lower().replace(" ", "-")
-                event_type = f"device:{device_name_dashed}:created"
-                new_event = Event(
-                    event_type=event_type,
-                    timestamp=datetime.now(),
-                    description=f"New device added: {obj.name}",
-                    tags=["device"]
-                )
-                event_service.create(new_event)
-            except Exception:
-                pass 
+            device_name_dashed = obj.name.lower().replace(" ", "-")
+            emit_event_safely(
+                self.log,
+                event_type=f"device:{device_name_dashed}:created",
+                timestamp=datetime.now(),
+                description=f"New device added: {obj.name}",
+                tags=["device"],
+            )
         return res
