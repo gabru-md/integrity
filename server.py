@@ -17,12 +17,14 @@ from apps.users import users_app
 from apps.network_signatures import network_signatures_app
 from gabru.auth import login_required
 from gabru.flask.server import Server
+from gabru.flask.util import render_flask_template
 from runtime.providers import (
     RasbhariAppStatusStore,
     RasbhariAssistantCommandProvider,
     RasbhariAuthProvider,
     RasbhariDashboardDataProvider,
 )
+from services.docs import DocsService
 
 basedir = os.path.dirname(__file__)
 
@@ -75,10 +77,29 @@ class RasbhariServer(Server):
         self.run()
 
     def setup_additional_routes(self):
+        docs_service = DocsService(os.path.join(basedir, "docs"))
+
         @self.app.route('/chat')
         @login_required
         def show_open_webui():
             return redirect(self.open_webui_url), 302
+
+        @self.app.route('/docs')
+        @login_required
+        def show_docs():
+            docs = docs_service.list_docs()
+            selected_path = 'README.md'
+            selected_doc = docs_service.get_doc(selected_path)
+            return render_flask_template('docs.html', docs=docs, selected_doc=selected_doc, selected_path=selected_path)
+
+        @self.app.route('/docs/<path:doc_path>')
+        @login_required
+        def show_doc(doc_path):
+            docs = docs_service.list_docs()
+            selected_doc = docs_service.get_doc(doc_path)
+            if selected_doc is None:
+                return render_flask_template('docs.html', docs=docs, selected_doc=None, selected_path=doc_path), 404
+            return render_flask_template('docs.html', docs=docs, selected_doc=selected_doc, selected_path=doc_path)
 
 
 if __name__ == '__main__':

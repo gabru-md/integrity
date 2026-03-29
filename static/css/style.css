@@ -1045,6 +1045,70 @@ input[readonly] {
     color: var(--accent-strong);
 }
 
+.docs-content {
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 0.96rem;
+}
+
+.docs-content h1,
+.docs-content h2,
+.docs-content h3 {
+    color: var(--text);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-top: 1.5rem;
+    margin-bottom: 0.7rem;
+}
+
+.docs-content h1 {
+    font-size: 2rem;
+}
+
+.docs-content h2 {
+    font-size: 1.5rem;
+}
+
+.docs-content h3 {
+    font-size: 1.15rem;
+}
+
+.docs-content p,
+.docs-content ul,
+.docs-content pre {
+    margin: 0.85rem 0;
+}
+
+.docs-content ul {
+    padding-left: 1.2rem;
+    list-style: disc;
+}
+
+.docs-content li {
+    margin: 0.35rem 0;
+}
+
+.docs-content a {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.docs-content code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: color-mix(in srgb, var(--surface-muted) 88%, transparent);
+    border-radius: 0.45rem;
+    padding: 0.12rem 0.35rem;
+}
+
+.docs-code {
+    overflow-x: auto;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface-muted) 86%, transparent);
+    padding: 1rem 1.1rem;
+}
+
 .mono {
     font-family: var(--font-mono);
 }
