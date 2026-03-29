@@ -134,6 +134,8 @@ Each app should now also expose user-facing instructions in the web UI via `user
   - admin-only account management surface
   - creates and updates real Rasbhari login accounts
   - supports personal workspace ownership without giving admins access to other users' private app data
+  - generates a 5-character API key for each account and lets users rotate it from `/users/profile`
+  - protected routes also accept `X-API-Key` or `Authorization: ApiKey <key>` for non-session access
   - **Signup & Approval**: Users can self-signup at `/signup`. New accounts are disabled (`is_approved=False`) until an admin approves them in the Users panel. Accounts created directly by admins are auto-approved.
 
 ### 12. Network-Signatures

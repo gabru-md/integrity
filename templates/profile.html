@@ -32,6 +32,21 @@
                 <p class="mt-1 text-xs text-slate-500 dark:text-gray-400">Your personal topic for ntfy.sh notifications. Leave blank to use the default.</p>
             </div>
 
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="min-w-0 flex-1">
+                        <label for="api_key" class="block text-sm font-medium text-slate-700 dark:text-gray-300">API Key</label>
+                        <input type="text" id="api_key" value="{{ user.api_key or '' }}" readonly
+                               class="mt-1 block w-full p-3 border border-slate-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 font-mono tracking-widest">
+                        <p class="mt-1 text-xs text-slate-500 dark:text-gray-400">Send this as `X-API-Key` to access Rasbhari routes without a browser session.</p>
+                    </div>
+                    <button type="submit" formaction="{{ url_for('Users.regenerate_api_key') }}" formmethod="POST"
+                            class="shrink-0 py-2 px-4 bg-slate-800 text-white font-medium rounded-lg shadow-md hover:bg-slate-900 transition duration-150 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-white">
+                        Regenerate
+                    </button>
+                </div>
+            </div>
+
             <div>
                 <label for="password" class="block text-sm font-medium text-slate-700 dark:text-gray-300">New Password</label>
                 <input type="password" id="password" name="password"

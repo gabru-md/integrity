@@ -86,6 +86,7 @@ Rasbhari supports real sign-in accounts and a managed signup flow.
 
 - **Signup & Approval**: New users can request access via the `/signup` page. These accounts are created in a pending state (`is_approved=False`) and cannot log in until an administrator approves them in the `Users` app.
 - **Admin Creation**: Users created directly by administrators through the `Users` dashboard are automatically approved.
+- **API Keys**: Every user also gets a generated 5-character `api_key`. Protected routes accept `X-API-Key: <key>` and `Authorization: ApiKey <key>`. Users can rotate their own key from `/users/profile`.
 - **Data Ownership**: Every personal record is owned by a specific `user_id`.
 - **Permissions**: Normal users can only read and write their own app data. Admin users can access system panels like `Processes`, `Devices`, and `Users`.
 - **Private Data**: Admin access does not automatically bypass private data ownership checks.
@@ -178,6 +179,7 @@ Open `http://localhost:5000`.
 
 ```bash
 curl -X POST http://localhost:5000/events/ \
+  -H "X-API-Key: YOUR5K" \
   -H "Content-Type: application/json" \
   -d '{
     "event_type": "learning:session",
@@ -190,6 +192,7 @@ curl -X POST http://localhost:5000/events/ \
 
 ```bash
 curl -X POST http://localhost:5000/skills/ \
+  -H "X-API-Key: YOUR5K" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Python",
@@ -206,6 +209,7 @@ Once `SkillXPProcessor` is running, `#python` events award XP to the `Python` sk
 
 ```bash
 curl -X POST http://localhost:5000/connections/ \
+  -H "X-API-Key: YOUR5K" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Mom",
@@ -220,6 +224,7 @@ curl -X POST http://localhost:5000/connections/ \
 
 ```bash
 curl -X POST http://localhost:5000/connections/1/ledger \
+  -H "X-API-Key: YOUR5K" \
   -H "Content-Type: application/json" \
   -d '{
     "interaction_type": "Call",
@@ -236,6 +241,7 @@ Queue report generation through the event pipeline:
 
 ```bash
 curl -X POST http://localhost:5000/reports/generate \
+  -H "X-API-Key: YOUR5K" \
   -H "Content-Type: application/json" \
   -d '{
     "report_type": "daily",
@@ -248,6 +254,7 @@ Generate one immediately and inspect the JSON response:
 
 ```bash
 curl -X POST http://localhost:5000/reports/generate \
+  -H "X-API-Key: YOUR5K" \
   -H "Content-Type: application/json" \
   -d '{
     "report_type": "weekly",

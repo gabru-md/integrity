@@ -11,6 +11,65 @@ class Role(str, Enum):
 
 
 class PermissionManager:
+    _user_service = None
+
+    @staticmethod
+    def _get_user_service():
+        if PermissionManager._user_service is None:
+            from services.users import UserService
+            PermissionManager._user_service = UserService()
+        return PermissionManager._user_service
+
+    @staticmethod
+    def _get_request_api_key() -> str:
+        direct_header = request.headers.get("X-API-Key", "").strip()
+        if direct_header:
+            return direct_header
+        authorization = request.headers.get("Authorization", "").strip()
+        if authorization.lower().startswith("apikey "):
+            return authorization[7:].strip()
+        return ""
+
+    @staticmethod
+    def _get_request_authenticated_user():
+        if getattr(g, "_authenticated_user_resolved", False):
+            return getattr(g, "_authenticated_user", None)
+
+        if session.get("user_id"):
+            user = {
+                "id": session.get("user_id"),
+                "username": session.get("username", ""),
+                "display_name": session.get("display_name", ""),
+                "is_admin": bool(session.get("is_admin")),
+                "auth_type": "session",
+            }
+            g._authenticated_user = user
+            g._authenticated_user_resolved = True
+            return user
+
+        api_key = PermissionManager._get_request_api_key()
+        if not api_key:
+            g._authenticated_user = None
+            g._authenticated_user_resolved = True
+            return None
+
+        user = PermissionManager._get_user_service().authenticate_api_key(api_key)
+        if not user:
+            g._authenticated_user = None
+            g._authenticated_user_resolved = True
+            return None
+
+        g._authenticated_user = {
+            "id": user.id,
+            "username": user.username,
+            "display_name": user.display_name,
+            "is_admin": user.is_admin,
+            "api_key": user.api_key,
+            "auth_type": "api_key",
+        }
+        g._authenticated_user_resolved = True
+        return g._authenticated_user
+
     @staticmethod
     def get_current_role() -> Role:
         if not PermissionManager.is_authenticated():
@@ -19,27 +78,30 @@ class PermissionManager:
 
     @staticmethod
     def is_authenticated() -> bool:
-        return bool(session.get("user_id"))
+        return PermissionManager._get_request_authenticated_user() is not None
 
     @staticmethod
     def is_admin() -> bool:
-        return bool(session.get("is_admin"))
+        user = PermissionManager._get_request_authenticated_user()
+        return bool(user and user.get("is_admin"))
 
     @staticmethod
     def get_current_user_id() -> Optional[int]:
-        return session.get("user_id")
+        user = PermissionManager._get_request_authenticated_user()
+        return user.get("id") if user else None
 
     @staticmethod
     def get_current_user() -> Optional[Dict[str, Any]]:
-        user_id = PermissionManager.get_current_user_id()
-        if not user_id:
+        user = PermissionManager._get_request_authenticated_user()
+        if not user:
             return None
 
         return {
-            "id": user_id,
-            "username": session.get("username", ""),
-            "display_name": session.get("display_name", ""),
-            "is_admin": PermissionManager.is_admin(),
+            "id": user.get("id"),
+            "username": user.get("username", ""),
+            "display_name": user.get("display_name", ""),
+            "is_admin": bool(user.get("is_admin")),
+            "auth_type": user.get("auth_type", "session"),
         }
 
     @staticmethod
@@ -48,6 +110,15 @@ class PermissionManager:
         session["username"] = user.username
         session["display_name"] = user.display_name
         session["is_admin"] = user.is_admin
+        g._authenticated_user = {
+            "id": user.id,
+            "username": user.username,
+            "display_name": user.display_name,
+            "is_admin": user.is_admin,
+            "api_key": getattr(user, "api_key", None),
+            "auth_type": "session",
+        }
+        g._authenticated_user_resolved = True
 
     @staticmethod
     def logout():
@@ -55,6 +126,8 @@ class PermissionManager:
         session.pop("username", None)
         session.pop("display_name", None)
         session.pop("is_admin", None)
+        g._authenticated_user = None
+        g._authenticated_user_resolved = True
 
     @staticmethod
     def can_write() -> bool:

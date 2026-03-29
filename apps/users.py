@@ -1,7 +1,12 @@
+from datetime import datetime
+
 from flask import render_template, request, redirect, url_for, flash, session
 from apps.user_docs import build_app_user_guidance
+from gabru.auth import PermissionManager
 from gabru.flask.app import App
+from model.event import Event
 from model.user import User
+from services.events import EventService
 from services.users import UserService
 
 
@@ -30,7 +35,7 @@ users_app = App(
 
 @users_app.blueprint.route("/profile", methods=["GET"])
 def profile():
-    user_id = session.get("user_id")
+    user_id = PermissionManager.get_current_user_id()
     if not user_id:
         return redirect(url_for("login"))
     
@@ -44,7 +49,7 @@ def profile():
 
 @users_app.blueprint.route("/profile/update", methods=["POST"])
 def update_profile():
-    user_id = session.get("user_id")
+    user_id = PermissionManager.get_current_user_id()
     if not user_id:
         return redirect(url_for("login"))
     
@@ -71,9 +76,38 @@ def update_profile():
     success = users_app.service.update(user)
     if success:
         flash("Profile updated successfully!", "success")
-        # Update session display name if it's stored there
         session["display_name"] = user.display_name
     else:
         flash("Failed to update profile.", "error")
         
+    return redirect(url_for("Users.profile"))
+
+
+@users_app.blueprint.route("/profile/api-key/regenerate", methods=["POST"])
+def regenerate_api_key():
+    user_id = PermissionManager.get_current_user_id()
+    if not user_id:
+        return redirect(url_for("login"))
+
+    user = users_app.service.get_by_id(user_id)
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("home"))
+
+    new_api_key = users_app.service.regenerate_api_key(user_id)
+    if not new_api_key:
+        flash("Failed to regenerate API key.", "error")
+        return redirect(url_for("Users.profile"))
+
+    try:
+        EventService().create(Event(
+            event_type="user:api_key_regenerated",
+            timestamp=datetime.now(),
+            description=f"API key regenerated for {user.username}",
+            tags=["security", "user"],
+        ))
+    except Exception:
+        pass
+
+    flash("API key regenerated successfully.", "success")
     return redirect(url_for("Users.profile"))

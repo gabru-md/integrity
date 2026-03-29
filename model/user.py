@@ -11,6 +11,7 @@ class User(WidgetUIModel):
     username: str = Field(default="", widget_enabled=True, description="Unique username used to sign in.")
     display_name: str = Field(default="", widget_enabled=True, description="Friendly name shown in the interface.")
     password: Optional[str] = Field(default=None, widget_enabled=False, ui_enabled=False, description="Temporary plain password used only when creating or resetting a user.")
+    api_key: Optional[str] = Field(default=None, edit_enabled=False, widget_enabled=False, ui_enabled=False, description="Short API key used for header-based access to Rasbhari routes.")
     is_admin: bool = Field(default=False, widget_enabled=True, description="Whether this account can access Rasbhari admin panels.")
     is_active: bool = Field(default=True, widget_enabled=True, description="Whether this account can sign in.")
     is_approved: bool = Field(default=False, widget_enabled=True, description="Whether this account has been approved by an admin.")
