@@ -82,6 +82,19 @@ class DashboardDataProvider(Protocol):
         ...
 
 
+@runtime_checkable
+class AssistantCommandProvider(Protocol):
+    def handle(
+        self,
+        user_id: int,
+        message: str,
+        confirm: bool = False,
+        cancel: bool = False,
+        change_action: Optional[str] = None,
+    ) -> Any:
+        ...
+
+
 @dataclass
 class TimelineEventView:
     event_type: str

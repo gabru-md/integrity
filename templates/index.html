@@ -189,16 +189,29 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
             </svg>
         </button>
-        <div id="chat-window" class="hidden h-[60vh] max-h-[680px] w-[22rem] flex-col overflow-hidden rounded-[var(--card-radius)] border border-[var(--border)] bg-[var(--surface)] shadow-2xl floating-blur md:w-[26rem]">
+        <div id="chat-window" class="hidden h-[60vh] max-h-[680px] w-[23.5rem] flex-col overflow-hidden rounded-[var(--card-radius)] border border-[var(--border)] bg-[var(--surface)] shadow-2xl floating-blur md:w-[28rem]">
             <div class="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
                 <div>
                     <div class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Assistant</div>
-                    <h3 class="text-base font-extrabold text-[var(--text)]">Open WebUI</h3>
+                    <h3 class="text-base font-extrabold text-[var(--text)]">Rasbhari AI</h3>
                 </div>
                 <button id="close-chat-button" class="btn-ghost h-10 w-10 rounded-2xl p-0">✕</button>
             </div>
-            <div class="relative flex-1">
-                <iframe id="chat-frame" src="" frameborder="0" class="h-full w-full opacity-0 transition-opacity duration-300"></iframe>
+            <div id="assistant-thread" class="assistant-thread flex-1 overflow-y-auto px-4 py-4">
+                <div class="assistant-bubble assistant-bubble-ai">
+                    Describe what happened or what you want Rasbhari to do. I can log events, trigger activities, save thoughts, and create promises.
+                </div>
+            </div>
+            <div class="border-t border-[var(--border)] px-4 py-4">
+                <form id="assistant-form" class="grid gap-3">
+                    <textarea id="assistant-input" class="assistant-input" placeholder="Examples: 'litterbox cleaned', 'create a daily promise to stretch', 'note that I need to buy cat food'"></textarea>
+                    <div class="flex items-center justify-between gap-3">
+                        <button id="assistant-submit" type="submit" class="btn-primary flex-1 px-4 py-3 text-sm">Send Command</button>
+                        {% if open_webui_url %}
+                        <a id="assistant-open-webui" href="/chat" target="_blank" rel="noreferrer" class="btn-secondary px-4 py-3 text-sm">Open WebUI</a>
+                        {% endif %}
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -246,25 +259,299 @@
         const chatButton = document.getElementById('chat-button');
         const closeChatButton = document.getElementById('close-chat-button');
         const chatWindow = document.getElementById('chat-window');
-        const chatFrame = document.getElementById('chat-frame');
-        const openWebuiUrl = "{{ open_webui_url }}";
-        let isChatLoaded = false;
+        const assistantThread = document.getElementById('assistant-thread');
+        const assistantForm = document.getElementById('assistant-form');
+        const assistantInput = document.getElementById('assistant-input');
+        const assistantSubmit = document.getElementById('assistant-submit');
+        const assistantOpenWebui = document.getElementById('assistant-open-webui');
+        const assistantStorageKey = 'rasbhari_assistant_thread_v1';
+        const assistantPendingKey = 'rasbhari_assistant_pending_v1';
+        const assistantPendingCardKey = 'rasbhari_assistant_pending_card_v1';
+        let pendingConfirmation = null;
+        let pendingCardId = null;
 
-        if (chatButton && chatWindow && closeChatButton && chatFrame) {
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function saveAssistantState() {
+            try {
+                sessionStorage.setItem(assistantStorageKey, assistantThread?.innerHTML || '');
+                if (pendingConfirmation) {
+                    sessionStorage.setItem(assistantPendingKey, pendingConfirmation);
+                } else {
+                    sessionStorage.removeItem(assistantPendingKey);
+                }
+                if (pendingCardId) {
+                    sessionStorage.setItem(assistantPendingCardKey, pendingCardId);
+                } else {
+                    sessionStorage.removeItem(assistantPendingCardKey);
+                }
+            } catch (_) {}
+        }
+
+        function restoreAssistantState() {
+            try {
+                const nav = performance.getEntriesByType('navigation')[0];
+                if (nav && nav.type === 'reload') {
+                    sessionStorage.removeItem(assistantStorageKey);
+                    sessionStorage.removeItem(assistantPendingKey);
+                    return;
+                }
+                const storedThread = sessionStorage.getItem(assistantStorageKey);
+                if (storedThread && assistantThread) {
+                    assistantThread.innerHTML = storedThread;
+                    assistantThread.scrollTop = assistantThread.scrollHeight;
+                }
+                pendingConfirmation = sessionStorage.getItem(assistantPendingKey);
+                pendingCardId = sessionStorage.getItem(assistantPendingCardKey);
+            } catch (_) {}
+        }
+
+        function syncAssistantLock() {
+            const locked = Boolean(pendingConfirmation);
+            if (assistantInput) {
+                assistantInput.disabled = locked;
+                assistantInput.placeholder = locked
+                    ? 'Confirm or ignore the staged action before entering a new command'
+                    : "Examples: 'litterbox cleaned', 'create a daily promise to stretch', 'note that I need to buy cat food'";
+            }
+            if (assistantSubmit) {
+                assistantSubmit.disabled = locked;
+                assistantSubmit.textContent = locked ? 'Action Pending' : 'Send Command';
+            }
+            if (assistantOpenWebui) {
+                assistantOpenWebui.classList.toggle('pointer-events-none', locked);
+                assistantOpenWebui.classList.toggle('opacity-50', locked);
+                assistantOpenWebui.setAttribute('aria-disabled', locked ? 'true' : 'false');
+            }
+        }
+
+        function appendAssistantBubble(content, author = 'ai') {
+            if (!assistantThread) return;
+            const bubble = document.createElement('div');
+            bubble.className = `assistant-bubble ${author === 'user' ? 'assistant-bubble-user' : 'assistant-bubble-ai'}`;
+            bubble.textContent = content;
+            assistantThread.appendChild(bubble);
+            assistantThread.scrollTop = assistantThread.scrollHeight;
+            saveAssistantState();
+        }
+
+        function renderAssistantResponseCard(payload, cardId = null) {
+            const card = document.createElement('div');
+            const stateClass = payload.executed ? 'assistant-card-executed' : (payload.requires_confirmation ? 'assistant-card-staged' : 'assistant-card-answer');
+            card.className = `assistant-card ${stateClass}`;
+            if (cardId) {
+                card.dataset.cardId = cardId;
+            }
+
+            const details = [];
+            if (payload.payload?.activity_name) details.push(['Activity', payload.payload.activity_name]);
+            else if (payload.payload?.activity_id && payload.payload?.event_type) details.push(['Activity', `${payload.payload.activity_id}`]);
+            if (payload.payload?.event_type || payload.payload?.event_preview?.event_type) details.push(['Event', payload.payload.event_type || payload.payload.event_preview?.event_type]);
+            if (payload.payload?.name) details.push(['Promise', payload.payload.name]);
+            else if (payload.payload?.promise_name) details.push(['Promise', payload.payload.promise_name]);
+            if (payload.payload?.thought_message) details.push(['Thought', payload.payload.thought_message]);
+            if (payload.payload?.tags?.length) details.push(['Tags', payload.payload.tags.join(', ')]);
+            if (payload.payload?.promise_target_event_type) details.push(['Target Type', payload.payload.promise_target_event_type]);
+            if (payload.payload?.promise_target_event_tag) details.push(['Target Tag', payload.payload.promise_target_event_tag]);
+            if (payload.payload?.promise_frequency) details.push(['Frequency', payload.payload.promise_frequency]);
+
+            const statusLabel = payload.executed ? 'Committed' : (payload.requires_confirmation ? 'Staged' : 'Reply');
+            const title = payload.executed
+                ? 'Action committed'
+                : (payload.requires_confirmation ? 'Pending confirmation' : 'Assistant reply');
+            const confidence = typeof payload.confidence === 'number' ? payload.confidence.toFixed(2) : null;
+            const primaryText = payload.summary || payload.response || 'Done.';
+
+            card.innerHTML = `
+                <div class="assistant-card-header">
+                    <div>
+                        <div class="assistant-card-kicker">${escapeHtml(statusLabel)}</div>
+                        <div class="assistant-card-title">${escapeHtml(title)}</div>
+                    </div>
+                    ${payload.action ? `<span class="assistant-chip">${escapeHtml(payload.action)}</span>` : ''}
+                </div>
+                <div class="assistant-card-body">
+                    <div class="assistant-card-response">${escapeHtml(primaryText)}</div>
+                    ${(!payload.requires_confirmation && payload.response && payload.summary && payload.response !== payload.summary) ? `<div class="assistant-card-summary"><strong>Details:</strong> ${escapeHtml(payload.response)}</div>` : ''}
+                    ${payload.reasoning ? `<div class="assistant-card-reasoning"><strong>Why:</strong> ${escapeHtml(payload.reasoning)}</div>` : ''}
+                    ${details.length ? `<div class="assistant-card-grid">${details.map(([label, value]) => `<div class="assistant-detail"><span class="assistant-detail-label">${escapeHtml(label)}</span><span class="assistant-detail-value">${escapeHtml(value)}</span></div>`).join('')}</div>` : ''}
+                </div>
+                <div class="assistant-card-footer">
+                    ${confidence ? `<span class="assistant-meta">Confidence ${escapeHtml(confidence)}</span>` : ''}
+                    ${payload.requires_confirmation ? `<span class="assistant-meta assistant-meta-accent">Waiting for confirmation</span>` : ''}
+                </div>
+                ${payload.requires_confirmation ? `<div class="assistant-card-actions"><button type="button" class="btn-ghost assistant-inline-change-toggle px-4 py-2 text-sm" data-change-toggle="true">Change</button><button type="button" class="btn-ghost assistant-inline-ignore px-4 py-2 text-sm" data-ignore="true">Ignore</button><button type="button" class="btn-primary assistant-inline-confirm px-4 py-2 text-sm" data-confirm="true">Confirm Action</button></div><div class="assistant-change-panel hidden"><div class="assistant-change-row"><select class="assistant-change-select" aria-label="Choose action type"><option value="trigger_activity" ${payload.action === 'trigger_activity' ? 'selected' : ''}>Trigger Activity</option><option value="create_event" ${payload.action === 'create_event' ? 'selected' : ''}>Create Event</option><option value="create_thought" ${payload.action === 'create_thought' ? 'selected' : ''}>Create Thought</option><option value="create_promise" ${payload.action === 'create_promise' ? 'selected' : ''}>Create Promise</option></select><button type="button" class="btn-secondary assistant-inline-change-apply px-4 py-2 text-sm" data-change-apply="true">Restage</button></div><div class="assistant-change-copy">This changes the staged action and asks for confirmation again.</div></div>` : ''}
+            `;
+            return card;
+        }
+
+        function markPendingCardAsChanged() {
+            if (!assistantThread || !pendingCardId) return;
+            const previousCard = assistantThread.querySelector(`.assistant-card[data-card-id="${pendingCardId}"]`);
+            if (!previousCard) return;
+            previousCard.classList.remove('assistant-card-staged');
+            previousCard.classList.add('assistant-card-changed');
+            const kicker = previousCard.querySelector('.assistant-card-kicker');
+            const title = previousCard.querySelector('.assistant-card-title');
+            if (kicker) kicker.textContent = 'Changed';
+            if (title) title.textContent = 'Previous staged action discarded';
+            previousCard.querySelector('.assistant-card-actions')?.remove();
+            previousCard.querySelector('.assistant-change-panel')?.remove();
+            const accentMeta = previousCard.querySelector('.assistant-meta-accent');
+            if (accentMeta) accentMeta.textContent = 'Replaced by a new staged action';
+        }
+
+        function appendAssistantResponse(payload, options = {}) {
+            if (!assistantThread) return;
+            if (options.replacePending) {
+                markPendingCardAsChanged();
+            }
+            const cardId = payload.requires_confirmation ? `pending-${Date.now()}` : null;
+            const bubble = document.createElement('div');
+            bubble.className = 'assistant-bubble assistant-bubble-ai assistant-bubble-card';
+            bubble.appendChild(renderAssistantResponseCard(payload, cardId));
+            assistantThread.appendChild(bubble);
+            assistantThread.scrollTop = assistantThread.scrollHeight;
+            pendingCardId = cardId;
+            saveAssistantState();
+        }
+
+        function setAssistantLoading(isLoading) {
+            if (!assistantSubmit) return;
+            assistantSubmit.disabled = isLoading;
+            assistantSubmit.textContent = isLoading ? 'Thinking...' : 'Send Command';
+        }
+
+        async function sendAssistantCommand(message, confirm = false) {
+            appendAssistantBubble(message, 'user');
+            setAssistantLoading(true);
+            try {
+                const response = await fetch('/assistant/command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ message, confirm }),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    appendAssistantBubble(payload.error || payload.response || 'The assistant failed to process that command.');
+                    return;
+                }
+                appendAssistantResponse(payload);
+
+                if (payload.requires_confirmation) {
+                    pendingConfirmation = message;
+                } else {
+                    pendingConfirmation = null;
+                    pendingCardId = null;
+                }
+                saveAssistantState();
+                syncAssistantLock();
+            } catch (_) {
+                appendAssistantBubble('The assistant request failed.');
+            } finally {
+                setAssistantLoading(false);
+            }
+        }
+
+        if (chatButton && chatWindow && closeChatButton && assistantThread && assistantForm && assistantInput) {
+            restoreAssistantState();
+            syncAssistantLock();
             chatButton.addEventListener('click', () => {
                 chatWindow.classList.toggle('hidden');
                 chatWindow.classList.toggle('chat-window-active');
-                if (!chatWindow.classList.contains('hidden') && !isChatLoaded && openWebuiUrl) {
-                    chatFrame.src = openWebuiUrl;
-                    chatFrame.onload = () => chatFrame.classList.add('loaded');
-                    isChatLoaded = true;
-                }
                 chatButton.classList.remove('chat-pulse');
             });
 
             closeChatButton.addEventListener('click', () => {
                 chatWindow.classList.add('hidden');
                 chatWindow.classList.remove('chat-window-active');
+            });
+
+            assistantForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const message = assistantInput.value.trim();
+                if (!message) return;
+                assistantInput.value = '';
+                await sendAssistantCommand(message, false);
+            });
+
+            assistantThread.addEventListener('click', async (event) => {
+                const confirmButton = event.target.closest('[data-confirm="true"]');
+                if (confirmButton && pendingConfirmation) {
+                    const message = pendingConfirmation;
+                    pendingConfirmation = null;
+                    saveAssistantState();
+                    syncAssistantLock();
+                    await sendAssistantCommand(message, true);
+                    return;
+                }
+                const ignoreButton = event.target.closest('[data-ignore="true"]');
+                if (ignoreButton && pendingConfirmation) {
+                    try {
+                        const response = await fetch('/assistant/command', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({ cancel: true }),
+                        });
+                        const payload = await response.json();
+                        appendAssistantResponse(payload, { replacePending: true });
+                    } catch (_) {
+                        appendAssistantBubble('Failed to ignore the staged action.');
+                    } finally {
+                        pendingConfirmation = null;
+                        pendingCardId = null;
+                        saveAssistantState();
+                        syncAssistantLock();
+                    }
+                    return;
+                }
+                const toggleButton = event.target.closest('[data-change-toggle="true"]');
+                if (toggleButton) {
+                    const card = toggleButton.closest('.assistant-card');
+                    const panel = card?.querySelector('.assistant-change-panel');
+                    panel?.classList.toggle('hidden');
+                    return;
+                }
+                const applyButton = event.target.closest('[data-change-apply="true"]');
+                if (applyButton && pendingConfirmation) {
+                    const card = applyButton.closest('.assistant-card');
+                    const select = card?.querySelector('.assistant-change-select');
+                    const changeAction = select?.value;
+                    if (!changeAction) return;
+                    try {
+                        const response = await fetch('/assistant/command', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({ change_action: changeAction }),
+                        });
+                        const payload = await response.json();
+                        appendAssistantResponse(payload, { replacePending: true });
+                        if (!response.ok) return;
+                        if (payload.requires_confirmation) {
+                            pendingConfirmation = pendingConfirmation;
+                        } else {
+                            pendingConfirmation = null;
+                            pendingCardId = null;
+                        }
+                    } catch (_) {
+                        appendAssistantBubble('Failed to restage the action.');
+                    } finally {
+                        saveAssistantState();
+                        syncAssistantLock();
+                    }
+                }
             });
 
             document.addEventListener('click', (event) => {

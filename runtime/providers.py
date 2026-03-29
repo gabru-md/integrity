@@ -6,6 +6,7 @@ from typing import Optional
 
 from gabru.contracts import (
     AppStatusStore,
+    AssistantCommandProvider,
     AuthProvider,
     AuthenticatedUser,
     DashboardDataProvider,
@@ -17,6 +18,7 @@ from services.dependency_health import DependencyHealthService
 from services.devices import DeviceService
 from services.events import EventService
 from services.notifications import NotificationService
+from services.assistant_command import AssistantCommandService
 from services.skill_level_history import SkillLevelHistoryService
 from services.timeline import TimelineService
 from services.users import UserService
@@ -327,3 +329,24 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             "Failed to send",
         )
         return sum(1 for line in lines if any(marker in line for marker in failure_markers))
+
+
+class RasbhariAssistantCommandProvider(AssistantCommandProvider):
+    def __init__(self, assistant_command_service: Optional[AssistantCommandService] = None):
+        self.assistant_command_service = assistant_command_service or AssistantCommandService()
+
+    def handle(
+        self,
+        user_id: int,
+        message: str,
+        confirm: bool = False,
+        cancel: bool = False,
+        change_action: Optional[str] = None,
+    ):
+        return self.assistant_command_service.handle(
+            user_id=user_id,
+            message=message,
+            confirm=confirm,
+            cancel=cancel,
+            change_action=change_action,
+        )

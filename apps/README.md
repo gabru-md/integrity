@@ -16,6 +16,17 @@ Most apps are built directly with `gabru.flask.app.App`. A few extend it when th
 
 Each app should now also expose user-facing instructions in the web UI via `user_guidance`. This is separate from developer documentation and should explain what the app is for, what important terms mean, and how a user should fill in the main fields.
 
+## Shared AI Command Layer
+
+Rasbhari also exposes a shell-level assistant command surface through the floating `Rasbhari AI` panel and the `/assistant/command` route.
+
+- This is not a separate app.
+- It is a cross-app orchestration layer that can create events, trigger activities, save thoughts, and create promises.
+- Internally it now routes commands through app-specific resolvers, so `activities`, `promises`, `thoughts`, and `events` can each score whether they should own the request.
+- The assistant should prefer an existing activity over inventing a new event, and otherwise prefer event creation when downstream promises, skills, reports, or notifications can react through the normal event bus.
+- Write actions are staged first and must be explicitly confirmed before they execute, which protects the event bus and downstream processors from accidental AI writes.
+- The full behavior contract and current UX rules for the assistant live in [docs/AI.md](/Users/manish/PycharmProjects/integrity/docs/AI.md).
+
 ## Currently Registered Apps
 
 ### 1. Blogs

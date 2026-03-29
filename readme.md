@@ -15,6 +15,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Generates daily, weekly, and monthly behavioral mirror reports from current activity, thought, project, and skill signals.
 - Includes user-facing instructions inside each app UI so non-developers can understand the meaning of fields and terms.
 - Provides a dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
+- Includes a native `Rasbhari AI` command layer that can interpret natural-language commands, route them through app-specific resolvers, and execute safe actions through the existing apps and event bus.
 - Runs comfortably on a Raspberry Pi while staying inspectable and hackable.
 
 ## Current Apps
@@ -60,6 +61,7 @@ The dashboard is now a control surface rather than a passive summary page. The h
 - drag reorder for the remaining widgets
 - action-first widget controls such as quick event logging, thought capture, skill practice logging, and activity triggering
 - a `Universal Timeline` that merges skills, projects, notifications, and recent events
+- a floating `Rasbhari AI` command panel that can log events, trigger activities, create thoughts, and create promises using local Ollama-backed intent routing with per-app command resolvers
 
 Widget pinning, collapsing, and ordering are persisted locally in the browser.
 
@@ -87,6 +89,9 @@ Rasbhari supports real sign-in accounts and a managed signup flow.
 - **Signup & Approval**: New users can request access via the `/signup` page. These accounts are created in a pending state (`is_approved=False`) and cannot log in until an administrator approves them in the `Users` app.
 - **Admin Creation**: Users created directly by administrators through the `Users` dashboard are automatically approved.
 - **API Keys**: Every user also gets a generated 5-character `api_key`. Protected routes accept `X-API-Key: <key>` and `Authorization: ApiKey <key>`. Users can rotate their own key from `/users/profile`.
+- **Assistant Commands**: The `/assistant/command` route accepts natural-language commands, runs them through a local Ollama model, and then routes the plan through app-specific resolvers for `activities`, `promises`, `thoughts`, `events`, and `answer` before execution.
+- **Safe Staging**: Write actions are staged first. Rasbhari explains the planned change, then waits for explicit confirmation through the UI `Confirm Action` button or a short acknowledgement like `yes` or `thanks` before committing anything to the system.
+- **AI Design Reference**: See [docs/AI.md](docs/AI.md) for the detailed architecture, staging model, resolver flow, current limits, and testing patterns.
 - **Data Ownership**: Every personal record is owned by a specific `user_id`.
 - **Permissions**: Normal users can only read and write their own app data. Admin users can access system panels like `Processes`, `Devices`, and `Users`.
 - **Private Data**: Admin access does not automatically bypass private data ownership checks.
@@ -97,6 +102,7 @@ Rasbhari supports real sign-in accounts and a managed signup flow.
 ```text
 Dashboard / Web UI
     -> Rasbhari app modules in apps/
+    -> Rasbhari AI command layer
     -> Gabru framework contracts and Flask primitives
     -> Runtime providers and service implementations
     -> Pydantic models and PostgreSQL databases
@@ -110,6 +116,9 @@ Key building blocks:
 - `runtime/` for Rasbhari-specific provider wiring that binds framework contracts to concrete services
 - `services/` for concrete PostgreSQL-backed implementations and domain-side orchestration
 - `model/` for Pydantic schemas used by the current Rasbhari implementation
+- `services/assistant_command.py` for the AI command router that translates natural language into safe Rasbhari actions
+- `services/assistant_resolvers.py` for app-specific routing decisions that let each domain claim a command before execution
+- `docs/AI.md` for the detailed AI architecture and behavior contract
 - `gabru/process.py` for daemon-style workers
 - `gabru/qprocessor/` for database-backed queue processors
 
@@ -166,6 +175,9 @@ Optional but useful:
 - `COURIER_SENDER_EMAIL`
 - `COURIER_RECEIVER_EMAIL`
 - `OPEN_WEBUI_URL`
+- `OLLAMA_BASE_URL`
+- `OLLAMA_COMMAND_MODEL`
+- `OLLAMA_TIMEOUT_SECONDS`
 - `FLASK_SECRET_KEY`
 
 ### 4. Run the server
@@ -235,6 +247,17 @@ curl -X POST http://localhost:5000/connections/1/ledger \
     "duration_minutes": 35,
     "quality_score": 4,
     "tags": ["family", "support"]
+  }'
+```
+
+### Send an assistant command
+
+```bash
+curl -X POST http://localhost:5000/assistant/command \
+  -H "X-API-Key: YOUR5K" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "litterbox cleaned"
   }'
 ```
 

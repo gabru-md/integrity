@@ -17,7 +17,12 @@ from apps.users import users_app
 from apps.network_signatures import network_signatures_app
 from gabru.auth import login_required
 from gabru.flask.server import Server
-from runtime.providers import RasbhariAppStatusStore, RasbhariAuthProvider, RasbhariDashboardDataProvider
+from runtime.providers import (
+    RasbhariAppStatusStore,
+    RasbhariAssistantCommandProvider,
+    RasbhariAuthProvider,
+    RasbhariDashboardDataProvider,
+)
 
 basedir = os.path.dirname(__file__)
 
@@ -31,6 +36,7 @@ class RasbhariServer(Server):
             auth_provider=RasbhariAuthProvider(),
             app_status_store=RasbhariAppStatusStore(),
             dashboard_provider=RasbhariDashboardDataProvider(),
+            assistant_provider=RasbhariAssistantCommandProvider(),
         )
         self.setup_datetime_filter()
         self.setup_apps()

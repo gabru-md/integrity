@@ -84,10 +84,15 @@ Used by `ThoughtService`.
 - `SERVER_FILES_FOLDER`
 - `FLASK_SECRET_KEY`
 - `OPEN_WEBUI_URL`
+- `OLLAMA_BASE_URL`
+- `OLLAMA_COMMAND_MODEL`
+- `OLLAMA_TIMEOUT_SECONDS`
 
 Notes:
 
 - `/chat` redirects to `OPEN_WEBUI_URL`
+- `/assistant/command` uses `OLLAMA_BASE_URL` and `OLLAMA_COMMAND_MODEL`
+- See [docs/AI.md](/Users/manish/PycharmProjects/integrity/docs/AI.md) for how the assistant uses these values inside the Rasbhari command pipeline
 - `FLASK_SECRET_KEY` should be set explicitly outside local development
 
 ## Logging
@@ -155,4 +160,7 @@ SERVER_DEBUG=False
 FLASK_SECRET_KEY=replace-me
 NTFY_BASE_URL=https://ntfy.sh
 NTFY_TOPIC=rasbhari-alerts
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_COMMAND_MODEL=qwen2.5:7b-instruct
+OLLAMA_TIMEOUT_SECONDS=20
 ```

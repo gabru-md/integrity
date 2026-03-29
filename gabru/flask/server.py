@@ -7,7 +7,7 @@ from typing import Optional
 
 from flask import Flask, redirect, send_from_directory, jsonify, request
 from gabru.log import Logger
-from gabru.contracts import AppStatusStore, AuthProvider, DashboardDataProvider
+from gabru.contracts import AppStatusStore, AssistantCommandProvider, AuthProvider, DashboardDataProvider
 from gabru.flask.app import App
 from gabru.auth import PermissionManager, Role, admin_required, login_required
 
@@ -31,6 +31,7 @@ class Server:
         auth_provider: Optional[AuthProvider] = None,
         app_status_store: Optional[AppStatusStore] = None,
         dashboard_provider: Optional[DashboardDataProvider] = None,
+        assistant_provider: Optional[AssistantCommandProvider] = None,
     ):
         self.name = name
         self.app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
@@ -43,6 +44,7 @@ class Server:
         self.auth_provider = auth_provider
         self.app_status_store = app_status_store
         self.dashboard_provider = dashboard_provider
+        self.assistant_provider = assistant_provider
         if self.auth_provider:
             PermissionManager.configure(self.auth_provider)
         self.process_manager = None
@@ -220,6 +222,36 @@ class Server:
         @admin_required
         def devices():
             return redirect('/devices/home')
+
+        @self.app.route('/assistant/command', methods=['POST'])
+        @login_required
+        def assistant_command():
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({"error": "JSON request body is required"}), 400
+
+            message = (data.get("message") or "").strip()
+            cancel = bool(data.get("cancel"))
+            change_action = (data.get("change_action") or "").strip() or None
+            if not message and not cancel and not change_action:
+                return jsonify({"error": "message is required"}), 400
+
+            user_id = PermissionManager.get_current_user_id()
+            if user_id is None:
+                return jsonify({"error": "Unable to determine current user"}), 401
+            if self.assistant_provider is None:
+                return jsonify({"error": "Assistant provider is not configured"}), 500
+
+            confirm = bool(data.get("confirm"))
+            result = self.assistant_provider.handle(
+                user_id=user_id,
+                message=message,
+                confirm=confirm,
+                cancel=cancel,
+                change_action=change_action,
+            )
+            status_code = 200 if result.ok else 500
+            return jsonify(result.model_dump()), status_code
 
         @self.app.route('/download/<filename>')
         @login_required
