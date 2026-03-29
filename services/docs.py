@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import html
-import os
 import re
 from pathlib import Path
 
@@ -20,7 +19,7 @@ class DocsService:
             docs.append(
                 {
                     "path": rel_path,
-                    "title": self._title_for_path(rel_path),
+                    "title": self._title_for_path(rel_path, path.read_text(encoding="utf-8")),
                     "section": rel_path.split("/", 1)[0] if "/" in rel_path else "root",
                 }
             )
@@ -33,8 +32,8 @@ class DocsService:
 
         raw = safe_path.read_text(encoding="utf-8")
         return {
-            "path": safe_path.relative_to(self.docs_root).as_posix(),
-            "title": self._title_for_path(safe_path.relative_to(self.docs_root).as_posix(), raw),
+            "path": relative_path,
+            "title": self._title_for_path(relative_path, raw),
             "raw": raw,
             "html": self._render_markdown(raw),
         }
