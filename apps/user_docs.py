@@ -8,10 +8,14 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Add tags when you want skills, promises, or filters to pick up the event later.",
             ],
             "glossary": [
-                {"term": "Activity", "meaning": "A reusable action template such as Clean Kitchen, Study Session, or Water Plants."},
-                {"term": "Event Type", "meaning": "The machine-readable name emitted when the activity is triggered, such as kitchen:cleaned."},
-                {"term": "Tags", "meaning": "Short labels attached to the emitted event. Tags make it easier to match skills, promises, and searches."},
-                {"term": "Default Payload", "meaning": "Extra JSON data sent with the event every time this activity is triggered unless you override it."},
+                {"term": "Activity",
+                 "meaning": "A reusable action template such as Clean Kitchen, Study Session, or Water Plants."},
+                {"term": "Event Type",
+                 "meaning": "The machine-readable name emitted when the activity is triggered, such as kitchen:cleaned."},
+                {"term": "Tags",
+                 "meaning": "Short labels attached to the emitted event. Tags make it easier to match skills, promises, and searches."},
+                {"term": "Default Payload",
+                 "meaning": "Extra JSON data sent with the event every time this activity is triggered unless you override it."},
             ],
             "examples": [
                 "Example: an activity named Study Session can emit event type learning:session with tags study, python.",
@@ -26,8 +30,10 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
             "glossary": [
                 {"term": "Slug", "meaning": "The URL-safe identifier for a post, such as weekly-review-12."},
-                {"term": "Markdown", "meaning": "A lightweight writing format for headings, links, lists, and code blocks."},
-                {"term": "Status", "meaning": "Draft keeps the post in progress. Published marks it as ready for reading."},
+                {"term": "Markdown",
+                 "meaning": "A lightweight writing format for headings, links, lists, and code blocks."},
+                {"term": "Status",
+                 "meaning": "Draft keeps the post in progress. Published marks it as ready for reading."},
             ],
             "examples": [
                 "Example: title Weekly Review, slug weekly-review, tags review, reflection.",
@@ -43,7 +49,8 @@ def build_app_user_guidance(app_name: str) -> dict:
             "glossary": [
                 {"term": "Location", "meaning": "The room or place where the device belongs, such as Kitchen or Desk."},
                 {"term": "Type", "meaning": "The category of device, such as Camera, Beacon, Light, or Sensor."},
-                {"term": "Authorized Apps", "meaning": "The Rasbhari apps or processes that are allowed to use this device."},
+                {"term": "Authorized Apps",
+                 "meaning": "The Rasbhari apps or processes that are allowed to use this device."},
             ],
         },
         "Connections": {
@@ -55,10 +62,14 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Log interactions directly inside the Connections page so the relationship record and its timeline stay together.",
             ],
             "glossary": [
-                {"term": "Cadence", "meaning": "How many days can pass before the relationship is considered overdue for contact."},
-                {"term": "Priority", "meaning": "A simple importance flag to help you visually separate core relationships from lighter ties."},
-                {"term": "Ledger", "meaning": "The timeline of calls, texts, meetups, and other interactions logged under a connection."},
-                {"term": "Last Contact", "meaning": "The latest timestamp automatically updated when a connection interaction is created."},
+                {"term": "Cadence",
+                 "meaning": "How many days can pass before the relationship is considered overdue for contact."},
+                {"term": "Priority",
+                 "meaning": "A simple importance flag to help you visually separate core relationships from lighter ties."},
+                {"term": "Ledger",
+                 "meaning": "The timeline of calls, texts, meetups, and other interactions logged under a connection."},
+                {"term": "Last Contact",
+                 "meaning": "The latest timestamp automatically updated when a connection interaction is created."},
             ],
             "examples": [
                 "Example: create Mom with cadence 7 days and priority High to make overdue contact obvious in reports.",
@@ -74,7 +85,8 @@ def build_app_user_guidance(app_name: str) -> dict:
             "glossary": [
                 {"term": "Event", "meaning": "A record of something that happened at a point in time."},
                 {"term": "Event Type", "meaning": "The main event identifier, usually written like domain:action."},
-                {"term": "Tags", "meaning": "Secondary labels that help other apps group, reward, notify, or count events."},
+                {"term": "Tags",
+                 "meaning": "Secondary labels that help other apps group, reward, notify, or count events."},
             ],
             "examples": [
                 "Example: event type learning:session, description Read chapter 3, tags python, study.",
@@ -89,7 +101,8 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
             "glossary": [
                 {"term": "Project Type", "meaning": "A simple category such as Code, DIY, or Other."},
-                {"term": "State", "meaning": "The current lifecycle status of the project, such as Active or Completed."},
+                {"term": "State",
+                 "meaning": "The current lifecycle status of the project, such as Active or Completed."},
                 {"term": "Progress Count", "meaning": "How many timeline updates have been logged for the project."},
             ],
         },
@@ -101,10 +114,14 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Use refresh when you want the UI to recount recent matching events immediately.",
             ],
             "glossary": [
-                {"term": "Frequency", "meaning": "How often the promise resets, such as daily, weekly, monthly, or once."},
-                {"term": "Target Event Tag", "meaning": "A tag that matching events must contain, such as workout or reading."},
-                {"term": "Target Event Type", "meaning": "A specific event type the promise should watch, such as fitness:session."},
-                {"term": "Required Count", "meaning": "How many matching events are needed in a period for the promise to be fulfilled."},
+                {"term": "Frequency",
+                 "meaning": "How often the promise resets, such as daily, weekly, monthly, or once."},
+                {"term": "Target Event Tag",
+                 "meaning": "A tag that matching events must contain, such as workout or reading."},
+                {"term": "Target Event Type",
+                 "meaning": "A specific event type the promise should watch, such as fitness:session."},
+                {"term": "Required Count",
+                 "meaning": "How many matching events are needed in a period for the promise to be fulfilled."},
                 {"term": "Streak", "meaning": "How many periods in a row the promise has been kept."},
             ],
         },
@@ -116,11 +133,15 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Add aliases when people or systems might log the same skill under different names.",
             ],
             "glossary": [
-                {"term": "Skill", "meaning": "A capability you want to grow over time, such as Python, Cooking, or Counter Strike."},
-                {"term": "Tag Key", "meaning": "The primary tag used to match events to this skill. It should stay stable over time."},
+                {"term": "Skill",
+                 "meaning": "A capability you want to grow over time, such as Python, Cooking, or Counter Strike."},
+                {"term": "Tag Key",
+                 "meaning": "The primary tag used to match events to this skill. It should stay stable over time."},
                 {"term": "Aliases", "meaning": "Alternative tag names that should also count toward the same skill."},
-                {"term": "Total XP", "meaning": "The accumulated experience points earned for the skill from matching events."},
-                {"term": "Requirement", "meaning": "The current description of what is needed to reach the next level."},
+                {"term": "Total XP",
+                 "meaning": "The accumulated experience points earned for the skill from matching events."},
+                {"term": "Requirement",
+                 "meaning": "The current description of what is needed to reach the next level."},
             ],
             "examples": [
                 "Example: skill Python with tag key python and alias py will gain XP from events tagged python or py.",
@@ -135,10 +156,14 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Add Connections and log interactions inside their ledger if you want the report to score social balance and neglected relationships.",
             ],
             "glossary": [
-                {"term": "Integrity Score", "meaning": "A 0 to 100 score estimating how closely your behavior matched your visible commitments and growth signals."},
-                {"term": "Stalled Intent", "meaning": "An active project with no matching progress evidence in the selected time window."},
-                {"term": "Behavioral Mirror", "meaning": "A report that reflects both logged action and missing action, not just completed items."},
-                {"term": "Neglected Connection", "meaning": "A tracked relationship whose last contact is older than the cadence you set in Connections."},
+                {"term": "Integrity Score",
+                 "meaning": "A 0 to 100 score estimating how closely your behavior matched your visible commitments and growth signals."},
+                {"term": "Stalled Intent",
+                 "meaning": "An active project with no matching progress evidence in the selected time window."},
+                {"term": "Behavioral Mirror",
+                 "meaning": "A report that reflects both logged action and missing action, not just completed items."},
+                {"term": "Neglected Connection",
+                 "meaning": "A tracked relationship whose last contact is older than the cadence you set in Connections."},
             ],
             "examples": [
                 "Example: a daily report can flag that a project stayed active while no project-linked events or updates were logged.",
@@ -163,10 +188,32 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Set a password when creating a user. Enter a new password later only when you want to rotate or reset it.",
             ],
             "glossary": [
-                {"term": "Admin", "meaning": "An operator who can access system panels like Processes, Devices, and dependency health."},
-                {"term": "Personal Workspace", "meaning": "The private set of app records owned by a specific user account."},
+                {"term": "Admin",
+                 "meaning": "An operator who can access system panels like Processes, Devices, and dependency health."},
+                {"term": "Personal Workspace",
+                 "meaning": "The private set of app records owned by a specific user account."},
                 {"term": "Active", "meaning": "Whether the account is allowed to sign in."},
             ],
         },
+        "NetworkSignatures": {
+            "overview": "The Network Signatures app allows Rasbhari to monitor your local network for specific devices. When a device (like your phone) is detected, Rasbhari can automatically log an event in your timeline.",
+            "how_to_use": [
+                "To start tracking, add a new signature with your device's MAC address.",
+                "You can find this in your phone's Wi-Fi settings.",
+                "Once saved, the Network Sniffer process will scan for your device every 30 seconds.",
+            ],
+            "glossary": [
+                {"term": "Name",
+                 "meaning": "A friendly name for this signature (e.g., 'My iPhone')."},
+                {"term": "MAC Address",
+                 "meaning": "The unique hardware address of your device (e.g., 00:11:22:33:44:55)."},
+                {"term": "Event Type",
+                 "meaning": "The type of event to log when the device is detected (e.g., 'presence' or 'habit')."},
+                {"term": "Tags",
+                 "meaning": "Comma-separated tags to add to the generated event."},
+                {"term": "Is Active",
+                 "meaning": "Whether this signature should currently be monitored."}
+            ]
+        }
     }
     return docs.get(app_name, {})

@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify, abort, redirect
-from typing import TypeVar, Generic, Optional
+from typing import TypeVar, Generic, Optional, get_args, get_origin
+from enum import Enum
+import typing
 
 from gabru.log import Logger
 from gabru.db.service import CRUDService
@@ -144,7 +146,8 @@ class App(Generic[T]):
         attributes = []
 
         for name, field in clazz.model_fields.items():
-            attr_type = str(field.annotation)
+            annotation = field.annotation
+            attr_type = str(annotation)
             is_required = field.is_required()
 
             # Clean up type string
@@ -158,6 +161,18 @@ class App(Generic[T]):
             ui_enabled = extra.get("ui_enabled", edit_enabled or widget_enabled)
             label = name.replace("_", " ").title()
             description = getattr(field, "description", None) or ""
+            
+            widget_type = extra.get("widget_type", "text")
+            widget_options = extra.get("widget_options", [])
+            
+            # Auto-detect options from Literal or Enum
+            origin = get_origin(annotation)
+            if origin is typing.Literal:
+                widget_type = "select"
+                widget_options = list(get_args(annotation))
+            elif isinstance(annotation, type) and issubclass(annotation, Enum):
+                widget_type = "select"
+                widget_options = [e.value for e in annotation]
 
             attributes.append({
                 "name": name,
@@ -168,7 +183,9 @@ class App(Generic[T]):
                 "edit_enabled": edit_enabled,
                 "widget_enabled": widget_enabled,
                 "download_enabled": download_enabled,
-                "ui_enabled": ui_enabled
+                "ui_enabled": ui_enabled,
+                "widget_type": widget_type,
+                "widget_options": widget_options
             })
         return attributes
 

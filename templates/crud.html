@@ -147,9 +147,9 @@
 
                     <form @submit.prevent="handleCrudFormSubmission" class="mt-6 space-y-4">
                         <div v-for="attr in editableAttributes" :key="attr.name"
-                             :class="['flex', getInputType(attr.type) === 'checkbox' ? 'items-center space-x-3' : 'flex-col space-y-1']">
+                             :class="['flex', getInputType(attr) === 'checkbox' ? 'items-center space-x-3' : 'flex-col space-y-1']">
 
-                            <template v-if="getInputType(attr.type) === 'checkbox'">
+                            <template v-if="getInputType(attr) === 'checkbox'">
                                 <input type="checkbox"
                                        :id="attr.name"
                                        :name="attr.name"
@@ -166,6 +166,27 @@
                                     {{ attr.description }}
                                 </p>
                             </template>
+                            
+                            <template v-else-if="getInputType(attr) === 'select'">
+                                <label :for="attr.name"
+                                       class="text-sm font-medium text-slate-700 capitalize dark:text-gray-300">
+                                    {{ formatKey(attr.name) }}
+                                    <span v-if="attr.required" class="text-red-500">*</span>
+                                </label>
+                                <p v-if="attr.description" class="text-xs leading-5 text-slate-500 dark:text-gray-400">
+                                    {{ attr.description }}
+                                </p>
+                                <select :id="attr.name"
+                                        :name="attr.name"
+                                        v-model="formData[attr.name]"
+                                        class="p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
+                                              dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                                        :required="attr.required">
+                                    <option v-for="option in attr.widget_options" :key="option" :value="option">
+                                        {{ formatKey(option) }}
+                                    </option>
+                                </select>
+                            </template>
 
                             <template v-else>
                                 <label :for="attr.name"
@@ -177,7 +198,7 @@
                                     {{ attr.description }}
                                 </p>
 
-                                <input :type="getInputType(attr.type)"
+                                <input :type="getInputType(attr)"
                                        :id="attr.name"
                                        :name="attr.name"
                                        v-model="formData[attr.name]"
@@ -317,7 +338,9 @@
                 return strValue;
             }
 
-            function getInputType(type) {
+            function getInputType(attr) {
+                if (attr.widget_type === 'select') return 'select';
+                const type = attr.type;
                 if (type && (type.includes('bool') || type.includes('boolean'))) return 'checkbox';
                 if (type && type.includes('datetime')) return 'datetime-local';
                 if (type && (type.includes('int') || type.includes('float'))) return 'number';
@@ -435,8 +458,10 @@
                 const newFormData = {};
                 editableAttributes.value.forEach(attr => {
                     // For booleans, initialize to false or a default you prefer (e.g., matching the Pydantic default)
-                    if (getInputType(attr.type) === 'checkbox') {
+                    if (getInputType(attr) === 'checkbox') {
                          newFormData[attr.name] = false;
+                    } else if (getInputType(attr) === 'select' && attr.widget_options.length > 0) {
+                         newFormData[attr.name] = attr.widget_options[0];
                     } else {
                          newFormData[attr.name] = '';
                     }
@@ -461,7 +486,7 @@
                     let value = item[attr.name];
 
                     // FIX: Correctly format ISO datetime string for datetime-local input
-                    if (getInputType(attr.type) === 'datetime-local') {
+                    if (getInputType(attr) === 'datetime-local') {
                         if (typeof value === 'string' && value) {
                            const date = new Date(value);
                            console.log(date);
@@ -489,7 +514,7 @@
                     }
 
                     // Booleans are bound directly, but handle null/undefined safely
-                    if (getInputType(attr.type) === 'checkbox') {
+                    if (getInputType(attr) === 'checkbox') {
                         value = !!value; // Convert to strict boolean: true/false
                     }
 

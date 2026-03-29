@@ -12,6 +12,7 @@ Examples:
 
 - `Atmos`
 - `Heimdall`
+- `NetworkSniffer`
 
 ### `QueueProcessor`
 
@@ -99,6 +100,15 @@ Queue progress is persisted in `queue.queuestats`.
   - runs YOLO11n detection
   - emits `tracking:*` events
   - supports a streaming endpoint for the dashboard
+
+### NetworkSniffer
+
+- File: `processes/network_sniffer.py`
+- Type: `Process`
+- Purpose:
+  - scans the local network for specific MAC addresses
+  - emits events based on configured `NetworkSignatures`
+  - supports a cooldown period between events
 
 ## Queue Checkpointing
 

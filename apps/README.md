@@ -135,6 +135,18 @@ Each app should now also expose user-facing instructions in the web UI via `user
   - supports personal workspace ownership without giving admins access to other users' private app data
   - **Signup & Approval**: Users can self-signup at `/signup`. New accounts are disabled (`is_approved=False`) until an admin approves them in the Users panel. Accounts created directly by admins are auto-approved.
 
+### 12. Network-Signatures
+
+- File: `apps/network_signatures.py`
+- Model: `NetworkSignature`
+- Widget: `basic`
+- Processes:
+  - `NetworkSniffer`
+- Notes:
+  - monitors local network for specific device MAC addresses
+  - emits events when a device is detected after its cooldown period
+  - uses standard `crud.html` for management
+
 ## User-Facing Instructions
 
 `gabru.flask.app.App` now passes `user_guidance` into the app home template. The shared instructions panel can render:
@@ -190,5 +202,5 @@ When adding a new app:
 4. Register it in [server.py](/Users/manish/PycharmProjects/integrity/server.py).
 5. Add or update `user_guidance` so the app home page explains the app to end users.
 6. Add user-friendly `description=` text to important Pydantic fields.
-7. Update this file and the root [readme.md](/Users/manish/PychariProjects/integrity/readme.md).
+7. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
 8. Update [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) if the app adds environment requirements.

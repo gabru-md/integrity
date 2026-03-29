@@ -32,6 +32,7 @@ Rasbhari currently registers these apps in [server.py](/Users/manish/PycharmProj
 - `Connections`
 - `Reports`
 - `Users`
+- `Network-Signatures`
 
 See [apps/README.md](apps/README.md) for details.
 
@@ -46,6 +47,7 @@ Rasbhari currently uses these background processes:
 - `ReportProcessor`
 - `Atmos`
 - `Heimdall`
+- `NetworkSniffer`
 
 See [processes/README.md](processes/README.md) for details.
 
