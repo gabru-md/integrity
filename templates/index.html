@@ -28,7 +28,7 @@
         <div class="min-h-0">
             <div class="border-b border-[var(--border)] px-4 pb-5 pt-4">
                 <div class="flex items-center gap-4">
-                    <div class="flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-[var(--accent-soft)] text-[var(--accent)] shadow-sm">
+                    <div class="sidebar-brand-mark flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-[var(--accent-soft)] text-[var(--accent)] shadow-sm">
                         <svg width="28" height="28" viewBox="-2.5 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="m13.656 17.338c-.857.989-1.334 2.79-.709 3.371.6.449 2.2.391 3.385-1.23.344-.487.551-1.093.551-1.747 0-.603-.175-1.164-.477-1.637l.007.012c-.73-.555-1.778.164-2.757 1.243zm-8.057.3c-.908-1.04-2.088-1.658-2.851-1.2-.51.382-.605 1.685.123 2.967 1.078 1.524 2.6 1.679 3.221 1.307.659-.488.3-2.137-.493-3.075zm4.105 3.145c-1.1-.026-2.8.439-2.776 1.032-.018.4 1.331 1.572 2.7 1.513 1.326.03 2.7-1.139 2.682-1.649s-1.5-.927-2.607-.884zm-.075-13.944c-1.275-.032-2.5.933-2.5 1.493 0 .68 1.008 1.376 2.51 1.394 1.543.01 2.518-.559 2.532-1.26.016-.794-1.394-1.639-2.518-1.627zm-3.071.532c-2.135-.345-3.913.9-3.842 3.192.07.884 4.63-3.041 3.843-3.177v-.015zm9.749 3.251c.071-2.277-1.709-3.521-3.844-3.176-.787.135 3.772 4.061 3.844 3.176zm.364.824c-1.239-.329-.42 5.049.588 4.615.551-.525.894-1.265.894-2.084 0-1.077-.592-2.015-1.468-2.508l-.014-.007v-.015zm-14.9 4.675c1.007.45 1.827-4.929.589-4.6-.891.504-1.483 1.445-1.483 2.525 0 .821.343 1.563.893 2.089l.001.001zm9.415-5.948c-.63.49-1.032 1.249-1.032 2.101 0 .624.215 1.197.575 1.65l-.004-.005c.492.838 1.388 1.392 2.414 1.392.467 0 .908-.115 1.295-.318l-.015.007c.631-.49 1.034-1.248 1.034-2.101 0-.624-.215-1.197-.576-1.65l.004.005c-.484-.835-1.374-1.388-2.393-1.388-.476 0-.923.121-1.314.333l.015-.007zm-3.1.135c-.373-.199-.816-.315-1.286-.315-1.02 0-1.911.548-2.395 1.366l-.007.013c-.357.45-.572 1.026-.572 1.652 0 .855.402 1.616 1.027 2.105l.006.004c.376.205.823.325 1.298.325 1.019 0 1.909-.553 2.386-1.376l.007-.013c.352-.448.564-1.019.564-1.64 0-.853-.4-1.612-1.024-2.1l-.006-.004zm4.369 7.162c-.077-1.399-1.23-2.504-2.641-2.504-.049 0-.098.001-.147.004h.007c-.028-.001-.062-.002-.095-.002-1.423 0-2.585 1.119-2.653 2.526v.006.029c.078 1.399 1.232 2.504 2.643 2.504.049 0 .098-.001.147-.004h-.007c.035.002.076.003.117.003 1.413 0 2.566-1.116 2.625-2.514v-.005-.029l.01-.015zm3.215-15.133c-1.69.771-3.14 1.756-4.396 2.945l.007-.007c.377 1.5 2.344 1.558 3.063 1.512-.139-.044-.251-.141-.314-.266l-.001-.003c.18-.12.821-.611 1.002-.777 1.838-1.528.273-4.22-1.661-4.908z"/>
                         </svg>
@@ -42,29 +42,95 @@
             </div>
 
             <div class="min-h-0 overflow-y-auto px-2 py-4">
-                <div class="mb-3 px-3 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[var(--text-soft)]">Workspace</div>
-                <ul class="space-y-1.5">
-                    <li><a href="/" class="nav-link {% if request.path == '/' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Dashboard</span><span class="text-xs text-[var(--text-muted)]">Home</span></a></li>
-                    {% if PermissionManager.can_view_app('promises') and 'promises' in active_app_names %}<li><a href="/promises/home" class="nav-link {% if '/promises' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Promises</span><span class="text-xs text-[var(--text-muted)]">Track</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('projects') and 'projects' in active_app_names %}<li><a href="/projects/home" class="nav-link {% if '/projects' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Projects</span><span class="text-xs text-[var(--text-muted)]">Build</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('activities') and 'activities' in active_app_names %}<li><a href="/activities/home" class="nav-link {% if '/activities' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Activities</span><span class="text-xs text-[var(--text-muted)]">Automate</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('skills') and 'skills' in active_app_names %}<li><a href="/skills/home" class="nav-link {% if '/skills' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Skills</span><span class="text-xs text-[var(--text-muted)]">Grow</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('events') and 'events' in active_app_names %}<li><a href="/events/home" class="nav-link {% if '/events' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Events</span><span class="text-xs text-[var(--text-muted)]">Stream</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}<li><a href="/thoughts/home" class="nav-link {% if '/thoughts' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Thoughts</span><span class="text-xs text-[var(--text-muted)]">Capture</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('connections') and 'connections' in active_app_names %}<li><a href="/connections/home" class="nav-link {% if '/connections' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Connections</span><span class="text-xs text-[var(--text-muted)]">Ledger</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('reports') and 'reports' in active_app_names %}<li><a href="/reports/home" class="nav-link {% if '/reports' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Reports</span><span class="text-xs text-[var(--text-muted)]">Mirror</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('blogs') and 'blogs' in active_app_names %}<li><a href="/blogs/home" class="nav-link {% if '/blogs' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Blogs</span><span class="text-xs text-[var(--text-muted)]">Publish</span></a></li>{% endif %}
-                    {% if PermissionManager.can_view_app('network_signatures') and 'network_signatures' in active_app_names %}<li><a href="/network_signatures/home" class="nav-link {% if '/network_signatures' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Network Signatures</span><span class="text-xs text-[var(--text-muted)]">Observe</span></a></li>{% endif %}
-                </ul>
+                <div class="space-y-3">
+                    <details class="sidebar-group" {% if request.path == '/' or '/promises' in request.path or '/projects' in request.path or '/activities' in request.path or '/skills' in request.path or '/events' in request.path or '/thoughts' in request.path or '/connections' in request.path or '/reports' in request.path or '/blogs' in request.path or '/network_signatures' in request.path %}open{% endif %}>
+                        <summary class="sidebar-group-summary">
+                            <span>Apps</span>
+                            <span class="sidebar-group-chevron">⌄</span>
+                        </summary>
+                        <ul class="space-y-1.5 pt-2">
+                            <li><a href="/" class="nav-link {% if request.path == '/' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a></li>
+                            {% if PermissionManager.can_view_app('promises') and 'promises' in active_app_names %}<li><a href="/promises/home" class="nav-link {% if '/promises' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◌</span><span>Promises</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('projects') and 'projects' in active_app_names %}<li><a href="/projects/home" class="nav-link {% if '/projects' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▣</span><span>Projects</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('activities') and 'activities' in active_app_names %}<li><a href="/activities/home" class="nav-link {% if '/activities' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">↻</span><span>Activities</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('skills') and 'skills' in active_app_names %}<li><a href="/skills/home" class="nav-link {% if '/skills' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✦</span><span>Skills</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('events') and 'events' in active_app_names %}<li><a href="/events/home" class="nav-link {% if '/events' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⚑</span><span>Events</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}<li><a href="/thoughts/home" class="nav-link {% if '/thoughts' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✎</span><span>Thoughts</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('connections') and 'connections' in active_app_names %}<li><a href="/connections/home" class="nav-link {% if '/connections' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">∞</span><span>Connections</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('reports') and 'reports' in active_app_names %}<li><a href="/reports/home" class="nav-link {% if '/reports' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▤</span><span>Reports</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('blogs') and 'blogs' in active_app_names %}<li><a href="/blogs/home" class="nav-link {% if '/blogs' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Blogs</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('network_signatures') and 'network_signatures' in active_app_names %}<li><a href="/network_signatures/home" class="nav-link {% if '/network_signatures' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌁</span><span>Network Signatures</span></a></li>{% endif %}
+                        </ul>
+                    </details>
 
-                {% if current_user and current_user.is_admin %}
-                <div class="mb-3 mt-6 px-3 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[var(--text-soft)]">System</div>
-                <ul class="space-y-1.5">
-                    <li><a href="/apps" class="nav-link {% if request.path == '/apps' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>System Apps</span><span class="text-xs text-[var(--text-muted)]">Registry</span></a></li>
-                    <li><a href="/processes" class="nav-link {% if request.path == '/processes' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Processes</span><span class="text-xs text-[var(--text-muted)]">Runtime</span></a></li>
-                    <li><a href="/heimdall" class="nav-link {% if request.path == '/heimdall' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Heimdall</span><span class="text-xs text-[var(--text-muted)]">Monitor</span></a></li>
-                </ul>
-                {% endif %}
+                    <details class="sidebar-group" {% if '/users/profile' in request.path %}open{% endif %}>
+                        <summary class="sidebar-group-summary">
+                            <span>Settings</span>
+                            <span class="sidebar-group-chevron">⌄</span>
+                        </summary>
+                        <div class="space-y-2 pt-2">
+                            <a href="/users/profile" class="nav-link {% if '/users/profile' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⚙</span><span>Profile</span></a>
+
+                            <details class="sidebar-subgroup mt-2" open>
+                                <summary class="sidebar-subgroup-summary">
+                                    <span>Theme</span>
+                                    <span class="sidebar-group-chevron">⌄</span>
+                                </summary>
+                                <div class="mt-3 grid gap-4">
+                                    <div>
+                                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Themes</div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button type="button" onclick="setPreference('theme','slate')" data-pref="theme" data-value="slate" class="btn-secondary px-3 py-2 text-sm">Slate</button>
+                                            <button type="button" onclick="setPreference('theme','dawn')" data-pref="theme" data-value="dawn" class="btn-secondary px-3 py-2 text-sm">Dawn</button>
+                                            <button type="button" onclick="setPreference('theme','forest')" data-pref="theme" data-value="forest" class="btn-secondary px-3 py-2 text-sm">Forest</button>
+                                            <button type="button" onclick="setPreference('theme','noir')" data-pref="theme" data-value="noir" class="btn-secondary px-3 py-2 text-sm">Noir</button>
+                                            <button type="button" onclick="setPreference('theme','console')" data-pref="theme" data-value="console" class="btn-secondary col-span-2 px-3 py-2 text-sm">Console</button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Density</div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button type="button" onclick="setPreference('density','comfy')" data-pref="density" data-value="comfy" class="btn-secondary px-3 py-2 text-sm">Comfy</button>
+                                            <button type="button" onclick="setPreference('density','compact')" data-pref="density" data-value="compact" class="btn-secondary px-3 py-2 text-sm">Compact</button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Surface</div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button type="button" onclick="setPreference('chrome','glass')" data-pref="chrome" data-value="glass" class="btn-secondary px-3 py-2 text-sm">Glass</button>
+                                            <button type="button" onclick="setPreference('chrome','solid')" data-pref="chrome" data-value="solid" class="btn-secondary px-3 py-2 text-sm">Solid</button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Motion</div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button type="button" onclick="setPreference('motion','full')" data-pref="motion" data-value="full" class="btn-secondary px-3 py-2 text-sm">Full</button>
+                                            <button type="button" onclick="setPreference('motion','reduced')" data-pref="motion" data-value="reduced" class="btn-secondary px-3 py-2 text-sm">Reduced</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </details>
+
+                    {% if current_user and current_user.is_admin %}
+                    <details class="sidebar-group" {% if request.path == '/apps' or request.path == '/processes' or request.path == '/heimdall' or '/devices' in request.path %}open{% endif %}>
+                        <summary class="sidebar-group-summary">
+                            <span>Admin</span>
+                            <span class="sidebar-group-chevron">⌄</span>
+                        </summary>
+                        <ul class="space-y-1.5 pt-2">
+                            <li><a href="/apps" class="nav-link {% if request.path == '/apps' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌘</span><span>System Apps</span></a></li>
+                            <li><a href="/processes" class="nav-link {% if request.path == '/processes' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◫</span><span>Processes</span></a></li>
+                            {% if PermissionManager.can_view_app('devices') and 'devices' in active_app_names %}<li><a href="/devices/home" class="nav-link {% if '/devices' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⬡</span><span>Devices</span></a></li>{% endif %}
+                            <li><a href="/heimdall" class="nav-link {% if request.path == '/heimdall' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◉</span><span>Heimdall</span></a></li>
+                        </ul>
+                    </details>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
@@ -84,50 +150,16 @@
 
                 <div class="border-t border-[var(--border)] px-3 py-3">
                     <div class="grid gap-2">
-                        <a href="/users/profile" class="btn-secondary w-full px-3 py-3 text-sm">Profile Settings</a>
+                        <a href="/users/profile" class="btn-secondary sidebar-footer-action w-full px-3 py-3 text-sm">
+                            <span class="nav-icon" aria-hidden="true">⚙</span>
+                            <span class="sidebar-footer-label">Profile Settings</span>
+                        </a>
                         <form action="/logout" method="POST">
-                            <button type="submit" class="btn-ghost w-full px-3 py-3 text-sm">Sign Out</button>
+                            <button type="submit" class="btn-ghost sidebar-footer-action w-full px-3 py-3 text-sm">
+                                <span class="nav-icon" aria-hidden="true">⇢</span>
+                                <span class="sidebar-footer-label">Sign Out</span>
+                            </button>
                         </form>
-                    </div>
-
-                    <div class="mt-4 border-t border-[var(--border)] pt-4">
-                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Appearance</div>
-                        <div class="grid gap-4">
-                            <div>
-                                <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Themes</div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button type="button" onclick="setPreference('theme','slate')" data-pref="theme" data-value="slate" class="btn-secondary px-3 py-2 text-sm">Slate</button>
-                                    <button type="button" onclick="setPreference('theme','dawn')" data-pref="theme" data-value="dawn" class="btn-secondary px-3 py-2 text-sm">Dawn</button>
-                                    <button type="button" onclick="setPreference('theme','forest')" data-pref="theme" data-value="forest" class="btn-secondary px-3 py-2 text-sm">Forest</button>
-                                    <button type="button" onclick="setPreference('theme','noir')" data-pref="theme" data-value="noir" class="btn-secondary px-3 py-2 text-sm">Noir</button>
-                                    <button type="button" onclick="setPreference('theme','console')" data-pref="theme" data-value="console" class="btn-secondary col-span-2 px-3 py-2 text-sm">Console</button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Density</div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button type="button" onclick="setPreference('density','comfy')" data-pref="density" data-value="comfy" class="btn-secondary px-3 py-2 text-sm">Comfy</button>
-                                    <button type="button" onclick="setPreference('density','compact')" data-pref="density" data-value="compact" class="btn-secondary px-3 py-2 text-sm">Compact</button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Surface</div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button type="button" onclick="setPreference('chrome','glass')" data-pref="chrome" data-value="glass" class="btn-secondary px-3 py-2 text-sm">Glass</button>
-                                    <button type="button" onclick="setPreference('chrome','solid')" data-pref="chrome" data-value="solid" class="btn-secondary px-3 py-2 text-sm">Solid</button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Motion</div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button type="button" onclick="setPreference('motion','full')" data-pref="motion" data-value="full" class="btn-secondary px-3 py-2 text-sm">Full</button>
-                                    <button type="button" onclick="setPreference('motion','reduced')" data-pref="motion" data-value="reduced" class="btn-secondary px-3 py-2 text-sm">Reduced</button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </details>
