@@ -37,6 +37,7 @@ Each app should now also expose user-facing instructions in the web UI via `user
 - Notes:
   - custom home page with summary stats
   - includes refresh and history routes per promise
+  - **Negative Promises**: Supports "I will not..." commitments. Set `is_negative=True` and `max_allowed=0` (or a small threshold) to track avoiding certain behaviors.
 
 ### 3. Events
 

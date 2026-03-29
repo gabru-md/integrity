@@ -18,8 +18,12 @@ class Promise(WidgetUIModel):
     target_event_tag: Optional[str] = Field(default=None, widget_enabled=True, description="Tag that matching events must include")
     target_event_type: Optional[str] = Field(default=None, widget_enabled=True, description="Exact event type that matching events must use")
     
-    required_count: int = Field(default=1, widget_enabled=True, description="How many matching events are required in each period")
+    required_count: int = Field(default=1, widget_enabled=True, description="How many matching events are required in each period (for positive promises)")
     
+    # Negative Promises
+    is_negative: bool = Field(default=False, widget_enabled=True, description="If True, the promise is to NOT let an event happen")
+    max_allowed: int = Field(default=0, widget_enabled=True, description="Maximum number of times the event can happen before promise is broken (for negative promises)")
+
     # status: active, fulfilled, broken, pending, paused
     status: str = Field(default="active", edit_enabled=False, widget_enabled=True, description="Current promise state such as active, fulfilled, or broken")
     

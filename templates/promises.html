@@ -55,7 +55,7 @@
             <div class="p-6 flex-1">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                             {% if promise.status == 'active' %}bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400
                             {% elif promise.status == 'fulfilled' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400
                             {% elif promise.status == 'broken' %}bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400
@@ -67,16 +67,27 @@
                 </div>
                 <h3 class="text-xl font-bold text-slate-800 dark:text-gray-100 mb-2">{{ promise.name }}</h3>
                 <p class="text-slate-500 dark:text-gray-400 text-sm mb-4 line-clamp-2">{{ promise.description }}</p>
-                
+
                 <!-- Progress Bar -->
                 <div class="mb-4">
                     <div class="flex justify-between text-xs font-bold mb-1">
-                        <span class="text-slate-400 uppercase">Progress</span>
-                        <span class="text-indigo-600 dark:text-indigo-400">{{ promise.current_count }} / {{ promise.required_count }}</span>
+                        <span class="text-slate-400 uppercase">
+                            {% if promise.is_negative %} Limit: {{ promise.max_allowed }} {% else %} Progress {% endif %}
+                        </span>
+                        <span class="{% if promise.is_negative and promise.current_count > promise.max_allowed %}text-rose-600{% else %}text-indigo-600 dark:text-indigo-400{% endif %}">
+                            {{ promise.current_count }} / {% if promise.is_negative %}{{ promise.max_allowed }}{% else %}{{ promise.required_count }}{% endif %}
+                        </span>
                     </div>
                     <div class="w-full bg-slate-100 dark:bg-gray-700 rounded-full h-2">
-                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" 
-                             style="width: {{ [100, (promise.current_count / promise.required_count * 100)]|min }}%"></div>
+                        {% if promise.is_negative %}
+                            {# Negative Promise: Bar grows as you approach the limit, turns red if exceeded #}
+                            <div class="{% if promise.current_count > promise.max_allowed %}bg-rose-500{% else %}bg-amber-400{% endif %} h-2 rounded-full transition-all duration-500"
+                                 style="width: {{ [100, (promise.current_count / (promise.max_allowed or 1) * 100)]|min }}%"></div>
+                        {% else %}
+                            {# Standard Promise #}
+                            <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500"
+                                 style="width: {{ [100, (promise.current_count / promise.required_count * 100)]|min }}%"></div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -132,7 +143,7 @@
 
 <!-- Simple Modal for Add/Edit -->
 <div id="modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden transform transition-all">
         <div class="px-8 py-6 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50">
             <h2 id="modal-title" class="text-2xl font-extrabold text-slate-800 dark:text-gray-100">New Promise</h2>
             <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-gray-200">
@@ -168,15 +179,25 @@
                     <input type="number" id="required_count" value="1" min="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                 </div>
             </div>
+            <div class="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="is_negative" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" onchange="toggleNegativeFields()">
+                    <label for="is_negative" class="text-sm font-bold text-slate-700 dark:text-gray-300">Negative Promise</label>
+                </div>
+                <div id="max-allowed-container" class="opacity-50 pointer-events-none">
+                    <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-1">Max Allowed</label>
+                    <input type="number" id="max_allowed" value="0" min="0" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white outline-none">
+                </div>
+            </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Target Event Tag</label>
-                    <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Use this when the promise should count any event carrying a specific tag.</p>
+                    <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Use this when promise should count any event carrying a specific tag.</p>
                     <input type="text" id="target_event_tag" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="e.g., exercise">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Target Event Type</label>
-                    <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Use this when the promise should only count one exact event type.</p>
+                    <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Use this when promise should only count one exact event type.</p>
                     <input type="text" id="target_event_type" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="e.g., fitness:activity">
                 </div>
             </div>
@@ -222,6 +243,9 @@
             document.getElementById('required_count').value = promise.required_count;
             document.getElementById('target_event_tag').value = promise.target_event_tag || '';
             document.getElementById('target_event_type').value = promise.target_event_type || '';
+            document.getElementById('is_negative').checked = promise.is_negative;
+            document.getElementById('max_allowed').value = promise.max_allowed || 0;
+            toggleNegativeFields(); // Update UI state
         } else {
             document.getElementById('modal-title').innerText = 'New Promise';
             form.reset();
@@ -244,6 +268,8 @@
             required_count: parseInt(document.getElementById('required_count').value),
             target_event_tag: document.getElementById('target_event_tag').value || null,
             target_event_type: document.getElementById('target_event_type').value || null,
+            is_negative: document.getElementById('is_negative').checked,
+            max_allowed: parseInt(document.getElementById('max_allowed').value) || 0,
         };
 
         const url = id ? `/promises/${id}` : '/promises/';
@@ -359,6 +385,20 @@
                 }
             }
         });
+    }
+
+    function toggleNegativeFields() {
+        const isNeg = document.getElementById('is_negative').checked;
+        const container = document.getElementById('max-allowed-container');
+        const reqCount = document.getElementById('required_count');
+
+        if (isNeg) {
+            container.classList.remove('opacity-50', 'pointer-events-none');
+            reqCount.parentElement.classList.add('opacity-50', 'pointer-events-none');
+        } else {
+            container.classList.add('opacity-50', 'pointer-events-none');
+            reqCount.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+        }
     }
 
     function closeVisualizer() {

@@ -42,6 +42,14 @@ class PromiseProcessor(QueueProcessor[Event]):
                 if event_ts_aware > start_time:
                     # The event falls within the current period. Increment count.
                     promise.current_count += 1
+                    
+                    # Negative Promise Logic: Check if it's already broken
+                    if promise.is_negative and promise.current_count > promise.max_allowed:
+                        # For now, we don't change status to 'broken' immediately if it's a recurring promise, 
+                        # because evaluation happens at the end of the period. 
+                        # But we could trigger an alert here.
+                        self.log.info(f"Negative promise {promise.name} threshold exceeded ({promise.current_count} > {promise.max_allowed})")
+                    
                     self.promise_service.update(promise)
                     self.log.info(f"Event {event.id} incremented current_count for promise: {promise.name}")
         return True
@@ -84,7 +92,12 @@ class PromiseProcessor(QueueProcessor[Event]):
         
         event_count = self._count_matching_events(promise, start_time, end_time)
         
-        fulfilled = event_count >= promise.required_count
+        if promise.is_negative:
+            # Negative promise: Success if count is within max_allowed
+            fulfilled = event_count <= promise.max_allowed
+        else:
+            # Positive promise: Success if count is at least required_count
+            fulfilled = event_count >= promise.required_count
         
         if fulfilled:
             promise.status = "fulfilled" if promise.frequency == "once" else "active"
@@ -92,14 +105,14 @@ class PromiseProcessor(QueueProcessor[Event]):
             promise.total_completions += 1
             if promise.streak > promise.best_streak:
                 promise.best_streak = promise.streak
-            self.log.info(f"Promise fulfilled: {promise.name} (Count: {event_count})")
+            self.log.info(f"Promise fulfilled: {promise.name} (Count: {event_count}, Negative: {promise.is_negative})")
         else:
             if promise.frequency != "once":
                 promise.streak = 0
-                self.log.info(f"Promise broken: {promise.name} (Count: {event_count})")
+                self.log.info(f"Promise broken: {promise.name} (Count: {event_count}, Negative: {promise.is_negative})")
             else:
                 promise.status = "broken"
-                self.log.info(f"One-time promise broken: {promise.name}")
+                self.log.info(f"One-time promise broken: {promise.name} (Count: {event_count}, Negative: {promise.is_negative})")
 
         promise.total_periods += 1
         promise.current_count = 0

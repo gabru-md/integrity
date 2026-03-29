@@ -24,6 +24,8 @@ class PromiseService(CRUDService[Promise]):
                                 target_event_tag VARCHAR(255),
                                 target_event_type VARCHAR(255),
                                 required_count INTEGER DEFAULT 1,
+                                is_negative BOOLEAN DEFAULT FALSE,
+                                max_allowed INTEGER DEFAULT 0,
                                 status VARCHAR(50) DEFAULT 'active',
                                 current_count INTEGER DEFAULT 0,
                                 streak INTEGER DEFAULT 0,
@@ -53,6 +55,7 @@ class PromiseService(CRUDService[Promise]):
         return (
             promise.user_id, promise.name, promise.description, promise.frequency,
             promise.target_event_tag, promise.target_event_type, promise.required_count,
+            promise.is_negative, promise.max_allowed,
             promise.status, promise.current_count, promise.streak, promise.best_streak,
             promise.total_completions, promise.total_periods,
             promise.last_checked_at, promise.next_check_at,
@@ -69,28 +72,32 @@ class PromiseService(CRUDService[Promise]):
             "target_event_tag": row[5],
             "target_event_type": row[6],
             "required_count": row[7],
-            "status": row[8],
-            "current_count": row[9],
-            "streak": row[10],
-            "best_streak": row[11],
-            "total_completions": row[12],
-            "total_periods": row[13],
-            "last_checked_at": row[14],
-            "next_check_at": row[15],
-            "created_at": row[16],
-            "updated_at": row[17]
+            "is_negative": row[8],
+            "max_allowed": row[9],
+            "status": row[10],
+            "current_count": row[11],
+            "streak": row[12],
+            "best_streak": row[13],
+            "total_completions": row[14],
+            "total_periods": row[15],
+            "last_checked_at": row[16],
+            "next_check_at": row[17],
+            "created_at": row[18],
+            "updated_at": row[19]
         }
         return Promise(**promise_dict)
 
     def _get_columns_for_insert(self) -> List[str]:
         return ["user_id", "name", "description", "frequency", "target_event_tag", "target_event_type", 
-                "required_count", "status", "current_count", "streak", "best_streak", "total_completions", 
-                "total_periods", "last_checked_at", "next_check_at", "created_at", "updated_at"]
+                "required_count", "is_negative", "max_allowed", "status", "current_count", "streak", 
+                "best_streak", "total_completions", "total_periods", "last_checked_at", "next_check_at", 
+                "created_at", "updated_at"]
 
     def _get_columns_for_update(self) -> List[str]:
         return self._get_columns_for_insert()
 
     def _get_columns_for_select(self) -> List[str]:
         return ["id", "user_id", "name", "description", "frequency", "target_event_tag", "target_event_type", 
-                "required_count", "status", "current_count", "streak", "best_streak", "total_completions", 
-                "total_periods", "last_checked_at", "next_check_at", "created_at", "updated_at"]
+                "required_count", "is_negative", "max_allowed", "status", "current_count", "streak", 
+                "best_streak", "total_completions", "total_periods", "last_checked_at", "next_check_at", 
+                "created_at", "updated_at"]
