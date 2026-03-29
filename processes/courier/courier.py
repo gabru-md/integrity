@@ -108,7 +108,7 @@ class Courier(QueueProcessor[Event]):
         topic = self.default_ntfy_topic
         
         if event.user_id:
-            user = self.user_service.get(event.user_id)
+            user = self.user_service.get_by_id(event.user_id)
             if user and user.ntfy_topic:
                 topic = user.ntfy_topic
                 self.log.debug(f"Using personal ntfy topic '{topic}' for user {user.username}")
