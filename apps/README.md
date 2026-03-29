@@ -190,7 +190,9 @@ Every `App` instance provides these endpoints unless explicitly overridden:
 | `PUT` | `/{app}/<id>` | Update a record |
 | `DELETE` | `/{app}/<id>` | Delete a record |
 | `GET` | `/{app}/home` | Render the app UI |
-| `POST" | `/{app}/widget/enable` | Enable dashboard widget |
+| `POST` | `/enable_app/{app_name}` | Enable an application |
+| `POST` | `/disable_app/{app_name}` | Disable an application |
+| `POST` | `/{app}/widget/enable` | Enable dashboard widget |
 | `POST` | `/{app}/widget/disable` | Disable dashboard widget |
 
 ## App Authoring Checklist

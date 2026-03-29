@@ -40,6 +40,7 @@ class App(Generic[T]):
         self.processes = []
         self.home_template = home_template
         self.widget_enabled = widget_enabled
+        self.is_active = True
         self.widget_type = widget_type # basic, count, timeline, kanban, progress_ring
         self.widget_config = widget_config or {}
         self.server_instance = None
@@ -53,6 +54,10 @@ class App(Generic[T]):
                     next_path = request.full_path if request.query_string else request.path
                     return redirect(f"/login?next={next_path}")
                 return abort(401)
+            
+            # Check if the app itself is enabled by the admin
+            if not self.is_active:
+                return abort(403, description=f"The '{self.name.capitalize()}' app is currently disabled by an administrator.")
             
             # Use refined route-level permission check
             if not PermissionManager.can_access_route(self.name, request.path):

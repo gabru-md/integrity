@@ -14,6 +14,7 @@ from gabru.qprocessor.qprocessor import QueueProcessor
 from gabru.flask.util import render_flask_template
 from model.user import User
 from services.users import UserService
+from services.applications import ApplicationService
 
 from dotenv import load_dotenv
 
@@ -32,6 +33,7 @@ class Server:
         self.not_allowed_app_names = []
         self.log = Logger.get_log(self.name)
         self.registered_apps = []
+        self.application_service = ApplicationService()
         self.process_manager = None
         self.process_manager_thread = None
 
@@ -48,6 +50,15 @@ class Server:
     def register_app(self, app: App):
         if app.name.lower() in self.not_allowed_app_names:
             raise Exception("Could not register app")
+
+        # Sync application status with the database
+        db_app = self.application_service.get_by_name(app.name)
+        if db_app:
+            app.is_active = db_app.is_active
+        else:
+            # First time this app is registered, add to database as active
+            self.application_service.set_active_status(app.name, True)
+            app.is_active = True
 
         self.registered_apps.append(app)
         app.server_instance = self # give it the server instance
@@ -197,6 +208,26 @@ class Server:
         def download(filename):
             return send_from_directory(directory=SERVER_FILES_FOLDER, path=filename, as_attachment=True)
 
+        @self.app.route('/enable_app/<app_name>', methods=['POST'])
+        @admin_required
+        def enable_app(app_name):
+            for app in self.registered_apps:
+                if app.name.lower() == app_name.lower():
+                    app.is_active = True
+                    self.application_service.set_active_status(app.name, True)
+                    return jsonify({"message": f"App {app.name} enabled successfully"}), 200
+            return jsonify({"error": f"App {app_name} not found"}), 404
+
+        @self.app.route('/disable_app/<app_name>', methods=['POST'])
+        @admin_required
+        def disable_app(app_name):
+            for app in self.registered_apps:
+                if app.name.lower() == app_name.lower():
+                    app.is_active = False
+                    self.application_service.set_active_status(app.name, False)
+                    return jsonify({"message": f"App {app.name} disabled successfully"}), 200
+            return jsonify({"error": f"App {app_name} not found"}), 404
+
         @self.app.route('/enable_process/<process_name>', methods=['POST'])
         @admin_required
         def enable_process(process_name):
@@ -289,7 +320,8 @@ class Server:
                 'name': app.name,
                 'model_class': app.model_class.__name__,
                 'processes': [p[0].__name__ for p in app.processes],
-                'widget_enabled': app.widget_enabled
+                'widget_enabled': app.widget_enabled,
+                'is_active': app.is_active
             }
             apps_data.append(app_data)
         return apps_data
@@ -297,8 +329,8 @@ class Server:
     def get_widgets_data(self) -> {}:
         widgets_data = {}
         for app in self.registered_apps:
-            # Check if the current role can view the app AND if the app has its widget functionality enabled
-            if PermissionManager.can_view_app(app.name):
+            # Check if the app is active and current role can view it
+            if app.is_active and PermissionManager.can_view_app(app.name):
                 widget_data, model_attributes = app.widget_data()
                 if widget_data is not None:
                     widgets_data[app.name.capitalize()] = {
