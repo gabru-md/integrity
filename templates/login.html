@@ -1,79 +1,84 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-    </style>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>Sign In | Rasbhari</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'noir';
+            const chrome = localStorage.getItem('chrome') || 'glass';
+            const motion = localStorage.getItem('motion') || 'full';
+            const density = localStorage.getItem('density') || 'comfy';
+            const html = document.documentElement;
+            html.setAttribute('data-theme', theme);
+            html.setAttribute('data-chrome', chrome);
+            html.setAttribute('data-motion', motion);
+            html.setAttribute('data-density', density);
+            html.classList.toggle('dark', ['noir', 'console'].includes(theme));
+        })();
+    </script>
 </head>
-<body class="min-h-screen bg-[#020617] text-slate-100 selection:bg-indigo-500/30">
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full"></div>
-        <div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-amber-500/10 blur-[120px] rounded-full"></div>
-    </div>
+<body class="shell-fade-in">
+    <main class="auth-layout">
+        <section class="auth-side flex items-end">
+            <div class="relative z-10 w-full max-w-2xl">
+                <div class="auth-kicker">Integrity OS</div>
+                <h1 class="auth-title mt-5 text-[var(--text)]">Operate your system from one clean surface.</h1>
+                <p class="auth-copy mt-5 max-w-xl">Rasbhari brings event flow, dashboards, processes, and personal operations into a single configurable workspace. Sign in to continue where you left off.</p>
 
-    <main class="relative flex min-h-screen items-center justify-center px-6 py-12">
-        <section class="w-full max-w-md glass rounded-[2.5rem] p-10 shadow-2xl">
-            <div class="mb-10 text-center">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600/20 mb-6 border border-indigo-500/20">
-                    <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
+                <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div class="auth-highlight">
+                        <div class="metric-label">Configurable</div>
+                        <div class="mt-2 text-lg font-bold text-[var(--text)]">Themes and UI density</div>
+                    </div>
+                    <div class="auth-highlight">
+                        <div class="metric-label">Unified</div>
+                        <div class="mt-2 text-lg font-bold text-[var(--text)]">Apps, events, and runtime</div>
+                    </div>
+                    <div class="auth-highlight">
+                        <div class="metric-label">Fast</div>
+                        <div class="mt-2 text-lg font-bold text-[var(--text)]">Designed for operational flow</div>
+                    </div>
                 </div>
-                <div class="text-[0.65rem] font-black uppercase tracking-[0.4em] text-indigo-400/80 mb-2">Integrity OS</div>
-                <h1 class="text-4xl font-extrabold tracking-tight text-white">Welcome back</h1>
-                <p class="mt-3 text-slate-400 text-sm leading-relaxed">Enter your credentials to access your Rasbhari dashboard.</p>
             </div>
+        </section>
 
-            {% if error %}
-            <div class="mb-6 flex items-center gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400 animate-in fade-in slide-in-from-top-2 duration-300">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                {{ error }}
-            </div>
-            {% endif %}
-
-            <form method="post" action="/login" class="space-y-5">
-                <input type="hidden" name="next" value="{{ next_url or '/' }}">
-
-                <div class="space-y-2">
-                    <label for="username" class="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Username</label>
-                    <input id="username" name="username" type="text" required autocomplete="username"
-                           class="w-full rounded-2xl border border-white/5 bg-white/5 px-5 py-4 text-white placeholder:text-slate-600 outline-none transition-all focus:border-indigo-500/50 focus:bg-white/10 focus:ring-4 focus:ring-indigo-500/10"
-                           placeholder="Enter your username">
+        <section class="flex items-center justify-center px-6 py-10">
+            <div class="auth-panel">
+                <div class="mb-8">
+                    <div class="auth-kicker">Access</div>
+                    <h2 class="mt-4 text-4xl font-extrabold tracking-tight text-[var(--text)]">Welcome back</h2>
+                    <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Enter your credentials to access your Rasbhari dashboard.</p>
                 </div>
 
-                <div class="space-y-2">
-                    <label for="password" class="text-xs font-bold uppercase tracking-wider text-slate-400 ml-1">Password</label>
-                    <input id="password" name="password" type="password" required autocomplete="current-password"
-                           class="w-full rounded-2xl border border-white/5 bg-white/5 px-5 py-4 text-white placeholder:text-slate-600 outline-none transition-all focus:border-indigo-500/50 focus:bg-white/10 focus:ring-4 focus:ring-indigo-500/10"
-                           placeholder="••••••••">
+                {% if error %}
+                <div class="ui-alert ui-alert-danger mb-6">{{ error }}</div>
+                {% endif %}
+
+                <form method="post" action="/login" class="space-y-5">
+                    <input type="hidden" name="next" value="{{ next_url or '/' }}">
+
+                    <label class="block space-y-2">
+                        <span class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Username</span>
+                        <input id="username" name="username" type="text" required autocomplete="username" placeholder="Enter your username">
+                    </label>
+
+                    <label class="block space-y-2">
+                        <span class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Password</span>
+                        <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+                    </label>
+
+                    <button type="submit" class="btn-primary w-full justify-center px-5 py-4">Sign In</button>
+                </form>
+
+                <div class="mt-8 flex items-center justify-between gap-4">
+                    <div class="text-sm text-[var(--text-soft)]">Need an account?</div>
+                    <a href="/signup" class="ui-link text-sm">Request access</a>
                 </div>
-
-                <button type="submit"
-                        class="group relative w-full overflow-hidden rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-bold text-white transition-all hover:bg-indigo-500 hover:shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-[0.98]">
-                    <span class="relative z-10 flex items-center justify-center gap-2">
-                        Sign In
-                        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                        </svg>
-                    </span>
-                </button>
-            </form>
-
-            <div class="mt-8 text-center">
-                <p class="text-sm text-slate-500">
-                    Don't have an account? 
-                    <a href="/signup" class="font-bold text-indigo-400 hover:text-indigo-300 transition-colors ml-1">Request access</a>
-                </p>
             </div>
         </section>
     </main>

@@ -1,443 +1,250 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Custom styles for collapsible nav */
-        /* Start with the sidebar collapsed on mobile */
-        #sidebar {
-            transform: translateX(-100%);
-        }
-
-        /* Show the sidebar on desktop (md screens and up) */
-        @media (min-width: 768px) {
-            #sidebar {
-                transform: translateX(0);
-            }
-            /* Default main content wrapper margin on desktop */
-            #content-wrapper {
-                margin-left: 16rem; /* ml-64 (256px) */
-            }
-        }
-
-        /* State for when the sidebar is toggled *open* on mobile */
-        #sidebar.open {
-            transform: translateX(0);
-        }
-
-        /* State for when the sidebar is toggled *closed* on mobile (optional, as default style handles it) */
-        #sidebar.closed {
-            transform: translateX(-100%);
-        }
-
-        #sidebar.open ~ #sidebar-backdrop {
-            opacity: 1;
-            pointer-events: auto; /* Re-enable clicks on the backdrop */
-        }
-
-    </style>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <title>{% block title %}App Dashboard{% endblock %}</title>
-    
+    <title>{% block title %}Rasbhari{% endblock %}</title>
     <script>
-        // Pre-load theme to avoid flash
         (function() {
-            const theme = localStorage.getItem('theme') || 'dark';
-            const darkThemes = ['dark', 'twilight', 'console'];
+            const prefs = {
+                theme: localStorage.getItem('theme') || 'slate',
+                density: localStorage.getItem('density') || 'comfy',
+                chrome: localStorage.getItem('chrome') || 'glass',
+                motion: localStorage.getItem('motion') || 'full'
+            };
+            const darkThemes = ['noir', 'console'];
             const html = document.documentElement;
-            
-            // Set the attribute immediately for CSS variables
-            html.setAttribute('data-theme', theme);
-            
-            // Toggle the Tailwind 'dark' class
-            if (darkThemes.includes(theme)) {
-                html.classList.add('dark');
-            } else {
-                html.classList.remove('dark');
-            }
+            Object.entries(prefs).forEach(([key, value]) => html.setAttribute(`data-${key}`, value));
+            html.classList.toggle('dark', darkThemes.includes(prefs.theme));
         })();
     </script>
 </head>
-
-<body class="transition-colors duration-300">
-<nav id="sidebar" class="fixed top-0 left-0 h-screen w-64 z-20 transition-transform duration-300
-                bg-white border-r border-slate-200 shadow-xl
-                dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between">
-
-    <!-- Top Section (Scrollable) -->
-    <div class="flex-1 overflow-y-auto p-4">
-        <div class="flex items-center space-x-2 p-2 mb-8 border-b border-slate-100 dark:border-gray-700/50">
-            <svg fill="#972020" width="32px" height="32px" viewBox="-2.5 0 24 24" xmlns="http://www.w3.org/2000/svg"
-                 stroke="#972020">
-                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                <g id="SVGRepo_iconCarrier">
-                    <path d="m13.656 17.338c-.857.989-1.334 2.79-.709 3.371.6.449 2.2.391 3.385-1.23.344-.487.551-1.093.551-1.747 0-.603-.175-1.164-.477-1.637l.007.012c-.73-.555-1.778.164-2.757 1.243zm-8.057.3c-.908-1.04-2.088-1.658-2.851-1.2-.51.382-.605 1.685.123 2.967 1.078 1.524 2.6 1.679 3.221 1.307.659-.488.3-2.137-.493-3.075zm4.105 3.145c-1.1-.026-2.8.439-2.776 1.032-.018.4 1.331 1.572 2.7 1.513 1.326.03 2.7-1.139 2.682-1.649s-1.5-.927-2.607-.884zm-.075-13.944c-1.275-.032-2.5.933-2.5 1.493 0 .68 1.008 1.376 2.51 1.394 1.543.01 2.518-.559 2.532-1.26.016-.794-1.394-1.639-2.518-1.627zm-3.071.532c-2.135-.345-3.913.9-3.842 3.192.07.884 4.63-3.041 3.843-3.177v-.015zm9.749 3.251c.071-2.277-1.709-3.521-3.844-3.176-.787.135 3.772 4.061 3.844 3.176zm.364.824c-1.239-.329-.42 5.049.588 4.615.551-.525.894-1.265.894-2.084 0-1.077-.592-2.015-1.468-2.508l-.014-.007v-.015zm-14.9 4.675c1.007.45 1.827-4.929.589-4.6-.891.504-1.483 1.445-1.483 2.525 0 .821.343 1.563.893 2.089l.001.001zm9.415-5.948c-.63.49-1.032 1.249-1.032 2.101 0 .624.215 1.197.575 1.65l-.004-.005c.492.838 1.388 1.392 2.414 1.392.467 0 .908-.115 1.295-.318l-.015.007c.631-.49 1.034-1.248 1.034-2.101 0-.624-.215-1.197-.576-1.65l.004.005c-.484-.835-1.374-1.388-2.393-1.388-.476 0-.923.121-1.314.333l.015-.007zm-3.1.135c-.373-.199-.816-.315-1.286-.315-1.02 0-1.911.548-2.395 1.366l-.007.013c-.357.45-.572 1.026-.572 1.652 0 .855.402 1.616 1.027 2.105l.006.004c.376.205.823.325 1.298.325 1.019 0 1.909-.553 2.386-1.376l.007-.013c.352-.448.564-1.019.564-1.64 0-.853-.4-1.612-1.024-2.1l-.006-.004zm4.369 7.162c-.077-1.399-1.23-2.504-2.641-2.504-.049 0-.098.001-.147.004h.007c-.028-.001-.062-.002-.095-.002-1.423 0-2.585 1.119-2.653 2.526v.006.029c.078 1.399 1.232 2.504 2.643 2.504.049 0 .098-.001.147-.004h-.007c.035.002.076.003.117.003 1.413 0 2.566-1.116 2.625-2.514v-.005-.029l.01-.015zm3.215-15.133c-1.69.771-3.14 1.756-4.396 2.945l.007-.007c.377 1.5 2.344 1.558 3.063 1.512-.139-.044-.251-.141-.314-.266l-.001-.003c.18-.12.821-.611 1.002-.777 1.838-1.528.273-4.22-1.661-4.908z"/>
-                </g>
-            </svg>
-            <span class="text-2xl font-extrabold text-slate-800 dark:text-gray-100">Rasbhari</span>
-        </div>
-
-        <ul class="space-y-2">
-            <li>
-                <a href="/" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if request.path == '/' %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                    </svg>
-                    Dashboard
-                </a>
-            </li>
-            
-            {% if PermissionManager.can_view_app('promises') %}
-            <li>
-                <a href="/promises/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if '/promises' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Promises
-                </a>
-            </li>
-            {% endif %}
-
-            {% if PermissionManager.can_view_app('projects') %}
-            <li>
-                <a href="/projects/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if '/projects' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Projects
-                </a>
-            </li>
-            {% endif %}
-
-            {% if PermissionManager.can_view_app('blogs') %}
-            <li>
-                <a href="/blogs/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if '/blogs' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2zM14 4v4h4"></path>
-                    </svg>
-                    Blog
-                </a>
-            </li>
-            {% endif %}
-
-            {% if PermissionManager.can_view_app('connections') %}
-            <li>
-                <a href="/connections/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if '/connections' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M17 20h5V4H2v16h5m10 0v-2a4 4 0 00-8 0v2m8 0H9m4-10a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    Connections
-                </a>
-            </li>
-            {% endif %}
-
-            {% if PermissionManager.can_view_app('reports') %}
-            <li>
-                <a href="/reports/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if '/reports' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 17v-6m3 6V7m3 10v-3m4 7H5a2 2 0 01-2-2V5a2 2 0 012-2h8l6 6v10a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Reports
-                </a>
-            </li>
-            {% endif %}
-
-            {% if PermissionManager.can_view_app('events') %}
-            <li>
-                <a href="/events/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if '/events' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    Events
-                </a>
-            </li>
-            {% endif %}
-
-            {% if PermissionManager.can_access_admin_panel() %}
-            <div class="pt-4 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-t border-slate-100 dark:border-gray-700/50 mt-4">
-                Admin Panel
+<body class="shell-fade-in">
+<nav id="sidebar" class="fixed left-0 top-0 z-30 h-screen -translate-x-full overflow-y-auto p-3 transition-transform duration-300 md:translate-x-0 md:p-4">
+    <div class="flex min-h-full flex-col justify-between">
+        <div class="min-h-0">
+            <div class="border-b border-[var(--border)] px-4 pb-5 pt-4">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-[var(--accent-soft)] text-[var(--accent)] shadow-sm">
+                        <svg width="28" height="28" viewBox="-2.5 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="m13.656 17.338c-.857.989-1.334 2.79-.709 3.371.6.449 2.2.391 3.385-1.23.344-.487.551-1.093.551-1.747 0-.603-.175-1.164-.477-1.637l.007.012c-.73-.555-1.778.164-2.757 1.243zm-8.057.3c-.908-1.04-2.088-1.658-2.851-1.2-.51.382-.605 1.685.123 2.967 1.078 1.524 2.6 1.679 3.221 1.307.659-.488.3-2.137-.493-3.075zm4.105 3.145c-1.1-.026-2.8.439-2.776 1.032-.018.4 1.331 1.572 2.7 1.513 1.326.03 2.7-1.139 2.682-1.649s-1.5-.927-2.607-.884zm-.075-13.944c-1.275-.032-2.5.933-2.5 1.493 0 .68 1.008 1.376 2.51 1.394 1.543.01 2.518-.559 2.532-1.26.016-.794-1.394-1.639-2.518-1.627zm-3.071.532c-2.135-.345-3.913.9-3.842 3.192.07.884 4.63-3.041 3.843-3.177v-.015zm9.749 3.251c.071-2.277-1.709-3.521-3.844-3.176-.787.135 3.772 4.061 3.844 3.176zm.364.824c-1.239-.329-.42 5.049.588 4.615.551-.525.894-1.265.894-2.084 0-1.077-.592-2.015-1.468-2.508l-.014-.007v-.015zm-14.9 4.675c1.007.45 1.827-4.929.589-4.6-.891.504-1.483 1.445-1.483 2.525 0 .821.343 1.563.893 2.089l.001.001zm9.415-5.948c-.63.49-1.032 1.249-1.032 2.101 0 .624.215 1.197.575 1.65l-.004-.005c.492.838 1.388 1.392 2.414 1.392.467 0 .908-.115 1.295-.318l-.015.007c.631-.49 1.034-1.248 1.034-2.101 0-.624-.215-1.197-.576-1.65l.004.005c-.484-.835-1.374-1.388-2.393-1.388-.476 0-.923.121-1.314.333l.015-.007zm-3.1.135c-.373-.199-.816-.315-1.286-.315-1.02 0-1.911.548-2.395 1.366l-.007.013c-.357.45-.572 1.026-.572 1.652 0 .855.402 1.616 1.027 2.105l.006.004c.376.205.823.325 1.298.325 1.019 0 1.909-.553 2.386-1.376l.007-.013c.352-.448.564-1.019.564-1.64 0-.853-.4-1.612-1.024-2.1l-.006-.004zm4.369 7.162c-.077-1.399-1.23-2.504-2.641-2.504-.049 0-.098.001-.147.004h.007c-.028-.001-.062-.002-.095-.002-1.423 0-2.585 1.119-2.653 2.526v.006.029c.078 1.399 1.232 2.504 2.643 2.504.049 0 .098-.001.147-.004h-.007c.035.002.076.003.117.003 1.413 0 2.566-1.116 2.625-2.514v-.005-.029l.01-.015zm3.215-15.133c-1.69.771-3.14 1.756-4.396 2.945l.007-.007c.377 1.5 2.344 1.558 3.063 1.512-.139-.044-.251-.141-.314-.266l-.001-.003c.18-.12.821-.611 1.002-.777 1.838-1.528.273-4.22-1.661-4.908z"/>
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="section-kicker text-[10px] font-extrabold uppercase">Integrity OS</div>
+                        <div class="truncate text-2xl font-extrabold text-[var(--text)]">Rasbhari</div>
+                        <div class="mt-1 text-sm text-[var(--text-soft)]">Professional control surface for apps, processes, and events.</div>
+                    </div>
+                </div>
             </div>
-            <li>
-                <a href="/apps" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if request.path == '/apps' %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                    System Apps
-                </a>
-            </li>
-            <li>
-                <a href="/processes" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if request.path == '/processes' %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Processes
-                </a>
-            </li>
-            <li>
-                <a href="/devices" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if request.path == '/devices' %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M15 10l4.55-4.55A1 1 0 0019 4H5a1 1 0 00-.707 1.707L9 10m6 0a3 3 0 11-6 0 3 3 0 016 0zM7 16h10a2 2 0 002-2v-4a2 2 0 00-2-2H7a2 2 0 00-2 2v4a2 2 0 002 2z"></path>
-                    </svg>
-                    Devices
-                </a>
-            </li>
-            <li>
-                <a href="/heimdall" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if request.path == '/heimdall' %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M15 10l4.55-4.55A1 1 0 0019 4H5a1 1 0 00-.707 1.707L9 10m6 0a3 3 0 11-6 0 3 3 0 016 0zM7 16h10a2 2 0 002-2v-4a2 2 0 00-2-2H7a2 2 0 00-2 2v4a2 2 0 002 2z"></path>
-                    </svg>
-                    Heimdall
-                </a>
-            </li>
-            <li>
-                <a href="/users/home" class="flex items-center p-3 rounded-xl text-slate-700 font-semibold transition duration-150
-                                     hover:bg-indigo-50 hover:text-indigo-600
-                                     dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-indigo-400
-                                     {% if '/users' in request.path %}bg-indigo-50 text-indigo-600 dark:bg-gray-700 dark:text-indigo-400{% endif %}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M17 20h5V4H2v16h5m10 0v-2a4 4 0 00-8 0v2m8 0H9m4-10a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    Users
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-    </div>
 
-    <!-- Bottom Section with Theme Selector and Credits -->
-    <div class="space-y-4 p-4 border-t border-slate-100 dark:border-gray-700/50">
+            <div class="min-h-0 overflow-y-auto px-2 py-4">
+                <div class="mb-3 px-3 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[var(--text-soft)]">Workspace</div>
+                <ul class="space-y-1.5">
+                    <li><a href="/" class="nav-link {% if request.path == '/' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Dashboard</span><span class="text-xs text-[var(--text-muted)]">Home</span></a></li>
+                    {% if PermissionManager.can_view_app('promises') and 'promises' in active_app_names %}<li><a href="/promises/home" class="nav-link {% if '/promises' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Promises</span><span class="text-xs text-[var(--text-muted)]">Track</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('projects') and 'projects' in active_app_names %}<li><a href="/projects/home" class="nav-link {% if '/projects' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Projects</span><span class="text-xs text-[var(--text-muted)]">Build</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('activities') and 'activities' in active_app_names %}<li><a href="/activities/home" class="nav-link {% if '/activities' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Activities</span><span class="text-xs text-[var(--text-muted)]">Automate</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('skills') and 'skills' in active_app_names %}<li><a href="/skills/home" class="nav-link {% if '/skills' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Skills</span><span class="text-xs text-[var(--text-muted)]">Grow</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('events') and 'events' in active_app_names %}<li><a href="/events/home" class="nav-link {% if '/events' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Events</span><span class="text-xs text-[var(--text-muted)]">Stream</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}<li><a href="/thoughts/home" class="nav-link {% if '/thoughts' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Thoughts</span><span class="text-xs text-[var(--text-muted)]">Capture</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('connections') and 'connections' in active_app_names %}<li><a href="/connections/home" class="nav-link {% if '/connections' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Connections</span><span class="text-xs text-[var(--text-muted)]">Ledger</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('reports') and 'reports' in active_app_names %}<li><a href="/reports/home" class="nav-link {% if '/reports' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Reports</span><span class="text-xs text-[var(--text-muted)]">Mirror</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('blogs') and 'blogs' in active_app_names %}<li><a href="/blogs/home" class="nav-link {% if '/blogs' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Blogs</span><span class="text-xs text-[var(--text-muted)]">Publish</span></a></li>{% endif %}
+                    {% if PermissionManager.can_view_app('network_signatures') and 'network_signatures' in active_app_names %}<li><a href="/network_signatures/home" class="nav-link {% if '/network_signatures' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Network Signatures</span><span class="text-xs text-[var(--text-muted)]">Observe</span></a></li>{% endif %}
+                </ul>
 
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/40">
-            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-gray-400">Signed In</div>
-            <div class="mt-2 text-sm font-semibold text-slate-800 dark:text-gray-100">{{ current_user.display_name if current_user else 'Guest' }}</div>
-            <div class="text-xs text-slate-500 dark:text-gray-400">@{{ current_user.username if current_user else 'guest' }}</div>
-            <div class="mt-2 text-[11px] font-bold uppercase tracking-wider {% if current_user and current_user.is_admin %}text-amber-500{% else %}text-emerald-500{% endif %}">
-                {% if current_user and current_user.is_admin %}Admin Access{% else %}Personal Workspace{% endif %}
-            </div>
-            <div class="mt-3 space-y-2">
-                <a href="{{ url_for('Users.profile') }}"
-                   class="block w-full text-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
-                    My Profile
-                </a>
-                <form method="post" action="/logout">
-                    <button type="submit"
-                            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
-                        Sign Out
-                    </button>
-                </form>
+                {% if current_user and current_user.is_admin %}
+                <div class="mb-3 mt-6 px-3 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[var(--text-soft)]">System</div>
+                <ul class="space-y-1.5">
+                    <li><a href="/apps" class="nav-link {% if request.path == '/apps' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>System Apps</span><span class="text-xs text-[var(--text-muted)]">Registry</span></a></li>
+                    <li><a href="/processes" class="nav-link {% if request.path == '/processes' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Processes</span><span class="text-xs text-[var(--text-muted)]">Runtime</span></a></li>
+                    <li><a href="/heimdall" class="nav-link {% if request.path == '/heimdall' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span>Heimdall</span><span class="text-xs text-[var(--text-muted)]">Monitor</span></a></li>
+                </ul>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Theme Selector -->
-        <div class="px-2">
-             <label for="theme-select" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 dark:text-gray-400">
-                Theme
-            </label>
-            <select id="theme-select" onchange="switchTheme(this.value)" class="w-full bg-slate-100 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500">
-                <option value="dark">Dark</option>
-                <option value="nature">Nature</option>
-                <option value="twilight">Twilight</option>
-                <option value="solarized">Solarized</option>
-                <option value="console">Console</option>
-            </select>
-        </div>
+        <div class="border-t border-[var(--border)] px-3 py-4">
+            {% if current_user %}
+            <details id="user-menu" class="shell-card overflow-hidden">
+                <summary class="flex cursor-pointer items-center gap-3 px-3 py-3">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-sm font-extrabold text-[var(--accent)]">
+                        {{ (current_user.display_name or current_user.username or 'R')[:1] | upper }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="truncate text-sm font-bold text-[var(--text)]">{{ current_user.display_name or current_user.username }}</div>
+                        <div class="truncate text-xs text-[var(--text-soft)]">@{{ current_user.username }}</div>
+                    </div>
+                    <div class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Menu</div>
+                </summary>
 
-        <div>
-            <div class="p-0 text-center text-sm text-slate-500 dark:text-gray-400">
-                github: <a href="https://github.com/gabru-md" target="_blank">@gabru-md</a>
-            </div>
+                <div class="border-t border-[var(--border)] px-3 py-3">
+                    <div class="grid gap-2">
+                        <a href="/users/profile" class="btn-secondary w-full px-3 py-3 text-sm">Profile Settings</a>
+                        <form action="/logout" method="POST">
+                            <button type="submit" class="btn-ghost w-full px-3 py-3 text-sm">Sign Out</button>
+                        </form>
+                    </div>
+
+                    <div class="mt-4 border-t border-[var(--border)] pt-4">
+                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Appearance</div>
+                        <div class="grid gap-4">
+                            <div>
+                                <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Themes</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" onclick="setPreference('theme','slate')" data-pref="theme" data-value="slate" class="btn-secondary px-3 py-2 text-sm">Slate</button>
+                                    <button type="button" onclick="setPreference('theme','dawn')" data-pref="theme" data-value="dawn" class="btn-secondary px-3 py-2 text-sm">Dawn</button>
+                                    <button type="button" onclick="setPreference('theme','forest')" data-pref="theme" data-value="forest" class="btn-secondary px-3 py-2 text-sm">Forest</button>
+                                    <button type="button" onclick="setPreference('theme','noir')" data-pref="theme" data-value="noir" class="btn-secondary px-3 py-2 text-sm">Noir</button>
+                                    <button type="button" onclick="setPreference('theme','console')" data-pref="theme" data-value="console" class="btn-secondary col-span-2 px-3 py-2 text-sm">Console</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Density</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" onclick="setPreference('density','comfy')" data-pref="density" data-value="comfy" class="btn-secondary px-3 py-2 text-sm">Comfy</button>
+                                    <button type="button" onclick="setPreference('density','compact')" data-pref="density" data-value="compact" class="btn-secondary px-3 py-2 text-sm">Compact</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Surface</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" onclick="setPreference('chrome','glass')" data-pref="chrome" data-value="glass" class="btn-secondary px-3 py-2 text-sm">Glass</button>
+                                    <button type="button" onclick="setPreference('chrome','solid')" data-pref="chrome" data-value="solid" class="btn-secondary px-3 py-2 text-sm">Solid</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Motion</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" onclick="setPreference('motion','full')" data-pref="motion" data-value="full" class="btn-secondary px-3 py-2 text-sm">Full</button>
+                                    <button type="button" onclick="setPreference('motion','reduced')" data-pref="motion" data-value="reduced" class="btn-secondary px-3 py-2 text-sm">Reduced</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+            {% endif %}
         </div>
     </div>
 </nav>
 
-<div id="sidebar-backdrop" onclick="toggleSidebar()"
-     class="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 opacity-0 md:hidden pointer-events-none">
-</div>
+<div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="pointer-events-none fixed inset-0 z-20 bg-slate-950/45 opacity-0 transition-opacity duration-300 md:hidden"></div>
 
-<header class="md:hidden sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between z-10 dark:bg-gray-800 dark:border-gray-700">
-    <button id="sidebar-toggle-button" onclick="toggleSidebar()"
-            class="p-2 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-700">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-    </button>
-    <div class="text-xl font-extrabold text-slate-800 dark:text-gray-100">Rasbhari</div>
-    <div></div>
+<header class="sticky top-0 z-20 px-3 pt-3 md:hidden">
+    <div class="shell-card app-shell flex items-center justify-between px-4 py-3">
+        <button id="sidebar-toggle-button" onclick="toggleSidebar()" class="btn-ghost h-11 w-11 rounded-2xl p-0" aria-label="Toggle navigation">☰</button>
+        <div class="text-lg font-extrabold text-[var(--text)]">Rasbhari</div>
+        <button type="button" onclick="document.getElementById('user-menu')?.setAttribute('open','open'); toggleSidebar(true);" class="btn-secondary h-11 rounded-2xl px-4 text-sm">Menu</button>
+    </div>
 </header>
 
-<main id="content-wrapper" class="min-h-screen transition-all duration-300 bg-slate-50 dark:bg-gray-900">
-    {% block content %}{% endblock %}
-     <div id="chat-widget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-4">
-        <!-- Chat Button -->
-        <button id="chat-button"
-                class="bg-indigo-600 dark:bg-green-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-green-400 transition transform hover:-translate-y-1 chat-pulse">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                 xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+<main id="content-wrapper" class="min-h-screen px-3 pb-6 pt-3 md:px-4 md:pb-8">
+    <div class="app-shell">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div id="chat-widget" class="fixed bottom-5 right-5 z-50 flex flex-col items-end space-y-3">
+        <button id="chat-button" class="btn-primary chat-pulse flex h-14 w-14 items-center justify-center rounded-full p-0 text-white" aria-label="Open assistant">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
             </svg>
         </button>
-
-        <!-- Chat Window -->
-        <div id="chat-window"
-             class="hidden flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden
-                    w-80 md:w-96 h-[60vh] max-h-[600px] border border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center p-4 bg-indigo-600 dark:bg-green-600 text-white shadow-md">
-                h3 class="text-lg font-semibold">Ollama Chat</h3>
-                <button id="close-chat-button" class="p-1 rounded-full hover:bg-white hover:text-indigo-600 dark:hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
+        <div id="chat-window" class="hidden h-[60vh] max-h-[680px] w-[22rem] flex-col overflow-hidden rounded-[var(--card-radius)] border border-[var(--border)] bg-[var(--surface)] shadow-2xl floating-blur md:w-[26rem]">
+            <div class="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
+                <div>
+                    <div class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Assistant</div>
+                    <h3 class="text-base font-extrabold text-[var(--text)]">Open WebUI</h3>
+                </div>
+                <button id="close-chat-button" class="btn-ghost h-10 w-10 rounded-2xl p-0">✕</button>
             </div>
-            <div class="flex-1 w-full h-full relative">
-                <iframe id="chat-frame" src="" frameborder="0" class="w-full h-full opacity-0 transition-opacity duration-300"></iframe>
+            <div class="relative flex-1">
+                <iframe id="chat-frame" src="" frameborder="0" class="h-full w-full opacity-0 transition-opacity duration-300"></iframe>
             </div>
         </div>
     </div>
 </main>
 
 <script>
-    // Sidebar Toggle Logic
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.toggle('open');
+    function applyThemeMeta(themeName) {
+        const darkThemes = ['noir', 'console'];
+        const html = document.documentElement;
+        html.classList.toggle('dark', darkThemes.includes(themeName));
+        const labelMap = { slate: 'Slate', dawn: 'Dawn', forest: 'Forest', noir: 'Noir', console: 'Console' };
+        const themeLabel = document.getElementById('theme-label');
+        if (themeLabel) themeLabel.textContent = labelMap[themeName] || themeName;
     }
 
-    // Theme Logic
-    const themeSelect = document.getElementById('theme-select');
-    
-    // Set initial dropdown state
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    if(themeSelect) {
-        themeSelect.value = currentTheme;
+    function syncPreferenceButtons() {
+        document.querySelectorAll('[data-pref]').forEach((button) => {
+            const pref = button.getAttribute('data-pref');
+            const value = button.getAttribute('data-value');
+            const current = localStorage.getItem(pref) || document.documentElement.getAttribute(`data-${pref}`);
+            button.setAttribute('aria-pressed', current === value ? 'true' : 'false');
+        });
     }
-    
-    function switchTheme(themeName) {
-        const darkThemes = ['dark', 'twilight', 'console'];
-        const isDark = darkThemes.includes(themeName);
-        
-        document.documentElement.setAttribute('data-theme', themeName);
-        
-        const html = document.documentElement;
-        if (isDark) {
-            html.classList.add('dark');
-        } else {
-            html.classList.remove('dark');
-        }
-        
-        localStorage.setItem('theme', themeName);
+
+    function setPreference(key, value) {
+        document.documentElement.setAttribute(`data-${key}`, value);
+        localStorage.setItem(key, value);
+        if (key === 'theme') applyThemeMeta(value);
+        syncPreferenceButtons();
     }
-    
+
+    function toggleSidebar(forceOpen) {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        const willOpen = forceOpen === undefined ? !sidebar.classList.contains('open') : forceOpen;
+        sidebar.classList.toggle('open', willOpen);
+        backdrop.classList.toggle('opacity-100', willOpen);
+        backdrop.classList.toggle('pointer-events-auto', willOpen);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        applyThemeMeta(localStorage.getItem('theme') || 'slate');
+        syncPreferenceButtons();
+
         const chatButton = document.getElementById('chat-button');
         const closeChatButton = document.getElementById('close-chat-button');
         const chatWindow = document.getElementById('chat-window');
         const chatFrame = document.getElementById('chat-frame');
-        // Get the OPEN_WEBUI_URL from the template context
         const openWebuiUrl = "{{ open_webui_url }}";
-
         let isChatLoaded = false;
 
-        chatButton.addEventListener('click', () => {
-            chatWindow.classList.toggle('hidden');
-            chatWindow.classList.toggle('chat-window-active');
+        if (chatButton && chatWindow && closeChatButton && chatFrame) {
+            chatButton.addEventListener('click', () => {
+                chatWindow.classList.toggle('hidden');
+                chatWindow.classList.toggle('chat-window-active');
+                if (!chatWindow.classList.contains('hidden') && !isChatLoaded && openWebuiUrl) {
+                    chatFrame.src = openWebuiUrl;
+                    chatFrame.onload = () => chatFrame.classList.add('loaded');
+                    isChatLoaded = true;
+                }
+                chatButton.classList.remove('chat-pulse');
+            });
 
-            // Load the iframe content only on the first opening
-            if (!chatWindow.classList.contains('hidden') && !isChatLoaded && openWebuiUrl) {
-                chatFrame.src = openWebuiUrl;
-                chatFrame.onload = () => {
-                    chatFrame.classList.add('loaded');
-                };
-                isChatLoaded = true;
-            }
-            // Remove pulse animation after first click
-            chatButton.classList.remove('chat-pulse');
-        });
-
-        closeChatButton.addEventListener('click', () => {
-            chatWindow.classList.add('hidden');
-            chatWindow.classList.remove('chat-window-active');
-        });
-
-        // Close chat window if clicked outside
-        document.addEventListener('click', (event) => {
-            if (!chatWindow.classList.contains('hidden') &&
-                !chatWindow.contains(event.target) &&
-                !chatButton.contains(event.target)) {
+            closeChatButton.addEventListener('click', () => {
                 chatWindow.classList.add('hidden');
                 chatWindow.classList.remove('chat-window-active');
-            }
-        });
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!chatWindow.classList.contains('hidden') &&
+                    !chatWindow.contains(event.target) &&
+                    !chatButton.contains(event.target)) {
+                    chatWindow.classList.add('hidden');
+                    chatWindow.classList.remove('chat-window-active');
+                }
+            });
+        }
     });
-
-
 </script>
 </body>
 </html>

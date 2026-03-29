@@ -1,90 +1,58 @@
 {% extends "index.html" %}
 
 {% block title %}Heimdall Multi-Stream Dashboard{% endblock %}
+{% block shell_title %}Heimdall Streams{% endblock %}
+{% block shell_subtitle %}Monitor every authorized device feed from one clean multi-stream console optimized for fast scanning.{% endblock %}
 
 {% block content %}
 <script>
-    // The base name of the Flask application blueprint
     const APP_NAME = 'devices';
-    // The API endpoint defined in devices.py
     const API_ENDPOINT = `/${APP_NAME}/heimdall-devices`;
 
-    /**
-     * Converts a string to Title Case, cleaning up slugs (e.g., "front-door" -> "Front Door")
-     * @param {string} str
-     * @returns {string}
-     */
     function toTitleCase(str) {
         if (!str) return '';
-        // Replaces dashes/underscores with spaces and capitalizes each word
         return str.replace(/[-_]/g, ' ')
                   .replace(/\b\w/g, c => c.toUpperCase());
     }
 
-    /**
-     * Creates the HTML structure for a single device stream box.
-     * @param {object} device - Must contain name and location.
-     * @returns {string}
-     */
     function createDeviceBox(device) {
-        // Use location for display title, falling back to name
-        const rawTitle = device.name;
-        const title = toTitleCase(rawTitle);
-
-        // The /stream/<device_name> route expects the URL-safe device name (d.name)
-        const deviceNameSlug = device.name;
-        const streamSource = `/${APP_NAME}/stream/${deviceNameSlug}`;
-
-        // Status visualization
-        // Note: For simplicity, we assume devices from the API are 'Online',
-        // but the stream status is checked by the browser (onerror).
-        const statusColor = 'bg-green-500';
-        const statusText = 'Streaming';
-
-        // Placeholder/error image if the stream fails to load
-        const errorPlaceholder = `https://placehold.co/640x480/2c3e50/ecf0f1?text=${title.toUpperCase()}+STREAM+OFFLINE`;
+        const title = toTitleCase(device.name);
+        const streamSource = `/${APP_NAME}/stream/${device.name}`;
+        const errorPlaceholder = `https://placehold.co/640x480/1f2937/e5edf8?text=${title.toUpperCase()}+OFFLINE`;
 
         return `
-            <div class="rounded-xl shadow-2xl bg-white dark:bg-gray-800 overflow-hidden transition transform hover:scale-[1.01] duration-300">
-                <!-- Title and Status Header -->
-                <div class="flex justify-between items-center p-3 bg-slate-800 dark:bg-gray-900 text-white">
-                    <h2 class="text-lg font-semibold truncate">${title}</h2>
-                    <span class="status-pill inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${statusColor} text-white">
-                        ${statusText}
-                    </span>
+            <article class="shell-card overflow-hidden">
+                <div class="flex items-center justify-between border-b border-[var(--border)] px-4 py-4">
+                    <div>
+                        <div class="section-kicker text-[10px] font-extrabold uppercase">Camera Feed</div>
+                        <h2 class="mt-1 text-lg font-extrabold text-[var(--text)]">${title}</h2>
+                    </div>
+                    <span class="ui-badge ui-badge-success status-pill">Streaming</span>
                 </div>
-
-                <!-- Video Stream Container (Fixed 4:3 Aspect Ratio) -->
                 <div class="video-box">
                     <div class="video-box-content">
-                        <!-- The image tag handles the MJPEG stream. onerror provides a fallback. -->
                         <img class="video-stream"
                              src="${streamSource}"
-                             onerror="this.src='${errorPlaceholder}'; this.parentNode.parentNode.querySelector('.status-pill').textContent = 'Error'; this.parentNode.parentNode.querySelector('.status-pill').classList.replace('bg-green-500', 'bg-red-500');"
+                             onerror="this.src='${errorPlaceholder}'; this.closest('article').querySelector('.status-pill').textContent = 'Error'; this.closest('article').querySelector('.status-pill').classList.remove('ui-badge-success'); this.closest('article').querySelector('.status-pill').classList.add('ui-badge-danger');"
                              alt="Live video feed from ${title}"
                              loading="lazy"
                              title="${title} Live Stream">
                     </div>
                 </div>
-            </div>
+            </article>
         `;
     }
 
-    /**
-     * Fetches device list from the API endpoint and renders the dashboard.
-     */
     async function initializeDashboard() {
         const dashboardContainer = document.getElementById('dashboard-container');
         const loadingPlaceholder = document.getElementById('loading-placeholder');
 
         if (!dashboardContainer || !loadingPlaceholder) return;
 
-        // Show loading state
         loadingPlaceholder.classList.remove('hidden');
 
         try {
             const response = await fetch(API_ENDPOINT);
-
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -92,81 +60,64 @@
             const devices = await response.json();
 
             if (devices.length === 0) {
-                dashboardContainer.innerHTML = `
-                    <p class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10 text-xl text-slate-500 dark:text-gray-400">
-                        No devices are currently enabled for Heimdall streaming.
-                    </p>
-                `;
+                dashboardContainer.innerHTML = `<div class="empty-state lg:col-span-3 xl:col-span-4">No devices are currently enabled for Heimdall streaming.</div>`;
                 return;
             }
 
-            // Render the device boxes
-            const htmlContent = devices.map(createDeviceBox).join('');
-            dashboardContainer.innerHTML = htmlContent;
-
+            dashboardContainer.innerHTML = devices.map(createDeviceBox).join('');
         } catch (error) {
             console.error("Error fetching device list:", error);
-            dashboardContainer.innerHTML = `
-                <p class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10 text-xl text-red-500 dark:text-red-400">
-                    Error connecting to the device API at <code>${API_ENDPOINT}</code>. Check console for details.
-                </p>
-            `;
+            dashboardContainer.innerHTML = `<div class="empty-state lg:col-span-3 xl:col-span-4">Error connecting to the device API at <code>${API_ENDPOINT}</code>. Check the console for details.</div>`;
         } finally {
-            // Hide loading state
             loadingPlaceholder.classList.add('hidden');
         }
     }
 
-    // Run initialization when the page is fully loaded
     document.addEventListener('DOMContentLoaded', initializeDashboard);
 </script>
 
 <style>
-    /* Custom fixed aspect ratio for video containers (640x480 is 4:3) */
     .video-box {
         position: relative;
         width: 100%;
-        /* 480 / 640 = 0.75 or 75% */
         padding-bottom: 75%;
-        background-color: #1f2937; /* Dark background for loading/offline */
+        background: color-mix(in srgb, var(--surface-contrast) 86%, transparent);
     }
+
     .video-box-content {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        inset: 0;
     }
-    /* Style for the MJPEG stream images */
+
     .video-stream {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* Ensures video stream fills the container */
+        object-fit: cover;
     }
 </style>
 
-<div class="p-4 sm:p-8">
+<div class="space-y-6 px-1 py-2">
+    <section class="split-card">
+        <div class="shell-card hero-card px-6 py-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Video Operations</div>
+            <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Heimdall Multi-Stream Dashboard</h1>
+            <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Centralized view for all active video devices using a stable 4:3 layout designed for quick monitoring and low visual clutter.</p>
+        </div>
 
-    <header class="mb-8 p-6 bg-white shadow-xl rounded-2xl border border-slate-200 dark:bg-gray-800 dark:border-gray-700">
-        <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100">Heimdall Multi-Stream Dashboard</h1>
-        <p class="text-slate-500 mt-2 dark:text-gray-400">Centralized view for all active video devices (4:3 aspect ratio).</p>
-    </header>
+        <div class="shell-card px-6 py-6">
+            <div class="metric-label">Live Source Discovery</div>
+            <div class="mt-4 text-sm leading-6 text-[var(--text-soft)]">Authorized devices are fetched from the devices API at runtime. Failed streams degrade gracefully to a visible offline state instead of breaking the layout.</div>
+        </div>
+    </section>
 
-    <div id="loading-placeholder" class="text-center py-12">
-        <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <div id="loading-placeholder" class="shell-card px-6 py-8 text-center">
+        <svg class="mx-auto h-8 w-8 animate-spin text-[var(--accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p class="mt-3 text-lg font-medium text-slate-700 dark:text-gray-300">Fetching authorized devices...</p>
+        <p class="mt-3 text-sm font-semibold text-[var(--text-soft)]">Fetching authorized devices...</p>
     </div>
 
-    <main id="dashboard-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-
-    </main>
-
-    <footer class="mt-12 text-center text-sm text-slate-400 dark:text-gray-500">
-        Dashboard powered by Heimdall.
-    </footer>
-
+    <main id="dashboard-container" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></main>
 </div>
 {% endblock %}

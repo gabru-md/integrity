@@ -51,11 +51,17 @@ class Server:
     def setup_auth_context(self):
         @self.app.context_processor
         def inject_permissions():
+            active_app_names = {
+                app.name.lower()
+                for app in self.registered_apps
+                if getattr(app, "is_active", False)
+            }
             return dict(
                 PermissionManager=PermissionManager,
                 current_role=PermissionManager.get_current_role(),
                 current_user=PermissionManager.get_current_user(),
-                Role=Role
+                Role=Role,
+                active_app_names=active_app_names,
             )
 
     def register_app(self, app: App):

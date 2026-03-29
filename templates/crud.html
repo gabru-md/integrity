@@ -1,17 +1,20 @@
 {% extends "index.html" %}
 {% block title %}Manage {{ model_class_name }}s{% endblock %}
+{% block shell_title %}{{ model_class_name }} Workspace{% endblock %}
+{% block shell_subtitle %}Review, search, create, and edit {{ model_class_name|lower }} records from a cleaner operational interface while preserving the existing CRUD flow.{% endblock %}
 
 {% block content %}
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-<div id="vue-crud-app" class="p-4 sm:p-8">
-    <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
+<div id="vue-crud-app" class="space-y-6 px-1 py-2">
+    <header class="shell-card hero-card px-6 py-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 {% raw %}
-                <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100 capitalize">{{ modelClassName }}s
-                    Management</h1>
-                <p class="text-slate-500 mt-1 dark:text-gray-400">Manage and view all <span class="lowercase">{{ modelClassName }}</span>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Resource Management</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)] capitalize">{{ modelClassName }}s
+                    Workspace</h1>
+                <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Manage and view all <span class="lowercase">{{ modelClassName }}</span>
                     entries.</p>
                 {% endraw %}
             </div>
@@ -25,14 +28,13 @@
 
     <div id="data-view">
         <div id="view-data-card"
-             class="p-6 bg-white shadow-xl rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-6 border-b pb-4 border-slate-100 dark:border-gray-700/50">
-                <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100 capitalize">All {{ modelClassName
+             class="shell-card table-shell px-6 py-6">
+            <div class="toolbar mb-6 border-b border-[var(--border)] pb-4">
+                <h2 class="text-2xl font-extrabold text-[var(--text)] capitalize">All {{ modelClassName
                     }}s</h2>
 
                 <button @click="openCreateModal"
-                        class="flex items-center space-x-2 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md
-                               hover:bg-indigo-700 transition duration-300 focus:ring-4 focus:ring-indigo-300">
+                        class="btn-primary px-4 py-3 text-sm">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                          xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -41,48 +43,45 @@
                 </button>
             </div>
 
-            <div class="flex space-x-4 mb-4">
-                <input type="text" v-model="searchTerm" placeholder="Search entries..."
-                       class="flex-grow p-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+            <div class="mb-4">
+                <input type="text" v-model="searchTerm" placeholder="Search entries..." class="max-w-xl">
             </div>
 
-            <div id="recent-data-container" class="overflow-x-auto relative shadow-sm rounded-xl">
-                <p v-if="loading" class="text-center py-10 text-slate-500 dark:text-gray-400">Loading data...</p>
-                <p v-if="error" class="text-center py-10 text-red-500">
-                    Failed to load data. Please check the API route: <code class="bg-red-100 p-1 rounded">{{ fetchUrl
+            <div id="recent-data-container" class="table-wrap relative">
+                <p v-if="loading" class="text-center py-10 text-[var(--text-soft)]">Loading data...</p>
+                <p v-if="error" class="text-center py-10 text-[var(--danger)]">
+                    Failed to load data. Please check the API route: <code class="rounded-lg bg-[var(--surface-muted)] px-2 py-1">{{ fetchUrl
                     }}</code>
                 </p>
                 <p v-else-if="!loading && filteredData.length === 0"
-                   class="text-center py-10 text-slate-500 dark:text-gray-400">
+                   class="empty-state">
                     No recent entries found. Start by creating one!
                 </p>
 
-                <table v-else class="min-w-full divide-y divide-slate-200 dark:divide-gray-700">
+                <table v-else class="table-modern">
                     <thead>
-                    <tr class="bg-slate-50 dark:bg-gray-700">
+                    <tr>
                         <th v-for="attr in visibleAttributes" :key="attr.name"
-                            class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-gray-300">
+                            class="text-left">
                             {{ formatKey(attr.name) }}
                         </th>
                         <th v-for="attr in downloadableAttributes" :key="attr.name"
-                            class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-gray-300">
+                            class="text-left">
                             {{ formatKey(attr.name) }}
                         </th>
                         {% endraw %}
                         {% block xth %}{% endblock %}
                         {% raw %}
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-gray-300">
+                        <th class="text-right">
                             Actions
                         </th>
                     </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-slate-200 dark:bg-gray-800 dark:divide-gray-700">
-                    <tr v-for="(item, index) in filteredData" :key="item.id"
-                        :class="[index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-slate-50 dark:bg-gray-700/50',
-                                     'hover:bg-slate-50 dark:hover:bg-gray-700 transition duration-150']">
+                    <tbody>
+                    <tr v-for="(item, index) in filteredData" :key="item.id">
 
                         <td v-for="attr in visibleAttributes" :key="attr.name"
-                            class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 dark:text-gray-200">
+                            class="whitespace-nowrap text-sm">
                             <template v-if="attr.name === 'enabled'">
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input
@@ -100,22 +99,22 @@
                             </template>
                         </td>
                         <td v-for="attr in downloadableAttributes" :key="attr.name"
-                            class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 dark:text-gray-200">
+                            class="whitespace-nowrap text-sm">
                             <a :href="getDownloadUrl(item, attr)" target="_blank"
-                               class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors">
+                               class="font-medium text-[var(--accent)] hover:text-[var(--accent-strong)]">
                                 {{ formatValue(item[attr.name], attr.name) }}
                             </a>
                         </td>
                         {% endraw %}
                         {% block xtd %}{% endblock %}
                         {% raw %}
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                        <td class="whitespace-nowrap text-right text-sm font-medium space-x-4">
                             <button @click="openEditModal(item)"
-                                    class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">
+                                    class="font-medium text-[var(--accent)] hover:text-[var(--accent-strong)]">
                                 Edit
                             </button>
                             <button @click="handleDelete(item.id)"
-                                    class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium">
+                                    class="font-medium text-[var(--danger)]">
                                 Delete
                             </button>
                         </td>
@@ -129,14 +128,13 @@
     <div v-if="isModalOpen"
          class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/50 backdrop-blur-sm dark:bg-gray-900/80">
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl
-                        dark:bg-gray-800">
+            <div class="modal-surface relative transform overflow-hidden text-left transition-all sm:my-8 sm:w-full sm:max-w-xl">
                 <div class="px-4 py-5 sm:p-6">
-                    <div class="flex items-start justify-between border-b pb-3 border-slate-100 dark:border-gray-700/50">
-                        <h3 id="modal-title" class="text-xl font-bold text-slate-800 dark:text-gray-100">{{ formMode ===
+                    <div class="flex items-start justify-between border-b border-[var(--border)] pb-3">
+                        <h3 id="modal-title" class="text-xl font-bold text-[var(--text)]">{{ formMode ===
                             'create' ? 'Create New' : 'Edit' }} {{ modelClassName }}</h3>
                         <button type="button" @click="isModalOpen = false"
-                                class="text-slate-400 hover:text-slate-600 dark:text-gray-400 dark:hover:text-gray-200">
+                                class="btn-ghost h-10 w-10 rounded-2xl p-0">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                  xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -154,33 +152,30 @@
                                        :id="attr.name"
                                        :name="attr.name"
                                        v-model="formData[attr.name]"
-                                       class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500
-                                              dark:bg-gray-700 dark:border-gray-600 dark:ring-offset-gray-800">
+                                       class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
 
                                 <label :for="attr.name"
-                                       class="text-sm font-medium text-slate-700 capitalize dark:text-gray-300 cursor-pointer">
+                                       class="cursor-pointer text-sm font-medium text-[var(--text)] capitalize">
                                     {{ formatKey(attr.name) }}
                                     <span v-if="attr.required" class="text-red-500">*</span>
                                 </label>
-                                <p v-if="attr.description" class="text-xs leading-5 text-slate-500 dark:text-gray-400">
+                                <p v-if="attr.description" class="text-xs leading-5 text-[var(--text-soft)]">
                                     {{ attr.description }}
                                 </p>
                             </template>
                             
                             <template v-else-if="getInputType(attr) === 'select'">
                                 <label :for="attr.name"
-                                       class="text-sm font-medium text-slate-700 capitalize dark:text-gray-300">
+                                       class="text-sm font-medium text-[var(--text)] capitalize">
                                     {{ formatKey(attr.name) }}
                                     <span v-if="attr.required" class="text-red-500">*</span>
                                 </label>
-                                <p v-if="attr.description" class="text-xs leading-5 text-slate-500 dark:text-gray-400">
+                                <p v-if="attr.description" class="text-xs leading-5 text-[var(--text-soft)]">
                                     {{ attr.description }}
                                 </p>
                                 <select :id="attr.name"
                                         :name="attr.name"
                                         v-model="formData[attr.name]"
-                                        class="p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
-                                              dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                                         :required="attr.required">
                                     <option v-for="option in attr.widget_options" :key="option" :value="option">
                                         {{ formatKey(option) }}
@@ -190,11 +185,11 @@
 
                             <template v-else>
                                 <label :for="attr.name"
-                                       class="text-sm font-medium text-slate-700 capitalize dark:text-gray-300">
+                                       class="text-sm font-medium text-[var(--text)] capitalize">
                                     {{ formatKey(attr.name) }}
                                     <span v-if="attr.required" class="text-red-500">*</span>
                                 </label>
-                                <p v-if="attr.description" class="text-xs leading-5 text-slate-500 dark:text-gray-400">
+                                <p v-if="attr.description" class="text-xs leading-5 text-[var(--text-soft)]">
                                     {{ attr.description }}
                                 </p>
 
@@ -202,21 +197,18 @@
                                        :id="attr.name"
                                        :name="attr.name"
                                        v-model="formData[attr.name]"
-                                       class="p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150
-                                              dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                                        :placeholder="`Enter ${formatKey(attr.name)}`"
                                        :required="attr.required">
                             </template>
                         </div>
 
-                        <div class="pt-4 border-t border-slate-100 dark:border-gray-700/50 flex justify-end space-x-3">
+                        <div class="flex justify-end space-x-3 border-t border-[var(--border)] pt-4">
                             <button type="button" @click="isModalOpen = false"
-                                    class="py-2 px-4 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition duration-150
-                                           dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                                    class="btn-secondary px-4 py-3">
                                 Cancel
                             </button>
                             <button type="submit" :disabled="isSubmitting"
-                                    class="py-2 px-4 bg-indigo-600 text-white font-medium rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                                    class="btn-primary px-4 py-3">
                                 {{ isSubmitting ? 'Saving...' : (formMode === 'create' ? `Save ${modelClassName}` :
                                 `Update ${modelClassName}`) }}
                             </button>

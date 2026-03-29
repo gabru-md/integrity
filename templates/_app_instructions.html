@@ -6,37 +6,35 @@
     <div class="pointer-events-none fixed bottom-24 right-6 z-40">
         <label
             for="{{ instructions_id }}"
-            class="pointer-events-auto inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg transition hover:border-indigo-200 hover:text-indigo-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+            class="btn-secondary pointer-events-auto rounded-full px-4 py-3 text-sm"
         >
-            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-700 dark:bg-gray-700 dark:text-indigo-300">i</span>
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent-soft)] text-xs font-bold text-[var(--accent)]">i</span>
             <span>Instructions</span>
         </label>
     </div>
 
     <label
         for="{{ instructions_id }}"
-        class="pointer-events-none fixed inset-0 z-40 bg-slate-950/20 opacity-0 transition peer-checked:pointer-events-auto peer-checked:opacity-100 dark:bg-black/40"
+        class="pointer-events-none fixed inset-0 z-40 bg-slate-950/28 opacity-0 transition peer-checked:pointer-events-auto peer-checked:opacity-100"
         aria-hidden="true"
     ></label>
 
     <aside
-        class="fixed right-0 top-0 z-50 flex h-full w-full max-w-md translate-x-full flex-col border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 ease-out peer-checked:translate-x-0 dark:border-gray-700 dark:bg-gray-800"
+        class="fixed right-0 top-0 z-50 flex h-full w-full max-w-md translate-x-full flex-col border-l border-[var(--border)] bg-[var(--surface)] shadow-2xl transition-transform duration-300 ease-out floating-blur peer-checked:translate-x-0"
         aria-label="{{ app_name }} instructions"
     >
-        <div class="border-b border-slate-100 px-5 py-4 dark:border-gray-700/70">
+        <div class="border-b border-[var(--border)] px-5 py-5">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <div class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-700 dark:bg-gray-700 dark:text-indigo-300">
-                        Instructions
-                    </div>
-                    <h2 class="mt-3 text-lg font-bold text-slate-800 dark:text-gray-100">{{ app_name }}</h2>
+                    <div class="ui-pill !px-3 !py-2">Instructions</div>
+                    <h2 class="mt-4 text-xl font-extrabold text-[var(--text)]">{{ app_name }}</h2>
                     {% if user_guidance.overview %}
-                    <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-gray-400">{{ user_guidance.overview }}</p>
+                    <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ user_guidance.overview }}</p>
                     {% endif %}
                 </div>
                 <label
                     for="{{ instructions_id }}"
-                    class="cursor-pointer rounded-lg border border-slate-200 px-2.5 py-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                    class="btn-ghost h-10 w-10 cursor-pointer rounded-2xl p-0"
                     aria-label="Close instructions"
                 >
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,29 +46,27 @@
 
         <div class="flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {% if user_guidance.how_to_use %}
-            <section class="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-gray-700/70 dark:bg-gray-700/30">
-                <h3 class="text-sm font-semibold text-slate-800 dark:text-gray-100">How to use it</h3>
+            <section class="shell-card px-4 py-4">
+                <h3 class="text-sm font-bold text-[var(--text)]">How to use it</h3>
                 <div class="mt-3 flex flex-wrap gap-2">
                     {% for item in user_guidance.how_to_use %}
-                    <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium leading-5 text-slate-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                        {{ item }}
-                    </span>
+                    <span class="ui-badge">{{ item }}</span>
                     {% endfor %}
                 </div>
             </section>
             {% endif %}
 
             {% if user_guidance.glossary %}
-            <section class="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-gray-700/70 dark:bg-gray-700/30">
+            <section class="shell-card px-4 py-4">
                 <div class="mb-3 flex items-center justify-between">
-                    <h3 class="text-sm font-semibold text-slate-800 dark:text-gray-100">What things mean</h3>
-                    <span class="text-xs text-slate-500 dark:text-gray-400">{{ user_guidance.glossary|length }} terms</span>
+                    <h3 class="text-sm font-bold text-[var(--text)]">What things mean</h3>
+                    <span class="text-xs text-[var(--text-soft)]">{{ user_guidance.glossary|length }} terms</span>
                 </div>
                 <div class="space-y-3">
                     {% for item in user_guidance.glossary %}
-                    <div class="rounded-xl border border-slate-100 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
-                        <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">{{ item.term }}</div>
-                        <div class="mt-1 text-xs leading-5 text-slate-500 dark:text-gray-400">{{ item.meaning }}</div>
+                    <div class="stack-row">
+                        <div class="text-sm font-bold text-[var(--text)]">{{ item.term }}</div>
+                        <div class="mt-1 text-xs leading-5 text-[var(--text-soft)]">{{ item.meaning }}</div>
                     </div>
                     {% endfor %}
                 </div>
@@ -78,16 +74,16 @@
             {% endif %}
 
             {% if user_guidance.fields %}
-            <section class="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-gray-700/70 dark:bg-gray-700/30">
+            <section class="shell-card px-4 py-4">
                 <div class="mb-3 flex items-center justify-between">
-                    <h3 class="text-sm font-semibold text-slate-800 dark:text-gray-100">Field guide</h3>
-                    <span class="text-xs text-slate-500 dark:text-gray-400">{{ user_guidance.fields|length }} fields</span>
+                    <h3 class="text-sm font-bold text-[var(--text)]">Field guide</h3>
+                    <span class="text-xs text-[var(--text-soft)]">{{ user_guidance.fields|length }} fields</span>
                 </div>
                 <div class="space-y-3">
                     {% for field in user_guidance.fields %}
-                    <div class="rounded-xl border border-slate-100 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
-                        <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">{{ field.label or field.name }}</div>
-                        <div class="mt-1 text-xs leading-5 text-slate-500 dark:text-gray-400">{{ field.description }}</div>
+                    <div class="stack-row">
+                        <div class="text-sm font-bold text-[var(--text)]">{{ field.label or field.name }}</div>
+                        <div class="mt-1 text-xs leading-5 text-[var(--text-soft)]">{{ field.description }}</div>
                     </div>
                     {% endfor %}
                 </div>
@@ -95,11 +91,11 @@
             {% endif %}
 
             {% if user_guidance.examples %}
-            <section class="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 dark:border-gray-700/70 dark:bg-gray-700/30">
-                <h3 class="text-sm font-semibold text-slate-800 dark:text-gray-100">Examples</h3>
+            <section class="shell-card px-4 py-4">
+                <h3 class="text-sm font-bold text-[var(--text)]">Examples</h3>
                 <div class="mt-3 space-y-2">
                     {% for item in user_guidance.examples %}
-                    <div class="rounded-xl border border-slate-100 bg-white px-3 py-2 text-xs leading-5 text-slate-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">{{ item }}</div>
+                    <div class="stack-row text-xs leading-5 text-[var(--text-soft)]">{{ item }}</div>
                     {% endfor %}
                 </div>
             </section>

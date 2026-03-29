@@ -1,17 +1,20 @@
 {% extends "index.html" %}
 {% block title %}Manage {{ model_class_name }}s{% endblock %}
+{% block shell_title %}Activities Workspace{% endblock %}
+{% block shell_subtitle %}Define, search, trigger, and maintain activities through the same refreshed CRUD interface used across the rest of the system.{% endblock %}
 
 {% block content %}
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-<div id="vue-crud-app" class="p-4 sm:p-8">
-    <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
+<div id="vue-crud-app" class="space-y-6 px-1 py-2">
+    <header class="shell-card hero-card px-6 py-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 {% raw %}
-                <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100 capitalize">{{ modelClassName }}s
-                    Management</h1>
-                <p class="text-slate-500 mt-1 dark:text-gray-400">Define and trigger your custom activities to generate events
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Action Automation</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)] capitalize">{{ modelClassName }}s
+                    Workspace</h1>
+                <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Define and trigger your custom activities to generate events
                     consistently.</p>
                 {% endraw %}
             </div>

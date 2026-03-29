@@ -1,73 +1,94 @@
 {% extends "index.html" %}
 {% block title %}My Profile{% endblock %}
+{% block shell_title %}Profile Settings{% endblock %}
+{% block shell_subtitle %}Update your account details, password, notification preferences, and personal API access key from one place.{% endblock %}
 
 {% block content %}
-<div class="p-4 sm:p-8 max-w-2xl mx-auto">
-    <header class="mb-8 p-6 bg-white shadow-lg rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
-        <h1 class="text-4xl font-extrabold text-slate-800 dark:text-gray-100">My Profile</h1>
-        <p class="text-slate-500 mt-1 dark:text-gray-400">View and update your personal information.</p>
-    </header>
+<div class="space-y-6 px-1 py-2">
+    <section class="hero-grid">
+        <div class="shell-card hero-card px-6 py-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Account</div>
+            <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">My Profile</h1>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Everything related to your identity, notification routing, and API authentication lives here. Changes are applied immediately after save.</p>
+        </div>
 
-    <div class="p-6 bg-white shadow-xl rounded-2xl border border-slate-100 dark:bg-gray-800 dark:border-gray-700">
-        <form action="{{ url_for('Users.update_profile') }}" method="POST" class="space-y-6">
-            <div>
-                <label for="username" class="block text-sm font-medium text-slate-700 dark:text-gray-300">Username</label>
-                <input type="text" id="username" name="username" value="{{ user.username }}" readonly
-                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg bg-slate-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
-                       aria-describedby="username-help">
-                <p id="username-help" class="mt-1 text-xs text-slate-500 dark:text-gray-400">Your username cannot be changed.</p>
+        <div class="shell-card px-6 py-6">
+            <div class="metric-label">Current User</div>
+            <div class="mt-3 text-2xl font-extrabold text-[var(--text)]">{{ user.display_name or user.username }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">@{{ user.username }}</div>
+            <div class="mt-5 flex flex-wrap gap-2">
+                <span class="ui-badge">Profile</span>
+                <span class="ui-badge">{{ 'Admin' if user.is_admin else 'Standard User' }}</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="split-card">
+        <div class="shell-card px-6 py-6">
+            <div class="mb-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Identity</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Personal settings</h2>
             </div>
 
-            <div>
-                <label for="display_name" class="block text-sm font-medium text-slate-700 dark:text-gray-300">Display Name</label>
-                <input type="text" id="display_name" name="display_name" value="{{ user.display_name }}" required
-                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+            <form action="{{ url_for('Users.update_profile') }}" method="POST" class="space-y-5">
+                <label class="block space-y-2">
+                    <span class="text-sm font-semibold text-[var(--text)]">Username</span>
+                    <input type="text" id="username" name="username" value="{{ user.username }}" readonly aria-describedby="username-help">
+                    <span id="username-help" class="text-xs text-[var(--text-soft)]">Your username is fixed and cannot be changed.</span>
+                </label>
+
+                <label class="block space-y-2">
+                    <span class="text-sm font-semibold text-[var(--text)]">Display Name</span>
+                    <input type="text" id="display_name" name="display_name" value="{{ user.display_name }}" required>
+                </label>
+
+                <label class="block space-y-2">
+                    <span class="text-sm font-semibold text-[var(--text)]">Ntfy Topic</span>
+                    <input type="text" id="ntfy_topic" name="ntfy_topic" value="{{ user.ntfy_topic or '' }}" placeholder="e.g., my-personal-alerts">
+                    <span class="text-xs text-[var(--text-soft)]">Leave blank to use the default notification topic.</span>
+                </label>
+
+                <label class="block space-y-2">
+                    <span class="text-sm font-semibold text-[var(--text)]">New Password</span>
+                    <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
+                </label>
+
+                <label class="block space-y-2">
+                    <span class="text-sm font-semibold text-[var(--text)]">Confirm New Password</span>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter new password">
+                </label>
+
+                <div class="flex justify-end border-t border-[var(--border)] pt-4">
+                    <button type="submit" class="btn-primary px-5 py-3">Update Profile</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="space-y-6">
+            <div class="shell-card px-6 py-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Access</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">API Key</h2>
+                <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use this key in the `X-API-Key` header or as `Authorization: ApiKey &lt;key&gt;` to access Rasbhari routes without a browser session.</p>
+
+                <div class="mt-5 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+                    <div class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Current Key</div>
+                    <input type="text" id="api_key" value="{{ user.api_key or '' }}" readonly class="mono mt-3 tracking-[0.3em]">
+                </div>
+
+                <form action="{{ url_for('Users.regenerate_api_key') }}" method="POST" class="mt-4">
+                    <button type="submit" class="btn-secondary w-full px-5 py-3">Regenerate API Key</button>
+                </form>
             </div>
 
-            <div>
-                <label for="ntfy_topic" class="block text-sm font-medium text-slate-700 dark:text-gray-300">Ntfy Topic</label>
-                <input type="text" id="ntfy_topic" name="ntfy_topic" value="{{ user.ntfy_topic or '' }}"
-                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                       placeholder="e.g., my-personal-alerts">
-                <p class="mt-1 text-xs text-slate-500 dark:text-gray-400">Your personal topic for ntfy.sh notifications. Leave blank to use the default.</p>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
-                <div class="flex items-center justify-between gap-4">
-                    <div class="min-w-0 flex-1">
-                        <label for="api_key" class="block text-sm font-medium text-slate-700 dark:text-gray-300">API Key</label>
-                        <input type="text" id="api_key" value="{{ user.api_key or '' }}" readonly
-                               class="mt-1 block w-full p-3 border border-slate-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 font-mono tracking-widest">
-                        <p class="mt-1 text-xs text-slate-500 dark:text-gray-400">Send this as `X-API-Key` to access Rasbhari routes without a browser session.</p>
-                    </div>
-                    <button type="submit" formaction="{{ url_for('Users.regenerate_api_key') }}" formmethod="POST"
-                            class="shrink-0 py-2 px-4 bg-slate-800 text-white font-medium rounded-lg shadow-md hover:bg-slate-900 transition duration-150 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-white">
-                        Regenerate
-                    </button>
+            <div class="shell-card px-6 py-6">
+                <div class="metric-label">Usage Notes</div>
+                <div class="mt-4 stack-list">
+                    <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Regenerating invalidates the old key immediately.</div>
+                    <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Treat the key like a password and only store it in trusted systems.</div>
+                    <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">UI appearance settings are managed globally from the sidebar and stored locally in your browser.</div>
                 </div>
             </div>
-
-            <div>
-                <label for="password" class="block text-sm font-medium text-slate-700 dark:text-gray-300">New Password</label>
-                <input type="password" id="password" name="password"
-                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                       placeholder="Leave blank to keep current password">
-            </div>
-
-            <div>
-                <label for="confirm_password" class="block text-sm font-medium text-slate-700 dark:text-gray-300">Confirm New Password</label>
-                <input type="password" id="confirm_password" name="confirm_password"
-                       class="mt-1 block w-full p-3 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                       placeholder="Re-enter new password">
-            </div>
-
-            <div class="flex justify-end pt-4 border-t border-slate-100 dark:border-gray-700/50">
-                <button type="submit"
-                        class="py-2 px-4 bg-indigo-600 text-white font-medium rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 focus:ring-4 focus:ring-indigo-300">
-                    Update Profile
-                </button>
-            </div>
-        </form>
-    </div>
+        </div>
+    </section>
 </div>
 {% endblock %}
