@@ -13,6 +13,7 @@ Use it as the primary place to find:
 ## Core Docs
 
 - [AI Command Layer](./AI.md)
+- [macOS Agent](./mac-agent.md)
 
 ## Notes
 
