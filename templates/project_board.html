@@ -20,18 +20,81 @@
         </div>
     </header>
 
-    <section class="bg-white dark:bg-gray-800 shadow rounded-2xl p-5 border border-slate-100 dark:border-gray-700">
-        <h2 class="text-xl font-bold text-slate-800 dark:text-gray-100">Create Ticket</h2>
-        <form class="mt-4 grid gap-3 lg:grid-cols-[1.2fr_1.6fr_auto]" @submit.prevent="createTicket">
-            <input v-model="newTicket.title" type="text" required placeholder="Ticket title"
-                   class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-            <textarea v-model="newTicket.description" rows="1" placeholder="Description"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></textarea>
-            <button type="submit" :disabled="isSubmitting"
-                    class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-50">
-                {% raw %}{{ isSubmitting ? 'Creating...' : 'Add Ticket' }}{% endraw %}
-            </button>
-        </form>
+    <section class="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)_20rem]">
+        <aside class="bg-white dark:bg-gray-800 shadow rounded-2xl p-5 border border-slate-100 dark:border-gray-700">
+            <h2 class="text-lg font-bold text-slate-800 dark:text-gray-100">Project Context</h2>
+            <dl class="mt-4 space-y-4 text-sm">
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Project</dt>
+                    <dd class="text-right font-semibold text-slate-800 dark:text-gray-100">{{ project.name }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">State</dt>
+                    <dd class="text-right font-semibold text-slate-800 dark:text-gray-100">{{ project.state }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Type</dt>
+                    <dd class="text-right font-semibold text-slate-800 dark:text-gray-100">{{ project.project_type or "Other" }}</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Started</dt>
+                    <dd class="text-right font-semibold text-slate-800 dark:text-gray-100">{{ project.start_date | datetimeformat }}</dd>
+                </div>
+            </dl>
+            <div class="mt-6 border-t border-slate-100 pt-4 dark:border-gray-700">
+                <a href="/projects/{{ project.id }}/view" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
+                    Open full project page
+                </a>
+            </div>
+        </aside>
+
+        <div class="bg-white dark:bg-gray-800 shadow rounded-2xl p-5 border border-slate-100 dark:border-gray-700">
+            <h2 class="text-xl font-bold text-slate-800 dark:text-gray-100">Create Ticket</h2>
+            <form class="mt-4 space-y-3" @submit.prevent="createTicket">
+                <input v-model="newTicket.title" type="text" required placeholder="Ticket title"
+                       class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                <textarea v-model="newTicket.description" rows="2" placeholder="Description"
+                          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></textarea>
+                <div class="flex justify-start">
+                    <button type="submit" :disabled="isSubmitting"
+                            class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-50">
+                        {% raw %}{{ isSubmitting ? 'Creating...' : 'Add Ticket' }}{% endraw %}
+                    </button>
+                </div>
+            </form>
+        </div>
+        <aside class="bg-white dark:bg-gray-800 shadow rounded-2xl p-5 border border-slate-100 dark:border-gray-700">
+            <h2 class="text-lg font-bold text-slate-800 dark:text-gray-100">Board Context</h2>
+            <dl class="mt-4 space-y-4 text-sm">
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Last Updated</dt>
+                    <dd class="text-right font-semibold text-slate-800 dark:text-gray-100">
+                        {{ board_last_updated | datetimeformat if board_last_updated else "No ticket activity yet" }}
+                    </dd>
+                </div>
+                <div class="flex items-start justify-between gap-4">
+                    <dt class="text-slate-500 dark:text-gray-400">Archived</dt>
+                    <dd class="text-right font-semibold text-slate-800 dark:text-gray-100">
+                        {{ archived_count }} ticket{{ '' if archived_count == 1 else 's' }}
+                    </dd>
+                </div>
+            </dl>
+            <div class="mt-6 border-t border-slate-100 pt-4 dark:border-gray-700">
+                <h3 class="text-sm font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">Recent Activity</h3>
+                {% if recent_activity %}
+                <div class="mt-3 space-y-3">
+                    {% for item in recent_activity[:3] %}
+                    <div class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 dark:border-gray-700 dark:bg-gray-900/60">
+                        <div class="text-sm font-semibold text-slate-800 dark:text-gray-100">{{ item.description or item.event_type }}</div>
+                        <div class="mt-1 text-xs text-slate-500 dark:text-gray-400">{{ item.timestamp | datetimeformat }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="mt-3 text-sm text-slate-500 dark:text-gray-400">No kanban events for this project yet.</p>
+                {% endif %}
+            </div>
+        </aside>
     </section>
 
     <section class="space-y-4">

@@ -46,6 +46,36 @@ def view_project_board(project_id):
     if not project:
         return "Project not found", 404
     tickets = kanban_ticket_service.get_by_project_id(project_id, include_archived=False)
+    archived_tickets = kanban_ticket_service.get_by_project_id(project_id, include_archived=True)
+    archived_count = sum(1 for ticket in archived_tickets if ticket.is_archived)
+    all_tickets = [ticket.dict() for ticket in archived_tickets]
+    last_updated = None
+    if all_tickets:
+        latest_ticket = max(
+            all_tickets,
+            key=lambda ticket: ticket.get("updated_at") or ticket.get("state_changed_at") or ticket.get("created_at") or "",
+        )
+        last_updated = latest_ticket.get("updated_at") or latest_ticket.get("state_changed_at") or latest_ticket.get("created_at")
+    project_tag = f"project:{project.name.lower().replace(' ', '-')}"
+    recent_activity = []
+    try:
+        events = event_service.find_all(
+            filters={"event_type": {"$in": [
+                "kanban:ticket_created",
+                "kanban:ticket_moved",
+                "kanban:ticket_updated",
+                "kanban:ticket_archived",
+            ]}},
+            sort_by={"timestamp": "DESC"},
+        )
+        for event in events:
+            tags = event.tags or []
+            if project_tag in tags:
+                recent_activity.append(event.dict())
+            if len(recent_activity) >= 5:
+                break
+    except Exception:
+        recent_activity = []
     return render_flask_template(
         'project_board.html',
         project=project,
@@ -54,6 +84,9 @@ def view_project_board(project_id):
         ticket_state_labels={state.value: state.value.replace("_", " ").title() for state in KanbanTicketState},
         app_name="KanbanTickets",
         user_guidance=build_app_user_guidance("KanbanTickets"),
+        board_last_updated=last_updated,
+        archived_count=archived_count,
+        recent_activity=recent_activity,
     )
 
 @project_app.blueprint.route('/<int:project_id>/timeline', methods=['GET'])
