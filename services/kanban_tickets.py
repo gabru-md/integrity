@@ -29,6 +29,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                         title VARCHAR(255) NOT NULL,
                         description TEXT,
                         state VARCHAR(50) NOT NULL DEFAULT 'backlog',
+                        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
                         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
                         updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
                         state_changed_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -37,6 +38,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                 )
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS description TEXT")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS state VARCHAR(50) NOT NULL DEFAULT 'backlog'")
+                cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT NOW()")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS state_changed_at TIMESTAMP NOT NULL DEFAULT NOW()")
@@ -51,6 +53,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
             entity.title,
             entity.description,
             state_value,
+            entity.is_archived,
             entity.created_at,
             entity.updated_at,
             entity.state_changed_at,
@@ -64,19 +67,20 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
             title=row[3],
             description=row[4] or "",
             state=row[5],
-            created_at=row[6],
-            updated_at=row[7],
-            state_changed_at=row[8],
+            is_archived=bool(row[6]),
+            created_at=row[7],
+            updated_at=row[8],
+            state_changed_at=row[9],
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["user_id", "project_id", "title", "description", "state", "created_at", "updated_at", "state_changed_at"]
+        return ["user_id", "project_id", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["user_id", "project_id", "title", "description", "state", "created_at", "updated_at", "state_changed_at"]
+        return ["user_id", "project_id", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "user_id", "project_id", "title", "description", "state", "created_at", "updated_at", "state_changed_at"]
+        return ["id", "user_id", "project_id", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def create(self, obj: KanbanTicket) -> Optional[int]:
         now = datetime.now()
@@ -129,8 +133,11 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                 )
         return updated
 
-    def get_by_project_id(self, project_id: int) -> List[KanbanTicket]:
-        return self.find_all(filters={"project_id": project_id}, sort_by={"id": "DESC"})
+    def get_by_project_id(self, project_id: int, include_archived: bool = True) -> List[KanbanTicket]:
+        filters = {"project_id": project_id}
+        if not include_archived:
+            filters["is_archived"] = False
+        return self.find_all(filters=filters, sort_by={"id": "DESC"})
 
     def move_ticket(self, ticket_id: int, state: str) -> Optional[KanbanTicket]:
         normalized_state = (state or "").strip().lower().replace("-", "_")
@@ -150,6 +157,26 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
             return self.STATE_ORDER[0]
         index = self.STATE_ORDER.index(normalized_state)
         return self.STATE_ORDER[min(index + 1, len(self.STATE_ORDER) - 1)]
+
+    def archive_ticket(self, ticket_id: int) -> Optional[KanbanTicket]:
+        ticket = self.get_by_id(ticket_id)
+        if not ticket:
+            return None
+        if ticket.is_archived:
+            return ticket
+        ticket.is_archived = True
+        if self.update(ticket):
+            project = self.project_service.get_by_id(ticket.project_id)
+            emit_event_safely(
+                self.log,
+                user_id=ticket.user_id,
+                event_type="kanban:ticket_archived",
+                timestamp=datetime.now(),
+                description=f"Archived ticket '{ticket.title}'",
+                tags=self._build_event_tags(project.name if project else None, ticket.state, ticket.id),
+            )
+            return self.get_by_id(ticket_id)
+        return None
 
     @staticmethod
     def _build_event_tags(project_name: Optional[str], state_value, ticket_id: Optional[int], previous_state: Optional[str] = None) -> List[str]:

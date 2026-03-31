@@ -114,6 +114,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Keep tickets short and concrete so the board stays fast to scan.",
                 "Use the board for day-to-day execution and the project timeline for narrative updates.",
                 "Move tickets forward as work advances. Rasbhari emits events when tickets are created or moved.",
+                "Archive shipped or stale tickets when you want them out of the active board without deleting their history.",
             ],
             "glossary": [
                 {"term": "Backlog", "meaning": "Work that exists but is not yet selected."},
@@ -121,6 +122,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 {"term": "In Progress", "meaning": "Work currently being executed."},
                 {"term": "Completed", "meaning": "Work finished but not yet shipped or deployed."},
                 {"term": "Shipped", "meaning": "Work delivered, released, or deployed."},
+                {"term": "Archived", "meaning": "A ticket hidden from the project board but still kept in the system and global ticket list."},
             ],
         },
         "Promises": {

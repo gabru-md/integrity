@@ -45,13 +45,15 @@ def view_project_board(project_id):
     project = project_app.service.get_by_id(project_id)
     if not project:
         return "Project not found", 404
-    tickets = kanban_ticket_service.get_by_project_id(project_id)
+    tickets = kanban_ticket_service.get_by_project_id(project_id, include_archived=False)
     return render_flask_template(
         'project_board.html',
         project=project,
         initial_tickets=[ticket.dict() for ticket in tickets],
         board_states=KanbanTicketService.STATE_ORDER,
         ticket_state_labels={state.value: state.value.replace("_", " ").title() for state in KanbanTicketState},
+        app_name="KanbanTickets",
+        user_guidance=build_app_user_guidance("KanbanTickets"),
     )
 
 @project_app.blueprint.route('/<int:project_id>/timeline', methods=['GET'])

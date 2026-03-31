@@ -18,6 +18,7 @@ def process_ticket_data(data):
     data["title"] = (data.get("title") or "").strip()
     data["description"] = (data.get("description") or "").strip()
     data["state"] = (data.get("state") or "backlog").strip().lower().replace("-", "_")
+    data["is_archived"] = bool(data.get("is_archived", False))
     data["updated_at"] = now
     if not data.get("created_at"):
         data["created_at"] = now
@@ -56,6 +57,15 @@ def move_ticket(ticket_id):
         ticket = kanban_tickets_app.service.move_ticket(ticket_id, requested_state)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    if not ticket:
+        return jsonify({"error": "Ticket not found"}), 404
+    return jsonify(ticket.dict()), 200
+
+
+@kanban_tickets_app.blueprint.route("/<int:ticket_id>/archive", methods=["POST"])
+@write_access_required
+def archive_ticket(ticket_id):
+    ticket = kanban_tickets_app.service.archive_ticket(ticket_id)
     if not ticket:
         return jsonify({"error": "Ticket not found"}), 404
     return jsonify(ticket.dict()), 200
