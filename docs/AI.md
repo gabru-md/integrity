@@ -53,8 +53,8 @@ The AI surface currently appears as a floating `Rasbhari AI` chat panel in the s
 
 Files:
 
-- [templates/index.html](/Users/manish/PycharmProjects/integrity/templates/index.html)
-- [static/css/style.css](/Users/manish/PycharmProjects/integrity/static/css/style.css)
+- [templates/index.html](templates/index.html)
+- [static/css/style.css](static/css/style.css)
 
 Current UI behavior:
 
@@ -162,12 +162,12 @@ User message
 
 Important files:
 
-- [gabru/contracts.py](/Users/manish/PycharmProjects/integrity/gabru/contracts.py)
-- [gabru/flask/server.py](/Users/manish/PycharmProjects/integrity/gabru/flask/server.py)
-- [runtime/providers.py](/Users/manish/PycharmProjects/integrity/runtime/providers.py)
-- [services/assistant_command.py](/Users/manish/PycharmProjects/integrity/services/assistant_command.py)
-- [services/assistant_resolvers.py](/Users/manish/PycharmProjects/integrity/services/assistant_resolvers.py)
-- [model/assistant_command.py](/Users/manish/PycharmProjects/integrity/model/assistant_command.py)
+- [gabru/contracts.py](gabru/contracts.py)
+- [gabru/flask/server.py](gabru/flask/server.py)
+- [runtime/providers.py](runtime/providers.py)
+- [services/assistant_command.py](services/assistant_command.py)
+- [services/assistant_resolvers.py](services/assistant_resolvers.py)
+- [model/assistant_command.py](model/assistant_command.py)
 
 ### Layer responsibilities
 

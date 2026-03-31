@@ -137,4 +137,4 @@ That keeps `gabru/` reusable while letting Rasbhari keep its concrete PostgreSQL
 - `Activities`
 - `Skills`
 
-See [apps/README.md](/Users/manish/PycharmProjects/integrity/apps/README.md).
+See [apps/README.md](apps/README.md).

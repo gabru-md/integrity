@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rasbhari
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5002:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5001:5000"
+    environment:
+      # Rasbhari (main app data)
+      RASBHARI_POSTGRES_DB: rasbhari
+      RASBHARI_POSTGRES_USER: postgres
+      RASBHARI_POSTGRES_PASSWORD: postgres
+      RASBHARI_POSTGRES_HOST: postgres
+      RASBHARI_POSTGRES_PORT: 5432
+
+      # Events
+      EVENTS_POSTGRES_DB: events
+      EVENTS_POSTGRES_USER: postgres
+      EVENTS_POSTGRES_PASSWORD: postgres
+      EVENTS_POSTGRES_HOST: postgres
+      EVENTS_POSTGRES_PORT: 5432
+
+      # Queue
+      QUEUE_POSTGRES_DB: queue
+      QUEUE_POSTGRES_USER: postgres
+      QUEUE_POSTGRES_PASSWORD: postgres
+      QUEUE_POSTGRES_HOST: postgres
+      QUEUE_POSTGRES_PORT: 5432
+
+      # Notifications
+      NOTIFICATIONS_POSTGRES_DB: notifications
+      NOTIFICATIONS_POSTGRES_USER: postgres
+      NOTIFICATIONS_POSTGRES_PASSWORD: postgres
+      NOTIFICATIONS_POSTGRES_HOST: postgres
+      NOTIFICATIONS_POSTGRES_PORT: 5432
+
+      # Thoughts
+      THOUGHTS_POSTGRES_DB: thoughts
+      THOUGHTS_POSTGRES_USER: postgres
+      THOUGHTS_POSTGRES_PASSWORD: postgres
+      THOUGHTS_POSTGRES_HOST: postgres
+      THOUGHTS_POSTGRES_PORT: 5432
+
+      # Server
+      SERVER_PORT: 5000
+      SERVER_DEBUG: "False"
+      FLASK_SECRET_KEY: replace-me-in-production
+      LOG_DIR: /tmp/rasbhari/logs
+      SERVER_FILES_FOLDER: /tmp/rasbhari/files
+
+      # Optional — override via .env or shell env
+      # NTFY_BASE_URL: https://ntfy.sh
+      # NTFY_TOPIC: rasbhari-alerts
+      # OLLAMA_BASE_URL: http://localhost:11434
+      # OLLAMA_COMMAND_MODEL: qwen2.5:7b-instruct
+      # OLLAMA_TIMEOUT_SECONDS: 20
+      # OPEN_WEBUI_URL: http://localhost:3000
+
+volumes:
+  postgres_data:

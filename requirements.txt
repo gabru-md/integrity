@@ -14,10 +14,10 @@ typing-inspection==0.4.1
 typing_extensions==4.15.0
 Werkzeug==3.1.3
 zipp==3.23.0
-protobuf~=6.32.1
-sendgrid~=6.12.5
-requests~=2.32.5
-ultralytics~=8.3.209
-numpy~=2.0.2
-scipy~=1.13.1
-opencv-python~=4.12.0.88
+protobuf==6.32.1
+sendgrid==6.12.5
+requests==2.32.5
+ultralytics==8.3.209
+numpy==2.0.2
+scipy==1.13.1
+opencv-python==4.12.0.88

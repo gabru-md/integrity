@@ -63,7 +63,7 @@ The current contract set includes:
 - `AppStatusStore` for app enable/disable state
 - `DashboardDataProvider` for reliability cards and universal timeline data
 
-Rasbhari binds these contracts to concrete implementations in [runtime/providers.py](/Users/manish/PycharmProjects/integrity/runtime/providers.py).
+Rasbhari binds these contracts to concrete implementations in [runtime/providers.py](runtime/providers.py).
 
 ## Flask Layer
 
@@ -78,7 +78,7 @@ Rasbhari binds these contracts to concrete implementations in [runtime/providers
 
 `Server` no longer imports Rasbhari services directly. It accepts provider implementations for auth, app status, and dashboard data, and the application bootstrap composes those at runtime.
 
-Rasbhari extends this in [server.py](/Users/manish/PycharmProjects/integrity/server.py) to register all current apps and supply concrete providers from `runtime/`.
+Rasbhari extends this in [server.py](server.py) to register all current apps and supply concrete providers from `runtime/`.
 
 ### `App`
 

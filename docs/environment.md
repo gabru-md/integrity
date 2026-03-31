@@ -92,7 +92,7 @@ Notes:
 
 - `/chat` redirects to `OPEN_WEBUI_URL`
 - `/assistant/command` uses `OLLAMA_BASE_URL` and `OLLAMA_COMMAND_MODEL`
-- See [docs/AI.md](/Users/manish/PycharmProjects/integrity/docs/AI.md) for how the assistant uses these values inside the Rasbhari command pipeline
+- See [docs/AI.md](docs/AI.md) for how the assistant uses these values inside the Rasbhari command pipeline
 - `FLASK_SECRET_KEY` should be set explicitly outside local development
 
 ## Logging

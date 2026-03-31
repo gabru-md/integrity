@@ -21,7 +21,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 
 ## Current Apps
 
-Rasbhari currently registers these apps in [server.py](/Users/manish/PycharmProjects/integrity/server.py):
+Rasbhari currently registers these apps in [server.py](server.py):
 
 - `Blogs`
 - `Promises`

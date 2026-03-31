@@ -66,7 +66,7 @@ habits_app.register_process(HabitProcessor, enabled=True)
 
 ## 5. Register the app in the server
 
-Update [server.py](/Users/manish/PycharmProjects/integrity/server.py):
+Update [server.py](server.py):
 
 ```python
 self.register_app(habits_app)
@@ -78,7 +78,7 @@ If your app needs new app-wide services for auth, app state, or dashboard aggreg
 
 Update:
 
-- [apps/README.md](/Users/manish/PycharmProjects/integrity/apps/README.md)
-- [readme.md](/Users/manish/PycharmProjects/integrity/readme.md)
-- [processes/README.md](/Users/manish/PycharmProjects/integrity/processes/README.md) if you added a process
-- [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) and [ENVIRONMENT.md](/Users/manish/PycharmProjects/integrity/ENVIRONMENT.md) if you added new env vars
+- [apps/README.md](apps/README.md)
+- [readme.md](readme.md)
+- [processes/README.md](processes/README.md) if you added a process
+- [.env.example](.env.example) and [ENVIRONMENT.md](ENVIRONMENT.md) if you added new env vars

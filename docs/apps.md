@@ -25,7 +25,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
 - Internally it now routes commands through app-specific resolvers, so `activities`, `promises`, `thoughts`, and `events` can each score whether they should own the request.
 - The assistant should prefer an existing activity over inventing a new event, and otherwise prefer event creation when downstream promises, skills, reports, or notifications can react through the normal event bus.
 - Write actions are staged first and must be explicitly confirmed before they execute, which protects the event bus and downstream processors from accidental AI writes.
-- The full behavior contract and current UX rules for the assistant live in [docs/AI.md](/Users/manish/PycharmProjects/integrity/docs/AI.md).
+- The full behavior contract and current UX rules for the assistant live in [docs/AI.md](docs/AI.md).
 
 ## Currently Registered Apps
 
@@ -216,8 +216,8 @@ When adding a new app:
 2. Create a service in `services/`.
 3. If the feature needs app-wide framework composition, wire it through `runtime/providers.py`.
 4. Create the app in `apps/`.
-5. Register it in [server.py](/Users/manish/PycharmProjects/integrity/server.py).
+5. Register it in [server.py](server.py).
 6. Add or update `user_guidance` so the app home page explains the app to end users.
 7. Add user-friendly `description=` text to important Pydantic fields.
-8. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
-9. Update [.env.example](/Users/manish/PycharmProjects/integrity/.env.example) if the app adds environment requirements.
+8. Update this file and the root [readme.md](readme.md).
+9. Update [.env.example](.env.example) if the app adds environment requirements.

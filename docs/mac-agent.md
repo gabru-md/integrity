@@ -13,7 +13,7 @@ This gives you a practical way to validate the ecosystem idea before building a 
 
 ## File
 
-- [scripts/rasbhari_mac_agent.py](/Users/manish/PycharmProjects/integrity/scripts/rasbhari_mac_agent.py)
+- [scripts/rasbhari_mac_agent.py](scripts/rasbhari_mac_agent.py)
 
 ## What It Supports Today
 

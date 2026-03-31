@@ -17,13 +17,20 @@ class EventService(CRUDService[Event]):
             with self.db.conn.cursor() as cursor:
                 cursor.execute("""
                             CREATE TABLE IF NOT EXISTS events (
-                                id SERIAL PRIMARY KEY,
+                                id BIGSERIAL,
                                 user_id INTEGER,
                                 event_type VARCHAR(255) NOT NULL,
                                 timestamp TIMESTAMP NOT NULL,
                                 description TEXT,
                                 tags TEXT[]
                             ) PARTITION BY RANGE (timestamp)
+                        """)
+                cursor.execute("""
+                            CREATE TABLE IF NOT EXISTS events_default
+                                PARTITION OF events DEFAULT
+                        """)
+                cursor.execute("""
+                            CREATE INDEX IF NOT EXISTS events_id_idx ON events (id)
                         """)
                 self.db.conn.commit()
 
