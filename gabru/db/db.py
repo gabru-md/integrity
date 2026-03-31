@@ -3,6 +3,7 @@ import os
 import threading
 
 import psycopg2
+from psycopg2 import InterfaceError, OperationalError
 from dotenv import load_dotenv
 
 from gabru.log import Logger
@@ -60,6 +61,10 @@ class DB:
     def _is_connection_usable(self, conn) -> bool:
         return bool(conn) and getattr(conn, "closed", 1) == 0
 
+    @staticmethod
+    def is_connection_error(exc: Exception) -> bool:
+        return isinstance(exc, (OperationalError, InterfaceError))
+
     def _connect(self):
         try:
             conn = psycopg2.connect(
@@ -96,6 +101,24 @@ class DB:
             conn = DB._shared_connections.pop(self._connection_key, None)
             if self._is_connection_usable(conn):
                 conn.close()
+
+    def invalidate_connection(self):
+        with DB._shared_lock:
+            conn = DB._shared_connections.pop(self._connection_key, None)
+        if self._is_connection_usable(conn):
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+    def rollback_quietly(self):
+        conn = self.get_conn()
+        if not self._is_connection_usable(conn):
+            return
+        try:
+            conn.rollback()
+        except Exception:
+            pass
 
     def __del__(self):
         pass

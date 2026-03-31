@@ -27,10 +27,22 @@ class ReadOnlyService(Generic[T]):
         """
         pass
 
+    def _run_with_connection_retry(self, operation, *, fallback=None, action_name: str = "database operation"):
+        for attempt in range(2):
+            conn = self.db.get_conn()
+            if not conn:
+                return fallback() if callable(fallback) else fallback
+            try:
+                return operation(conn)
+            except Exception as exc:
+                if attempt == 0 and self.db.is_connection_error(exc):
+                    self.log.warning("%s failed due to a dropped database connection. Retrying once.", action_name)
+                    self.db.invalidate_connection()
+                    continue
+                raise
+
     def get_by_id(self, obj_id: int) -> Optional[T]:
         """Retrieves an object by its ID."""
-        if not self.db.get_conn():
-            return None
         columns = ", ".join(self._get_columns_for_select())
         query = f"SELECT {columns} FROM {self.table_name} WHERE id = %s"
         params = [obj_id]
@@ -40,12 +52,15 @@ class ReadOnlyService(Generic[T]):
             query += f" AND {self.user_scope_column} = %s"
             params.append(user_scope)
 
-        with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, tuple(params))
-            row = cursor.fetchone()
-            if row:
-                return self._to_object(row)
-        return None
+        def operation(conn):
+            with conn.cursor() as cursor:
+                cursor.execute(query, tuple(params))
+                row = cursor.fetchone()
+                if row:
+                    return self._to_object(row)
+                return None
+
+        return self._run_with_connection_retry(operation, fallback=None, action_name=f"get_by_id on {self.table_name}")
 
     def get_all(self) -> List[T]:
         """Retrieves all objects from the database."""
@@ -53,8 +68,6 @@ class ReadOnlyService(Generic[T]):
 
     def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
         """Returns the total count of items matching the filters."""
-        if not self.db.get_conn():
-            return 0
         query = f"SELECT COUNT(*) FROM {self.table_name}"
         where_clauses = []
         params = []
@@ -65,15 +78,16 @@ class ReadOnlyService(Generic[T]):
                 params.append(filter_val)
             if where_clauses:
                 query += " WHERE " + " AND ".join(where_clauses)
-        with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, tuple(params))
-            row = cursor.fetchone()
-            return row[0] if row else 0
+        def operation(conn):
+            with conn.cursor() as cursor:
+                cursor.execute(query, tuple(params))
+                row = cursor.fetchone()
+                return row[0] if row else 0
+
+        return self._run_with_connection_retry(operation, fallback=0, action_name=f"count on {self.table_name}")
 
     def get_recent_items(self, limit: int = 10) -> List[T]:
         """Retrieves the most recently created items from the database."""
-        if not self.db.get_conn():
-            return []
         columns = ", ".join(self._get_columns_for_select())
         query = f"SELECT {columns} FROM {self.table_name} ORDER BY id DESC LIMIT %s"
         params = [limit]
@@ -84,18 +98,18 @@ class ReadOnlyService(Generic[T]):
             filter_params = list(filters.values())
             query = f"SELECT {columns} FROM {self.table_name} WHERE {' AND '.join(where_clauses)} ORDER BY id DESC LIMIT %s"
             params = filter_params + params
-        with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, tuple(params))
-            rows = cursor.fetchall()
-            return [self._to_object(row) for row in rows]
+        def operation(conn):
+            with conn.cursor() as cursor:
+                cursor.execute(query, tuple(params))
+                rows = cursor.fetchall()
+                return [self._to_object(row) for row in rows]
+
+        return self._run_with_connection_retry(operation, fallback=[], action_name=f"get_recent_items on {self.table_name}")
 
     def get_all_items_after(self, last_id: int, limit=10) -> List[T]:
         """
         Retrieves all events with an ID greater than the given last_id.
         """
-        if not self.db.get_conn():
-            return []
-
         columns = ", ".join(self._get_columns_for_select())
         query = f"SELECT {columns} FROM {self.table_name} WHERE id > %s ORDER BY id ASC LIMIT %s"
         params = [last_id, limit]
@@ -105,19 +119,19 @@ class ReadOnlyService(Generic[T]):
             query = f"SELECT {columns} FROM {self.table_name} WHERE id > %s AND {self.user_scope_column} = %s ORDER BY id ASC LIMIT %s"
             params = [last_id, user_scope, limit]
 
-        with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, tuple(params))
-            rows = cursor.fetchall()
-            return [self._to_object(row) for row in rows]
+        def operation(conn):
+            with conn.cursor() as cursor:
+                cursor.execute(query, tuple(params))
+                rows = cursor.fetchall()
+                return [self._to_object(row) for row in rows]
+
+        return self._run_with_connection_retry(operation, fallback=[], action_name=f"get_all_items_after on {self.table_name}")
 
     def find_all(self, filters: Optional[Dict[str, Any]] = None, sort_by: Optional[Dict[str, str]] = None) -> List[T]:
         """
         Retrieves items from the database based on flexible filters and sorting.
         This is a crucial improvement for performance.
         """
-        if not self.db.get_conn():
-            return []
-
         columns = ", ".join(self._get_columns_for_select())
         query = f"SELECT {columns} FROM {self.table_name}"
         where_clauses = []
@@ -152,10 +166,13 @@ class ReadOnlyService(Generic[T]):
             sort_clauses = [f"{col} {order}" for col, order in sort_by.items()]
             query += " ORDER BY " + ", ".join(sort_clauses)
 
-        with self.db.get_conn().cursor() as cursor:
-            cursor.execute(query, tuple(params))
-            rows = cursor.fetchall()
-            return [self._to_object(row) for row in rows]
+        def operation(conn):
+            with conn.cursor() as cursor:
+                cursor.execute(query, tuple(params))
+                rows = cursor.fetchall()
+                return [self._to_object(row) for row in rows]
+
+        return self._run_with_connection_retry(operation, fallback=[], action_name=f"find_all on {self.table_name}")
 
     def find_one_by_field(self, field_name: str, value: Any) -> Optional[T]:
         """Retrieves a single object by a specific field and value."""
@@ -223,28 +240,31 @@ class CRUDService(ReadOnlyService[T]):
 
     def create(self, obj: T) -> Optional[int]:
         """Creates a new object in the database."""
-        if not self.db.get_conn():
-            return None
         self._apply_request_user_scope_to_object(obj)
         columns = ", ".join(self._get_columns_for_insert())
         placeholders = ", ".join(["%s"] * len(self._get_columns_for_insert()))
         query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders}) RETURNING id"
+        payload = self._to_tuple(obj)
 
-        with self.db.get_conn().cursor() as cursor:
-            try:
-                cursor.execute(query, self._to_tuple(obj))
-                self.db.get_conn().commit()
-                return cursor.fetchone()[0]
-            except Exception as e:
-                self.db.get_conn().rollback()
-                self.log.exception(e)
-                self.log.warning("Create failed for %s with payload %s", self.table_name, self._to_tuple(obj))
-                return None
+        def operation(conn):
+            with conn.cursor() as cursor:
+                cursor.execute(query, payload)
+                new_id = cursor.fetchone()[0]
+                conn.commit()
+                return new_id
+
+        try:
+            return self._run_with_connection_retry(operation, fallback=None, action_name=f"create on {self.table_name}")
+        except Exception as e:
+            self.db.rollback_quietly()
+            self.log.exception(e)
+            self.log.warning("Create failed for %s with payload %s", self.table_name, payload)
+            return None
 
 
     def update(self, obj: T) -> bool:
         """Updates an existing object."""
-        if not self.db.get_conn() or obj.id is None:
+        if obj.id is None:
             return False
         self._apply_request_user_scope_to_object(obj)
         existing = self.get_by_id(obj.id)
@@ -256,21 +276,24 @@ class CRUDService(ReadOnlyService[T]):
         query = f"UPDATE {self.table_name} SET {set_clause} WHERE id=%s"
 
         values = self._to_tuple(obj) + (obj.id,)
-        with self.db.get_conn().cursor() as cursor:
-            try:
+
+        def operation(conn):
+            with conn.cursor() as cursor:
                 cursor.execute(query, values)
-                self.db.get_conn().commit()
-                return cursor.rowcount > 0
-            except Exception as e:
-                self.db.get_conn().rollback()
-                self.log.exception(e)
-                self.log.warning("Update failed for %s id=%s", self.table_name, obj.id)
-                return False
+                updated = cursor.rowcount > 0
+                conn.commit()
+                return updated
+
+        try:
+            return self._run_with_connection_retry(operation, fallback=False, action_name=f"update on {self.table_name}")
+        except Exception as e:
+            self.db.rollback_quietly()
+            self.log.exception(e)
+            self.log.warning("Update failed for %s id=%s", self.table_name, obj.id)
+            return False
 
     def delete(self, obj_id: int) -> bool:
         """Deletes an object by its ID."""
-        if not self.db.get_conn():
-            return False
         if self.user_scoped and self._get_request_user_scope() is not None and not self.get_by_id(obj_id):
             return False
         query = f"DELETE FROM {self.table_name} WHERE id=%s"
@@ -279,16 +302,21 @@ class CRUDService(ReadOnlyService[T]):
         if user_scope is not None:
             query += f" AND {self.user_scope_column} = %s"
             params.append(user_scope)
-        with self.db.get_conn().cursor() as cursor:
-            try:
+
+        def operation(conn):
+            with conn.cursor() as cursor:
                 cursor.execute(query, tuple(params))
-                self.db.get_conn().commit()
-                return cursor.rowcount > 0
-            except Exception as e:
-                self.db.get_conn().rollback()
-                self.log.exception(e)
-                self.log.warning("Delete failed for %s id=%s", self.table_name, obj_id)
-                return False
+                deleted = cursor.rowcount > 0
+                conn.commit()
+                return deleted
+
+        try:
+            return self._run_with_connection_retry(operation, fallback=False, action_name=f"delete on {self.table_name}")
+        except Exception as e:
+            self.db.rollback_quietly()
+            self.log.exception(e)
+            self.log.warning("Delete failed for %s id=%s", self.table_name, obj_id)
+            return False
 
     def _apply_request_user_scope_to_object(self, obj: T):
         user_scope = self._get_request_user_scope()
