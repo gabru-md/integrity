@@ -14,7 +14,6 @@ from processes.project_updater import ProjectUpdater
 from datetime import datetime
 from gabru.flask.util import render_flask_template
 
-timeline_service = TimelineService()
 event_service = EventService()
 kanban_ticket_service = KanbanTicketService()
 
@@ -31,6 +30,8 @@ project_app = App(
 )
 
 project_app.register_process(ProjectUpdater, enabled=True)
+
+timeline_service = TimelineService()
 
 @project_app.blueprint.route('/<int:project_id>/view', methods=['GET'])
 def view_project(project_id):

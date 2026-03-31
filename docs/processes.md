@@ -139,5 +139,5 @@ The admin `Processes` page now also runs lightweight dependency probes for exter
 1. Pick `Process` or `QueueProcessor`.
 2. Register it from the owning app.
 3. Decide whether it should be enabled by default.
-4. Update this file and the root [readme.md](/Users/manish/PycharmProjects/integrity/readme.md).
-5. Document any env requirements in [ENVIRONMENT.md](/Users/manish/PycharmProjects/integrity/ENVIRONMENT.md) and [.env.example](/Users/manish/PycharmProjects/integrity/.env.example).
+4. Update this file and the root [readme.md](readme.md).
+5. Document any env requirements in [ENVIRONMENT.md](ENVIRONMENT.md) and [.env.example](.env.example).
