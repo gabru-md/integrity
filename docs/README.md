@@ -14,6 +14,7 @@ Use it as the primary place to find:
 
 - [AI Command Layer](./AI.md)
 - [macOS Agent](./mac-agent.md)
+- [Rasbhari Overview](./rasbhari.md)
 
 ## Notes
 

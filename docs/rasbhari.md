@@ -12,6 +12,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Stores everything important as events.
 - Uses queue processors to react to those events in the background.
 - Exposes CRUD-style apps for core domains such as projects, promises, activities, and skills.
+- Adds project-scoped kanban boards with minimal tickets that emit workflow events into the shared event bus.
 - Generates daily, weekly, and monthly behavioral mirror reports from current activity, thought, project, and skill signals.
 - Includes user-facing instructions inside each app UI so non-developers can understand the meaning of fields and terms.
 - Provides a dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
@@ -28,6 +29,7 @@ Rasbhari currently registers these apps in [server.py](/Users/manish/PycharmProj
 - `Thoughts`
 - `Devices`
 - `Projects`
+- `KanbanTickets`
 - `Activities`
 - `Skills`
 - `Connections`
@@ -35,7 +37,7 @@ Rasbhari currently registers these apps in [server.py](/Users/manish/PycharmProj
 - `Users`
 - `Network-Signatures`
 
-See [apps/README.md](apps/README.md) for details.
+The `Projects` app now includes a per-project board view backed by the `KanbanTickets` app.
 
 ## Current Background Processes
 
@@ -90,6 +92,7 @@ Rasbhari supports real sign-in accounts and a managed signup flow.
 - **Admin Creation**: Users created directly by administrators through the `Users` dashboard are automatically approved.
 - **API Keys**: Every user also gets a generated 5-character `api_key`. Protected routes accept `X-API-Key: <key>` and `Authorization: ApiKey <key>`. Users can rotate their own key from `/users/profile`.
 - **Assistant Commands**: The `/assistant/command` route accepts natural-language commands, runs them through a local Ollama model, and then routes the plan through app-specific resolvers for `activities`, `promises`, `thoughts`, `events`, and `answer` before execution.
+- **Kanban Events**: Ticket creation and state movement emit `kanban:ticket_created`, `kanban:ticket_moved`, and `kanban:ticket_updated` events with project and state tags.
 - **Safe Staging**: Write actions are staged first. Rasbhari explains the planned change, then waits for explicit confirmation through the UI `Confirm Action` button or a short acknowledgement like `yes` or `thanks` before committing anything to the system.
 - **AI Design Reference**: See [docs/AI.md](docs/AI.md) for the detailed architecture, staging model, resolver flow, current limits, and testing patterns.
 - **Data Ownership**: Every personal record is owned by a specific `user_id`.

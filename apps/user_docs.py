@@ -93,9 +93,10 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
         },
         "Projects": {
-            "overview": "Projects track larger bodies of work. Use the project page to manage the project record, then open a project to post updates or blog-style progress notes.",
+            "overview": "Projects track larger bodies of work. Use the project page to manage the project record, then open a project to post updates, maintain a lightweight kanban board, or add blog-style progress notes.",
             "how_to_use": [
                 "Create a project first, then use View Progress to maintain its timeline.",
+                "Use Open Board when you want to track concrete tickets from backlog to shipped.",
                 "Use project type for broad grouping only. The timeline carries the detailed story.",
                 "Post short updates for milestones and choose Blog when an update deserves a fuller write-up.",
             ],
@@ -104,6 +105,22 @@ def build_app_user_guidance(app_name: str) -> dict:
                 {"term": "State",
                  "meaning": "The current lifecycle status of the project, such as Active or Completed."},
                 {"term": "Progress Count", "meaning": "How many timeline updates have been logged for the project."},
+                {"term": "Board", "meaning": "A simple project kanban view for tickets moving from backlog to shipped."},
+            ],
+        },
+        "KanbanTickets": {
+            "overview": "Kanban tickets are minimal project work items. Each ticket belongs to one project and moves through a fixed board from backlog to shipped.",
+            "how_to_use": [
+                "Keep tickets short and concrete so the board stays fast to scan.",
+                "Use the board for day-to-day execution and the project timeline for narrative updates.",
+                "Move tickets forward as work advances. Rasbhari emits events when tickets are created or moved.",
+            ],
+            "glossary": [
+                {"term": "Backlog", "meaning": "Work that exists but is not yet selected."},
+                {"term": "Prioritized", "meaning": "Work chosen as likely next."},
+                {"term": "In Progress", "meaning": "Work currently being executed."},
+                {"term": "Completed", "meaning": "Work finished but not yet shipped or deployed."},
+                {"term": "Shipped", "meaning": "Work delivered, released, or deployed."},
             ],
         },
         "Promises": {

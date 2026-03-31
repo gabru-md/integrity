@@ -1,0 +1,153 @@
+{% extends "index.html" %}
+{% block title %}Project Board: {{ project.name }}{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<div id="project-board-app" class="p-4 sm:p-8 space-y-8">
+    <header class="bg-white dark:bg-gray-800 shadow rounded-2xl p-6 border border-slate-100 dark:border-gray-700">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 dark:text-gray-100">{{ project.name }} Board</h1>
+                <p class="mt-2 text-slate-600 dark:text-gray-400">
+                    Minimal project kanban for backlog, prioritization, execution, completion, and shipping.
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-4 text-sm">
+                <a href="/projects/{{ project.id }}/view" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">Open Timeline</a>
+                <a href="/projects/home" class="text-slate-600 hover:text-slate-900 dark:text-gray-300 dark:hover:text-white font-medium">Back to Projects</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="bg-white dark:bg-gray-800 shadow rounded-2xl p-6 border border-slate-100 dark:border-gray-700">
+        <h2 class="text-xl font-bold text-slate-800 dark:text-gray-100">Create Ticket</h2>
+        <form class="mt-4 grid gap-4 lg:grid-cols-[1.2fr_2fr_auto]" @submit.prevent="createTicket">
+            <input v-model="newTicket.title" type="text" required placeholder="Ticket title"
+                   class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+            <textarea v-model="newTicket.description" rows="2" placeholder="Description"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></textarea>
+            <button type="submit" :disabled="isSubmitting"
+                    class="rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-50">
+                {% raw %}{{ isSubmitting ? 'Creating...' : 'Add Ticket' }}{% endraw %}
+            </button>
+        </form>
+    </section>
+
+    <section class="space-y-4">
+        <div v-if="errorMessage" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
+            {% raw %}{{ errorMessage }}{% endraw %}
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div v-for="state in boardStates" :key="state" class="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="mb-4">
+                    <h2 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">{% raw %}{{ stateLabels[state] }}{% endraw %}</h2>
+                    <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-gray-100">{% raw %}{{ ticketsByState(state).length }}{% endraw %}</p>
+                </div>
+                <div class="space-y-3 min-h-[8rem]">
+                    <div v-if="ticketsByState(state).length === 0" class="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-400 dark:border-gray-700 dark:text-gray-500">
+                        Empty
+                    </div>
+                    <article v-for="ticket in ticketsByState(state)" :key="ticket.id" class="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/70">
+                        <div class="flex items-start justify-between gap-3">
+                            <h3 class="text-sm font-semibold text-slate-900 dark:text-gray-100">{% raw %}{{ ticket.title }}{% endraw %}</h3>
+                            <button v-if="ticket.state !== boardStates[boardStates.length - 1]" @click="moveTicket(ticket)"
+                                    class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                Next
+                            </button>
+                        </div>
+                        <p v-if="ticket.description" class="mt-3 whitespace-pre-wrap text-sm text-slate-600 dark:text-gray-300">{% raw %}{{ ticket.description }}{% endraw %}</p>
+                        <dl class="mt-4 space-y-2 text-xs text-slate-500 dark:text-gray-400">
+                            <div class="flex justify-between gap-2">
+                                <dt>Created</dt>
+                                <dd>{% raw %}{{ formatDate(ticket.created_at) }}{% endraw %}</dd>
+                            </div>
+                            <div class="flex justify-between gap-2">
+                                <dt>State Changed</dt>
+                                <dd>{% raw %}{{ formatDate(ticket.state_changed_at) }}{% endraw %}</dd>
+                            </div>
+                        </dl>
+                        <div class="mt-4">
+                            <select :value="ticket.state" @change="moveTicket(ticket, $event.target.value)"
+                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
+                                <option v-for="option in boardStates" :key="option" :value="option">{% raw %}{{ stateLabels[option] }}{% endraw %}</option>
+                            </select>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    const { createApp, ref } = Vue;
+    const PROJECT_ID = {{ project.id }};
+    const INITIAL_TICKETS = {{ initial_tickets | tojson }};
+    const BOARD_STATES = {{ board_states | tojson }};
+    const STATE_LABELS = {{ ticket_state_labels | tojson }};
+
+    createApp({
+        setup() {
+            const tickets = ref(INITIAL_TICKETS || []);
+            const boardStates = ref(BOARD_STATES || []);
+            const stateLabels = ref(STATE_LABELS || {});
+            const isSubmitting = ref(false);
+            const errorMessage = ref("");
+            const newTicket = ref({ title: "", description: "" });
+
+            const sortTickets = (items) => [...items].sort((left, right) => new Date(right.updated_at || 0) - new Date(left.updated_at || 0));
+
+            const loadTickets = async () => {
+                const res = await fetch(`/kanbantickets/project/${PROJECT_ID}`);
+                if (!res.ok) throw new Error("Failed to load kanban board");
+                tickets.value = sortTickets(await res.json());
+            };
+
+            const createTicket = async () => {
+                if (!newTicket.value.title.trim()) return;
+                isSubmitting.value = true;
+                errorMessage.value = "";
+                try {
+                    const res = await fetch(`/kanbantickets/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            project_id: PROJECT_ID,
+                            title: newTicket.value.title,
+                            description: newTicket.value.description,
+                            state: 'backlog'
+                        })
+                    });
+                    if (!res.ok) throw new Error("Failed to create ticket");
+                    newTicket.value = { title: "", description: "" };
+                    await loadTickets();
+                } catch (error) {
+                    errorMessage.value = error.message || "Failed to create ticket";
+                } finally {
+                    isSubmitting.value = false;
+                }
+            };
+
+            const moveTicket = async (ticket, targetState) => {
+                errorMessage.value = "";
+                try {
+                    const res = await fetch(`/kanbantickets/${ticket.id}/move`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(targetState ? { state: targetState } : {})
+                    });
+                    if (!res.ok) throw new Error("Failed to move ticket");
+                    await loadTickets();
+                } catch (error) {
+                    errorMessage.value = error.message || "Failed to move ticket";
+                }
+            };
+
+            const ticketsByState = (state) => tickets.value.filter((ticket) => ticket.state === state);
+            const formatDate = (value) => value ? new Date(value).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown';
+
+            return { tickets, boardStates, stateLabels, newTicket, isSubmitting, errorMessage, createTicket, moveTicket, ticketsByState, formatDate };
+        }
+    }).mount('#project-board-app');
+</script>
+{% endblock %}

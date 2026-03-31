@@ -2,9 +2,11 @@ from flask import request, jsonify
 from apps.user_docs import build_app_user_guidance
 from gabru.auth import write_access_required
 from gabru.flask.app import App
+from model.kanban_ticket import KanbanTicketState
 from model.project import Project
 from model.timeline import TimelineItem
 from services.projects import ProjectService
+from services.kanban_tickets import KanbanTicketService
 from services.timeline import TimelineService
 from services.events import EventService
 from model.event import Event
@@ -14,6 +16,7 @@ from gabru.flask.util import render_flask_template
 
 timeline_service = TimelineService()
 event_service = EventService()
+kanban_ticket_service = KanbanTicketService()
 
 project_app = App(
     'Projects',
@@ -35,6 +38,21 @@ def view_project(project_id):
     if not project:
         return "Project not found", 404
     return render_flask_template('project_details.html', project=project)
+
+
+@project_app.blueprint.route('/<int:project_id>/board', methods=['GET'])
+def view_project_board(project_id):
+    project = project_app.service.get_by_id(project_id)
+    if not project:
+        return "Project not found", 404
+    tickets = kanban_ticket_service.get_by_project_id(project_id)
+    return render_flask_template(
+        'project_board.html',
+        project=project,
+        initial_tickets=[ticket.dict() for ticket in tickets],
+        board_states=KanbanTicketService.STATE_ORDER,
+        ticket_state_labels={state.value: state.value.replace("_", " ").title() for state in KanbanTicketState},
+    )
 
 @project_app.blueprint.route('/<int:project_id>/timeline', methods=['GET'])
 def get_timeline(project_id):

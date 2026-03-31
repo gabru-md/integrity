@@ -10,6 +10,7 @@ from apps.projects import project_app
 from apps.promises import promises_app
 from apps.blogs import blog_app
 from apps.activities import activities_app
+from apps.kanban_tickets import kanban_tickets_app
 from apps.connections import connections_app
 from apps.reports import reports_app
 from apps.skills import skills_app
@@ -63,6 +64,7 @@ class RasbhariServer(Server):
         self.register_app(thoughts_app)
         self.register_app(devices_app)
         self.register_app(project_app)
+        self.register_app(kanban_tickets_app)
         self.register_app(activities_app)
         self.register_app(skills_app)
         self.register_app(connections_app)
