@@ -8,12 +8,14 @@ from datetime import datetime
 
 def process_data(json_data):
     current_timestamp = datetime.now()
-    tags = json_data['tags']
-    if tags:
-        json_data["tags"] = [t.strip() for t in tags.split(',')]
+    tags = json_data.get("tags")
+    if isinstance(tags, list):
+        json_data["tags"] = [str(tag).strip() for tag in tags if str(tag).strip()]
+    elif isinstance(tags, str):
+        json_data["tags"] = [tag.strip() for tag in tags.split(",") if tag.strip()]
     else:
         json_data["tags"] = []
-    json_data["timestamp"] = int(current_timestamp.timestamp())
+    json_data["timestamp"] = current_timestamp
     return json_data
 
 

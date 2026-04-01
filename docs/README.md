@@ -16,6 +16,7 @@ Use it as the primary place to find:
 - [macOS Agent](./mac-agent.md)
 - [Rasbhari Overview](./rasbhari.md)
 - [Testing Sandbox](./testing-sandbox.md)
+- [Test Suite](./testing.md)
 
 ## Notes
 
