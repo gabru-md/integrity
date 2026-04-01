@@ -88,6 +88,11 @@ Used by `ThoughtService`.
 - `OLLAMA_COMMAND_MODEL`
 - `OLLAMA_TIMEOUT_SECONDS`
 
+Sandbox note:
+
+- the disposable test instance uses the same variable names in a dedicated `.env.test`
+- see [testing-sandbox.md](testing-sandbox.md) and [.env.test.example](/Users/manish/PycharmProjects/integrity/.env.test.example)
+
 Notes:
 
 - `/chat` redirects to `OPEN_WEBUI_URL`
