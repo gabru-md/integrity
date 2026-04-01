@@ -87,6 +87,7 @@ Used by `ThoughtService`.
 - `OLLAMA_BASE_URL`
 - `OLLAMA_COMMAND_MODEL`
 - `OLLAMA_TIMEOUT_SECONDS`
+- `RASBHARI_VERSION`
 
 Sandbox note:
 
@@ -97,6 +98,7 @@ Notes:
 
 - `/chat` redirects to `OPEN_WEBUI_URL`
 - `/assistant/command` uses `OLLAMA_BASE_URL` and `OLLAMA_COMMAND_MODEL`
+- `RASBHARI_VERSION` can be set explicitly in deployments that do not ship `.git`; otherwise Rasbhari falls back to the current git commit when available
 - See [docs/AI.md](docs/AI.md) for how the assistant uses these values inside the Rasbhari command pipeline
 - `FLASK_SECRET_KEY` should be set explicitly outside local development
 
@@ -168,4 +170,5 @@ NTFY_TOPIC=rasbhari-alerts
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_COMMAND_MODEL=qwen2.5:7b-instruct
 OLLAMA_TIMEOUT_SECONDS=20
+RASBHARI_VERSION=
 ```
