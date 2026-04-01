@@ -91,7 +91,7 @@ Used by `ThoughtService`.
 Sandbox note:
 
 - the disposable test instance uses the same variable names in a dedicated `.env.test`
-- see [testing-sandbox.md](testing-sandbox.md) and [.env.test.example](/Users/manish/PycharmProjects/integrity/.env.test.example)
+- see [testing-sandbox.md](testing-sandbox.md) and [.env.test.example](../.env.test.example)
 
 Notes:
 

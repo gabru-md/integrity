@@ -13,11 +13,11 @@ It is designed for trying UI changes, project workflows, dashboards, reports, re
 
 ## Files
 
-- [docker-compose.sandbox.yml](/Users/manish/PycharmProjects/integrity/docker-compose.sandbox.yml)
-- [.env.test.example](/Users/manish/PycharmProjects/integrity/.env.test.example)
-- [scripts/test_sandbox.sh](/Users/manish/PycharmProjects/integrity/scripts/test_sandbox.sh)
-- [scripts/reset_test_data.py](/Users/manish/PycharmProjects/integrity/scripts/reset_test_data.py)
-- [scripts/seed_test_data.py](/Users/manish/PycharmProjects/integrity/scripts/seed_test_data.py)
+- [docker-compose.sandbox.yml](../docker-compose.sandbox.yml)
+- [.env.test.example](../.env.test.example)
+- [scripts/test_sandbox.sh](../scripts/test_sandbox.sh)
+- [scripts/reset_test_data.py](../scripts/reset_test_data.py)
+- [scripts/seed_test_data.py](../scripts/seed_test_data.py)
 
 ## First Run
 
