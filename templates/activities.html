@@ -162,6 +162,52 @@
                         </div>
                     </div>
                 </details>
+
+                <div v-if="activity.recommendations && activity.recommendations.length" class="mt-4 border-t border-slate-200 pt-4 dark:border-gray-700">
+                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Recommendations</div>
+                    <div class="mt-3 grid gap-3">
+                        <div v-for="recommendation in activity.recommendations"
+                             :key="recommendation.id"
+                             class="recommendation-card rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
+                             data-recommendation-card
+                             :data-recommendation-key="recommendation.id || `${recommendation.action || 'none'}:${recommendation.scope || 'item'}:${recommendation.scope_id || recommendation.title}`.replace(/\\s+/g, '-').toLowerCase()"
+                             :data-recommendation-kind="recommendation.kind || 'stage_action'">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <div class="text-base font-bold text-[var(--text)]">{{ recommendation.title }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ recommendation.body }}</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span v-if="recommendation.action" class="ui-badge">{{ (recommendation.action_label || recommendation.action || 'Suggestion').replaceAll('_', ' ') }}</span>
+                                    <button type="button"
+                                            class="recommendation-dismiss text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-soft)] transition hover:text-[var(--text)]"
+                                            data-dismiss-recommendation>
+                                        Dismiss
+                                    </button>
+                                </div>
+                            </div>
+                            <details v-if="recommendation.reasoning" class="recommendation-reasoning mt-3">
+                                <summary class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-soft)]">Why</summary>
+                                <div class="mt-2 text-xs leading-6 text-[var(--text-soft)]">{{ recommendation.reasoning }}</div>
+                            </details>
+                            <div v-else class="mt-3 text-xs text-[var(--text-soft)]">Confidence {{ Number(recommendation.confidence || 0).toFixed(2) }}</div>
+                            <div v-if="recommendation.action" class="mt-4 flex flex-wrap gap-2">
+                                <button v-if="recommendation.kind === 'quick_apply'"
+                                        type="button"
+                                        class="btn-secondary px-4 py-2 text-sm"
+                                        :data-apply-recommendation="JSON.stringify(recommendation)">
+                                    {{ recommendation.action_label || 'Apply' }}
+                                </button>
+                                <button v-else-if="recommendation.kind === 'stage_action'"
+                                        type="button"
+                                        class="btn-primary px-4 py-2 text-sm"
+                                        :data-stage-recommendation="JSON.stringify(recommendation)">
+                                    {{ recommendation.action_label || 'Stage Action' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </article>
     </section>

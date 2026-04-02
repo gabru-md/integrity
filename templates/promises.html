@@ -160,6 +160,18 @@
                 </div>
                 {% endif %}
 
+                {% set promise_card_recommendations = (promise_recommendations or {}).get(promise.id, []) %}
+                {% if promise_card_recommendations %}
+                <div class="rounded-2xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-4 py-4">
+                    <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-3">Recommendations</div>
+                    {% set recommendations = promise_card_recommendations %}
+                    {% set recommendation_scope = 'item' %}
+                    <div class="grid gap-3">
+                        {% include "_recommendation_cards.html" with context %}
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="flex justify-between items-center pt-1">
                     <div class="text-[10px] text-slate-400 uppercase tracking-widest">
                         {{ promise.total_completions }} completions across {{ promise.total_periods }} periods

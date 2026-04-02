@@ -1,14 +1,18 @@
 import json
+from typing import Optional
+
 from flask import request, jsonify
 
-from gabru.auth import write_access_required
+from gabru.auth import PermissionManager, write_access_required
 from gabru.flask.app import App
 from apps.user_docs import build_app_user_guidance
 from model.activity import Activity
 from services.activities import ActivityService
 from services.events import EventService
 from services.promises import PromiseService
+from services.recommendation_followups import RecommendationFollowUpService
 from services.skills import SkillService
+from services.users import UserService
 
 
 def process_activity_data(json_data):
@@ -34,6 +38,12 @@ activity_service = ActivityService()
 event_service = EventService()
 promise_service = PromiseService()
 skill_service = SkillService()
+user_service = UserService()
+recommendation_followup_service = RecommendationFollowUpService(
+    activity_service=activity_service,
+    promise_service=promise_service,
+    skill_service=skill_service,
+)
 
 activities_app = App(
     'Activities',
@@ -73,7 +83,7 @@ def _match_skills(activity: Activity) -> list[dict]:
     return matches[:3]
 
 
-def _serialize_activity(activity: Activity) -> dict:
+def _serialize_activity(activity: Activity, recommendations: Optional[list[dict]] = None) -> dict:
     recent_events = event_service.find_all(filters={"event_type": activity.event_type}, sort_by={"timestamp": "DESC"})
     latest_event = recent_events[0] if recent_events else None
     linked_promises = _match_promises(activity)
@@ -86,13 +96,39 @@ def _serialize_activity(activity: Activity) -> dict:
     activity_data["trigger_count"] = len(recent_events)
     activity_data["latest_event"] = latest_event.dict() if latest_event else None
     activity_data["payload_keys"] = payload_keys
+    activity_data["recommendations"] = recommendations or []
     return activity_data
 
 
 @activities_app.blueprint.route('/catalog', methods=['GET'])
 def activity_catalog():
     activities = activity_service.find_all(sort_by={"name": "ASC"})
-    return jsonify([_serialize_activity(activity) for activity in activities]), 200
+    recommendation_map: dict[int, list[dict]] = {}
+    user_id = PermissionManager.get_current_user_id()
+    if user_id:
+        user = user_service.get_by_id(user_id)
+        recommendation_limit = 2
+        if user:
+            if not getattr(user, "recommendations_enabled", True):
+                recommendation_limit = 0
+            else:
+                recommendation_limit = max(0, int(getattr(user, "recommendation_limit", 2) or 0))
+        if recommendation_limit > 0:
+            activity_recommendations = recommendation_followup_service.recommendation_engine.get_recommendations(
+                user_id=user_id,
+                app_name="Activities",
+                limit=recommendation_limit,
+            )
+            for item in activity_recommendations:
+                if item.scope_id is None:
+                    continue
+                recommendation_map.setdefault(item.scope_id, []).append(
+                    RecommendationFollowUpService._to_follow_up_payload(item)
+                )
+    return jsonify([
+        _serialize_activity(activity, recommendations=recommendation_map.get(activity.id, []))
+        for activity in activities
+    ]), 200
 
 
 @activities_app.blueprint.route('/trigger/<int:activity_id>', methods=['POST'])

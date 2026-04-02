@@ -1,16 +1,20 @@
 from datetime import datetime, timedelta
 from flask import jsonify
 from apps.user_docs import build_app_user_guidance
-from gabru.auth import write_access_required
+from gabru.auth import PermissionManager, write_access_required
 from gabru.flask.app import App
 from model.promise import Promise
 from services.promises import PromiseService
 from services.events import EventService
+from services.recommendation_followups import RecommendationFollowUpService
+from services.users import UserService
 from processes.promise_processor import PromiseProcessor
 from gabru.flask.util import render_flask_template
 
 promise_service = PromiseService()
 event_service = EventService()
+user_service = UserService()
+recommendation_followup_service = RecommendationFollowUpService(promise_service=promise_service)
 
 
 def _should_filter_by_exact_event_type(promise: Promise) -> bool:
@@ -63,6 +67,7 @@ class PromiseApp(App[Promise]):
         @self.blueprint.route('/home')
         def home():
             promises = self.service.get_all()
+            recommendation_map = self._build_recommendation_map()
             # Calculate some stats for the dashboard
             stats = {
                 "total": len(promises),
@@ -76,6 +81,7 @@ class PromiseApp(App[Promise]):
                                    app_name=self.name,
                                    user_guidance=self.user_guidance,
                                    promises=promises,
+                                   promise_recommendations=recommendation_map,
                                    stats=stats)
 
         @self.blueprint.route('/<int:promise_id>/refresh', methods=['POST'])
@@ -147,5 +153,35 @@ class PromiseApp(App[Promise]):
                 "promise_name": promise.name,
                 "history": history_data
             })
+
+    @staticmethod
+    def _build_recommendation_map() -> dict[int, list[dict]]:
+        user_id = PermissionManager.get_current_user_id()
+        if not user_id:
+            return {}
+
+        user = user_service.get_by_id(user_id)
+        recommendation_limit = 2
+        if user:
+            if not getattr(user, "recommendations_enabled", True):
+                recommendation_limit = 0
+            else:
+                recommendation_limit = max(0, int(getattr(user, "recommendation_limit", 2) or 0))
+        if recommendation_limit <= 0:
+            return {}
+
+        recommendation_map: dict[int, list[dict]] = {}
+        recommendations = recommendation_followup_service.recommendation_engine.get_recommendations(
+            user_id=user_id,
+            app_name="Promises",
+            limit=recommendation_limit,
+        )
+        for item in recommendations:
+            if item.scope_id is None:
+                continue
+            recommendation_map.setdefault(item.scope_id, []).append(
+                RecommendationFollowUpService._to_follow_up_payload(item)
+            )
+        return recommendation_map
 
 promises_app = PromiseApp()
