@@ -215,6 +215,41 @@ class RecommendationFollowUpServiceTests(unittest.TestCase):
         self.assertIsNotNone(items[0].action)
         self.assertTrue(items[0].reasoning)
 
+    def test_engine_emits_skill_signal_recommendations(self):
+        project = Project(
+            id=3,
+            user_id=7,
+            name="Rasbhari",
+            project_type="Code",
+            focus_tags=["python"],
+            start_date=datetime(2026, 4, 1, 9, 0, 0),
+            state=ProjectState.ACTIVE,
+            last_updated=datetime.now(),
+        )
+        activity = Activity(
+            id=5,
+            user_id=7,
+            name="Python Session",
+            event_type="work:python",
+            tags=["python"],
+        )
+        skill = Skill(id=4, user_id=7, name="Python", tag_key="python", aliases=[])
+        engine = RecommendationEngineService(
+            project_service=FakeProjectService([project]),
+            kanban_ticket_service=FakeKanbanTicketService(),
+            promise_service=FakePromiseService(),
+            skill_service=FakeSkillService([skill]),
+            activity_service=FakeActivityService([activity]),
+        )
+
+        items = engine.get_recommendations(user_id=7, app_name="Skills", limit=4)
+
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0].app_name, "Skills")
+        self.assertEqual(items[0].scope_id, 4)
+        self.assertEqual(items[0].kind, "info")
+        self.assertIn("matching signal", items[0].body)
+
 
 class RecommendationActionBridgeTests(unittest.TestCase):
     def setUp(self):

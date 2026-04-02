@@ -32,6 +32,7 @@ class RecommendationEngineService:
         self.detectors = detectors or [
             self._detect_promise_tag_links,
             self._detect_activity_tag_links,
+            self._detect_skill_signal_links,
             self._detect_missing_project_skills,
             self._detect_missing_project_promises,
             self._detect_projects_without_open_tickets,
@@ -151,6 +152,77 @@ class RecommendationEngineService:
                         "activity_tag_updates": [matching_tag],
                     },
                     tags=["activities", "linking", matching_tag],
+                )
+            )
+        return output
+
+    def _detect_skill_signal_links(self, user_id: int) -> Iterable[Recommendation]:
+        skills = self.skill_service.find_all(filters={"user_id": user_id}, sort_by={"name": "ASC"})
+        activities = self.activity_service.find_all(filters={"user_id": user_id}, sort_by={"name": "ASC"})
+        projects = self.project_service.find_all(filters={"user_id": user_id, "state": "Active"}, sort_by={"last_updated": "DESC"})
+
+        output: list[Recommendation] = []
+        for skill in skills:
+            match_keys = self.skill_service.get_match_keys(skill)
+            if not match_keys:
+                continue
+
+            matching_activities = []
+            for activity in activities:
+                activity_keys = {
+                    self.skill_service.normalize_skill_tag(str(tag))
+                    for tag in (activity.tags or [])
+                    if str(tag).strip()
+                }
+                activity_keys.update(self._extract_match_tokens(activity.name or "", activity.event_type or ""))
+                if match_keys.intersection({key for key in activity_keys if key}):
+                    matching_activities.append(activity)
+
+            matching_projects = []
+            for project in projects:
+                project_keys = {
+                    self.skill_service.normalize_skill_tag(str(tag))
+                    for tag in (getattr(project, "focus_tags", None) or [])
+                    if str(tag).strip()
+                }
+                project_name_key = self.skill_service.normalize_skill_tag(getattr(project, "name", "") or "")
+                if project_name_key:
+                    project_keys.add(project_name_key)
+                if match_keys.intersection({key for key in project_keys if key}):
+                    matching_projects.append(project)
+
+            if not matching_activities and not matching_projects:
+                continue
+
+            parts = []
+            if matching_activities:
+                parts.append(f"{len(matching_activities)} activit{'y' if len(matching_activities) == 1 else 'ies'}")
+            if matching_projects:
+                parts.append(f"{len(matching_projects)} active project{'s' if len(matching_projects) != 1 else ''}")
+
+            examples = []
+            if matching_activities:
+                examples.append(matching_activities[0].name)
+            if matching_projects:
+                examples.append(matching_projects[0].name)
+            example_text = f" Signals already exist in {', '.join(examples[:2])}." if examples else ""
+
+            output.append(
+                Recommendation(
+                    id=f"skill-signal:{skill.id}",
+                    app_name="Skills",
+                    scope="item",
+                    scope_id=skill.id,
+                    priority=72,
+                    confidence=0.74,
+                    title=f"Connect {skill.name} more explicitly",
+                    body=f"{skill.name} already has matching signal in {' and '.join(parts)}.{example_text} Keep tags stable so this growth area stays legible across Rasbhari.",
+                    reasoning="Matching activities or active projects already carry tags or names that align with this skill.",
+                    kind="info",
+                    action=None,
+                    action_label=None,
+                    payload={},
+                    tags=["skills", "linking", skill.tag_key or skill.name],
                 )
             )
         return output

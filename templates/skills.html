@@ -119,6 +119,51 @@
                     <span v-if="skill.aliases && skill.aliases.length === 0" class="ui-badge">No aliases</span>
                     <span v-for="alias in skill.aliases || []" :key="`${skill.id}-alias-${alias}`" class="ui-badge">{{ alias }}</span>
                 </div>
+                <div v-if="skillRecommendations[String(skill.id)] && skillRecommendations[String(skill.id)].length" class="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Recommendations</div>
+                    <div class="mt-3 grid gap-3">
+                        <div v-for="recommendation in skillRecommendations[String(skill.id)]"
+                             :key="recommendation.id"
+                             class="recommendation-card rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
+                             data-recommendation-card
+                             :data-recommendation-key="recommendation.id || `${recommendation.action || 'none'}:${recommendation.scope || 'item'}:${recommendation.scope_id || recommendation.title}`.replace(/\\s+/g, '-').toLowerCase()"
+                             :data-recommendation-kind="recommendation.kind || 'info'">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <div class="text-base font-bold text-[var(--text)]">{{ recommendation.title }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ recommendation.body }}</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span v-if="recommendation.action" class="ui-badge">{{ (recommendation.action_label || recommendation.action || 'Suggestion').replaceAll('_', ' ') }}</span>
+                                    <button type="button"
+                                            class="recommendation-dismiss text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-soft)] transition hover:text-[var(--text)]"
+                                            data-dismiss-recommendation>
+                                        Dismiss
+                                    </button>
+                                </div>
+                            </div>
+                            <details v-if="recommendation.reasoning" class="recommendation-reasoning mt-3">
+                                <summary class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-soft)]">Why</summary>
+                                <div class="mt-2 text-xs leading-6 text-[var(--text-soft)]">{{ recommendation.reasoning }}</div>
+                            </details>
+                            <div v-else class="mt-3 text-xs text-[var(--text-soft)]">Confidence {{ Number(recommendation.confidence || 0).toFixed(2) }}</div>
+                            <div v-if="recommendation.action" class="mt-4 flex flex-wrap gap-2">
+                                <button v-if="recommendation.kind === 'quick_apply'"
+                                        type="button"
+                                        class="btn-secondary px-4 py-2 text-sm"
+                                        :data-apply-recommendation="JSON.stringify(recommendation)">
+                                    {{ recommendation.action_label || 'Apply' }}
+                                </button>
+                                <button v-else-if="recommendation.kind === 'stage_action'"
+                                        type="button"
+                                        class="btn-primary px-4 py-2 text-sm"
+                                        :data-stage-recommendation="JSON.stringify(recommendation)">
+                                    {{ recommendation.action_label || 'Stage Action' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </article>
         </div>
     </section>
@@ -227,6 +272,7 @@
 
             const allSkills = ref([]);
             const history = ref([]);
+            const skillRecommendations = ref({});
             const loading = ref(true);
             const historyLoading = ref(true);
             const error = ref(null);
@@ -366,6 +412,14 @@
                 }
             }
 
+            async function fetchRecommendations() {
+                try {
+                    skillRecommendations.value = await fetchWithRetry('/skills/recommendations', { method: 'GET' }) || {};
+                } catch (e) {
+                    skillRecommendations.value = {};
+                }
+            }
+
             function setupFormForCreate() {
                 formMode.value = 'create';
                 itemId.value = null;
@@ -406,7 +460,7 @@
                         body: JSON.stringify(data),
                     });
                     isModalOpen.value = false;
-                    await Promise.all([fetchSkills(), fetchHistory()]);
+                    await Promise.all([fetchSkills(), fetchHistory(), fetchRecommendations()]);
                 } catch (e) {
                     alert(`Failed to ${formMode.value === 'edit' ? 'update' : 'create'} skill.`);
                 } finally {
@@ -418,14 +472,14 @@
                 if (!confirm(`Are you sure you want to delete this ${modelClassName.value} (ID: ${id})?`)) return;
                 try {
                     await fetchWithRetry(`${fetchUrl.value}${id}`, { method: 'DELETE' });
-                    await Promise.all([fetchSkills(), fetchHistory()]);
+                    await Promise.all([fetchSkills(), fetchHistory(), fetchRecommendations()]);
                 } catch (e) {
                     alert('Failed to delete skill.');
                 }
             }
 
             onMounted(async () => {
-                await Promise.all([fetchSkills(), fetchHistory()]);
+                await Promise.all([fetchSkills(), fetchHistory(), fetchRecommendations()]);
             });
 
             return {
@@ -444,6 +498,7 @@
                 totalXp,
                 highestLevel,
                 topSkill,
+                skillRecommendations,
                 formatKey,
                 getInputType,
                 formatDate,
