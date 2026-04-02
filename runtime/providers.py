@@ -273,6 +273,43 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             "events_today_count": len(recent_events_today),
         }
 
+    def get_capture_data(self) -> dict[str, object]:
+        recent_activities = []
+        for activity in self.activity_service.get_recent_items(8):
+            recent_activities.append({
+                "id": activity.id,
+                "name": activity.name,
+                "event_type": activity.event_type,
+                "description": activity.description,
+                "tags": activity.tags or [],
+            })
+
+        recent_events = self.event_service.get_recent_items(25)
+        suggested_event_types: list[str] = []
+        suggested_tags: list[str] = []
+        for event in recent_events:
+            event_type = (getattr(event, "event_type", "") or "").strip()
+            if event_type and event_type not in suggested_event_types:
+                suggested_event_types.append(event_type)
+            for tag in getattr(event, "tags", None) or []:
+                normalized_tag = str(tag).strip()
+                if normalized_tag and normalized_tag not in suggested_tags:
+                    suggested_tags.append(normalized_tag)
+            if len(suggested_event_types) >= 6 and len(suggested_tags) >= 10:
+                break
+
+        latest_event = next(iter(recent_events), None)
+        return {
+            "recent_activities": recent_activities,
+            "suggested_event_types": suggested_event_types[:6],
+            "suggested_tags": suggested_tags[:10],
+            "latest_event": {
+                "event_type": latest_event.event_type,
+                "description": latest_event.description,
+                "timestamp": latest_event.timestamp.isoformat() if latest_event and latest_event.timestamp else None,
+            } if latest_event else None,
+        }
+
     def _build_promise_index(self) -> list[dict]:
         promises = self.promise_service.find_all(sort_by={"name": "ASC"})
         indexed = []

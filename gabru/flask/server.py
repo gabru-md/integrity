@@ -114,6 +114,12 @@ class Server:
                 universal_timeline=universal_timeline
             )
 
+        @self.app.route('/capture')
+        @login_required
+        def capture():
+            capture_data = self.dashboard_provider.get_capture_data() if self.dashboard_provider else {}
+            return render_flask_template('capture.html', capture_data=capture_data)
+
         @self.app.route('/login', methods=['GET', 'POST'])
         def login():
             if request.method == 'GET':

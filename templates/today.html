@@ -20,7 +20,13 @@
         </div>
     </header>
 
-    <section class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+    <section class="today-mobile-actions md:hidden">
+        <a href="/capture" class="btn-primary px-4 py-3 text-sm">Quick Capture</a>
+        <a href="/projects/home" class="btn-secondary px-4 py-3 text-sm">Projects</a>
+        <a href="/dashboard" class="btn-secondary px-4 py-3 text-sm">Dashboard</a>
+    </section>
+
+    <section class="today-stats-grid grid grid-cols-2 gap-4 lg:grid-cols-4">
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Projects</div>
             <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ today_data.active_project_count or 0 }}</div>
@@ -102,7 +108,7 @@
     {% endif %}
 
     <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-        <div class="space-y-6">
+        <div class="space-y-6 today-primary-column">
             <article class="shell-card p-6">
                 <div class="flex items-center justify-between gap-3">
                     <div>
@@ -241,7 +247,7 @@
             </div>
         </div>
 
-        <div class="space-y-6">
+        <div class="space-y-6 today-secondary-column">
             <article class="shell-card p-6">
                 <div class="flex items-center justify-between gap-3">
                     <div>

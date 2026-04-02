@@ -106,6 +106,22 @@ class FakeDashboardProvider:
     def get_today_data(self):
         return {"guidance": [{"title": "Start with one meaningful move", "body": "Today route is working.", "href": "/projects/home"}]}
 
+    def get_capture_data(self):
+        return {
+            "recent_activities": [
+                {
+                    "id": 9,
+                    "name": "Quick note walk",
+                    "event_type": "walk:logged",
+                    "description": "Log a walk quickly.",
+                    "tags": ["health", "outdoors"],
+                }
+            ],
+            "suggested_event_types": ["travel:arrival", "meeting:logged"],
+            "suggested_tags": ["travel", "important"],
+            "latest_event": {"event_type": "travel:arrival", "description": "Arrived safely", "timestamp": "2026-04-02T12:00:00+00:00"},
+        }
+
     def get_dependency_health_data(self):
         return []
 
@@ -359,6 +375,32 @@ class TodayRouteTests(unittest.TestCase):
         self.assertIn(b"What Rasbhari Is", home_response.data)
         self.assertEqual(dashboard_response.status_code, 200)
         self.assertIn(b"Rasbhari Apps Dashboard", dashboard_response.data)
+
+    def test_capture_route_renders_remote_logging_surface(self):
+        fake_auth_provider = FakeAuthProvider()
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+
+        response = client.get("/capture")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Remote Capture", response.data)
+        self.assertIn(b"Log it before it disappears", response.data)
+        self.assertIn(b"Recent Activities", response.data)
+        self.assertIn(b"Quick Log", response.data)
 
     def test_admin_guide_requires_admin_and_renders_for_admin(self):
         fake_auth_provider = FakeAuthProvider()

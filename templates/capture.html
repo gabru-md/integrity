@@ -1,0 +1,194 @@
+{% extends "index.html" %}
+{% block title %}Capture{% endblock %}
+
+{% block content %}
+{% set capture_data = capture_data or {} %}
+<div class="space-y-6 px-1 py-2">
+    <header class="shell-card hero-card px-6 py-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Remote Capture</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Log it before it disappears</h1>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">A fast path for moments that cannot wait. Trigger a known activity in one tap or log one clean event directly into the Rasbhari event bus.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+                <a href="/" class="btn-secondary px-4 py-3 text-sm">Today</a>
+                <a href="/events/home" class="btn-secondary px-4 py-3 text-sm">Events</a>
+                <a href="/activities/home" class="btn-secondary px-4 py-3 text-sm">Activities</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="capture-layout grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <article class="shell-card p-6">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">One-Tap</div>
+                    <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Recent Activities</h2>
+                </div>
+                <a href="/activities/home" class="text-sm font-semibold text-[var(--accent)]">Manage</a>
+            </div>
+            <div class="mt-5 grid gap-3">
+                {% for activity in capture_data.recent_activities or [] %}
+                <button
+                    type="button"
+                    class="capture-activity-btn rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-left transition hover:-translate-y-0.5"
+                    data-activity-id="{{ activity.id }}"
+                >
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-sm font-bold text-[var(--text)]">{{ activity.name }}</div>
+                            <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ activity.event_type }}</div>
+                        </div>
+                        <span class="ui-badge">Trigger</span>
+                    </div>
+                    {% if activity.description %}
+                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ activity.description }}</div>
+                    {% endif %}
+                    {% if activity.tags %}
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        {% for tag in activity.tags %}
+                        <span class="ui-badge">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </button>
+                {% else %}
+                <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">
+                    No activities yet. Use the direct event form for now, then create activities for things you repeat.
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="shell-card p-6">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Direct Event</div>
+            <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Quick Log</h2>
+            <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Use a short machine-readable event type, then a human summary. Tags are optional but useful if promises or skills depend on them.</p>
+
+            <form id="remote-capture-form" class="capture-form mt-5 grid gap-4">
+                <div>
+                    <label for="capture-event-type" class="mb-2 block text-sm font-semibold text-[var(--text)]">Event type</label>
+                    <input id="capture-event-type" name="event_type" type="text" required class="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" placeholder="e.g. travel:arrival">
+                    {% if capture_data.suggested_event_types %}
+                    <div class="mt-3 flex flex-wrap gap-2 capture-chip-group">
+                        {% for item in capture_data.suggested_event_types %}
+                        <button type="button" class="capture-chip ui-badge" data-fill-target="capture-event-type" data-fill-value="{{ item }}">{{ item }}</button>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="capture-description" class="mb-2 block text-sm font-semibold text-[var(--text)]">Description</label>
+                    <textarea id="capture-description" name="description" rows="3" class="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" placeholder="Short summary of what happened"></textarea>
+                </div>
+
+                <div>
+                    <label for="capture-tags" class="mb-2 block text-sm font-semibold text-[var(--text)]">Tags</label>
+                    <input id="capture-tags" name="tags" type="text" class="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" placeholder="comma, separated, tags">
+                    {% if capture_data.suggested_tags %}
+                    <div class="mt-3 flex flex-wrap gap-2 capture-chip-group">
+                        {% for tag in capture_data.suggested_tags %}
+                        <button type="button" class="capture-chip ui-badge" data-tag-value="{{ tag }}">{{ tag }}</button>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="capture-submit-row flex items-center justify-between gap-3">
+                    <button id="capture-submit" type="submit" class="btn-primary px-4 py-3 text-sm">Log Event</button>
+                    {% if capture_data.latest_event %}
+                    <div class="text-right text-xs text-[var(--text-soft)]">
+                        <div class="font-semibold text-[var(--text)]">Last event</div>
+                        <div>{{ capture_data.latest_event.event_type }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+
+            <div id="capture-feedback" class="mt-4 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+        </article>
+    </section>
+</div>
+
+<script>
+    (function () {
+        const feedback = document.getElementById('capture-feedback');
+        const submitButton = document.getElementById('capture-submit');
+        const form = document.getElementById('remote-capture-form');
+
+        function showFeedback(message, isError = false) {
+            feedback.textContent = message;
+            feedback.classList.remove('hidden');
+            feedback.className = `mt-4 rounded-2xl border px-4 py-3 text-sm ${isError ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200' : 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'}`;
+        }
+
+        async function postJson(url, payload) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Request failed');
+            }
+            return data;
+        }
+
+        document.querySelectorAll('[data-fill-target]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const target = document.getElementById(button.dataset.fillTarget);
+                if (target) target.value = button.dataset.fillValue || '';
+            });
+        });
+
+        document.querySelectorAll('[data-tag-value]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const tagInput = document.getElementById('capture-tags');
+                const nextTag = (button.dataset.tagValue || '').trim();
+                if (!tagInput || !nextTag) return;
+                const existing = tagInput.value.split(',').map((item) => item.trim()).filter(Boolean);
+                if (!existing.includes(nextTag)) existing.push(nextTag);
+                tagInput.value = existing.join(', ');
+            });
+        });
+
+        document.querySelectorAll('.capture-activity-btn').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const activityId = button.dataset.activityId;
+                if (!activityId) return;
+                button.disabled = true;
+                try {
+                    await postJson(`/activities/trigger/${activityId}`, {});
+                    showFeedback('Activity triggered and event logged.');
+                } catch (error) {
+                    showFeedback(error.message || 'Failed to trigger activity.', true);
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            submitButton.disabled = true;
+            try {
+                const payload = {
+                    event_type: document.getElementById('capture-event-type').value.trim(),
+                    description: document.getElementById('capture-description').value.trim(),
+                    tags: document.getElementById('capture-tags').value.trim(),
+                };
+                await postJson('/events/', payload);
+                form.reset();
+                showFeedback('Event logged successfully.');
+            } catch (error) {
+                showFeedback(error.message || 'Failed to log event.', true);
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    })();
+</script>
+{% endblock %}

@@ -165,6 +165,14 @@ The operational dashboard is still available at `/dashboard`. It includes:
 
 Widget pinning, collapsing, and ordering are persisted locally in the browser.
 
+For remote use over Tailscale, Rasbhari now also exposes a dedicated `/capture` surface. It is intentionally narrower than Today or the full Events app:
+
+- one-tap triggering for recent activities
+- a compact direct event form
+- recent event-type and tag suggestions from your own data
+
+That keeps urgent remote logging on the normal event pipeline without requiring the full dashboard or shell access.
+
 Each app home page also includes an `Instructions` block for end users. These in-app explanations are intentionally separate from developer docs and now follow one helper pattern:
 
 - what the app is for
