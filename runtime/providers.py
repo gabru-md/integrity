@@ -20,12 +20,14 @@ from services.events import EventService
 from services.notifications import NotificationService
 from services.assistant_command import AssistantCommandService
 from services.skill_level_history import SkillLevelHistoryService
+from services.skills import SkillService
 from services.timeline import TimelineService
 from services.activities import ActivityService
 from services.connections import ConnectionService
 from services.kanban_tickets import KanbanTicketService
 from services.projects import ProjectService
 from services.promises import PromiseService
+from services.recommendation_followups import RecommendationFollowUpService
 from services.reports import ReportService
 from services.users import UserService
 
@@ -109,6 +111,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         device_service: Optional[DeviceService] = None,
         queue_service: Optional[QueueService] = None,
         skill_history_service: Optional[SkillLevelHistoryService] = None,
+        skill_service: Optional[SkillService] = None,
         timeline_service: Optional[TimelineService] = None,
         promise_service: Optional[PromiseService] = None,
         connection_service: Optional[ConnectionService] = None,
@@ -116,12 +119,14 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         project_service: Optional[ProjectService] = None,
         kanban_ticket_service: Optional[KanbanTicketService] = None,
         report_service: Optional[ReportService] = None,
+        recommendation_followup_service: Optional[RecommendationFollowUpService] = None,
     ):
         self.event_service = event_service or EventService()
         self.notification_service = notification_service or NotificationService()
         self.device_service = device_service or DeviceService()
         self.queue_service = queue_service or QueueService()
         self.skill_history_service = skill_history_service or SkillLevelHistoryService()
+        self.skill_service = skill_service or SkillService()
         self.timeline_service = timeline_service or TimelineService()
         self.promise_service = promise_service or PromiseService()
         self.connection_service = connection_service or ConnectionService()
@@ -129,8 +134,16 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         self.project_service = project_service or ProjectService()
         self.kanban_ticket_service = kanban_ticket_service or KanbanTicketService()
         self.report_service = report_service or ReportService()
+        self.recommendation_followup_service = recommendation_followup_service or RecommendationFollowUpService(
+            project_service=self.project_service,
+            kanban_ticket_service=self.kanban_ticket_service,
+            promise_service=self.promise_service,
+            skill_service=self.skill_service,
+        )
 
     def get_today_data(self) -> dict[str, object]:
+        promise_index = self._build_promise_index()
+        skill_index = self._build_skill_index()
         active_projects = self.project_service.find_all(filters={"state": "Active"}, sort_by={"last_updated": "DESC"})
         active_project_ids = [project.id for project in active_projects if project.id is not None]
 
@@ -147,6 +160,9 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
                 "href": f"/projects/{project.id}/board",
             }
             for ticket in tickets:
+                shared_tags = self._build_project_shared_tags(project)
+                linked_promises = self._match_promises_for_tags(shared_tags, promise_index)
+                linked_skills = self._match_skills_for_tags(shared_tags, skill_index)
                 ticket_data = {
                     "id": ticket.id,
                     "project_id": project.id,
@@ -157,6 +173,10 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
                     "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
                     "state_changed_at": ticket.state_changed_at.isoformat() if ticket.state_changed_at else None,
                     "href": f"/projects/{project.id}/board",
+                    "focus_tags": shared_tags,
+                    "linked_promises": linked_promises,
+                    "linked_skills": linked_skills,
+                    "contribution_summary": self._build_contribution_summary(linked_promises, linked_skills),
                 }
                 if ticket_data["state"] == "in_progress":
                     active_work.append(ticket_data)
@@ -242,10 +262,84 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             "neglected_connections": neglected_connections[:5],
             "suggested_activities": suggested_activities[:4],
             "guidance": guidance,
+            "recommended_follow_ups": self.recommendation_followup_service.get_follow_ups(
+                user_id=active_projects[0].user_id if active_projects else 0
+            ) if active_projects else [],
             "active_project_count": len(active_project_ids),
             "latest_report": report_summary,
             "events_today_count": len(recent_events_today),
         }
+
+    def _build_promise_index(self) -> list[dict]:
+        promises = self.promise_service.find_all(sort_by={"name": "ASC"})
+        indexed = []
+        for promise in promises:
+            match_values = []
+            if promise.target_event_tag:
+                match_values.append(str(promise.target_event_tag).strip().lower())
+            if promise.target_event_type and promise.target_event_type.startswith("project:"):
+                match_values.append(promise.target_event_type.split(":", 1)[1].strip().lower())
+            if match_values:
+                indexed.append({
+                    "id": promise.id,
+                    "name": promise.name,
+                    "href": "/promises/home",
+                    "match_values": set(match_values),
+                })
+        return indexed
+
+    def _build_skill_index(self) -> list[dict]:
+        skills = self.skill_service.find_all(sort_by={"name": "ASC"})
+        return [
+            {
+                "id": skill.id,
+                "name": skill.name,
+                "href": "/skills/home",
+                "match_values": self.skill_service.get_match_keys(skill),
+            }
+            for skill in skills
+        ]
+
+    @staticmethod
+    def _build_project_shared_tags(project) -> list[str]:
+        tags = []
+        if getattr(project, "name", None):
+            tags.append(project.name.strip().lower().replace(" ", "-"))
+        tags.extend(str(tag).strip().lower() for tag in (getattr(project, "focus_tags", None) or []) if str(tag).strip())
+        deduped = []
+        for tag in tags:
+            if tag not in deduped:
+                deduped.append(tag)
+        return deduped
+
+    @staticmethod
+    def _match_promises_for_tags(tags: list[str], promise_index: list[dict]) -> list[dict]:
+        tag_set = set(tags)
+        return [
+            {"id": item["id"], "name": item["name"], "href": item["href"]}
+            for item in promise_index
+            if item["match_values"].intersection(tag_set)
+        ][:3]
+
+    @staticmethod
+    def _match_skills_for_tags(tags: list[str], skill_index: list[dict]) -> list[dict]:
+        normalized_tags = {"".join(char for char in tag if char.isalnum()) for tag in tags if tag}
+        return [
+            {"id": item["id"], "name": item["name"], "href": item["href"]}
+            for item in skill_index
+            if item["match_values"].intersection(normalized_tags)
+        ][:3]
+
+    @staticmethod
+    def _build_contribution_summary(linked_promises: list[dict], linked_skills: list[dict]) -> Optional[str]:
+        parts = []
+        if linked_promises:
+            parts.append(f"{len(linked_promises)} promise{'s' if len(linked_promises) != 1 else ''}")
+        if linked_skills:
+            parts.append(f"{len(linked_skills)} skill{'s' if len(linked_skills) != 1 else ''}")
+        if not parts:
+            return None
+        return "Supports " + " and ".join(parts)
 
     @staticmethod
     def _priority_rank(priority: str) -> int:
@@ -555,3 +649,6 @@ class RasbhariAssistantCommandProvider(AssistantCommandProvider):
             cancel=cancel,
             change_action=change_action,
         )
+
+    def handle_recommendation(self, user_id: int, recommendation: dict):
+        return self.assistant_command_service.handle_recommendation(user_id=user_id, recommendation=recommendation)

@@ -226,6 +226,7 @@
     </div>
 </main>
 
+{% block scripts %}
 <script>
     function applyThemeMeta(themeName) {
         const darkThemes = ['noir', 'console'];
@@ -396,7 +397,7 @@
                     ${confidence ? `<span class="assistant-meta">Confidence ${escapeHtml(confidence)}</span>` : ''}
                     ${payload.requires_confirmation ? `<span class="assistant-meta assistant-meta-accent">Waiting for confirmation</span>` : ''}
                 </div>
-                ${payload.requires_confirmation ? `<div class="assistant-card-actions"><button type="button" class="btn-ghost assistant-inline-change-toggle px-4 py-2 text-sm" data-change-toggle="true">Change</button><button type="button" class="btn-ghost assistant-inline-ignore px-4 py-2 text-sm" data-ignore="true">Ignore</button><button type="button" class="btn-primary assistant-inline-confirm px-4 py-2 text-sm" data-confirm="true">Confirm Action</button></div><div class="assistant-change-panel hidden"><div class="assistant-change-row"><select class="assistant-change-select" aria-label="Choose action type"><option value="trigger_activity" ${payload.action === 'trigger_activity' ? 'selected' : ''}>Trigger Activity</option><option value="create_event" ${payload.action === 'create_event' ? 'selected' : ''}>Create Event</option><option value="create_thought" ${payload.action === 'create_thought' ? 'selected' : ''}>Create Thought</option><option value="create_promise" ${payload.action === 'create_promise' ? 'selected' : ''}>Create Promise</option></select><button type="button" class="btn-secondary assistant-inline-change-apply px-4 py-2 text-sm" data-change-apply="true">Restage</button></div><div class="assistant-change-copy">This changes the staged action and asks for confirmation again.</div></div>` : ''}
+                ${payload.requires_confirmation ? `<div class="assistant-card-actions"><button type="button" class="btn-ghost assistant-inline-change-toggle px-4 py-2 text-sm" data-change-toggle="true">Change</button><button type="button" class="btn-ghost assistant-inline-ignore px-4 py-2 text-sm" data-ignore="true">Ignore</button><button type="button" class="btn-primary assistant-inline-confirm px-4 py-2 text-sm" data-confirm="true">Confirm Action</button></div><div class="assistant-change-panel hidden"><div class="assistant-change-row"><select class="assistant-change-select" aria-label="Choose action type"><option value="trigger_activity" ${payload.action === 'trigger_activity' ? 'selected' : ''}>Trigger Activity</option><option value="create_event" ${payload.action === 'create_event' ? 'selected' : ''}>Create Event</option><option value="create_thought" ${payload.action === 'create_thought' ? 'selected' : ''}>Create Thought</option><option value="create_promise" ${payload.action === 'create_promise' ? 'selected' : ''}>Create Promise</option><option value="create_skill" ${payload.action === 'create_skill' ? 'selected' : ''}>Create Skill</option><option value="create_ticket" ${payload.action === 'create_ticket' ? 'selected' : ''}>Create Ticket</option><option value="create_project_update" ${payload.action === 'create_project_update' ? 'selected' : ''}>Project Update</option></select><button type="button" class="btn-secondary assistant-inline-change-apply px-4 py-2 text-sm" data-change-apply="true">Restage</button></div><div class="assistant-change-copy">This changes the staged action and asks for confirmation again.</div></div>` : ''}
             `;
             return card;
         }
@@ -471,6 +472,42 @@
                 setAssistantLoading(false);
             }
         }
+
+        async function stageRecommendation(recommendation) {
+            if (!assistantThread) return;
+            try {
+                const response = await fetch('/assistant/recommendation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ recommendation }),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    appendAssistantBubble(payload.error || payload.response || 'Failed to stage recommendation follow-up.');
+                    return;
+                }
+                appendAssistantResponse(payload, { replacePending: true });
+                if (payload.requires_confirmation) {
+                    pendingConfirmation = recommendation.title || recommendation.summary || 'Recommendation follow-up';
+                } else {
+                    pendingConfirmation = null;
+                    pendingCardId = null;
+                }
+                saveAssistantState();
+                syncAssistantLock();
+                if (chatWindow) {
+                    chatWindow.classList.remove('hidden');
+                    chatWindow.classList.add('chat-window-active');
+                }
+            } catch (_) {
+                appendAssistantBubble('Failed to stage recommendation follow-up.');
+            }
+        }
+
+        window.rasbhariAssistant = {
+            stageRecommendation,
+        };
 
         if (chatButton && chatWindow && closeChatButton && assistantThread && assistantForm && assistantInput) {
             restoreAssistantState();
@@ -574,5 +611,6 @@
         }
     });
 </script>
+{% endblock %}
 </body>
 </html>

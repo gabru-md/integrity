@@ -13,13 +13,16 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Uses queue processors to react to those events in the background.
 - Exposes CRUD-style apps for core domains such as projects, promises, activities, and skills.
 - Adds project-scoped kanban boards with minimal tickets that emit workflow events into the shared event bus.
+- Lets projects declare shared focus tags so ticket moves and timeline updates can contribute directly to promises and skills through the same event bus.
 - Generates daily, weekly, and monthly behavioral mirror reports from current activity, thought, project, and skill signals.
 - Includes user-facing instructions inside each app UI so non-developers can understand the meaning of fields and terms.
 - Provides a `Today` front door that unifies active work, due promises, neglected connections, suggested activities, and daily guidance.
+- Lets Today stage deterministic recommendation follow-ups such as creating a skill, promise, ticket, or project update through the same assistant confirmation flow.
 - Preserves a separate operational dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
 - Includes a low-friction macOS local signal collector that can autonomously emit normalized raw machine events into the event bus.
 - Includes a rule-based session inference layer that turns raw local signals into grounded session boundary events such as coding, writing, planning, and research.
 - Uses a typed notification model so outbound alerts are classed as `urgent`, `today`, `review`, `suggestion`, `digest`, or `system` instead of a single generic stream.
+- Includes a shared import foundation so future calendar, device, and external adapters normalize records once, dedupe them, and emit compatible events into the same event bus.
 - Includes a native `Rasbhari AI` command layer that can interpret natural-language commands, route them through app-specific resolvers, and execute safe actions through the existing apps and event bus.
 - Runs comfortably on a Raspberry Pi while staying inspectable and hackable.
 

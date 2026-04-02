@@ -8,7 +8,9 @@ from typing import List, Optional
 from gabru.log import Logger
 from model.assistant_command import AssistantAction, AssistantCommandPlan, AssistantCommandResult
 from model.event import Event
+from model.kanban_ticket import KanbanTicket
 from model.promise import Promise
+from model.skill import Skill
 from model.thought import Thought
 from services.activities import ActivityService
 from services.assistant_resolvers import (
@@ -19,6 +21,8 @@ from services.assistant_resolvers import (
     ThoughtCommandResolver,
 )
 from services.events import EventService
+from services.kanban_tickets import KanbanTicketService
+from services.project_updates import ProjectUpdateService
 from services.promises import PromiseService
 from services.skills import SkillService
 from services.thoughts import ThoughtService
@@ -30,6 +34,9 @@ class AssistantCommandService:
         "trigger_activity": 0.58,
         "create_thought": 0.58,
         "create_promise": 0.72,
+        "create_skill": 0.72,
+        "create_ticket": 0.68,
+        "create_project_update": 0.68,
         "answer": 0.0,
     }
     AFFIRMATIVE_MESSAGES = {
@@ -53,6 +60,8 @@ class AssistantCommandService:
         thought_service: Optional[ThoughtService] = None,
         promise_service: Optional[PromiseService] = None,
         skill_service: Optional[SkillService] = None,
+        kanban_ticket_service: Optional[KanbanTicketService] = None,
+        project_update_service: Optional[ProjectUpdateService] = None,
         ollama_url: Optional[str] = None,
         model_name: Optional[str] = None,
         timeout_seconds: Optional[float] = None,
@@ -62,6 +71,8 @@ class AssistantCommandService:
         self.thought_service = thought_service or ThoughtService()
         self.promise_service = promise_service or PromiseService()
         self.skill_service = skill_service or SkillService()
+        self.kanban_ticket_service = kanban_ticket_service
+        self.project_update_service = project_update_service
         self.ollama_url = (ollama_url or os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434").rstrip("/")
         self.model_name = model_name or os.getenv("OLLAMA_COMMAND_MODEL") or os.getenv("OLLAMA_MODEL") or ""
         self.timeout_seconds = timeout_seconds or float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "20"))
@@ -178,6 +189,47 @@ class AssistantCommandService:
             summary=plan.summary,
             reasoning=plan.reasoning,
             user_message=raw_text,
+            response=self._format_staged_response(plan),
+            payload=self._payload_for_plan(plan),
+        )
+
+    def handle_recommendation(self, user_id: int, recommendation: dict) -> AssistantCommandResult:
+        pending_entry = self.pending_plans.get(user_id)
+        if pending_entry:
+            pending_plan = pending_entry["plan"]
+            return AssistantCommandResult(
+                ok=True,
+                executed=False,
+                requires_confirmation=True,
+                action=pending_plan.action,
+                confidence=pending_plan.confidence,
+                summary=pending_plan.summary,
+                reasoning=pending_plan.reasoning,
+                user_message=str(recommendation.get("title") or ""),
+                response="There is already a staged action waiting. Confirm it or ignore it before staging a recommendation follow-up.",
+                payload=self._payload_for_plan(pending_plan),
+            )
+
+        plan = self._plan_from_recommendation(recommendation)
+        if plan is None:
+            return AssistantCommandResult(
+                ok=False,
+                executed=False,
+                user_message=str(recommendation.get("title") or ""),
+                response="This recommendation could not be turned into an actionable follow-up.",
+            )
+
+        user_message = str(recommendation.get("title") or plan.summary or "Recommendation follow-up")
+        self.pending_plans[user_id] = {"plan": plan, "user_message": user_message}
+        return AssistantCommandResult(
+            ok=True,
+            executed=False,
+            requires_confirmation=True,
+            action=plan.action,
+            confidence=plan.confidence,
+            summary=plan.summary,
+            reasoning=plan.reasoning,
+            user_message=user_message,
             response=self._format_staged_response(plan),
             payload=self._payload_for_plan(plan),
         )
@@ -450,6 +502,98 @@ class AssistantCommandService:
                 },
             )
 
+        if plan.action == "create_skill":
+            skill = Skill(
+                user_id=user_id,
+                name=(plan.skill_name or "").strip(),
+                tag_key=(plan.skill_tag_key or "").strip(),
+                aliases=self._normalize_tags(plan.skill_aliases),
+            )
+            skill_id = self.skill_service.create(skill)
+            if not skill_id:
+                return self._execution_failure(plan, raw_text, "Failed to create skill.")
+            return AssistantCommandResult(
+                ok=True,
+                executed=True,
+                action=plan.action,
+                confidence=plan.confidence,
+                summary=plan.summary or f"Created skill {skill.name}.",
+                reasoning=plan.reasoning,
+                user_message=raw_text,
+                response=self._format_executed_response(
+                    title="Skill created",
+                    action_line=f"Created skill `{skill.name}`.",
+                    plan=plan,
+                    details=[
+                        f"Tag key: {skill.tag_key}",
+                        f"Aliases: {', '.join(skill.aliases) if skill.aliases else 'none'}",
+                    ],
+                ),
+                payload={"skill_id": skill_id, "skill_name": skill.name, "skill_tag_key": skill.tag_key},
+            )
+
+        if plan.action == "create_ticket":
+            ticket_service = self.kanban_ticket_service or KanbanTicketService()
+            ticket = KanbanTicket(
+                user_id=user_id,
+                project_id=plan.ticket_project_id or 0,
+                title=(plan.ticket_title or "").strip(),
+                description=(plan.ticket_description or "").strip(),
+                state=(plan.ticket_state or "backlog").strip().lower(),
+            )
+            ticket_id = ticket_service.create(ticket)
+            if not ticket_id:
+                return self._execution_failure(plan, raw_text, "Failed to create ticket.")
+            return AssistantCommandResult(
+                ok=True,
+                executed=True,
+                action=plan.action,
+                confidence=plan.confidence,
+                summary=plan.summary or f"Created ticket {ticket.title}.",
+                reasoning=plan.reasoning,
+                user_message=raw_text,
+                response=self._format_executed_response(
+                    title="Ticket created",
+                    action_line=f"Created ticket `{ticket.title}`.",
+                    plan=plan,
+                    details=[
+                        f"Project ID: {ticket.project_id}",
+                        f"State: {ticket.state}",
+                    ],
+                ),
+                payload={"ticket_id": ticket_id, "project_id": ticket.project_id, "title": ticket.title},
+            )
+
+        if plan.action == "create_project_update":
+            project_update_service = self.project_update_service or ProjectUpdateService(event_service=self.event_service)
+            timeline_id = project_update_service.create_update(
+                user_id=user_id,
+                project_id=plan.project_id or 0,
+                content=(plan.project_update_content or raw_text).strip(),
+                item_type=(plan.project_update_type or "Update").strip() or "Update",
+            )
+            if not timeline_id:
+                return self._execution_failure(plan, raw_text, "Failed to create project update.")
+            return AssistantCommandResult(
+                ok=True,
+                executed=True,
+                action=plan.action,
+                confidence=plan.confidence,
+                summary=plan.summary or "Created project update.",
+                reasoning=plan.reasoning,
+                user_message=raw_text,
+                response=self._format_executed_response(
+                    title="Project update created",
+                    action_line=f"Created project update for project #{plan.project_id}.",
+                    plan=plan,
+                    details=[
+                        f"Item type: {plan.project_update_type or 'Update'}",
+                        f"Content: {(plan.project_update_content or raw_text).strip()}",
+                    ],
+                ),
+                payload={"timeline_id": timeline_id, "project_id": plan.project_id},
+            )
+
         return AssistantCommandResult(
             ok=True,
             executed=False,
@@ -550,6 +694,14 @@ class AssistantCommandService:
         elif tags is None:
             normalized["tags"] = []
 
+        skill_aliases = normalized.get("skill_aliases")
+        if isinstance(skill_aliases, str):
+            normalized["skill_aliases"] = [item.strip() for item in skill_aliases.split(",") if item.strip()]
+        elif isinstance(skill_aliases, list):
+            normalized["skill_aliases"] = [str(item).strip() for item in skill_aliases if str(item).strip()]
+        elif skill_aliases is None:
+            normalized["skill_aliases"] = []
+
         return normalized
 
     def _normalize_action_value(self, payload: dict) -> str:
@@ -567,6 +719,12 @@ class AssistantCommandService:
 
         if payload.get("promise_name") or payload.get("promise_target_event_type") or payload.get("promise_target_event_tag") or "promise" in raw_signal:
             return "create_promise"
+        if payload.get("skill_name") or payload.get("skill_tag_key") or "create skill" in raw_signal:
+            return "create_skill"
+        if payload.get("ticket_project_id") or payload.get("ticket_title") or "create ticket" in raw_signal:
+            return "create_ticket"
+        if payload.get("project_id") or payload.get("project_update_content") or "project update" in raw_signal:
+            return "create_project_update"
         if payload.get("thought_message") or "note that" in raw_signal or raw_signal.startswith("note "):
             return "create_thought"
 
@@ -586,6 +744,12 @@ class AssistantCommandService:
                 "note": "create_thought",
                 "promise": "create_promise",
                 "create promise": "create_promise",
+                "skill": "create_skill",
+                "create skill": "create_skill",
+                "ticket": "create_ticket",
+                "create ticket": "create_ticket",
+                "project update": "create_project_update",
+                "create project update": "create_project_update",
                 "reply": "answer",
                 "respond": "answer",
             }
@@ -618,7 +782,7 @@ class AssistantCommandService:
 
     def _change_pending_action(self, user_id: int, pending_entry: dict, change_action: str) -> AssistantCommandResult:
         raw_action = (change_action or "").strip()
-        if raw_action not in ("create_event", "trigger_activity", "create_thought", "create_promise"):
+        if raw_action not in ("create_event", "trigger_activity", "create_thought", "create_promise", "create_skill", "create_ticket", "create_project_update"):
             return AssistantCommandResult(
                 ok=False,
                 executed=False,
@@ -744,6 +908,52 @@ class AssistantCommandService:
                 }
             )
 
+        if target_action == "create_skill":
+            skill_name = plan.skill_name or plan.promise_target_event_tag or (plan.ticket_title or raw_text).title()
+            skill_tag_key = plan.skill_tag_key or self.skill_service.normalize_skill_tag(skill_name)
+            return plan.model_copy(
+                update={
+                    **base_updates,
+                    "skill_name": skill_name,
+                    "skill_tag_key": skill_tag_key,
+                    "summary": f"Create skill `{skill_name}`.",
+                    "reasoning": f"Restaged by user as `{target_action}`.",
+                    "response": None,
+                }
+            )
+
+        if target_action == "create_ticket":
+            if not plan.ticket_project_id and not plan.project_id:
+                return None
+            title = plan.ticket_title or plan.summary or f"Follow up on {raw_text}"
+            return plan.model_copy(
+                update={
+                    **base_updates,
+                    "ticket_project_id": plan.ticket_project_id or plan.project_id,
+                    "ticket_title": title,
+                    "ticket_description": plan.ticket_description or plan.description or raw_text,
+                    "ticket_state": plan.ticket_state or "backlog",
+                    "summary": f"Create ticket `{title}`.",
+                    "reasoning": f"Restaged by user as `{target_action}`.",
+                    "response": None,
+                }
+            )
+
+        if target_action == "create_project_update":
+            if not plan.project_id and not plan.ticket_project_id:
+                return None
+            return plan.model_copy(
+                update={
+                    **base_updates,
+                    "project_id": plan.project_id or plan.ticket_project_id,
+                    "project_update_content": plan.project_update_content or plan.description or raw_text,
+                    "project_update_type": plan.project_update_type or "Update",
+                    "summary": "Create a project update.",
+                    "reasoning": f"Restaged by user as `{target_action}`.",
+                    "response": None,
+                }
+            )
+
         return None
 
     def _format_staged_response(self, plan: AssistantCommandPlan) -> str:
@@ -801,6 +1011,24 @@ class AssistantCommandService:
                 f"Target event type: {plan.promise_target_event_type or 'none'}",
                 f"Target event tag: {plan.promise_target_event_tag or 'none'}",
             ]
+        if plan.action == "create_skill":
+            return [
+                f"Skill: {plan.skill_name or 'unspecified'}",
+                f"Tag key: {plan.skill_tag_key or 'none'}",
+                f"Aliases: {', '.join(plan.skill_aliases) if plan.skill_aliases else 'none'}",
+            ]
+        if plan.action == "create_ticket":
+            return [
+                f"Project ID: {plan.ticket_project_id or 'unspecified'}",
+                f"Ticket: {plan.ticket_title or 'unspecified'}",
+                f"State: {plan.ticket_state or 'backlog'}",
+            ]
+        if plan.action == "create_project_update":
+            return [
+                f"Project ID: {plan.project_id or 'unspecified'}",
+                f"Type: {plan.project_update_type or 'Update'}",
+                f"Content: {plan.project_update_content or 'none'}",
+            ]
         return []
 
     def _is_affirmation(self, message: str) -> bool:
@@ -814,3 +1042,20 @@ class AssistantCommandService:
     @staticmethod
     def _normalize_tags(tags: List[str]) -> List[str]:
         return list(dict.fromkeys(tag.strip() for tag in (tags or []) if tag and tag.strip()))
+
+    def _plan_from_recommendation(self, recommendation: dict) -> Optional[AssistantCommandPlan]:
+        if not isinstance(recommendation, dict):
+            return None
+        payload = {
+            "action": recommendation.get("action"),
+            "confidence": recommendation.get("confidence", 0.7),
+            "reasoning": recommendation.get("reasoning", ""),
+            "summary": recommendation.get("title") or recommendation.get("summary") or "",
+            "response": recommendation.get("body") or recommendation.get("response"),
+        }
+        payload.update(recommendation.get("payload") or {})
+        payload = self._normalize_plan_payload(payload)
+        try:
+            return AssistantCommandPlan.model_validate(payload)
+        except Exception:
+            return None

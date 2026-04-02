@@ -127,7 +127,12 @@ def add_timeline_item(project_id):
             event_type=event_type,
             timestamp=datetime.now(),
             description=f"Timeline update for project: {project.name}",
-            tags=["progress"]
+            tags=[
+                "progress",
+                f"project:{project_name_dashed}",
+                f"project_work:{project_name_dashed}",
+                *(project.focus_tags or []),
+            ]
         )
         event_service.create(new_event)
             

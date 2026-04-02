@@ -97,6 +97,9 @@ class AssistantCommandProvider(Protocol):
     ) -> Any:
         ...
 
+    def handle_recommendation(self, user_id: int, recommendation: dict[str, Any]) -> Any:
+        ...
+
 
 @dataclass
 class TimelineEventView:

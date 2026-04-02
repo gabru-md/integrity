@@ -98,10 +98,12 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Create a project first, then use View Progress to maintain its timeline.",
                 "Use Open Board when you want to track concrete tickets from backlog to shipped.",
                 "Use project type for broad grouping only. The timeline carries the detailed story.",
+                "Add focus tags when project work should count toward promises or skills, for example python, writing, or deep-work.",
                 "Post short updates for milestones and choose Blog when an update deserves a fuller write-up.",
             ],
             "glossary": [
                 {"term": "Project Type", "meaning": "A simple category such as Code, DIY, or Other."},
+                {"term": "Focus Tags", "meaning": "Shared tags Rasbhari adds to project work events so tickets, promises, skills, and Today can line up around the same work."},
                 {"term": "State",
                  "meaning": "The current lifecycle status of the project, such as Active or Completed."},
                 {"term": "Progress Count", "meaning": "How many timeline updates have been logged for the project."},
@@ -114,6 +116,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Keep tickets short and concrete so the board stays fast to scan.",
                 "Use the board for day-to-day execution and the project timeline for narrative updates.",
                 "Move tickets forward as work advances. Rasbhari emits events when tickets are created or moved.",
+                "Project focus tags are automatically added to ticket workflow events so project work can contribute to promises and skills.",
                 "Archive shipped or stale tickets when you want them out of the active board without deleting their history.",
             ],
             "glossary": [

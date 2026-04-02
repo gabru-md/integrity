@@ -66,6 +66,7 @@ Current UI behavior:
   - `Ignore`
   - `Change`
 - `Change` restages the action type and asks for confirmation again
+- deterministic recommendation follow-ups can enter this same staged pipeline, so suggested writes remain explicit and reversible
 - if a staged action is replaced, the older staged card is marked as changed and no longer remains active
 
 ## Public API Surface
@@ -73,6 +74,7 @@ Current UI behavior:
 Current route:
 
 - `POST /assistant/command`
+- `POST /assistant/recommendation`
 
 This route accepts the current authenticated user through either:
 
@@ -80,7 +82,7 @@ This route accepts the current authenticated user through either:
 - `X-API-Key`
 - `Authorization: ApiKey <key>`
 
-The assistant route is not meant to be a raw execution endpoint. It is a staged command endpoint.
+The assistant routes are not meant to be raw execution endpoints. They are staged command endpoints.
 
 ## Request Shape
 

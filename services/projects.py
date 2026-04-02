@@ -17,6 +17,7 @@ class ProjectService(CRUDService[Project]):
                         user_id INTEGER NOT NULL,
                         name VARCHAR(255) NOT NULL,
                         project_type VARCHAR(50),
+                        focus_tags TEXT[] DEFAULT ARRAY[]::TEXT[],
                         start_date TIMESTAMP,
                         state VARCHAR(50),
                         last_updated TIMESTAMP,
@@ -24,28 +25,29 @@ class ProjectService(CRUDService[Project]):
                         UNIQUE(user_id, name)
                     )
                 """)
+                cursor.execute("ALTER TABLE projects ADD COLUMN IF NOT EXISTS focus_tags TEXT[] DEFAULT ARRAY[]::TEXT[]")
                 self.db.conn.commit()
 
     def _to_tuple(self, entity: Project) -> tuple:
         return (
-            entity.user_id, entity.name, entity.project_type, entity.start_date,
+            entity.user_id, entity.name, entity.project_type, entity.focus_tags or [], entity.start_date,
             entity.state.value, entity.last_updated, entity.progress_count
         )
 
     def _to_object(self, row: tuple) -> Project:
         return Project(
-            id=row[0], user_id=row[1], name=row[2], project_type=row[3], start_date=row[4],
-            state=row[5], last_updated=row[6], progress_count=row[7]
+            id=row[0], user_id=row[1], name=row[2], project_type=row[3], focus_tags=row[4] or [], start_date=row[5],
+            state=row[6], last_updated=row[7], progress_count=row[8]
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["user_id", "name", "project_type", "start_date", "state", "last_updated", "progress_count"]
+        return ["user_id", "name", "project_type", "focus_tags", "start_date", "state", "last_updated", "progress_count"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["user_id", "name", "project_type", "start_date", "state", "last_updated", "progress_count"]
+        return ["user_id", "name", "project_type", "focus_tags", "start_date", "state", "last_updated", "progress_count"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "user_id", "name", "project_type", "start_date", "state", "last_updated", "progress_count"]
+        return ["id", "user_id", "name", "project_type", "focus_tags", "start_date", "state", "last_updated", "progress_count"]
 
     def get_by_name(self, name: str) -> Optional[Project]:
         """Fetches a single project by its unique name."""

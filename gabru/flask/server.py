@@ -259,6 +259,27 @@ class Server:
             status_code = 200 if result.ok else 500
             return jsonify(result.model_dump()), status_code
 
+        @self.app.route('/assistant/recommendation', methods=['POST'])
+        @login_required
+        def assistant_recommendation():
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({"error": "JSON request body is required"}), 400
+
+            recommendation = data.get("recommendation")
+            if not isinstance(recommendation, dict):
+                return jsonify({"error": "recommendation object is required"}), 400
+
+            user_id = PermissionManager.get_current_user_id()
+            if user_id is None:
+                return jsonify({"error": "Unable to determine current user"}), 401
+            if self.assistant_provider is None:
+                return jsonify({"error": "Assistant provider is not configured"}), 500
+
+            result = self.assistant_provider.handle_recommendation(user_id=user_id, recommendation=recommendation)
+            status_code = 200 if result.ok else 500
+            return jsonify(result.model_dump()), status_code
+
         @self.app.route('/download/<filename>')
         @login_required
         def download(filename):

@@ -8,6 +8,9 @@ AssistantAction = Literal[
     "trigger_activity",
     "create_thought",
     "create_promise",
+    "create_skill",
+    "create_ticket",
+    "create_project_update",
     "answer",
 ]
 
@@ -29,6 +32,16 @@ class AssistantCommandPlan(BaseModel):
     promise_target_event_type: Optional[str] = None
     promise_target_event_tag: Optional[str] = None
     promise_required_count: Optional[int] = None
+    skill_name: Optional[str] = None
+    skill_tag_key: Optional[str] = None
+    skill_aliases: List[str] = Field(default_factory=list)
+    ticket_project_id: Optional[int] = None
+    ticket_title: Optional[str] = None
+    ticket_description: Optional[str] = None
+    ticket_state: Optional[str] = None
+    project_id: Optional[int] = None
+    project_update_content: Optional[str] = None
+    project_update_type: Optional[str] = None
     response: Optional[str] = None
 
 

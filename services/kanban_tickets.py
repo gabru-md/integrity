@@ -96,7 +96,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                 event_type="kanban:ticket_created",
                 timestamp=now,
                 description=f"Created ticket '{obj.title}'",
-                tags=self._build_event_tags(project.name if project else None, obj.state, ticket_id),
+                tags=self._build_event_tags(project, obj.state, ticket_id),
             )
         return ticket_id
 
@@ -120,7 +120,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                     event_type="kanban:ticket_moved",
                     timestamp=now,
                     description=f"Moved ticket '{obj.title}' from {old_state} to {new_state}",
-                    tags=self._build_event_tags(project.name if project else None, new_state, obj.id, old_state),
+                    tags=self._build_event_tags(project, new_state, obj.id, old_state),
                 )
             else:
                 emit_event_safely(
@@ -129,7 +129,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                     event_type="kanban:ticket_updated",
                     timestamp=now,
                     description=f"Updated ticket '{obj.title}'",
-                    tags=self._build_event_tags(project.name if project else None, new_state, obj.id),
+                    tags=self._build_event_tags(project, new_state, obj.id),
                 )
         return updated
 
@@ -173,16 +173,25 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                 event_type="kanban:ticket_archived",
                 timestamp=datetime.now(),
                 description=f"Archived ticket '{ticket.title}'",
-                tags=self._build_event_tags(project.name if project else None, ticket.state, ticket.id),
+                tags=self._build_event_tags(project, ticket.state, ticket.id),
             )
             return self.get_by_id(ticket_id)
         return None
 
     @staticmethod
-    def _build_event_tags(project_name: Optional[str], state_value, ticket_id: Optional[int], previous_state: Optional[str] = None) -> List[str]:
-        tags = ["kanban"]
+    def _build_event_tags(project, state_value, ticket_id: Optional[int], previous_state: Optional[str] = None) -> List[str]:
+        tags = ["kanban", "project_work"]
+        project_name = getattr(project, "name", None)
         if project_name:
-            tags.append(f"project:{project_name.strip().lower().replace(' ', '-')}")
+            project_slug = project_name.strip().lower().replace(' ', '-')
+            tags.extend([
+                f"project:{project_slug}",
+                f"project_work:{project_slug}",
+            ])
+        for focus_tag in getattr(project, "focus_tags", []) or []:
+            normalized_tag = str(focus_tag).strip().lower()
+            if normalized_tag:
+                tags.append(normalized_tag)
         normalized_state = state_value.value if hasattr(state_value, "value") else state_value
         if normalized_state:
             tags.append(f"ticket_state:{normalized_state}")

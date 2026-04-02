@@ -66,6 +66,42 @@
                 </div>
             </article>
 
+            <article class="shell-card p-6">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Follow-Ups</div>
+                        <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Actionable Recommendations</h2>
+                    </div>
+                </div>
+                <div class="mt-5 grid gap-4">
+                    {% for item in today_data.recommended_follow_ups or [] %}
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="text-base font-bold text-[var(--text)]">{{ item.title }}</div>
+                                <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
+                            </div>
+                            <span class="ui-badge">{{ item.action.replace('_', ' ') }}</span>
+                        </div>
+                        <div class="mt-3 text-xs text-[var(--text-soft)]">Confidence {{ '%.2f'|format(item.confidence or 0) }}{% if item.reasoning %} · {{ item.reasoning }}{% endif %}</div>
+                        <div class="mt-4">
+                            <button
+                                type="button"
+                                class="btn-primary px-4 py-2 text-sm"
+                                data-stage-recommendation='{{ item|tojson }}'
+                            >
+                                Stage Action
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">
+                        No recommendation follow-ups are ready right now.
+                    </div>
+                    {% endfor %}
+                </div>
+            </article>
+
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <article class="shell-card p-6">
                     <div class="flex items-center justify-between gap-3">
@@ -87,6 +123,19 @@
                             </div>
                             {% if ticket.description %}
                             <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ ticket.description }}</div>
+                            {% endif %}
+                            {% if ticket.contribution_summary %}
+                            <div class="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">{{ ticket.contribution_summary }}</div>
+                            {% endif %}
+                            {% if ticket.linked_promises or ticket.linked_skills %}
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                {% for promise in ticket.linked_promises or [] %}
+                                <a href="{{ promise.href }}" class="ui-badge">{{ promise.name }}</a>
+                                {% endfor %}
+                                {% for skill in ticket.linked_skills or [] %}
+                                <a href="{{ skill.href }}" class="ui-badge">{{ skill.name }}</a>
+                                {% endfor %}
+                            </div>
                             {% endif %}
                         </a>
                         {% else %}
@@ -110,6 +159,19 @@
                             <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ ticket.project_name }}</div>
                             {% if ticket.description %}
                             <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ ticket.description }}</div>
+                            {% endif %}
+                            {% if ticket.contribution_summary %}
+                            <div class="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">{{ ticket.contribution_summary }}</div>
+                            {% endif %}
+                            {% if ticket.linked_promises or ticket.linked_skills %}
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                {% for promise in ticket.linked_promises or [] %}
+                                <a href="{{ promise.href }}" class="ui-badge">{{ promise.name }}</a>
+                                {% endfor %}
+                                {% for skill in ticket.linked_skills or [] %}
+                                <a href="{{ skill.href }}" class="ui-badge">{{ skill.name }}</a>
+                                {% endfor %}
+                            </div>
                             {% endif %}
                         </a>
                         {% else %}
@@ -218,4 +280,21 @@
         </div>
     </section>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-stage-recommendation]');
+    if (!button || !window.rasbhariAssistant?.stageRecommendation) return;
+    try {
+        const recommendation = JSON.parse(button.getAttribute('data-stage-recommendation'));
+        button.disabled = true;
+        await window.rasbhariAssistant.stageRecommendation(recommendation);
+    } finally {
+        button.disabled = false;
+    }
+});
+</script>
 {% endblock %}

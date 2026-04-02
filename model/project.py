@@ -1,5 +1,5 @@
-from pydantic import Field
-from typing import Optional, Literal
+from pydantic import Field, field_validator
+from typing import Optional, Literal, List
 from datetime import datetime
 from enum import Enum
 from gabru.flask.model import WidgetUIModel
@@ -26,6 +26,11 @@ class Project(WidgetUIModel):
         widget_enabled=True,
         description="Broad category for the project"
     )
+    focus_tags: List[str] = Field(
+        default_factory=list,
+        widget_enabled=True,
+        description="Shared tags this project should emit so tickets, updates, skills, and promises line up."
+    )
     start_date: datetime = Field(default_factory=datetime.now, description="When the project started")
 
     state: ProjectState = Field(
@@ -45,3 +50,12 @@ class Project(WidgetUIModel):
         description="Number of progress updates logged.",
         edit_enabled=False
     )
+
+    @field_validator("focus_tags", mode="before")
+    @classmethod
+    def validate_focus_tags(cls, value):
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [item.strip().lower() for item in value.split(",") if item.strip()]
+        return [str(item).strip().lower() for item in value if str(item).strip()]
