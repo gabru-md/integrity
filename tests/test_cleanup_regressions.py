@@ -65,6 +65,11 @@ class DemoModel(WidgetUIModel):
     name: str = Field(default="")
 
 
+class RegistryDemoModel(WidgetUIModel):
+    id: Optional[int] = Field(default=None, edit_enabled=False)
+    title: str = Field(default="")
+
+
 class FakeCrudService:
     def __init__(self):
         self.created = []
@@ -401,6 +406,51 @@ class TodayRouteTests(unittest.TestCase):
         self.assertEqual(admin_response.status_code, 200)
         self.assertIn(b"Admin Control Plane", admin_response.data)
         self.assertIn(b"Operate the ecosystem", admin_response.data)
+
+    def test_app_registry_renders_operator_framing_and_app_metadata(self):
+        fake_auth_provider = FakeAuthProvider()
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        demo_app = App(
+            "DemoRegistry",
+            service=FakeCrudService(),
+            model_class=RegistryDemoModel,
+            user_guidance={
+                "app_purpose": "Use this app to structure demo records for the ecosystem.",
+                "setup_leverage": ["Enable the widget only if the data is worth surfacing."],
+                "pairs_with": ["Projects", "Today"],
+                "ecosystem_fit": {
+                    "headline": "How this app fits Rasbhari",
+                    "summary": "It supports the structure layer and feeds later views.",
+                    "stages": ["Structure", "Reflect"],
+                },
+            },
+        )
+        demo_app.register_process(FakeQueueProcessor, enabled=True)
+        server.register_app(demo_app)
+        server.process_manager = FakeProcessManager()
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = True
+
+        response = client.get("/apps")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Registered Applications", response.data)
+        self.assertIn(b"Ownership", response.data)
+        self.assertIn(b"Worker Dependency", response.data)
+        self.assertIn(b"Works With", response.data)
+        self.assertIn(b"Demoregistry", response.data)
 
 
 class ProcessAdminRouteTests(unittest.TestCase):

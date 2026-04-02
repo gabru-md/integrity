@@ -152,6 +152,13 @@ For queue-backed workers, the `Processes` page now provides clearer maintenance 
 
 These controls update persisted queue progress and reload the live processor state so recovery actions take effect immediately.
 
+The admin `App Registry` is also operator-oriented now. It shows:
+- which apps are active or disabled
+- what resource each app owns
+- which background workers the app depends on
+- how the app participates in the dashboard and the wider ecosystem
+- which other apps it works especially well with
+
 The `Reports` app adds a local-first behavioral mirror. It currently computes:
 
 - an `Integrity Score`

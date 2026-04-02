@@ -516,14 +516,61 @@ class Server:
         return self.dashboard_provider.get_dependency_health_data()
 
     def get_apps_data(self) -> []:
+        processes_by_app = {}
+        for process in self.get_processes_data():
+            processes_by_app.setdefault(process.get("owner_app"), []).append(process)
+
         apps_data = []
         for app in self.registered_apps:
+            app_processes = processes_by_app.get(app.name, [])
+            guidance = getattr(app, "user_guidance", {}) or {}
+            ecosystem_fit = guidance.get("ecosystem_fit") or {}
+            enabled_processes = [process for process in app_processes if process.get("is_enabled")]
+            stopped_enabled_processes = [
+                process for process in app_processes
+                if process.get("is_enabled") and not process.get("is_alive")
+            ]
+            running_processes = [process for process in app_processes if process.get("is_alive")]
+            queue_processors = [process for process in app_processes if process.get("type") == "QueueProcessor"]
+            if not app.is_active:
+                health_state = "inactive"
+            elif stopped_enabled_processes:
+                health_state = "attention"
+            elif app_processes:
+                health_state = "healthy" if len(running_processes) == len(enabled_processes) else "mixed"
+            else:
+                health_state = "steady"
+
             app_data = {
                 'name': app.name,
                 'model_class': app.model_class.__name__,
-                'processes': [p[0].__name__ for p in app.processes],
+                'home_href': f"/{app.name.lower()}/home",
+                'route_prefix': f"/{app.name.lower()}",
+                'owned_resource_label': f"{app.model_class.__name__} records",
+                'ownership_summary': f"Owns the {app.model_class.__name__} resource and its primary UI surface.",
+                'purpose': guidance.get("app_purpose") or guidance.get("overview") or "",
+                'pairs_with': guidance.get("pairs_with", []),
+                'setup_leverage': guidance.get("setup_leverage", []),
+                'ecosystem_summary': ecosystem_fit.get("summary", ""),
+                'ecosystem_stages': ecosystem_fit.get("stages", []),
+                'processes': app_processes,
+                'process_count': len(app_processes),
+                'running_process_count': len(running_processes),
+                'enabled_process_count': len(enabled_processes),
+                'queue_process_count': len(queue_processors),
+                'stopped_enabled_process_count': len(stopped_enabled_processes),
+                'process_summary': (
+                    f"{len(app_processes)} background worker{'s' if len(app_processes) != 1 else ''} registered"
+                    if app_processes else "No background workers registered"
+                ),
+                'widget_type': getattr(app, "widget_type", "basic"),
                 'widget_enabled': app.widget_enabled,
-                'is_active': app.is_active
+                'widget_summary': (
+                    f"{app.widget_type.replace('_', ' ').title()} widget enabled in the dashboard"
+                    if app.widget_enabled else "No active dashboard widget"
+                ),
+                'is_active': app.is_active,
+                'health_state': health_state,
             }
             apps_data.append(app_data)
         return apps_data
