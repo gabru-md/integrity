@@ -46,13 +46,30 @@ class RasbhariServer(Server):
         self.open_webui_url = os.getenv('OPEN_WEBUI_URL')
 
     def setup_datetime_filter(self):
+        def _format_datetime_value(value, fmt: str):
+            if isinstance(value, (int, float)):
+                parsed = datetime.fromtimestamp(value)
+            elif isinstance(value, str):
+                try:
+                    parsed = datetime.fromisoformat(value.replace("Z", ""))
+                except Exception:
+                    return value
+            else:
+                parsed = value
+            formatted = parsed.strftime(fmt)
+            return formatted.replace(" 0", " ").replace(" 00:", " 12:")
+
         @self.app.template_filter("datetimeformat")
         def datetimeformat(value):
             try:
-                if isinstance(value, (int, float)):
-                    return datetime.fromtimestamp(value).strftime("%b %d, %Y %H:%M")
-                # ISO string
-                return datetime.fromisoformat(value.replace("Z", "")).strftime("%b %d, %Y %H:%M")
+                return _format_datetime_value(value, "%b %d, %Y %H:%M")
+            except Exception as _:
+                return value
+
+        @self.app.template_filter("projectdatetimeformat")
+        def projectdatetimeformat(value):
+            try:
+                return _format_datetime_value(value, "%b %d, %Y, %I:%M %p")
             except Exception as _:
                 return value
 
