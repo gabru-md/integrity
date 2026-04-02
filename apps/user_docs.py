@@ -234,7 +234,8 @@ def build_rasbhari_admin_guide() -> dict:
             ],
             "checklist": [
                 "Manage app activation, widgets, process state, queue recovery, user approvals, and dependency health from inside Rasbhari.",
-                "Keep PostgreSQL schema surgery, Docker/service restarts, backups, and filesystem repair as infrastructure work outside Rasbhari.",
+                "Keep PostgreSQL schema surgery, Docker/service restarts, restore workflows, and filesystem repair as infrastructure work outside Rasbhari.",
+                "Scheduled backup execution can run through Rasbhari's process manager, but the actual backup script still operates at the host level.",
                 "Add future admin features only when they operate the product itself rather than the host machine underneath it.",
             ],
         },

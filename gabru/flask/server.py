@@ -535,6 +535,11 @@ class Server:
                     'is_enabled': is_enabled,
                     'owner_app': app.name,
                 }
+                if instance and hasattr(instance, "get_operator_snapshot"):
+                    try:
+                        p_data.update(instance.get_operator_snapshot())
+                    except Exception:
+                        pass
                 if issubclass(p_class, QueueProcessor) and instance:
                     p_data.update({
                         'type': 'QueueProcessor',
@@ -720,6 +725,21 @@ class Server:
             operator_issues.append({
                 "title": "Dependency issues",
                 "body": f"{len(unhealthy_dependencies)} integration dependency issue(s) need attention.",
+                "href": "/processes",
+            })
+
+        backup_process = next((process for process in processes_data if process.get("name") == "BackupScheduler"), None)
+        backup_state = (backup_process or {}).get("backup_state")
+        if backup_process and backup_state in {"failed", "unknown"}:
+            degraded_capabilities.append({
+                "title": "Backup automation needs attention",
+                "body": backup_process.get("backup_summary") or "Scheduled backups are not healthy.",
+                "href": "/processes",
+                "severity": "attention",
+            })
+            operator_issues.append({
+                "title": "Backup scheduler issue",
+                "body": backup_process.get("backup_summary") or "Scheduled backups need operator attention.",
                 "href": "/processes",
             })
 

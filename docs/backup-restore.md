@@ -9,7 +9,7 @@ It is designed around the current Rasbhari architecture:
 - remote access through Tailscale
 - operator recovery primarily inside Rasbhari, but backup and restore outside Rasbhari
 
-Backups stay outside the product on purpose. Rasbhari can help you observe and recover product-level issues, but database backup and restore are still infrastructure concerns.
+Backups stay outside the product on purpose. Rasbhari can help you observe and recover product-level issues, and it can schedule the existing host-side backup script through `BackupScheduler`, but the backup and restore mechanics are still infrastructure concerns.
 
 ## What Should Be Backed Up
 
@@ -113,6 +113,8 @@ Example cron entry:
 ```
 
 If you prefer `systemd`, the command can be wrapped in a dedicated oneshot service and timer.
+
+If you prefer to keep that schedule visible from inside Rasbhari, enable the `BackupScheduler` process and set `RASBHARI_BACKUP_INTERVAL_SECONDS` instead of using cron.
 
 ## Backup Verification
 

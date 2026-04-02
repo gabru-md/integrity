@@ -12,8 +12,43 @@ HEALTHCHECK_DELAY_SECONDS="${RASBHARI_UPDATE_HEALTHCHECK_DELAY_SECONDS:-5}"
 
 cd "$REPO_DIR"
 
+worktree_has_blocking_changes() {
+  local status_line path summary_lines line
+  while IFS= read -r status_line; do
+    [[ -z "$status_line" ]] && continue
+    if [[ "$status_line" == '?? '* ]]; then
+      return 0
+    fi
+    path="${status_line:3}"
+    [[ -z "$path" ]] && return 0
+
+    local unstaged_summary staged_summary
+    unstaged_summary="$(git diff --summary -- "$path" | sed '/^[[:space:]]*$/d')"
+    staged_summary="$(git diff --cached --summary -- "$path" | sed '/^[[:space:]]*$/d')"
+
+    if [[ -n "$unstaged_summary" || -n "$staged_summary" ]]; then
+      local only_mode_change=true
+      while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        [[ "$line" == *"mode change "* ]] || only_mode_change=false
+      done <<< "$unstaged_summary"
+      while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        [[ "$line" == *"mode change "* ]] || only_mode_change=false
+      done <<< "$staged_summary"
+      if [[ "$only_mode_change" == true ]]; then
+        continue
+      fi
+    fi
+
+    return 0
+  done < <(git status --porcelain)
+
+  return 1
+}
+
 echo "Checking repository state in $REPO_DIR"
-if [[ -n "$(git status --porcelain)" ]]; then
+if worktree_has_blocking_changes; then
   echo "Refusing update because the working tree is dirty."
   exit 10
 fi

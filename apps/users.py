@@ -6,6 +6,7 @@ from gabru.auth import PermissionManager
 from gabru.flask.app import App
 from gabru.flask.util import render_flask_template
 from model.user import User
+from processes.backup_scheduler import BackupScheduler
 from services.eventing import emit_event_safely
 from services.users import UserService
 
@@ -31,6 +32,7 @@ users_app = App(
     widget_enabled=False,
     user_guidance=build_app_user_guidance("Users"),
 )
+users_app.register_process(BackupScheduler, enabled=True)
 
 
 @users_app.blueprint.route("/profile", methods=["GET"])

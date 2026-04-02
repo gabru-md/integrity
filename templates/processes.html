@@ -303,7 +303,18 @@
                                 </div>
                             </div>
                             {% else %}
-                            <div class="text-sm text-[var(--text-soft)]">{{ process.recovery_summary }}</div>
+                            <div class="space-y-2">
+                                <div class="text-sm text-[var(--text-soft)]">{{ process.recovery_summary }}</div>
+                                {% if process.backup_summary %}
+                                <div class="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-xs text-[var(--text-soft)]">
+                                    <div class="font-semibold text-[var(--text)]">Backup</div>
+                                    <div class="mt-1">{{ process.backup_summary }}</div>
+                                    {% if process.backup_next_run_at %}
+                                    <div class="mt-1 mono">Next: {{ process.backup_next_run_at }}</div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
                             {% endif %}
                         </td>
 

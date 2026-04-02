@@ -203,7 +203,40 @@ class AdminUpdateService:
         status_output = self._git_output("status", "--porcelain")
         if status_output is None:
             return None
-        return bool(status_output.strip())
+        lines = [line for line in status_output.splitlines() if line.strip()]
+        if not lines:
+            return False
+        for line in lines:
+            if self._status_line_requires_block(line):
+                return True
+        return False
+
+    def _status_line_requires_block(self, line: str) -> bool:
+        if line.startswith("?? "):
+            return True
+
+        path = line[3:]
+        if not path:
+            return True
+
+        unstaged_mode_only = self._is_mode_only_change(path, cached=False)
+        staged_mode_only = self._is_mode_only_change(path, cached=True)
+        if unstaged_mode_only and staged_mode_only:
+            return False
+        return True
+
+    def _is_mode_only_change(self, path: str, *, cached: bool) -> bool:
+        args = ["diff"]
+        if cached:
+            args.append("--cached")
+        args.extend(["--summary", "--", path])
+        summary = self._git_output(*args)
+        if summary is None:
+            return False
+        lines = [line.strip() for line in summary.splitlines() if line.strip()]
+        if not lines:
+            return False
+        return all(line.startswith("mode change ") for line in lines)
 
     def _read_status_file(self) -> dict[str, Any]:
         if not self.status_file.exists():

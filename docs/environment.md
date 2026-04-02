@@ -118,12 +118,18 @@ Gabru writes:
 
 - `RASBHARI_BACKUP_DIR`
 - `RASBHARI_BACKUP_RETENTION_DAYS`
+- `RASBHARI_BACKUP_SCRIPT`
+- `RASBHARI_BACKUP_INTERVAL_SECONDS`
+- `RASBHARI_BACKUP_POLL_SECONDS`
+- `RASBHARI_BACKUP_STATUS_FILE`
 
 Notes:
 
 - `scripts/backup_rasbhari_postgres.sh` uses these values
 - `RASBHARI_BACKUP_DIR` should point to persistent storage on the Raspberry Pi
 - `RASBHARI_BACKUP_RETENTION_DAYS` controls how long timestamped backup directories are retained before pruning
+- `BackupScheduler` can run the existing backup script from inside Rasbhari's process manager using `RASBHARI_BACKUP_INTERVAL_SECONDS`
+- `RASBHARI_BACKUP_STATUS_FILE` stores the last success or failure snapshot surfaced in the admin and process views
 - See [backup-restore.md](backup-restore.md) for the full workflow
 
 ## Admin Updates
@@ -142,7 +148,7 @@ Notes:
 
 - The admin control plane uses these values to compare the current local commit with the latest remote commit and to trigger a deterministic host-side update flow.
 - `RASBHARI_UPDATE_SCRIPT` should point at `scripts/update_rasbhari_host.sh` inside the deployed repo unless you intentionally wrap it with your own host script.
-- The update script refuses to run when the repo working tree is dirty.
+- The update script refuses to run when the repo working tree is dirty, but chmod-only mode flips on scripts are ignored so accidental execute-bit changes do not block deployment.
 - The script fetches the target branch, validates the checkout, restarts the configured service, and rolls back to the previous commit if the health check fails.
 - `RASBHARI_UPDATE_VALIDATION_CMD` runs inside the repo directory before restart; keep it lightweight and deterministic for Raspberry Pi use.
 
@@ -197,6 +203,10 @@ THOUGHTS_POSTGRES_PORT=5432
 LOG_DIR=/tmp/rasbhari/logs
 RASBHARI_BACKUP_DIR=/var/backups/rasbhari
 RASBHARI_BACKUP_RETENTION_DAYS=14
+RASBHARI_BACKUP_SCRIPT=~/Desktop/apps/integrity/scripts/backup_rasbhari_postgres.sh
+RASBHARI_BACKUP_INTERVAL_SECONDS=7200
+RASBHARI_BACKUP_POLL_SECONDS=60
+RASBHARI_BACKUP_STATUS_FILE=/tmp/rasbhari/files/rasbhari-backup-status.json
 RASBHARI_UPDATE_REPO_DIR=~/Desktop/apps/integrity
 RASBHARI_UPDATE_SCRIPT=~/Desktop/apps/integrity/scripts/update_rasbhari_host.sh
 RASBHARI_UPDATE_REMOTE=origin
