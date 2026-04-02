@@ -123,11 +123,23 @@
         </div>
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <div v-for="state in boardStates" :key="state" class="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <div class="mb-4">
-                    <h2 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">{% raw %}{{ stateLabels[state] }}{% endraw %}</h2>
-                    <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-gray-100">{% raw %}{{ ticketsByState(state).length }}{% endraw %}</p>
+                <div class="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">{% raw %}{{ stateLabels[state] }}{% endraw %}</h2>
+                        <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-gray-100">{% raw %}{{ ticketsByState(state).length }}{% endraw %}</p>
+                    </div>
+                    <button
+                        type="button"
+                        @click="toggleColumn(state)"
+                        class="text-base font-semibold leading-none text-slate-400 transition-transform duration-200 hover:text-slate-700 dark:text-gray-500 dark:hover:text-gray-200"
+                        :class="{ 'rotate-180': !isColumnCollapsed(state) }"
+                        :aria-expanded="isColumnCollapsed(state) ? 'false' : 'true'"
+                        aria-label="Toggle column"
+                    >
+                        ⌄
+                    </button>
                 </div>
-                <div class="space-y-3 min-h-[8rem]">
+                <div v-if="!isColumnCollapsed(state)" class="space-y-3 min-h-[8rem]">
                     <div v-if="ticketsByState(state).length === 0" class="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-400 dark:border-gray-700 dark:text-gray-500">
                         Empty
                     </div>
@@ -233,6 +245,7 @@
             const errorMessage = ref("");
             const newTicket = ref({ title: "", description: "" });
             const expandedTickets = ref({});
+            const collapsedColumns = ref({});
             const sortTickets = (items) => [...items].sort((left, right) => new Date(right.updated_at || 0) - new Date(left.updated_at || 0));
 
             const loadTickets = async () => {
@@ -298,6 +311,13 @@
             const ticketsByState = (state) => tickets.value.filter((ticket) => ticket.state === state);
             const formatDate = (value) => value ? new Date(value).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown';
             const isTicketExpanded = (ticketId) => Boolean(expandedTickets.value[ticketId]);
+            const isColumnCollapsed = (state) => Boolean(collapsedColumns.value[state]);
+            const toggleColumn = (state) => {
+                collapsedColumns.value = {
+                    ...collapsedColumns.value,
+                    [state]: !collapsedColumns.value[state]
+                };
+            };
             const toggleTicketDetails = (ticketId) => {
                 expandedTickets.value = {
                     ...expandedTickets.value,
@@ -318,6 +338,8 @@
                 ticketsByState,
                 formatDate,
                 isTicketExpanded,
+                isColumnCollapsed,
+                toggleColumn,
                 toggleTicketDetails
             };
         }
