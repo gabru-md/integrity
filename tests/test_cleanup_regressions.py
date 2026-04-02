@@ -14,6 +14,7 @@ from gabru.contracts import AuthenticatedUser
 from gabru.flask.app import App
 from gabru.flask.server import Server
 from gabru.flask.model import WidgetUIModel
+from gabru.flask.util import render_flask_template
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -216,6 +217,25 @@ class SignupFlowTests(unittest.TestCase):
         with client.session_transaction() as session:
             self.assertEqual(session["user_id"], 123)
             self.assertEqual(session["username"], "admin")
+
+
+class MentalModelContextTests(unittest.TestCase):
+    def test_render_template_injects_mental_model(self):
+        app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
+        app.secret_key = "test-secret"
+
+        with app.test_request_context("/"):
+            rendered = render_flask_template(
+                "today.html",
+                today_data={"guidance": [], "active_work": [], "prioritized_work": [], "due_promises": [], "neglected_connections": [], "suggested_activities": [], "recommended_follow_ups": [], "active_project_count": 0, "latest_report": None, "events_today_count": 0},
+                PermissionManager=mock.Mock(can_view_app=lambda *_: False),
+                active_app_names=set(),
+                current_user=None,
+                Role=mock.Mock(),
+            )
+
+        self.assertIn("Capture, Structure, Commit, Grow, Reflect, Act", rendered)
+        self.assertIn("How Rasbhari Works", rendered)
 
 
 class TodayRouteTests(unittest.TestCase):

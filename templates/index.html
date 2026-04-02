@@ -118,6 +118,21 @@
                         </div>
                     </details>
 
+                    <section class="shell-card px-4 py-4">
+                        <div class="section-kicker text-[10px] font-extrabold uppercase">How Rasbhari Works</div>
+                        <h2 class="mt-2 text-base font-extrabold text-[var(--text)]">{{ rasbhari_mental_model.headline }}</h2>
+                        <p class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ rasbhari_mental_model.summary }}</p>
+                        <div class="mt-4 grid gap-2">
+                            {% for stage in rasbhari_mental_model.stages %}
+                            <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3">
+                                <div class="text-sm font-bold text-[var(--text)]">{{ loop.index }}. {{ stage.name }}</div>
+                                <div class="mt-1 text-xs leading-5 text-[var(--text-soft)]">{{ stage.description }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a href="/docs/mental-model.md" class="btn-secondary mt-4 w-full px-4 py-3 text-sm">Open Mental Model</a>
+                    </section>
+
                     {% if current_user and current_user.is_admin %}
                     <details class="sidebar-group" {% if request.path == '/apps' or request.path == '/processes' or request.path == '/heimdall' or '/devices' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">

@@ -1,3 +1,49 @@
+def build_rasbhari_mental_model() -> dict:
+    return {
+        "headline": "Rasbhari is a personal operating system built around an event bus.",
+        "summary": "The apps are not meant to stand alone. Each one either captures signals, structures them, commits to them, grows from them, reflects on them, or helps you act on them.",
+        "stages": [
+            {
+                "name": "Capture",
+                "description": "Events, activities, local signals, thoughts, and future imports turn real life into a shared record.",
+                "apps": ["Events", "Activities", "Thoughts", "NetworkSignatures", "Devices"],
+            },
+            {
+                "name": "Structure",
+                "description": "Projects, kanban tickets, blogs, and connections organize raw activity into work, relationships, and narrative context.",
+                "apps": ["Projects", "KanbanTickets", "Blogs", "Connections"],
+            },
+            {
+                "name": "Commit",
+                "description": "Promises make expectations explicit by watching for the event types and tags that should exist.",
+                "apps": ["Promises"],
+            },
+            {
+                "name": "Grow",
+                "description": "Skills turn repeated tagged work into visible progression and levels.",
+                "apps": ["Skills"],
+            },
+            {
+                "name": "Reflect",
+                "description": "Reports and timeline signals show where behavior matched or drifted from visible intent.",
+                "apps": ["Reports", "Projects", "Events"],
+            },
+            {
+                "name": "Act",
+                "description": "Today, notifications, and staged recommendations focus attention on the next small moves that matter.",
+                "apps": ["Today", "Reports", "Projects", "Promises"],
+            },
+        ],
+        "setup_path": [
+            "Create one activity so repeated actions become easy to log.",
+            "Create one project and one ticket so active work has structure.",
+            "Add one promise tied to a real event type or tag.",
+            "Add one skill tied to the tags you want to grow.",
+            "Open Today and check whether work, promises, and growth now connect visibly.",
+        ],
+    }
+
+
 def build_app_user_guidance(app_name: str) -> dict:
     docs = {
         "Activities": {
@@ -238,4 +284,30 @@ def build_app_user_guidance(app_name: str) -> dict:
             ]
         }
     }
-    return docs.get(app_name, {})
+    guidance = dict(docs.get(app_name, {}))
+    mental_model = build_rasbhari_mental_model()
+    stage_lookup = {}
+    for stage in mental_model["stages"]:
+        for app in stage["apps"]:
+            stage_lookup.setdefault(app, []).append(stage["name"])
+
+    guidance["ecosystem_fit"] = {
+        "headline": "How this app fits Rasbhari",
+        "summary": {
+            "Activities": "Activities are the easiest way to capture repeated real-world actions so the rest of Rasbhari can react to them.",
+            "Blogs": "Blogs add longer narrative context to project work and reflection.",
+            "Connections": "Connections turn relationship maintenance into something visible enough for Today and Reports to reason about.",
+            "Devices": "Devices define the physical endpoints future automation and imports can use.",
+            "Events": "Events are the shared language everything else listens to or emits.",
+            "Projects": "Projects structure larger bodies of work so execution, progress, promises, and skills can line up.",
+            "KanbanTickets": "Kanban tickets make project execution concrete and emit project-work signals back into the event bus.",
+            "Promises": "Promises convert your intentions into checkable commitments against real evidence.",
+            "Skills": "Skills reward repeated tagged work so growth becomes visible instead of assumed.",
+            "Reports": "Reports reflect the whole system back to you and expose drift between visible intent and recorded behavior.",
+            "Thoughts": "Thoughts capture fast human context before it turns into an event, project, or report input.",
+            "Users": "Users define who owns a private workspace and who operates the system.",
+            "NetworkSignatures": "Network Signatures are one capture source for passive presence and environment signals.",
+        }.get(app_name, "This app is one part of the shared Rasbhari loop."),
+        "stages": stage_lookup.get(app_name, []),
+    }
+    return guidance

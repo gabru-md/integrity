@@ -9,6 +9,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 
 ## What It Does
 
+- Gives the system one clear mental model: capture, structure, commit, grow, reflect, and act.
 - Stores everything important as events.
 - Uses queue processors to react to those events in the background.
 - Exposes CRUD-style apps for core domains such as projects, promises, activities, and skills.

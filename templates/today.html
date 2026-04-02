@@ -42,6 +42,30 @@
         </article>
     </section>
 
+    <section class="shell-card p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div class="max-w-3xl">
+                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Mental Model</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Capture, Structure, Commit, Grow, Reflect, Act</h2>
+                <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ rasbhari_mental_model.summary }}</p>
+            </div>
+            <a href="/docs/mental-model.md" class="btn-secondary px-4 py-3 text-sm">Read Full Model</a>
+        </div>
+        <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {% for stage in rasbhari_mental_model.stages %}
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                <div class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--accent)]">{{ loop.index }}. {{ stage.name }}</div>
+                <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ stage.description }}</div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    {% for app in stage.apps %}
+                    <span class="ui-badge">{{ app }}</span>
+                    {% endfor %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
     <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.9fr]">
         <div class="space-y-6">
             <article class="shell-card p-6">

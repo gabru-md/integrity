@@ -4,6 +4,8 @@ from functools import lru_cache
 
 from flask import render_template
 
+from apps.user_docs import build_rasbhari_mental_model
+
 
 @lru_cache(maxsize=1)
 def get_build_info():
@@ -41,5 +43,6 @@ def render_flask_template(template_name, **context):
         template_name,
         open_webui_url=open_webui_url,
         build_info=get_build_info(),
+        rasbhari_mental_model=build_rasbhari_mental_model(),
         **context,
     )
