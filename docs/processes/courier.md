@@ -6,9 +6,10 @@ Courier is Rasbhari's notification delivery worker.
 
 - consumes events from the events database
 - only processes events tagged with `notification`
-- sends ntfy.sh notifications by default
+- resolves a notification class for each event: `urgent`, `today`, `review`, `suggestion`, `digest`, or `system`
+- sends ntfy.sh notifications by default with class-aware title, priority, and tags
 - sends email through SendGrid when the event also includes the `email` tag
-- records successful deliveries in the notifications database
+- records successful deliveries in the notifications database with both delivery channel and notification class
 
 ## Retries
 
@@ -54,7 +55,7 @@ If `NTFY_BASE_URL` is unset, Courier defaults to `https://ntfy.sh`.
 {
   "event_type": "system:alert",
   "description": "Backup completed",
-  "tags": ["notification"]
+  "tags": ["notification", "notification_class:system"]
 }
 ```
 
@@ -64,6 +65,17 @@ If `NTFY_BASE_URL` is unset, Courier defaults to `https://ntfy.sh`.
 {
   "event_type": "report:daily",
   "description": "Daily report ready",
-  "tags": ["notification", "email"]
+  "tags": ["notification", "notification_class:review", "email"]
 }
 ```
+
+## Notification Classes
+
+- `urgent`: immediate interruption for high-severity issues
+- `today`: actionable updates that matter in the current day
+- `review`: reflection-ready outputs such as reports
+- `suggestion`: optional improvement prompts
+- `digest`: low-priority bundled summaries
+- `system`: operational or infrastructure state
+
+If no explicit `notification_class:<class>` tag is present, Courier falls back conservatively from event type. Today-class delivery is the default.

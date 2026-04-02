@@ -126,6 +126,7 @@ Notes:
 - ntfy.sh is the default delivery path
 - `NTFY_BASE_URL` lets you point Courier to a self-hosted ntfy instance
 - SendGrid is only used when the event has the `email` tag
+- Courier classifies notifications as `urgent`, `today`, `review`, `suggestion`, `digest`, or `system` using `notification_class:<class>` tags
 
 ## Example Minimal Local Setup
 

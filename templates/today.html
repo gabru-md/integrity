@@ -1,0 +1,221 @@
+{% extends "index.html" %}
+{% block title %}Today{% endblock %}
+
+{% block content %}
+<div class="space-y-6 px-1 py-2">
+    <header class="shell-card hero-card px-6 py-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Today</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Daily Control Surface</h1>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">One focused view for active work, commitments, neglected relationships, and the few next moves that matter today.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+                <a href="/projects/home" class="btn-secondary px-4 py-3 text-sm">Projects</a>
+                <a href="/promises/home" class="btn-secondary px-4 py-3 text-sm">Promises</a>
+                <a href="/activities/home" class="btn-secondary px-4 py-3 text-sm">Activities</a>
+                <a href="/dashboard" class="btn-primary px-4 py-3 text-sm">Open Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Projects</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ today_data.active_project_count or 0 }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Active projects in motion</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Events Today</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ today_data.events_today_count or 0 }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Recorded signals so far</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Due Promises</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ (today_data.due_promises or [])|length }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Commitments needing evidence</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Neglected</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ (today_data.neglected_connections or [])|length }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Relationships overdue for contact</div>
+        </article>
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+        <div class="space-y-6">
+            <article class="shell-card p-6">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Guidance</div>
+                        <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">High-Signal Next Moves</h2>
+                    </div>
+                    <a href="/reports/home" class="text-sm font-semibold text-[var(--accent)]">Reports</a>
+                </div>
+                <div class="mt-5 grid gap-4">
+                    {% for item in today_data.guidance or [] %}
+                    <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="text-base font-bold text-[var(--text)]">{{ item.title }}</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--text-soft)]">
+                        No guidance yet. Start by logging one meaningful action or moving one project ticket.
+                    </div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <article class="shell-card p-6">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Active Work</div>
+                            <h2 class="mt-2 text-xl font-extrabold text-[var(--text)]">In Progress</h2>
+                        </div>
+                        <a href="/projects/home" class="text-sm font-semibold text-[var(--accent)]">Projects</a>
+                    </div>
+                    <div class="mt-5 space-y-3">
+                        {% for ticket in today_data.active_work or [] %}
+                        <a href="{{ ticket.href }}" class="block rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <div class="text-sm font-bold text-[var(--text)]">{{ ticket.title }}</div>
+                                    <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ ticket.project_name }}</div>
+                                </div>
+                                <span class="ui-badge">In Progress</span>
+                            </div>
+                            {% if ticket.description %}
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ ticket.description }}</div>
+                            {% endif %}
+                        </a>
+                        {% else %}
+                        <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No tickets are currently in progress.</div>
+                        {% endfor %}
+                    </div>
+                </article>
+
+                <article class="shell-card p-6">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Ready Queue</div>
+                            <h2 class="mt-2 text-xl font-extrabold text-[var(--text)]">Prioritized</h2>
+                        </div>
+                        <a href="/projects/home" class="text-sm font-semibold text-[var(--accent)]">Boards</a>
+                    </div>
+                    <div class="mt-5 space-y-3">
+                        {% for ticket in today_data.prioritized_work or [] %}
+                        <a href="{{ ticket.href }}" class="block rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                            <div class="text-sm font-bold text-[var(--text)]">{{ ticket.title }}</div>
+                            <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ ticket.project_name }}</div>
+                            {% if ticket.description %}
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ ticket.description }}</div>
+                            {% endif %}
+                        </a>
+                        {% else %}
+                        <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No prioritized tickets are waiting. Promote one from backlog when ready.</div>
+                        {% endfor %}
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <article class="shell-card p-6">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Promises</div>
+                        <h2 class="mt-2 text-xl font-extrabold text-[var(--text)]">Due Checks</h2>
+                    </div>
+                    <a href="/promises/home" class="text-sm font-semibold text-[var(--accent)]">View All</a>
+                </div>
+                <div class="mt-5 space-y-3">
+                    {% for promise in today_data.due_promises or [] %}
+                    <a href="{{ promise.href }}" class="block rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">{{ promise.name }}</div>
+                            <span class="ui-badge">{{ promise.frequency }}</span>
+                        </div>
+                        {% if promise.description %}
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ promise.description }}</div>
+                        {% endif %}
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No promise checks are due right now.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="shell-card p-6">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Connections</div>
+                        <h2 class="mt-2 text-xl font-extrabold text-[var(--text)]">Neglected</h2>
+                    </div>
+                    <a href="/connections/home" class="text-sm font-semibold text-[var(--accent)]">Connections</a>
+                </div>
+                <div class="mt-5 space-y-3">
+                    {% for connection in today_data.neglected_connections or [] %}
+                    <a href="{{ connection.href }}" class="block rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">{{ connection.name }}</div>
+                            <span class="ui-badge">{{ connection.priority }}</span>
+                        </div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">
+                            {% if connection.days_since_contact is not none %}
+                            {{ connection.days_since_contact }} day(s) since last contact, {{ connection.overdue_days }} day(s) beyond cadence.
+                            {% else %}
+                            No contact logged yet. Cadence target is {{ connection.cadence_days }} day(s).
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No relationships are currently overdue.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="shell-card p-6">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Activities</div>
+                        <h2 class="mt-2 text-xl font-extrabold text-[var(--text)]">Suggested Triggers</h2>
+                    </div>
+                    <a href="/activities/home" class="text-sm font-semibold text-[var(--accent)]">Activities</a>
+                </div>
+                <div class="mt-5 space-y-3">
+                    {% for activity in today_data.suggested_activities or [] %}
+                    <a href="{{ activity.href }}" class="block rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="text-sm font-bold text-[var(--text)]">{{ activity.name }}</div>
+                        <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ activity.event_type }}</div>
+                        {% if activity.description %}
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ activity.description }}</div>
+                        {% endif %}
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No suggested activities available yet.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            {% if today_data.latest_report %}
+            <article class="shell-card p-6">
+                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Latest Mirror</div>
+                <a href="{{ today_data.latest_report.href }}" class="mt-3 block rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-base font-bold text-[var(--text)]">{{ today_data.latest_report.title }}</div>
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ today_data.latest_report.headline }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">Integrity</div>
+                            <div class="mt-1 text-2xl font-black text-[var(--text)]">{{ today_data.latest_report.integrity_score }}</div>
+                        </div>
+                    </div>
+                </a>
+            </article>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

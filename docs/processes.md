@@ -21,6 +21,7 @@ Used for event-driven background work with persisted progress.
 Examples:
 
 - `Courier`
+- `SessionInferenceProcessor`
 - `PromiseProcessor`
 - `ProjectUpdater`
 - `SkillXPProcessor`
@@ -49,6 +50,17 @@ Queue progress is persisted in `queue.queuestats`.
   - updates promise counters from matching events
   - performs periodic due checks
   - tracks streaks, completions, and next-check windows
+
+### SessionInferenceProcessor
+
+- File: `processes/session_inference_processor.py`
+- Type: `QueueProcessor`
+- Input: `events`
+- Purpose:
+  - listens for normalized raw local signals such as `local:app:*`, `local:user:idle`, and `local:machine:woke`
+  - infers conservative session boundaries for `coding`, `writing`, `planning`, and `research`
+  - emits grounded events such as `coding:session:start` and `coding:session:end`
+  - ends active sessions on app closure, idle transitions, wake events, or explicit context switches
 
 ### ProjectUpdater
 

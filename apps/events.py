@@ -2,6 +2,7 @@ from gabru.flask.app import App
 from apps.user_docs import build_app_user_guidance
 from model.event import Event
 from processes.courier.courier import Courier
+from processes.session_inference_processor import SessionInferenceProcessor
 from services.events import EventService
 from datetime import datetime
 
@@ -24,3 +25,4 @@ events_app = App('Events', EventService(), Event, _process_model_data_func=proce
 
 # Courier enabled to handle notifications (Default: ntfy.sh, Tag: 'email' for SendGrid)
 events_app.register_process(Courier, enabled=True)
+events_app.register_process(SessionInferenceProcessor, enabled=True)

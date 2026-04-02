@@ -72,6 +72,9 @@ class AppStatusStore(Protocol):
 
 @runtime_checkable
 class DashboardDataProvider(Protocol):
+    def get_today_data(self) -> dict[str, Any]:
+        ...
+
     def get_dependency_health_data(self) -> list[dict]:
         ...
 

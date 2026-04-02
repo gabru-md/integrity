@@ -1,6 +1,6 @@
 # Rasbhari
 
-Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts. It combines a Flask dashboard, contract-based framework primitives, PostgreSQL-backed runtime services, and background workers to track activities, projects, promises, notifications, devices, and skill progression.
+Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts. It combines a Flask Today surface, an operational dashboard, contract-based framework primitives, PostgreSQL-backed runtime services, and background workers to track activities, projects, promises, notifications, devices, and skill progression.
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.1%2B-green)](https://flask.palletsprojects.com/)
@@ -15,7 +15,11 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Adds project-scoped kanban boards with minimal tickets that emit workflow events into the shared event bus.
 - Generates daily, weekly, and monthly behavioral mirror reports from current activity, thought, project, and skill signals.
 - Includes user-facing instructions inside each app UI so non-developers can understand the meaning of fields and terms.
-- Provides a dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
+- Provides a `Today` front door that unifies active work, due promises, neglected connections, suggested activities, and daily guidance.
+- Preserves a separate operational dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
+- Includes a low-friction macOS local signal collector that can autonomously emit normalized raw machine events into the event bus.
+- Includes a rule-based session inference layer that turns raw local signals into grounded session boundary events such as coding, writing, planning, and research.
+- Uses a typed notification model so outbound alerts are classed as `urgent`, `today`, `review`, `suggestion`, `digest`, or `system` instead of a single generic stream.
 - Includes a native `Rasbhari AI` command layer that can interpret natural-language commands, route them through app-specific resolvers, and execute safe actions through the existing apps and event bus.
 - Runs comfortably on a Raspberry Pi while staying inspectable and hackable.
 
@@ -44,6 +48,7 @@ The `Projects` app now includes a per-project board view backed by the `KanbanTi
 Rasbhari currently uses these background processes:
 
 - `Courier`
+- `SessionInferenceProcessor`
 - `PromiseProcessor`
 - `ProjectUpdater`
 - `SkillXPProcessor`
@@ -54,9 +59,23 @@ Rasbhari currently uses these background processes:
 
 See [processes/README.md](processes/README.md) for details.
 
+## Today
+
+The default home page is now `Today`, a focused daily control surface rather than a general dashboard. It currently brings together:
+
+- active in-progress work from project boards
+- prioritized tickets that are ready to start
+- due promises
+- neglected connections
+- suggested activities
+- high-signal guidance derived from the current state of work and commitments
+- the latest report mirror when available
+
+The goal of `Today` is to answer: what matters now, what is drifting, and what should move next.
+
 ## Dashboard
 
-The dashboard is now a control surface rather than a passive summary page. The home page includes:
+The operational dashboard is still available at `/dashboard`. It includes:
 
 - `Reliability` row for processes, queue backlog, notifications, devices, and event flow
 - `Pinned` widgets section

@@ -15,6 +15,8 @@ TEST_GROUPS = {
         "tests.test_assistant_command_service",
         "tests.test_db_reconnect",
         "tests.test_eventing",
+        "tests.test_notification_policy",
+        "tests.test_session_inference_processor",
         "tests.test_skill_service",
     ],
     "integration": [

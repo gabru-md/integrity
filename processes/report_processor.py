@@ -36,6 +36,7 @@ class ReportProcessor(QueueProcessor[Event]):
                 f"anchor_date:{report.anchor_date}",
                 f"user_id:{user_id}",
                 "notification",
+                "notification_class:review",
             ],
         )
         self.event_service.create(created_event)

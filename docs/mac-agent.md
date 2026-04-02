@@ -1,64 +1,67 @@
-# macOS Agent
+# macOS Local Signals
 
-This is the first Rasbhari desktop integration for low-effort event generation on macOS.
+This is the first autonomous local capture layer for Rasbhari on macOS.
 
-It is intentionally simple:
+It is designed to emit only high-confidence raw signals with very low setup friction.
 
-- watches running GUI apps on macOS
-- detects app `opened` and `closed`
-- matches those transitions against local rules
-- posts events directly into Rasbhari through the normal `/events/` API
+By default it can emit:
 
-This gives you a practical way to validate the ecosystem idea before building a full signals pipeline.
+- app `opened`
+- app `closed`
+- user `idle`
+- user `active`
+- machine `started`
+- machine `woke`
+
+These are normalized into clean event bus entries instead of custom app-specific event names.
 
 ## File
 
-- [scripts/rasbhari_mac_agent.py](scripts/rasbhari_mac_agent.py)
+- [scripts/rasbhari_mac_agent.py](../scripts/rasbhari_mac_agent.py)
 
-## What It Supports Today
+## Why This Exists
 
-- generic app-open rules
-- generic app-close rules
-- cooldowns per rule
-- direct event posting with API key auth
-- local config stored in `~/.config/rasbhari-mac-agent/config.json`
-- optional background daemon mode with PID and log files
-- tag serialization aligned with Rasbhari's current `/events/` handler
+Rasbhari needs a foundation for autonomous capture before it can infer richer sessions or recommendations.
 
-This is app-agnostic. You can use any visible macOS app name, for example:
+This agent is that foundation:
 
-- `PyCharm`
-- `WebStorm`
-- `Netflix`
-- `Counter-Strike 2`
-- `Spotify`
+- it captures local machine signals automatically
+- it emits normalized raw events
+- it keeps the setup small enough to actually use
+- it still supports legacy custom rules when you want app-specific downstream automation
 
-## Why It Is Useful
+## Normalized Event Types
 
-This is especially useful for:
+The autonomous layer currently emits these event types:
 
-- negative promises such as "do not watch Netflix"
-- coding session tracking across JetBrains IDEs
-- gaming or reading session starts and finishes
-- simple desktop automation without invasive monitoring
+- `local:app:opened`
+- `local:app:closed`
+- `local:user:idle`
+- `local:user:active`
+- `local:machine:started`
+- `local:machine:woke`
 
-Example:
+These events carry tags such as:
 
-- watch `Netflix` opening
-- emit event type `entertainment:netflix`
-- let negative promises react downstream inside Rasbhari
+- `source:mac_agent`
+- `signal:raw`
+- `signal:app_lifecycle`
+- `signal:user_activity`
+- `signal:machine_state`
+- `state:opened`
+- `state:closed`
+- `state:idle`
+- `state:active`
+- `state:started`
+- `state:woke`
+- `app:<slug>`
+- `machine:<name>`
 
-## Configuration Flow
+This keeps the event bus consistent and makes later session inference easier.
 
-### 1. Initialize the agent
+## Low-Friction Setup
 
-Interactive:
-
-```bash
-python3 scripts/rasbhari_mac_agent.py init
-```
-
-Flag-driven:
+### 1. Initialize
 
 ```bash
 python3 scripts/rasbhari_mac_agent.py init \
@@ -67,74 +70,21 @@ python3 scripts/rasbhari_mac_agent.py init \
   --machine-name macbook-pro
 ```
 
-### 2. Add a rule
-
-Interactive:
-
-```bash
-python3 scripts/rasbhari_mac_agent.py rule add
-```
-
-or:
-
-```bash
-python3 scripts/rasbhari_mac_agent.py rule wizard
-```
-
-Flag-driven examples:
-
-Netflix example:
-
-```bash
-python3 scripts/rasbhari_mac_agent.py rule add \
-  --app-name "Netflix" \
-  --trigger opened \
-  --event-type entertainment:netflix \
-  --description "Opened Netflix on Mac" \
-  --tags netflix,entertainment,negative
-```
-
-PyCharm example:
-
-```bash
-python3 scripts/rasbhari_mac_agent.py rule add \
-  --app-name "PyCharm" \
-  --trigger opened \
-  --event-type coding:pycharm \
-  --description "Opened PyCharm" \
-  --tags coding,ide,pycharm
-```
-
-App-close example:
-
-```bash
-python3 scripts/rasbhari_mac_agent.py rule add \
-  --app-name "Counter-Strike 2" \
-  --trigger closed \
-  --event-type gaming:cs2:finished \
-  --description "Closed Counter-Strike 2" \
-  --tags gaming,cs2
-```
-
-### 3. Inspect rules
-
-```bash
-python3 scripts/rasbhari_mac_agent.py rule list
-```
-
-### 4. Run diagnostics
+### 2. Check local setup
 
 ```bash
 python3 scripts/rasbhari_mac_agent.py doctor
 ```
 
-### 5. Start the watcher
+### 3. Start watching
 
 ```bash
 python3 scripts/rasbhari_mac_agent.py run
 ```
 
-### 6. Run it as a background daemon
+That is enough to start emitting autonomous raw signals.
+
+## Daemon Mode
 
 Start:
 
@@ -159,146 +109,99 @@ Default files:
 - PID: `~/.config/rasbhari-mac-agent/agent.pid`
 - Log: `~/.config/rasbhari-mac-agent/agent.log`
 
-You can override them with `--pid-file` and `--log-file`.
+## Default Signal Behavior
 
-## Rule Model
+### App lifecycle
 
-Each rule currently contains:
+Enabled by default.
 
-- `app_name`
-- `trigger`
-- `event_type`
-- `description`
-- `tags`
-- `cooldown_seconds`
-- `enabled`
+The agent watches visible GUI apps and emits:
 
-Supported triggers today:
+- `local:app:opened`
+- `local:app:closed`
 
-- `opened`
-- `closed`
+It excludes a few noisy system apps by default:
 
-## Rule Ideas To Try
+- `Finder`
+- `Dock`
+- `Control Center`
+- `Notification Center`
+- `System Settings`
 
-You can already build several useful rule styles with the current agent.
+### User activity
 
-### 1. Distraction detection
+Enabled by default.
 
-- App: `Netflix`
-- Trigger: `opened`
-- Event type: `entertainment:netflix`
-- Tags: `negative,entertainment,netflix`
+The agent checks macOS idle time and emits:
 
-### 2. Focus session start
+- `local:user:idle`
+- `local:user:active`
 
-- App: `pycharm`
-- Trigger: `opened`
-- Event type: `coding:session:start`
-- Tags: `coding,python,focus`
+Default idle threshold:
 
-### 3. Focus session finish
+- `300` seconds
 
-- App: `pycharm`
-- Trigger: `closed`
-- Event type: `coding:session:end`
-- Tags: `coding,python,wrapup`
+### Machine state
 
-### 4. Communication tracking
+Enabled by default.
 
-- App: `WhatsApp`
-- Trigger: `opened`
-- Event type: `communication:whatsapp`
-- Tags: `communication,relationships,messaging`
+The agent emits:
 
-### 5. Reading or note-taking
+- `local:machine:started` when the watcher begins
+- `local:machine:woke` when it detects a long pause consistent with sleep/resume
 
-- App: `Logseq`
-- Trigger: `opened`
-- Event type: `thinking:logseq`
-- Tags: `notes,reflection,learning`
+Default wake detection gap:
 
-### 6. Browser intent markers
+- `60` seconds
 
-- App: `Google Chrome`
-- Trigger: `opened`
-- Event type: `browser:chrome`
-- Tags: `browser,web,context-switch`
+## Legacy Rule Layer
 
-### 7. Gaming session start and end
+The old custom rule system still exists on top of the autonomous signal layer.
 
-- App: `steam_osx`
-- Trigger: `opened`
-- Event type: `gaming:session:start`
-- Tags: `gaming,steam`
+Use it when you want app-specific derived events such as:
 
-- App: `steam_osx`
-- Trigger: `closed`
-- Event type: `gaming:session:end`
-- Tags: `gaming,steam,finished`
+- `entertainment:netflix`
+- `coding:session:start`
+- `gaming:session:end`
 
-### 8. Security / network context
+Examples:
 
-- App: `NordVPN`
-- Trigger: `opened`
-- Event type: `device:vpn:opened`
-- Tags: `security,vpn,network`
+```bash
+python3 scripts/rasbhari_mac_agent.py rule add \
+  --app-name "Netflix" \
+  --trigger opened \
+  --event-type entertainment:netflix \
+  --description "Opened Netflix on Mac" \
+  --tags netflix,entertainment,negative
+```
 
-### 9. Machine-specific automation
+```bash
+python3 scripts/rasbhari_mac_agent.py rule add \
+  --app-name "PyCharm" \
+  --trigger opened \
+  --event-type coding:session:start \
+  --description "Opened PyCharm" \
+  --tags coding,python,focus
+```
 
-Because the agent always appends a `machine:<name>` tag, the same rule on multiple Macs can still be filtered separately inside Rasbhari.
+List configured rules:
 
-### 10. Negative promise guardrails
+```bash
+python3 scripts/rasbhari_mac_agent.py rule list
+```
 
-Good candidates:
+## Model Going Forward
 
-- `Discord` opened
-- `Netflix` opened
-- `steam_osx` opened
-- `Google Chrome` opened
+This macOS agent should be treated as the first local signal collector, not the final behavior engine.
 
-These pair well with promises that watch for distraction tags or entertainment event types.
+The intended stack is:
 
-## Notes on Reliability
+1. raw local signals
+2. normalized event bus entries
+3. later session inference and recommendations inside Rasbhari
 
-This V1 intentionally avoids trying to detect everything on macOS.
+That means the agent should stay conservative:
 
-It focuses on app lifecycle transitions because those are practical and reliable enough to validate the ecosystem.
-
-It does not yet handle:
-
-- browser URL/domain tracking
-- detailed IDE project detection
-- window titles
-- media playback state
-- focus mode state
-
-Those can come later as optional integrations.
-
-## How It Works
-
-The agent polls the list of visible GUI processes using `osascript` and compares:
-
-- current apps
-- previously seen apps
-
-From that diff it derives:
-
-- newly opened apps
-- recently closed apps
-
-Matching rules emit normal Rasbhari events through:
-
-- `POST /events/`
-
-The current Rasbhari event route expects `tags` in the request body as a comma-separated string, and the mac agent formats them that way before sending.
-
-This means no special server endpoint is required for the first validation phase.
-
-## Intended Next Step
-
-If this feels useful, the next version should move from direct event posting to:
-
-- desktop agent emits `signals`
-- Rasbhari maps signals into events or activities
-
-That would keep clients thinner and make automation behavior easier to configure centrally.
+- emit facts
+- avoid heavy interpretation
+- stay easy to set up

@@ -13,7 +13,7 @@ Use it as the primary place to find:
 ## Core Docs
 
 - [AI Command Layer](./AI.md)
-- [macOS Agent](./mac-agent.md)
+- [macOS Local Signals](./mac-agent.md)
 - [Rasbhari Overview](./rasbhari.md)
 - [Testing Sandbox](./testing-sandbox.md)
 - [Test Suite](./testing.md)

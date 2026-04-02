@@ -19,6 +19,13 @@ CONFIG_PATH = CONFIG_DIR / "config.json"
 PID_PATH = CONFIG_DIR / "agent.pid"
 LOG_PATH = CONFIG_DIR / "agent.log"
 DEFAULT_POLL_SECONDS = 3
+DEFAULT_APP_EXCLUDES = [
+    "Finder",
+    "Dock",
+    "Control Center",
+    "Notification Center",
+    "System Settings",
+]
 
 
 @dataclass
@@ -39,6 +46,22 @@ def default_config() -> dict:
         "api_key": "",
         "machine_name": os.uname().nodename,
         "poll_seconds": DEFAULT_POLL_SECONDS,
+        "signals": {
+            "app_lifecycle": {
+                "enabled": True,
+                "include_apps": [],
+                "exclude_apps": DEFAULT_APP_EXCLUDES,
+            },
+            "user_activity": {
+                "enabled": True,
+                "idle_seconds": 300,
+            },
+            "machine_state": {
+                "enabled": True,
+                "sleep_gap_seconds": 60,
+                "emit_startup_event": True,
+            },
+        },
         "rules": [],
     }
 
@@ -89,6 +112,7 @@ def load_config() -> dict:
         data = json.load(handle)
     config = default_config()
     config.update(data)
+    config["signals"] = merge_signal_config(data.get("signals") or {})
     config["rules"] = [normalize_rule(rule) for rule in config.get("rules", [])]
     return config
 
@@ -115,6 +139,15 @@ def normalize_rule(raw: dict) -> dict:
     return rule
 
 
+def merge_signal_config(raw: dict) -> dict:
+    merged = default_config()["signals"]
+    for signal_name, defaults in merged.items():
+        overrides = raw.get(signal_name) or {}
+        if isinstance(overrides, dict):
+            defaults.update(overrides)
+    return merged
+
+
 def current_apps() -> set[str]:
     script = 'tell application "System Events" to get name of every process whose background only is false'
     result = subprocess.run(
@@ -129,6 +162,129 @@ def current_apps() -> set[str]:
     return {part.strip() for part in raw.split(",") if part.strip()}
 
 
+def current_idle_seconds() -> Optional[int]:
+    script = 'tell application "System Events" to get idle time'
+    result = subprocess.run(
+        ["osascript", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    raw = result.stdout.strip()
+    if not raw:
+        return None
+    return int(float(raw))
+
+
+def should_track_app(app_name: str, config: dict) -> bool:
+    app_config = config.get("signals", {}).get("app_lifecycle", {})
+    include_apps = {name.strip().lower() for name in app_config.get("include_apps") or [] if name.strip()}
+    exclude_apps = {name.strip().lower() for name in app_config.get("exclude_apps") or [] if name.strip()}
+    normalized = app_name.strip().lower()
+    if include_apps and normalized not in include_apps:
+        return False
+    return normalized not in exclude_apps
+
+
+def base_signal_tags(config: dict, extra_tags: Optional[List[str]] = None) -> List[str]:
+    tags = [
+        "source:mac_agent",
+        "signal:raw",
+        f"machine:{slugify(config.get('machine_name', 'mac'))}",
+    ]
+    if extra_tags:
+        tags.extend(extra_tags)
+    return list(dict.fromkeys(tags))
+
+
+def build_signal_event(config: dict, event_type: str, description: str, tags: Optional[List[str]] = None) -> dict:
+    return {
+        "event_type": event_type,
+        "description": description,
+        "tags": base_signal_tags(config, tags),
+    }
+
+
+def detect_signal_events(config: dict, previous_state: dict, current_state: dict) -> List[dict]:
+    signals = config.get("signals", {})
+    events: List[dict] = []
+
+    machine_state_config = signals.get("machine_state", {})
+    if machine_state_config.get("enabled"):
+        if current_state.get("emit_startup_event"):
+            events.append(
+                build_signal_event(
+                    config,
+                    "local:machine:started",
+                    f"Started local signal capture on {config.get('machine_name')}",
+                    ["signal:machine_state", "state:started"],
+                )
+            )
+        if current_state.get("loop_gap_seconds", 0) >= int(machine_state_config.get("sleep_gap_seconds") or 60):
+            events.append(
+                build_signal_event(
+                    config,
+                    "local:machine:woke",
+                    f"{config.get('machine_name')} resumed after a long pause",
+                    ["signal:machine_state", "state:woke"],
+                )
+            )
+
+    app_lifecycle_config = signals.get("app_lifecycle", {})
+    if app_lifecycle_config.get("enabled"):
+        previous_apps = previous_state.get("apps") or set()
+        current_apps_state = current_state.get("apps") or set()
+        for app_name in sorted(current_apps_state - previous_apps):
+            if not should_track_app(app_name, config):
+                continue
+            events.append(
+                build_signal_event(
+                    config,
+                    "local:app:opened",
+                    f"Opened {app_name}",
+                    ["signal:app_lifecycle", "state:opened", f"app:{slugify(app_name)}"],
+                )
+            )
+        for app_name in sorted(previous_apps - current_apps_state):
+            if not should_track_app(app_name, config):
+                continue
+            events.append(
+                build_signal_event(
+                    config,
+                    "local:app:closed",
+                    f"Closed {app_name}",
+                    ["signal:app_lifecycle", "state:closed", f"app:{slugify(app_name)}"],
+                )
+            )
+
+    user_activity_config = signals.get("user_activity", {})
+    if user_activity_config.get("enabled"):
+        idle_threshold = int(user_activity_config.get("idle_seconds") or 300)
+        previous_idle = previous_state.get("idle_seconds")
+        current_idle = current_state.get("idle_seconds")
+        if previous_idle is not None and current_idle is not None:
+            if previous_idle < idle_threshold <= current_idle:
+                events.append(
+                    build_signal_event(
+                        config,
+                        "local:user:idle",
+                        f"User went idle on {config.get('machine_name')}",
+                        ["signal:user_activity", "state:idle"],
+                    )
+                )
+            elif previous_idle >= idle_threshold > current_idle:
+                events.append(
+                    build_signal_event(
+                        config,
+                        "local:user:active",
+                        f"User became active on {config.get('machine_name')}",
+                        ["signal:user_activity", "state:active"],
+                    )
+                )
+
+    return events
+
+
 def post_event(config: dict, rule: dict, app_name: str) -> None:
     rasbhari_url = config.get("rasbhari_url", "").rstrip("/")
     api_key = config.get("api_key", "").strip()
@@ -141,12 +297,27 @@ def post_event(config: dict, rule: dict, app_name: str) -> None:
             [*(rule.get("tags") or []), "source:mac_agent", f"app:{slugify(app_name)}", f"machine:{slugify(config.get('machine_name', 'mac'))}"]
         )
     )
-    payload = {
-        "event_type": rule["event_type"],
-        "description": description_template.format(app_name=app_name, trigger=rule["trigger"]),
-        # Rasbhari's current /events/ handler expects tags as a comma-separated string.
+    payload = build_http_payload(
+        event_type=rule["event_type"],
+        description=description_template.format(app_name=app_name, trigger=rule["trigger"]),
+        tags=tags,
+    )
+    send_payload(config, payload)
+
+
+def build_http_payload(*, event_type: str, description: str, tags: List[str]) -> dict:
+    return {
+        "event_type": event_type,
+        "description": description,
         "tags": ", ".join(tags),
     }
+
+
+def send_payload(config: dict, payload: dict) -> None:
+    rasbhari_url = config.get("rasbhari_url", "").rstrip("/")
+    api_key = config.get("api_key", "").strip()
+    if not rasbhari_url or not api_key:
+        raise RuntimeError("rasbhari_url and api_key must be configured before running the agent")
     data = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
         f"{rasbhari_url}/events/",
@@ -160,6 +331,19 @@ def post_event(config: dict, rule: dict, app_name: str) -> None:
     with urllib.request.urlopen(request, timeout=10) as response:
         if response.status >= 300:
             raise RuntimeError(f"Event post failed with status {response.status}")
+
+
+def post_signal_events(config: dict, signal_events: List[dict]) -> List[dict]:
+    emitted = []
+    for event in signal_events:
+        payload = build_http_payload(
+            event_type=event["event_type"],
+            description=event["description"],
+            tags=event.get("tags") or [],
+        )
+        send_payload(config, payload)
+        emitted.append(event)
+    return emitted
 
 
 def slugify(value: str) -> str:
@@ -312,10 +496,13 @@ def command_doctor(args) -> int:
     print(f"API key configured: {'yes' if config.get('api_key') else 'no'}")
     print(f"Machine name: {config['machine_name']}")
     print(f"Poll seconds: {config['poll_seconds']}")
+    print(f"Autonomous signals enabled: {'yes' if any(section.get('enabled') for section in config.get('signals', {}).values()) else 'no'}")
     try:
         apps = sorted(current_apps())
         print(f"Detected GUI apps: {len(apps)}")
         print(", ".join(apps[:12]) or "none")
+        idle_seconds = current_idle_seconds()
+        print(f"Current idle seconds: {idle_seconds if idle_seconds is not None else 'unknown'}")
     except Exception as exc:
         print(f"Failed to query running apps: {exc}")
         return 1
@@ -329,19 +516,37 @@ def command_rule_wizard(args) -> int:
 def command_run(args) -> int:
     config = load_config()
     rules = [rule for rule in config["rules"] if rule["enabled"]]
-    if not rules:
-        print("No enabled rules configured.")
+    signals_enabled = any(section.get("enabled") for section in config.get("signals", {}).values())
+    if not rules and not signals_enabled:
+        print("No enabled signals or rules configured.")
         return 1
 
     cooldowns: dict[tuple[str, str, str], float] = {}
-    previous_apps = current_apps()
-    print(f"Watching {len(rules)} rules. Press Ctrl+C to stop.")
+    previous_state = {
+        "apps": current_apps(),
+        "idle_seconds": current_idle_seconds(),
+    }
+    last_loop_time = time.time()
+    startup_pending = True
+    print(f"Watching autonomous signals ({'on' if signals_enabled else 'off'}) and {len(rules)} enabled rule(s). Press Ctrl+C to stop.")
     while True:
         try:
             time.sleep(config.get("poll_seconds") or DEFAULT_POLL_SECONDS)
-            apps = current_apps()
-            opened = apps - previous_apps
-            closed = previous_apps - apps
+            now = time.time()
+            current_state = {
+                "apps": current_apps(),
+                "idle_seconds": current_idle_seconds(),
+                "loop_gap_seconds": max(0, int(now - last_loop_time)),
+                "emit_startup_event": startup_pending,
+            }
+            if signals_enabled:
+                signal_events = detect_signal_events(config, previous_state, current_state)
+                emitted_signals = post_signal_events(config, signal_events)
+                for event in emitted_signals:
+                    print(f"Emitted {event['event_type']} | {event['description']}")
+
+            opened = current_state["apps"] - (previous_state.get("apps") or set())
+            closed = (previous_state.get("apps") or set()) - current_state["apps"]
             for rule in rules:
                 matches = opened if rule["trigger"] == "opened" else closed
                 if rule["app_name"] not in matches:
@@ -354,7 +559,9 @@ def command_run(args) -> int:
                 post_event(config, rule, rule["app_name"])
                 print(f"Emitted {rule['event_type']} for {rule['app_name']} ({rule['trigger']})")
                 cooldowns[key] = now + int(rule.get("cooldown_seconds") or 300)
-            previous_apps = apps
+            previous_state = current_state
+            last_loop_time = now
+            startup_pending = False
         except KeyboardInterrupt:
             print("Stopped.")
             return 0

@@ -96,6 +96,12 @@ class Server:
         @self.app.route('/')
         @login_required
         def home():
+            today_data = self.get_today_data()
+            return render_flask_template('today.html', today_data=today_data)
+
+        @self.app.route('/dashboard')
+        @login_required
+        def dashboard():
             widgets_data = self.get_widgets_data()
             reliability_data = self.get_reliability_data() if PermissionManager.is_admin() else []
             universal_timeline = self.get_universal_timeline_data() if PermissionManager.is_admin() else []
@@ -390,6 +396,11 @@ class Server:
         if not self.dashboard_provider:
             return []
         return self.dashboard_provider.get_reliability_data(processes_data)
+
+    def get_today_data(self) -> dict:
+        if not self.dashboard_provider:
+            return {}
+        return self.dashboard_provider.get_today_data()
 
     def get_universal_timeline_data(self, limit: int = 20) -> list[dict]:
         if not self.dashboard_provider:

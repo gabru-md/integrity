@@ -15,6 +15,8 @@ from gabru.flask.app import App
 from gabru.flask.server import Server
 from gabru.flask.model import WidgetUIModel
 
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
 
 class FakeUser:
     def __init__(self, user_id=1, username="tester", display_name="Tester", is_admin=False, api_key="abcde"):
@@ -91,6 +93,20 @@ class FakeAppStatusStore:
 
     def set_app_state(self, name, active):
         return True
+
+
+class FakeDashboardProvider:
+    def get_today_data(self):
+        return {"guidance": [{"title": "Start with one meaningful move", "body": "Today route is working.", "href": "/projects/home"}]}
+
+    def get_dependency_health_data(self):
+        return []
+
+    def get_reliability_data(self, processes_data):
+        return []
+
+    def get_universal_timeline_data(self, limit=20):
+        return []
 
 
 class FakeSignupAuthProvider:
@@ -200,6 +216,34 @@ class SignupFlowTests(unittest.TestCase):
         with client.session_transaction() as session:
             self.assertEqual(session["user_id"], 123)
             self.assertEqual(session["username"], "admin")
+
+
+class TodayRouteTests(unittest.TestCase):
+    def test_home_uses_today_template_and_dashboard_route_still_exists(self):
+        fake_auth_provider = FakeAuthProvider()
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+
+        home_response = client.get("/")
+        dashboard_response = client.get("/dashboard")
+
+        self.assertEqual(home_response.status_code, 200)
+        self.assertIn(b"Daily Control Surface", home_response.data)
+        self.assertEqual(dashboard_response.status_code, 200)
+        self.assertIn(b"Rasbhari Apps Dashboard", dashboard_response.data)
 
 
 if __name__ == "__main__":

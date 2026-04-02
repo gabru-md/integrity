@@ -82,6 +82,7 @@ class SkillXPProcessor(QueueProcessor[Event]):
                 description=summary,
                 tags=[
                     "notification",
+                    "notification_class:today",
                     "skill",
                     "level_up",
                     f"skill:{self.skill_service.normalize_skill_tag(skill.tag_key or skill.name)}",

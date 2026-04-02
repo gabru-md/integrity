@@ -1,10 +1,13 @@
 import os
 import time
+from datetime import datetime
+
 import requests
 from gabru.qprocessor.qprocessor import QueueProcessor
 from model.event import Event
 from model.notification import Notification
 from services.events import EventService
+from services.notification_policy import CLASS_CONFIG, resolve_notification_intent
 from services.notifications import NotificationService
 from services.users import UserService
 from sendgrid import SendGridAPIClient
@@ -48,29 +51,31 @@ class Courier(QueueProcessor[Event]):
 
     def _process_item(self, event: Event) -> bool:
         """
-        Dispatch notification based on tags. 
-        If 'email' tag exists, send email. Otherwise, default to ntfy.sh.
+        Dispatch notification based on explicit notification intent.
         """
+        intent = resolve_notification_intent(event)
         success = False
-        notification_type = "ntfy"
 
-        if 'email' in (event.tags or []):
-            notification_type = "email"
+        if intent.delivery_channel == "email":
             success = self.create_email_notification(event)
         else:
-            success = self.send_ntfy_notification(event)
+            success = self.send_ntfy_notification(event, intent.notification_class, intent.title)
 
         if success:
             notification_dict = {
-                "notification_type": notification_type,
+                "title": intent.title,
+                "notification_type": intent.delivery_channel,
+                "notification_class": intent.notification_class,
                 "notification_data": event.description,
-                "created_at": int(time.time())
+                "created_at": datetime.now(),
             }
             notification = Notification(**notification_dict)
             self.notification_service.create(notification)
             return True
         else:
-            self.log.warn(f"Could not send {notification_type} notification for event {event.id}")
+            self.log.warn(
+                f"Could not send {intent.delivery_channel} {intent.notification_class} notification for event {event.id}"
+            )
             return False
 
     def create_email_notification(self, event: Event) -> bool:
@@ -115,21 +120,24 @@ class Courier(QueueProcessor[Event]):
 
         return f"{self.ntfy_base_url}/{topic}"
 
-    def send_ntfy_notification(self, event: Event) -> bool:
+    def send_ntfy_notification(self, event: Event, notification_class: str, title: str) -> bool:
         """
         Dispatches a POST request to ntfy.sh
         """
         ntfy_url = self.get_ntfy_url_for_event(event)
-        
+        config = CLASS_CONFIG.get(notification_class, CLASS_CONFIG["today"])
         headers = {
-            "Title": f"Rasbhari Alert: {event.event_type}",
-            "Priority": "high",
-            "Tags": "warning,robot"
+            "Title": title,
+            "Priority": config["priority"],
+            "Tags": config["emoji_tags"],
         }
 
         # Add event tags to ntfy tags
         if event.tags:
-            other_tags = [t for t in event.tags if t not in ['notification', 'ntfy']]
+            other_tags = [
+                t for t in event.tags
+                if t not in ['notification', 'ntfy', 'email'] and not t.startswith("notification_class:")
+            ]
             if other_tags:
                 headers["Tags"] += "," + ",".join(other_tags)
 

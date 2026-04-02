@@ -22,8 +22,9 @@ class QueueProcessor(Generic[T], Process):
         restarts, it knows where to pick up.
     """
 
-    def __init__(self, name, service: ReadOnlyService[T], enabled=False):
-        super().__init__(name=name, enabled=enabled, daemon=True)
+    def __init__(self, service: ReadOnlyService[T], enabled=False, name=None):
+        process_name = name or self.__class__.__name__
+        super().__init__(name=process_name, enabled=enabled, daemon=True)
         self.service = service
         self.q_service = QueueService()
         self._set_up_queue_stats()

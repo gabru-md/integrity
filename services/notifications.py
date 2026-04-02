@@ -18,34 +18,43 @@ class NotificationService(CRUDService[Notification]):
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS notifications (
                         id SERIAL PRIMARY KEY,
+                        title VARCHAR(255),
                         notification_type VARCHAR(255) NOT NULL,
+                        notification_class VARCHAR(50) NOT NULL DEFAULT 'today',
                         notification_data VARCHAR(500) NOT NULL,
                         created_at TIMESTAMP
                     )
                 """)
+                cursor.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title VARCHAR(255)")
+                cursor.execute(
+                    "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS notification_class VARCHAR(50) NOT NULL DEFAULT 'today'"
+                )
                 self.db.conn.commit()
 
     def _to_tuple(self, notification: Notification) -> tuple:
         return (
-            notification.notification_type, notification.notification_data, notification.created_at)
+            notification.title, notification.notification_type, notification.notification_class,
+            notification.notification_data, notification.created_at)
 
     def _to_object(self, row: tuple) -> Notification:
         notification_dict = {
             "id": row[0],
-            "notification_type": row[1],
-            "notification_data": row[2],
-            "created_at": row[3]
+            "title": row[1],
+            "notification_type": row[2],
+            "notification_class": row[3],
+            "notification_data": row[4],
+            "created_at": row[5]
         }
         return Notification(**notification_dict)
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["notification_type", "notification_data", "created_at"]
+        return ["title", "notification_type", "notification_class", "notification_data", "created_at"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["notification_type", "notification_data", "created_at"]
+        return ["title", "notification_type", "notification_class", "notification_data", "created_at"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "notification_type", "notification_data", "created_at"]
+        return ["id", "title", "notification_type", "notification_class", "notification_data", "created_at"]
 
     def queue_email_notification(self, notification: Union[Notification, str]) -> Optional[int]:
         if isinstance(notification, Notification):
@@ -55,7 +64,9 @@ class NotificationService(CRUDService[Notification]):
                 notification_obj.created_at = datetime.now()
         else:
             notification_obj = Notification(
+                title="Email notification",
                 notification_type="email",
+                notification_class="system",
                 notification_data=str(notification),
                 created_at=datetime.now(),
             )

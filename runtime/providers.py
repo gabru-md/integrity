@@ -21,6 +21,12 @@ from services.notifications import NotificationService
 from services.assistant_command import AssistantCommandService
 from services.skill_level_history import SkillLevelHistoryService
 from services.timeline import TimelineService
+from services.activities import ActivityService
+from services.connections import ConnectionService
+from services.kanban_tickets import KanbanTicketService
+from services.projects import ProjectService
+from services.promises import PromiseService
+from services.reports import ReportService
 from services.users import UserService
 
 
@@ -104,6 +110,12 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         queue_service: Optional[QueueService] = None,
         skill_history_service: Optional[SkillLevelHistoryService] = None,
         timeline_service: Optional[TimelineService] = None,
+        promise_service: Optional[PromiseService] = None,
+        connection_service: Optional[ConnectionService] = None,
+        activity_service: Optional[ActivityService] = None,
+        project_service: Optional[ProjectService] = None,
+        kanban_ticket_service: Optional[KanbanTicketService] = None,
+        report_service: Optional[ReportService] = None,
     ):
         self.event_service = event_service or EventService()
         self.notification_service = notification_service or NotificationService()
@@ -111,6 +123,199 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         self.queue_service = queue_service or QueueService()
         self.skill_history_service = skill_history_service or SkillLevelHistoryService()
         self.timeline_service = timeline_service or TimelineService()
+        self.promise_service = promise_service or PromiseService()
+        self.connection_service = connection_service or ConnectionService()
+        self.activity_service = activity_service or ActivityService()
+        self.project_service = project_service or ProjectService()
+        self.kanban_ticket_service = kanban_ticket_service or KanbanTicketService()
+        self.report_service = report_service or ReportService()
+
+    def get_today_data(self) -> dict[str, object]:
+        active_projects = self.project_service.find_all(filters={"state": "Active"}, sort_by={"last_updated": "DESC"})
+        active_project_ids = [project.id for project in active_projects if project.id is not None]
+
+        active_work = []
+        prioritized_work = []
+        for project in active_projects:
+            tickets = self.kanban_ticket_service.get_by_project_id(project.id, include_archived=False)
+            project_summary = {
+                "id": project.id,
+                "name": project.name,
+                "state": project.state,
+                "last_updated": project.last_updated.isoformat() if project.last_updated else None,
+                "progress_count": project.progress_count,
+                "href": f"/projects/{project.id}/board",
+            }
+            for ticket in tickets:
+                ticket_data = {
+                    "id": ticket.id,
+                    "project_id": project.id,
+                    "project_name": project.name,
+                    "title": ticket.title,
+                    "description": ticket.description,
+                    "state": ticket.state.value if hasattr(ticket.state, "value") else ticket.state,
+                    "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
+                    "state_changed_at": ticket.state_changed_at.isoformat() if ticket.state_changed_at else None,
+                    "href": f"/projects/{project.id}/board",
+                }
+                if ticket_data["state"] == "in_progress":
+                    active_work.append(ticket_data)
+                elif ticket_data["state"] == "prioritized":
+                    prioritized_work.append(ticket_data)
+
+        due_promises = []
+        for promise in self.promise_service.get_due_promises():
+            due_promises.append({
+                "id": promise.id,
+                "name": promise.name,
+                "description": promise.description,
+                "frequency": promise.frequency,
+                "next_check_at": promise.next_check_at.isoformat() if promise.next_check_at else None,
+                "streak": promise.streak,
+                "status": promise.status,
+                "href": "/promises/home",
+            })
+
+        neglected_connections = []
+        now = datetime.now()
+        for connection in self.connection_service.get_active():
+            if connection.last_contact_at is None:
+                days_since_contact = None
+                overdue_days = connection.cadence_days
+            else:
+                days_since_contact = max(0, (now - connection.last_contact_at).days)
+                overdue_days = days_since_contact - connection.cadence_days
+            if overdue_days >= 0:
+                neglected_connections.append({
+                    "id": connection.id,
+                    "name": connection.name,
+                    "priority": connection.priority,
+                    "relationship_type": connection.relationship_type,
+                    "cadence_days": connection.cadence_days,
+                    "days_since_contact": days_since_contact,
+                    "overdue_days": overdue_days,
+                    "href": "/connections/home",
+                })
+        neglected_connections.sort(key=lambda item: (-self._priority_rank(item["priority"]), -item["overdue_days"], item["name"]))
+
+        suggested_activities = []
+        for activity in self.activity_service.get_recent_items(6):
+            suggested_activities.append({
+                "id": activity.id,
+                "name": activity.name,
+                "event_type": activity.event_type,
+                "description": activity.description,
+                "tags": activity.tags or [],
+                "href": "/activities/home",
+            })
+
+        latest_report = next(iter(self.report_service.get_recent_items(1)), None)
+        report_summary = None
+        if latest_report:
+            report_summary = {
+                "title": latest_report.title,
+                "headline": latest_report.headline,
+                "integrity_score": latest_report.integrity_score,
+                "generated_at": latest_report.generated_at.isoformat() if latest_report.generated_at else None,
+                "href": f"/reports/{latest_report.id}/view" if latest_report.id else "/reports/home",
+            }
+
+        recent_events_today = self.event_service.find_all(
+            filters={"timestamp": {"$gt": datetime(now.year, now.month, now.day)}},
+            sort_by={"timestamp": "DESC"},
+        )
+        guidance = self._build_today_guidance(
+            active_work=active_work,
+            prioritized_work=prioritized_work,
+            due_promises=due_promises,
+            neglected_connections=neglected_connections,
+            suggested_activities=suggested_activities,
+            active_projects=active_projects,
+            report_summary=report_summary,
+            recent_events_today=recent_events_today,
+        )
+
+        return {
+            "active_work": active_work[:6],
+            "prioritized_work": prioritized_work[:6],
+            "due_promises": due_promises[:5],
+            "neglected_connections": neglected_connections[:5],
+            "suggested_activities": suggested_activities[:4],
+            "guidance": guidance,
+            "active_project_count": len(active_project_ids),
+            "latest_report": report_summary,
+            "events_today_count": len(recent_events_today),
+        }
+
+    @staticmethod
+    def _priority_rank(priority: str) -> int:
+        return {"High": 3, "Medium": 2, "Low": 1}.get(priority, 0)
+
+    def _build_today_guidance(
+        self,
+        *,
+        active_work: list[dict],
+        prioritized_work: list[dict],
+        due_promises: list[dict],
+        neglected_connections: list[dict],
+        suggested_activities: list[dict],
+        active_projects: list,
+        report_summary: Optional[dict],
+        recent_events_today: list,
+    ) -> list[dict]:
+        guidance = []
+        if active_work:
+            guidance.append({
+                "title": "Close the loop on current work",
+                "body": f"{len(active_work)} ticket(s) are already in progress. Finish or move one before pulling in more work.",
+                "href": active_work[0]["href"],
+            })
+        elif prioritized_work:
+            first_ticket = prioritized_work[0]
+            guidance.append({
+                "title": "Start the next concrete ticket",
+                "body": f"'{first_ticket['title']}' is prioritized and ready to become the first active ticket today.",
+                "href": first_ticket["href"],
+            })
+
+        if due_promises:
+            guidance.append({
+                "title": "A promise needs evidence today",
+                "body": f"{len(due_promises)} promise check(s) are due. Log the work or refresh promise status before the day drifts.",
+                "href": "/promises/home",
+            })
+
+        if neglected_connections:
+            top_connection = neglected_connections[0]
+            guidance.append({
+                "title": "Repair a neglected relationship",
+                "body": f"{top_connection['name']} is overdue for contact. A small message today would reduce relationship drift.",
+                "href": top_connection["href"],
+            })
+
+        if not recent_events_today and suggested_activities:
+            first_activity = suggested_activities[0]
+            guidance.append({
+                "title": "Seed the day with one tracked action",
+                "body": f"No events have been logged yet today. Trigger '{first_activity['name']}' or log one meaningful action to start the record.",
+                "href": first_activity["href"],
+            })
+
+        if report_summary:
+            guidance.append({
+                "title": "Use the latest mirror as calibration",
+                "body": f"{report_summary['title']} is your latest behavioral snapshot. Check it before deciding what to ignore today.",
+                "href": report_summary["href"],
+            })
+
+        if not guidance and active_projects:
+            guidance.append({
+                "title": "Pick one active project and move it visibly",
+                "body": f"You have {len(active_projects)} active project(s). Add one ticket move, update, or event so the day leaves a trace.",
+                "href": "/projects/home",
+            })
+
+        return guidance[:4]
 
     def get_dependency_health_data(self) -> list[dict]:
         try:
@@ -229,7 +434,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             items.append({
                 "source": "Courier",
                 "category": "Notifications",
-                "title": f"{item.notification_type.upper()} notification sent",
+                "title": item.title or f"{item.notification_class.title()} via {item.notification_type}",
                 "subtitle": item.notification_data,
                 "timestamp": item.created_at,
                 "href": "/processes",
