@@ -284,7 +284,7 @@ class MentalModelContextTests(unittest.TestCase):
             )
 
         self.assertIn("Capture, Structure, Commit, Grow, Reflect, Act", rendered)
-        self.assertIn("How Rasbhari Works", rendered)
+        self.assertNotIn("How Rasbhari Works", rendered)
         self.assertIn("Meet Rasbhari", rendered)
 
     def test_app_instructions_render_helper_sections(self):
@@ -370,6 +370,35 @@ class TodayRouteTests(unittest.TestCase):
         self.assertEqual(admin_response.status_code, 200)
         self.assertIn(b"Admin Guide", admin_response.data)
         self.assertIn(b"Process Health", admin_response.data)
+
+    def test_admin_overview_requires_admin_and_renders_for_admin(self):
+        fake_auth_provider = FakeAuthProvider()
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+
+        non_admin_response = client.get("/admin")
+        self.assertEqual(non_admin_response.status_code, 403)
+
+        with client.session_transaction() as session:
+            session["is_admin"] = True
+
+        admin_response = client.get("/admin")
+        self.assertEqual(admin_response.status_code, 200)
+        self.assertIn(b"Admin Control Plane", admin_response.data)
+        self.assertIn(b"Operate the ecosystem", admin_response.data)
 
 
 class ProcessAdminRouteTests(unittest.TestCase):

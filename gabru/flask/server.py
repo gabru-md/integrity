@@ -231,6 +231,11 @@ class Server:
         def admin_guide():
             return render_flask_template('admin_guide.html', admin_guide=build_rasbhari_admin_guide())
 
+        @self.app.route('/admin')
+        @admin_required
+        def admin_overview():
+            return render_flask_template('admin_overview.html', admin_data=self.get_admin_control_plane_data())
+
         @self.app.route('/devices')
         @admin_required
         def devices():
@@ -479,6 +484,100 @@ class Server:
         if not self.dashboard_provider:
             return {}
         return self.dashboard_provider.get_today_data()
+
+    def get_admin_control_plane_data(self) -> dict:
+        apps_data = self.get_apps_data()
+        processes_data = self.get_processes_data()
+        dependency_health_data = self.get_dependency_health_data()
+
+        users_app = next((app for app in self.registered_apps if app.name.lower() == "users" and getattr(app, "is_active", False)), None)
+        pending_approvals = 0
+        total_users = 0
+        active_users = 0
+        if users_app and getattr(users_app, "service", None):
+            try:
+                pending_approvals = users_app.service.count(filters={"is_approved": False})
+                total_users = users_app.service.count()
+                active_users = users_app.service.count(filters={"is_active": True})
+            except Exception:
+                pending_approvals = 0
+                total_users = 0
+                active_users = 0
+
+        active_apps = [app for app in apps_data if app.get("is_active")]
+        inactive_apps = [app for app in apps_data if not app.get("is_active")]
+        enabled_processes = [process for process in processes_data if process.get("is_enabled")]
+        running_processes = [process for process in processes_data if process.get("is_alive")]
+        stopped_enabled_processes = [process for process in processes_data if process.get("is_enabled") and not process.get("is_alive")]
+        queue_processors = [process for process in processes_data if process.get("type") == "QueueProcessor"]
+        unhealthy_dependencies = [item for item in dependency_health_data if item.get("status") not in {"Healthy", "Configured"}]
+
+        return {
+            "headline": "Admin Control Plane",
+            "summary": "Use Rasbhari itself to operate the Rasbhari ecosystem: oversee apps, processes, users, dependencies, and recovery actions from one place.",
+            "metrics": [
+                {"label": "Active Apps", "value": len(active_apps), "detail": f"{len(inactive_apps)} disabled"},
+                {"label": "Running Processes", "value": len(running_processes), "detail": f"{len(stopped_enabled_processes)} enabled but stopped"},
+                {"label": "Users", "value": total_users, "detail": f"{pending_approvals} pending approval"},
+                {"label": "Dependencies", "value": len(dependency_health_data), "detail": f"{len(unhealthy_dependencies)} need attention"},
+            ],
+            "focus_areas": [
+                {
+                    "title": "App Registry",
+                    "summary": "Control which product surfaces are active and whether their widgets participate in the shell.",
+                    "items": [
+                        f"{len(active_apps)} apps currently active",
+                        f"{len(inactive_apps)} apps currently disabled",
+                    ],
+                    "href": "/apps",
+                    "action_label": "Open App Registry",
+                },
+                {
+                    "title": "Process Runtime",
+                    "summary": "Operate background workers, inspect queue progress, and recover from drift without leaving Rasbhari.",
+                    "items": [
+                        f"{len(running_processes)} processes currently running",
+                        f"{len(queue_processors)} queue processors with replayable progress",
+                    ],
+                    "href": "/processes",
+                    "action_label": "Open Processes",
+                },
+                {
+                    "title": "User Stewardship",
+                    "summary": "Approve new users, monitor onboarding readiness, and keep operator access tight.",
+                    "items": [
+                        f"{total_users} total user accounts",
+                        f"{pending_approvals} approvals waiting",
+                    ],
+                    "href": "/users/home",
+                    "action_label": "Open Users",
+                },
+            ],
+            "attention_items": [
+                {
+                    "title": "Pending User Approvals",
+                    "body": f"{pending_approvals} user account(s) are waiting for approval.",
+                    "href": "/users/home",
+                }
+                for _ in ([1] if pending_approvals else [])
+            ] + [
+                {
+                    "title": "Enabled Processes Not Running",
+                    "body": f"{len(stopped_enabled_processes)} enabled process(es) are currently stopped.",
+                    "href": "/processes",
+                }
+                for _ in ([1] if stopped_enabled_processes else [])
+            ] + [
+                {
+                    "title": "Dependency Issues",
+                    "body": f"{len(unhealthy_dependencies)} dependency check(s) need attention before some features behave normally.",
+                    "href": "/processes",
+                }
+                for _ in ([1] if unhealthy_dependencies else [])
+            ],
+            "dependency_health": dependency_health_data[:4],
+            "recent_queue_processors": queue_processors[:5],
+        }
 
     def get_universal_timeline_data(self, limit: int = 20) -> list[dict]:
         if not self.dashboard_provider:

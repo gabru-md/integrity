@@ -1,0 +1,117 @@
+{% extends "index.html" %}
+{% block title %}Admin Control Plane{% endblock %}
+{% block shell_title %}Admin Control Plane{% endblock %}
+{% block shell_subtitle %}Oversee the Rasbhari ecosystem from one operator surface: apps, processes, users, dependencies, and recovery actions.{% endblock %}
+
+{% block content %}
+<div class="space-y-6 px-1 py-2">
+    <section class="hero-grid">
+        <div class="shell-card hero-card px-6 py-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Admin</div>
+            <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">{{ admin_data.headline }}</h1>
+            <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.summary }}</p>
+            <div class="mt-5 flex flex-wrap gap-3">
+                <a href="/apps" class="btn-secondary px-4 py-3 text-sm">App Registry</a>
+                <a href="/processes" class="btn-secondary px-4 py-3 text-sm">Processes</a>
+                <a href="/users/home" class="btn-secondary px-4 py-3 text-sm">Users</a>
+                <a href="/admin/guide" class="btn-primary px-4 py-3 text-sm">Admin Guide</a>
+            </div>
+        </div>
+        <div class="shell-card px-6 py-6">
+            <div class="metric-label">Operator Role</div>
+            <div class="mt-3 text-2xl font-extrabold text-[var(--text)]">Operate the ecosystem</div>
+            <div class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Admins are not just privileged users. They are responsible for keeping Rasbhari healthy, understandable, and ready for end users.</div>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        {% for metric in admin_data.metrics %}
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ metric.label }}</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ metric.value }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">{{ metric.detail }}</div>
+        </article>
+        {% endfor %}
+    </section>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div class="space-y-6">
+            <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Control Plane</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Primary Operator Surfaces</h2>
+                <div class="mt-5 grid gap-4">
+                    {% for area in admin_data.focus_areas %}
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <div class="text-base font-bold text-[var(--text)]">{{ area["title"] }}</div>
+                                <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ area["summary"] }}</div>
+                            </div>
+                            <a href="{{ area["href"] }}" class="btn-secondary px-4 py-2 text-sm">{{ area["action_label"] }}</a>
+                        </div>
+                        <div class="mt-4 grid gap-2">
+                            {% for item in area["items"] %}
+                            <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">{{ item }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Queue Recovery</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Replayable Processors</h2>
+                <div class="mt-5 grid gap-3">
+                    {% for process in admin_data.recent_queue_processors %}
+                    <a href="/processes" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">{{ process.name }}</div>
+                            <span class="ui-badge">{{ process.last_consumed_id if process.last_consumed_id is not none else 0 }}</span>
+                        </div>
+                        <div class="mt-2 text-sm text-[var(--text-soft)]">Owner: {{ process.owner_app }} · {{ 'Running' if process.is_alive else 'Stopped' }}</div>
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No queue processors are registered yet.</div>
+                    {% endfor %}
+                </div>
+            </article>
+        </div>
+
+        <div class="space-y-6">
+            <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Attention</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Operator Queue</h2>
+                <div class="mt-5 grid gap-3">
+                    {% for item in admin_data.attention_items %}
+                    <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="text-sm font-bold text-[var(--text)]">{{ item.title }}</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No immediate operator issues are surfaced right now.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Dependency Health</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Critical Services</h2>
+                <div class="mt-5 grid gap-3">
+                    {% for item in admin_data.dependency_health %}
+                    <a href="/processes" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">{{ item.name }}</div>
+                            <span class="ui-badge">{{ item.status }}</span>
+                        </div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.summary }}</div>
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No dependency health data is available.</div>
+                    {% endfor %}
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+{% endblock %}

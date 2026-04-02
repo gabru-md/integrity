@@ -107,6 +107,19 @@ This path is distinct from the end-user tutorial and focuses on:
 
 The admin guide is meant to explain how to operate Rasbhari, not how to use it as an end user.
 
+## Admin Control Plane
+
+Rasbhari now includes an admin overview at `/admin`.
+
+This is the operator front door for the Rasbhari ecosystem. It is meant to unify:
+
+- app activation and registry state
+- process runtime and queue recovery
+- user stewardship and pending approvals
+- dependency health and degraded capabilities
+
+The goal is to let admins oversee most Rasbhari-level operational work from inside Rasbhari itself instead of treating the web UI as read-only and the shell as the real control plane.
+
 ## Dashboard
 
 The operational dashboard is still available at `/dashboard`. It includes:
