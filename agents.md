@@ -100,6 +100,20 @@ Routes, UI composition, app-specific request shaping, and custom app endpoints b
 - Do not break shared templates or dashboard layout behavior.
 - Prefer practical vanilla JS over unnecessary complexity.
 
+### Frontend Collaboration Rules
+- Prefer summary-first surfaces. Cards and pages should show the most useful state first, then reveal lower-priority detail only when needed.
+- Use progressive disclosure for dense pages. If a surface is getting loud, prefer collapsible sections or cards over permanently visible secondary detail.
+- Collapsed means hidden, not squeezed. Do not leave cramped half-visible content inside the collapsed state just to imply expandability.
+- Reuse existing disclosure patterns. Prefer the shared disclosure styling, shared recommendation component, existing card spacing, and existing shell/button language before inventing a new local UI pattern.
+- Keep recommendations contextual. Inline recommendations should appear where the mismatch is discovered, stay subtle, and route action through the existing recommendation/chat flow rather than inventing a separate execution path per page.
+- Keep card actions consistent. Primary workflow actions should read like the rest of Rasbhari (`Next`, `Archive`, `Edit`, `Stage Action`) and should stay visually consistent across apps unless there is a clear product reason not to.
+- Default to one strong action per area. Avoid multiple equally loud controls competing in the same card or header when one action is clearly primary.
+- Preserve scanability on boards. Kanban, activity, and promise cards should remain easy to scan at a distance; ecosystem detail can expand, but titles, state, and next-action cues should stay visually stable.
+- Prefer shared shell integration over page-local hacks. If something needs dismiss logic, recommendation behavior, or theme-aware UI behavior, look for the shared shell path first.
+- Stay with framework scaffolding when the app is still being proven out. The generic Gabru CRUD surface is a valid baseline for prototyping, admin/internal resources, and low-priority apps.
+- Move to a custom page when the domain has a real product identity. Use a custom home/template only when the app needs stronger workflow framing, ecosystem linkage, richer scanability, or a clearly better experience than the generic scaffold can provide.
+- Do not replace framework scaffolding just for novelty. Custom UI should earn its maintenance cost through better product clarity, not aesthetic drift.
+
 ## Documentation Rules
 
 No code change is complete until docs are consistent.
