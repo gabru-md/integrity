@@ -47,81 +47,7 @@
         </article>
     </section>
 
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <article class="shell-card p-6">
-            <div class="section-kicker text-[10px] font-extrabold uppercase">Recovery</div>
-            <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Queue Maintenance</h2>
-            <div class="mt-5 grid gap-4">
-                {% for process in queue_processors %}
-                <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                        <div>
-                            <div class="text-base font-bold text-[var(--text)]">{{ process.name }}</div>
-                            <div class="mt-1 text-sm text-[var(--text-soft)]">{{ process.owner_app }} · {{ process.status_label }}</div>
-                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ process.recovery_summary }}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Last Consumed</div>
-                            <div id="queue-progress-value-{{ process.name | replace(' ', '-') }}" class="mt-1 mono text-lg font-bold text-[var(--text)]">{{ process.last_consumed_id | default(0) }}</div>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <button type="button" onclick="controlProcess('{{ process.name }}', 'restart')" class="btn-secondary px-4 py-2 text-sm">Restart</button>
-                        <button type="button" onclick="updateProcessProgress('{{ process.name }}', 0)" class="btn-secondary px-4 py-2 text-sm">Replay From Zero</button>
-                        <button type="button" onclick="jumpProcessProgressToLatest('{{ process.name }}')" class="btn-secondary px-4 py-2 text-sm">Jump To Latest</button>
-                        <button type="button" onclick="toggleQueueMaintenance('{{ process.name }}')" class="btn-ghost px-4 py-2 text-sm">Advanced Queue Controls</button>
-                        <button type="button" onclick="viewLogs('{{ process.name }}')" class="btn-ghost px-4 py-2 text-sm">Logs</button>
-                    </div>
-                    <div id="queue-maintenance-{{ process.name | replace(' ', '-') }}" class="mt-4 hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Advanced</div>
-                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use exact-id replay only when you know where this processor should resume. Replay from zero rebuilds all evidence. Jump to latest skips backlog.</div>
-                        <div class="mt-3 flex flex-wrap items-center gap-2">
-                            <input
-                                type="number"
-                                min="0"
-                                value="{{ process.last_consumed_id | default(0) }}"
-                                id="progress-input-{{ process.name | replace(' ', '-') }}"
-                                class="w-28 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-sm text-[var(--text)]"
-                            >
-                            <button
-                                type="button"
-                                onclick="submitProcessProgress('{{ process.name }}')"
-                                class="btn-primary px-4 py-2 text-sm">
-                                Replay From Exact ID
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No queue processors are registered right now.</div>
-                {% endfor %}
-            </div>
-        </article>
-
-        <article class="shell-card p-6">
-            <div class="section-kicker text-[10px] font-extrabold uppercase">Attention</div>
-            <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Operator Queue</h2>
-            <div class="mt-5 grid gap-4">
-                {% if stopped_enabled_processes %}
-                <a href="#processesTable" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
-                    <div class="text-sm font-bold text-[var(--text)]">Enabled Processes Not Running</div>
-                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ stopped_enabled_processes|length }} enabled process(es) need restart or investigation.</div>
-                </a>
-                {% endif %}
-                {% for item in dependency_health_data if item.status in ['Delayed', 'Broken'] %}
-                <a href="#dependency-health" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
-                    <div class="text-sm font-bold text-[var(--text)]">{{ item.name }}</div>
-                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.detail }}</div>
-                </a>
-                {% endfor %}
-                {% if not stopped_enabled_processes and not (dependency_health_data | selectattr('status', 'in', ['Delayed', 'Broken']) | list) %}
-                <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No immediate operator issues are surfaced right now.</div>
-                {% endif %}
-            </div>
-        </article>
-    </section>
-
-    <section class="mb-8" id="dependency-health">
+    <section class="shell-card p-6" id="dependency-health">
         <details class="disclosure" {% if dependency_health_data | selectattr('status', 'in', ['Delayed', 'Broken']) | list %}open{% endif %}>
             <summary class="disclosure-summary">
                 <div class="disclosure-summary-copy">
@@ -153,15 +79,105 @@
         </details>
     </section>
 
-    <details class="shell-card table-shell overflow-hidden disclosure">
-        <summary class="disclosure-summary">
-            <div class="disclosure-summary-copy">
-                <div class="disclosure-summary-title">Full Process Registry</div>
-                <div class="disclosure-summary-meta">Low-level runtime table for exact inspection and manual operator control.</div>
-            </div>
-            <span class="disclosure-summary-chevron">⌄</span>
-        </summary>
-        <div class="disclosure-body !p-0">
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <article class="shell-card p-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Recovery</div>
+            <details class="disclosure mt-4">
+                <summary class="disclosure-summary">
+                    <div class="disclosure-summary-copy">
+                        <div class="disclosure-summary-title">Queue Maintenance</div>
+                        <div class="disclosure-summary-meta">{{ queue_processors|length }} replayable processor(s). Use this when queues drift or matching logic changes.</div>
+                    </div>
+                    <span class="disclosure-summary-chevron">⌄</span>
+                </summary>
+                <div class="disclosure-body grid gap-4">
+                    {% for process in queue_processors %}
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <div class="text-base font-bold text-[var(--text)]">{{ process.name }}</div>
+                                <div class="mt-1 text-sm text-[var(--text-soft)]">{{ process.owner_app }} · {{ process.status_label }}</div>
+                                <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ process.recovery_summary }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Last Consumed</div>
+                                <div id="queue-progress-value-{{ process.name | replace(' ', '-') }}" class="mt-1 mono text-lg font-bold text-[var(--text)]">{{ process.last_consumed_id | default(0) }}</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <button type="button" onclick="controlProcess('{{ process.name }}', 'restart')" class="btn-secondary px-4 py-2 text-sm">Restart</button>
+                            <button type="button" onclick="updateProcessProgress('{{ process.name }}', 0)" class="btn-secondary px-4 py-2 text-sm">Replay From Zero</button>
+                            <button type="button" onclick="jumpProcessProgressToLatest('{{ process.name }}')" class="btn-secondary px-4 py-2 text-sm">Jump To Latest</button>
+                            <button type="button" onclick="toggleQueueMaintenance('{{ process.name }}')" class="btn-ghost px-4 py-2 text-sm">Advanced Queue Controls</button>
+                            <button type="button" onclick="viewLogs('{{ process.name }}')" class="btn-ghost px-4 py-2 text-sm">Logs</button>
+                        </div>
+                        <div id="queue-maintenance-{{ process.name | replace(' ', '-') }}" class="mt-4 hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Advanced</div>
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use exact-id replay only when you know where this processor should resume. Replay from zero rebuilds all evidence. Jump to latest skips backlog.</div>
+                            <div class="mt-3 flex flex-wrap items-center gap-2">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value="{{ process.last_consumed_id | default(0) }}"
+                                    id="progress-input-{{ process.name | replace(' ', '-') }}"
+                                    class="w-28 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-sm text-[var(--text)]"
+                                >
+                                <button
+                                    type="button"
+                                    onclick="submitProcessProgress('{{ process.name }}')"
+                                    class="btn-primary px-4 py-2 text-sm">
+                                    Replay From Exact ID
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No queue processors are registered right now.</div>
+                    {% endfor %}
+                </div>
+            </details>
+        </article>
+
+        <article class="shell-card p-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Attention</div>
+            <details class="disclosure mt-4" {% if stopped_enabled_processes or (dependency_health_data | selectattr('status', 'in', ['Delayed', 'Broken']) | list) %}open{% endif %}>
+                <summary class="disclosure-summary">
+                    <div class="disclosure-summary-copy">
+                        <div class="disclosure-summary-title">Operator Queue</div>
+                        <div class="disclosure-summary-meta">Restart issues and degraded dependencies that may need intervention.</div>
+                    </div>
+                    <span class="disclosure-summary-chevron">⌄</span>
+                </summary>
+                <div class="disclosure-body grid gap-4">
+                    {% if stopped_enabled_processes %}
+                    <a href="#processesTable" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="text-sm font-bold text-[var(--text)]">Enabled Processes Not Running</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ stopped_enabled_processes|length }} enabled process(es) need restart or investigation.</div>
+                    </a>
+                    {% endif %}
+                    {% for item in dependency_health_data if item.status in ['Delayed', 'Broken'] %}
+                    <a href="#dependency-health" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="text-sm font-bold text-[var(--text)]">{{ item.name }}</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.detail }}</div>
+                    </a>
+                    {% endfor %}
+                    {% if not stopped_enabled_processes and not (dependency_health_data | selectattr('status', 'in', ['Delayed', 'Broken']) | list) %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No immediate operator issues are surfaced right now.</div>
+                    {% endif %}
+                </div>
+            </details>
+        </article>
+    </section>
+    <section class="shell-card table-shell overflow-hidden p-6">
+        <details class="disclosure">
+            <summary class="disclosure-summary">
+                <div class="disclosure-summary-copy">
+                    <div class="disclosure-summary-title">Full Process Registry</div>
+                    <div class="disclosure-summary-meta">Low-level runtime table for exact inspection and manual operator control.</div>
+                </div>
+                <span class="disclosure-summary-chevron">⌄</span>
+            </summary>
+            <div class="disclosure-body !mt-4 !border-t !pt-0 !p-0">
         <div class="border-b border-[var(--border)] p-6">
             <input type="text" id="processSearchInput" onkeyup="filterProcesses()" placeholder="Search processes by name, app, or type...">
         </div>
@@ -306,8 +322,9 @@
         <div id="no-results-message" class="hidden border-t border-[var(--border)] px-6 py-12 text-center text-[var(--text-soft)]">
             No processes match your search query.
         </div>
-        </div>
-    </details>
+            </div>
+        </details>
+    </section>
 
 </div>
 

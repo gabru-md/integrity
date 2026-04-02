@@ -32,6 +32,7 @@ class SkillsApp(App[Skill]):
             widget_type="skill_tree",
             widget_recent_limit=5,
             _process_model_data_func=process_skill_data,
+            home_template="skills.html",
             user_guidance=build_app_user_guidance("Skills"),
         )
 
