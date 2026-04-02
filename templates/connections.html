@@ -66,22 +66,27 @@
                     data-notes="{{ connection.notes }}"
                     data-tags="{{ (connection.tags or []) | join(', ') }}"
                     data-active="{{ 'true' if connection.active else 'false' }}"
+                    data-expanded="false"
+                    onclick="selectConnectionFromCard(this)"
                 >
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <div class="text-lg font-bold text-slate-800 dark:text-gray-100">{{ connection.name }}</div>
                             <div class="mt-1 text-sm text-slate-500 dark:text-gray-400">{{ connection.relationship_type }} · cadence {{ connection.cadence_days }} days · {{ connection.priority }}</div>
                         </div>
-                        <div class="text-xs font-semibold {% if connection.active %}text-emerald-600 dark:text-emerald-400{% else %}text-slate-400 dark:text-gray-500{% endif %}">
-                            {{ 'Active' if connection.active else 'Paused' }}
+                        <div class="flex items-center gap-3">
+                            <div class="text-xs font-semibold {% if connection.active %}text-emerald-600 dark:text-emerald-400{% else %}text-slate-400 dark:text-gray-500{% endif %}">
+                                {{ 'Active' if connection.active else 'Paused' }}
+                            </div>
+                            <span class="text-base font-semibold leading-none text-slate-400 transition-transform duration-200 dark:text-gray-500 connection-card-chevron">▾</span>
                         </div>
                     </div>
-                    <div class="mt-3 flex flex-wrap gap-2">
+                    <div class="mt-3 hidden flex-wrap gap-2 connection-card-details">
                         {% for tag in connection.tags or [] %}
                         <span class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300">{{ tag }}</span>
                         {% endfor %}
                     </div>
-                    <div class="mt-4 flex flex-wrap gap-2">
+                    <div class="mt-4 hidden flex-wrap gap-2 connection-card-details">
                         <span class="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-gray-600 dark:text-gray-300">Last contact: {{ connection.last_contact_at.strftime("%Y-%m-%d %H:%M") if connection.last_contact_at else "Never" }}</span>
                     </div>
                 </button>
@@ -352,6 +357,17 @@
     function selectConnectionFromCard(card) {
         document.querySelectorAll('.connection-card').forEach(item => item.classList.remove('ring-2', 'ring-indigo-500'));
         card.classList.add('ring-2', 'ring-indigo-500');
+
+        const isExpanded = card.dataset.expanded === 'true';
+        card.dataset.expanded = isExpanded ? 'false' : 'true';
+        card.querySelectorAll('.connection-card-details').forEach((node) => {
+            node.classList.toggle('hidden', isExpanded);
+            node.classList.toggle('flex', !isExpanded);
+        });
+        const chevron = card.querySelector('.connection-card-chevron');
+        if (chevron) {
+            chevron.textContent = isExpanded ? '▾' : '▴';
+        }
 
         selectedConnectionId = card.dataset.id;
         selectedConnectionData = {

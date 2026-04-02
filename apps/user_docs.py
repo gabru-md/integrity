@@ -330,6 +330,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Set cadence days to the maximum gap you want between meaningful touchpoints.",
                 "Use priority to distinguish relationships that should affect integrity scoring more strongly in your own review process.",
                 "Log interactions directly inside the Connections page so the relationship record and its timeline stay together.",
+                "Use the card expanders when you want tags or last-contact detail without keeping every relationship fully open at once.",
             ],
             "setup_leverage": [
                 "Start with only the people you actually want Rasbhari to remind you about.",
