@@ -4,6 +4,15 @@ Rasbhari is a personal operating system built around an event bus.
 
 The apps are not meant to stand alone. They work together by sharing one language: events.
 
+In product terms, Rasbhari is meant to feel like one daily operating loop:
+
+- capture what happened
+- structure it into meaningful context
+- compare it against commitments
+- let repeated effort accumulate into growth
+- reflect on what changed
+- turn that back into the next useful action
+
 That means:
 
 - something happens
@@ -130,6 +139,18 @@ Rasbhari becomes useful when the same work can be seen from multiple angles:
 - Today can tell you what deserves attention next
 
 That is the point of the ecosystem.
+
+If the product starts to feel like a pile of apps, the right recovery question is:
+
+- where in the loop did the signal break?
+
+Usually the answer is one of these:
+
+- nothing meaningful is being captured yet
+- captured signals are not being structured into projects or relationships
+- commitments are not watching the same event vocabulary
+- growth is not tied to stable tags
+- reflection and Today do not yet have enough honest evidence to become useful
 
 ## Minimal Useful Setup
 

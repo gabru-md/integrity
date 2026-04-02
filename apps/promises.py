@@ -12,6 +12,24 @@ from gabru.flask.util import render_flask_template
 promise_service = PromiseService()
 event_service = EventService()
 
+
+def _should_filter_by_exact_event_type(promise: Promise) -> bool:
+    return bool(promise.target_event_type and not promise.target_event_type.startswith("project:"))
+
+
+def _event_matches_promise_filters(event, promise: Promise) -> bool:
+    if promise.target_event_type:
+        if promise.target_event_type.startswith("project:"):
+            if not PromiseProcessor._event_matches_project_target(event, promise.target_event_type):
+                return False
+        elif event.event_type != promise.target_event_type:
+            return False
+
+    if promise.target_event_tag and promise.target_event_tag not in (event.tags or []):
+        return False
+
+    return True
+
 def process_promise_data(data):
     # Initialize next_check_at if not provided
     if not data.get('next_check_at'):
@@ -79,14 +97,11 @@ class PromiseApp(App[Promise]):
                 "user_id": promise.user_id,
                 "timestamp": {"$gt": last_check, "$lt": end_time}
             }
-            if promise.target_event_type:
+            if _should_filter_by_exact_event_type(promise):
                 filters["event_type"] = promise.target_event_type
             
             events = ev_service.find_all(filters=filters)
-            if promise.target_event_tag:
-                count = sum(1 for e in events if promise.target_event_tag in e.tags)
-            else:
-                count = len(events)
+            count = sum(1 for e in events if _event_matches_promise_filters(e, promise))
             
             promise.current_count = count
             self.service.update(promise)
@@ -110,7 +125,7 @@ class PromiseApp(App[Promise]):
                 "user_id": promise.user_id,
                 "timestamp": {"$gt": start_time, "$lt": end_time}
             }
-            if promise.target_event_type:
+            if _should_filter_by_exact_event_type(promise):
                 filters["event_type"] = promise.target_event_type
             
             events = event_service.find_all(filters=filters)
@@ -118,7 +133,7 @@ class PromiseApp(App[Promise]):
             # Filter by tag if needed and format for chart
             history_data = []
             for e in events:
-                if not promise.target_event_tag or promise.target_event_tag in e.tags:
+                if _event_matches_promise_filters(e, promise):
                     # Convert to hours (e.g., 14.5 for 2:30 PM)
                     ts = e.timestamp
                     hour_val = ts.hour + (ts.minute / 60)

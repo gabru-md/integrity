@@ -17,6 +17,7 @@ TEST_GROUPS = {
         "tests.test_eventing",
         "tests.test_import_pipeline",
         "tests.test_notification_policy",
+        "tests.test_promise_processor",
         "tests.test_project_work_linking",
         "tests.test_recommendation_followups",
         "tests.test_session_inference_processor",
@@ -26,6 +27,7 @@ TEST_GROUPS = {
         "tests.test_cleanup_regressions",
         "tests.test_events_app",
         "tests.test_kanban_tickets_app",
+        "tests.test_promises_app",
     ],
 }
 TEST_GROUPS["all"] = TEST_GROUPS["unit"] + TEST_GROUPS["integration"]

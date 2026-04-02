@@ -13,6 +13,7 @@ from gabru.auth import PermissionManager, Role, admin_required, login_required
 
 from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
+from gabru.qprocessor.qservice import QueueService
 from gabru.flask.util import render_flask_template
 from apps.user_docs import build_rasbhari_admin_guide
 
@@ -366,6 +367,56 @@ class Server:
             with open(log_file, 'r') as f:
                 lines = f.readlines()
                 return jsonify({"logs": lines[-100:]})
+
+        @self.app.route('/process_progress/<process_name>', methods=['POST'])
+        @admin_required
+        def update_process_progress(process_name):
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({"error": "JSON request body is required"}), 400
+
+            last_consumed_id = data.get("last_consumed_id")
+            try:
+                last_consumed_id = int(last_consumed_id)
+            except (TypeError, ValueError):
+                return jsonify({"error": "last_consumed_id must be an integer"}), 400
+
+            if last_consumed_id < 0:
+                return jsonify({"error": "last_consumed_id cannot be negative"}), 400
+
+            process_instance = self.process_manager.all_processes_map.get(process_name) if self.process_manager else None
+            if process_instance is not None and not hasattr(process_instance, "q_stats"):
+                return jsonify({"error": f"Process {process_name} is not a queue processor"}), 400
+
+            if process_instance is None:
+                process_type = None
+                for app in self.registered_apps:
+                    for p_class, _args, kwargs in app.get_processes():
+                        name = kwargs.get('name', p_class.__name__)
+                        if name == process_name:
+                            process_type = p_class
+                            break
+                    if process_type is not None:
+                        break
+                if process_type is None:
+                    return jsonify({"error": f"Process {process_name} not found"}), 404
+                if not issubclass(process_type, QueueProcessor):
+                    return jsonify({"error": f"Process {process_name} is not a queue processor"}), 400
+
+            queue_service = QueueService()
+            updated_stats = queue_service.set_last_consumed_id(process_name, last_consumed_id)
+
+            if process_instance is not None:
+                if hasattr(process_instance, "reload_queue_state"):
+                    process_instance.reload_queue_state(last_consumed_id)
+                else:
+                    process_instance.q_stats.last_consumed_id = last_consumed_id
+
+            return jsonify({
+                "message": f"Updated {process_name} progress to {last_consumed_id} and reloaded runtime state",
+                "process_name": process_name,
+                "last_consumed_id": updated_stats.last_consumed_id,
+            }), 200
 
     def get_processes_data(self) -> list:
         processes_data = []

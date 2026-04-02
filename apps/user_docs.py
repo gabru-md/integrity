@@ -1,7 +1,11 @@
 def build_rasbhari_mental_model() -> dict:
     return {
         "headline": "Rasbhari is a personal operating system built around an event bus.",
-        "summary": "The apps are not meant to stand alone. Each one either captures signals, structures them, commits to them, grows from them, reflects on them, or helps you act on them.",
+        "summary": "Rasbhari is one event-driven loop, not a folder of disconnected tools. Each app either captures reality, structures it, commits to it, grows from it, reflects on it, or helps you act on it.",
+        "identity": {
+            "title": "What Rasbhari Is",
+            "body": "Rasbhari is a personal operating system for daily life. It records meaningful signals, organizes them into projects and relationships, compares them against commitments, and turns them back into guidance you can act on.",
+        },
         "stages": [
             {
                 "name": "Capture",
@@ -146,7 +150,7 @@ def build_rasbhari_tutorial() -> dict:
 
     return {
         "headline": "Rasbhari works best when you move through one shared loop, not isolated apps.",
-        "summary": "This guided walkthrough shows how each app participates in the same system so you can understand the ecosystem before trying to optimize it.",
+        "summary": "This walkthrough teaches the product story first: how one event-driven system turns capture, structure, commitments, growth, reflection, and action into one daily operating loop.",
         "steps": steps,
         "completion_copy": "You have seen the core loop. The next useful move is to create a little real structure and then return to Today.",
     }
@@ -223,7 +227,7 @@ def build_rasbhari_admin_guide() -> dict:
 
     return {
         "headline": "Admin Guide",
-        "summary": "This path is for operators, not end users. It explains how to keep Rasbhari healthy, understandable, and ready for onboarding.",
+        "summary": "This path is for operators, not end users. It explains how to keep Rasbhari healthy, understandable, and coherent as one event-driven product.",
         "sections": sections,
     }
 

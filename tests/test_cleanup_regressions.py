@@ -111,6 +111,44 @@ class FakeDashboardProvider:
         return []
 
 
+class FakeQueueStats:
+    def __init__(self, last_consumed_id=0):
+        self.last_consumed_id = last_consumed_id
+
+
+class FakeQueueProcessor:
+    def __init__(self, enabled=False, last_consumed_id=0):
+        self.enabled = enabled
+        self.q_stats = FakeQueueStats(last_consumed_id=last_consumed_id)
+        self.queue = [1, 2, 3]
+        self.reloaded_to = None
+
+    def reload_queue_state(self, last_consumed_id):
+        self.reloaded_to = last_consumed_id
+        self.q_stats.last_consumed_id = last_consumed_id
+        self.queue = []
+
+
+class FakeProcessManager:
+    def __init__(self):
+        self.all_processes_map = {"PromiseProcessor": FakeQueueProcessor(enabled=True, last_consumed_id=7)}
+
+    def get_process_status(self, name):
+        return False
+
+    def enable_process(self, name):
+        return True
+
+    def disable_process(self, name):
+        return True
+
+    def run_process(self, name):
+        return True
+
+    def pause_process(self, name):
+        return True
+
+
 class FakeSignupAuthProvider:
     def __init__(self):
         self.created_users = []
@@ -298,7 +336,8 @@ class TodayRouteTests(unittest.TestCase):
         dashboard_response = client.get("/dashboard")
 
         self.assertEqual(home_response.status_code, 200)
-        self.assertIn(b"Daily Control Surface", home_response.data)
+        self.assertIn(b"Your Daily Operating Loop", home_response.data)
+        self.assertIn(b"What Rasbhari Is", home_response.data)
         self.assertEqual(dashboard_response.status_code, 200)
         self.assertIn(b"Rasbhari Apps Dashboard", dashboard_response.data)
 
@@ -331,6 +370,63 @@ class TodayRouteTests(unittest.TestCase):
         self.assertEqual(admin_response.status_code, 200)
         self.assertIn(b"Admin Guide", admin_response.data)
         self.assertIn(b"Process Health", admin_response.data)
+
+
+class ProcessAdminRouteTests(unittest.TestCase):
+    def test_admin_can_update_queue_processor_progress(self):
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True))
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        server.process_manager = FakeProcessManager()
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = True
+
+        with mock.patch("gabru.flask.server.QueueService") as queue_service_cls:
+            queue_service = queue_service_cls.return_value
+            queue_service.set_last_consumed_id.return_value = mock.Mock(last_consumed_id=42)
+
+            response = client.post("/process_progress/PromiseProcessor", json={"last_consumed_id": 42})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["last_consumed_id"], 42)
+        queue_service.set_last_consumed_id.assert_called_once_with("PromiseProcessor", 42)
+        self.assertEqual(server.process_manager.all_processes_map["PromiseProcessor"].q_stats.last_consumed_id, 42)
+        self.assertEqual(server.process_manager.all_processes_map["PromiseProcessor"].reloaded_to, 42)
+        self.assertEqual(server.process_manager.all_processes_map["PromiseProcessor"].queue, [])
+
+    def test_process_progress_rejects_non_admin(self):
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=False))
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        server.process_manager = FakeProcessManager()
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+
+        response = client.post("/process_progress/PromiseProcessor", json={"last_consumed_id": 42})
+
+        self.assertEqual(response.status_code, 403)
 
 
 if __name__ == "__main__":

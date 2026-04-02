@@ -1,15 +1,15 @@
 {% extends "index.html" %}
 {% block title %}Registered Applications{% endblock %}
-{% block shell_title %}Application Registry{% endblock %}
-{% block shell_subtitle %}Enable, disable, and inspect every registered application and its runtime footprint from one operational view.{% endblock %}
+{% block shell_title %}App Registry{% endblock %}
+{% block shell_subtitle %}Inspect and operate the apps that make up Rasbhari's event-driven ecosystem.{% endblock %}
 
 {% block content %}
 <div class="space-y-6 px-1 py-2">
     <section class="hero-grid">
         <div class="shell-card hero-card px-6 py-6">
-            <div class="section-kicker text-[10px] font-extrabold uppercase">System Apps</div>
+            <div class="section-kicker text-[10px] font-extrabold uppercase">App Registry</div>
             <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Registered Applications</h1>
-            <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Review active modules, data models, background workers, and dashboard widget participation without leaving the shell.</p>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Review the apps that participate in Rasbhari's shared loop, along with their data models, background workers, and dashboard presence.</p>
             <div class="mt-5">
                 <a href="/admin/guide" class="btn-secondary px-4 py-3 text-sm">Open Admin Guide</a>
             </div>
@@ -17,7 +17,7 @@
         <div class="shell-card px-6 py-6">
             <div class="metric-label">Registry Count</div>
             <div class="metric-value mt-3">{{ apps_data|length }}</div>
-            <div class="metric-copy mt-3">Each application can be enabled independently and can expose its own model, routes, and runtime processes.</div>
+            <div class="metric-copy mt-3">Each app can be enabled independently, but the product works best when the active apps reinforce the same event-driven system.</div>
         </div>
     </section>
 

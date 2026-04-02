@@ -181,9 +181,31 @@
                         </td>
 
                         <td class="whitespace-nowrap">
-                            <div class="mono text-sm text-[var(--text-soft)]">
-                                {{ process.last_consumed_id | default('N/A') }}
+                            {% if process.type == 'QueueProcessor' %}
+                            <div class="space-y-2">
+                                <div id="progress-value-{{ process.name | replace(' ', '-') }}" class="mono text-sm text-[var(--text-soft)]">
+                                    {{ process.last_consumed_id | default(0) }}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value="{{ process.last_consumed_id | default(0) }}"
+                                        id="progress-input-{{ process.name | replace(' ', '-') }}"
+                                        class="w-24 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-sm text-[var(--text)]"
+                                    >
+                                    <button
+                                        type="button"
+                                        onclick="updateProcessProgress('{{ process.name }}')"
+                                        class="btn-secondary px-3 py-2 text-xs"
+                                        title="Set last consumed id for this queue processor">
+                                        Set
+                                    </button>
+                                </div>
                             </div>
+                            {% else %}
+                            <div class="mono text-sm text-[var(--text-soft)]">N/A</div>
+                            {% endif %}
                         </td>
 
                     </tr>
@@ -333,6 +355,50 @@
                 alert(`Failed to ${action} process ${processName}. Check console for details. Error: ${error.message}`);
             });
         }
+    }
+
+    function updateProcessProgress(processName) {
+        const safeName = processName.replace(/ /g, '-');
+        const input = document.getElementById(`progress-input-${safeName}`);
+        const valueNode = document.getElementById(`progress-value-${safeName}`);
+        if (!input) return;
+
+        const parsedValue = Number.parseInt(input.value, 10);
+        if (!Number.isInteger(parsedValue) || parsedValue < 0) {
+            alert('Last consumed id must be a non-negative integer.');
+            return;
+        }
+
+        if (!confirm(`Set last consumed id for ${processName} to ${parsedValue}?`)) {
+            return;
+        }
+
+        input.disabled = true;
+
+        fetch(`/process_progress/${encodeURIComponent(processName)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ last_consumed_id: parsedValue }),
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            input.disabled = false;
+            if (!ok) {
+                throw new Error(data.error || 'Failed to update process progress.');
+            }
+            if (valueNode) {
+                valueNode.textContent = `${data.last_consumed_id}`;
+            }
+            input.value = `${data.last_consumed_id}`;
+            alert(data.message || `Updated ${processName}.`);
+        })
+        .catch(error => {
+            input.disabled = false;
+            console.error('Error updating process progress:', error);
+            alert(error.message || `Failed to update ${processName}.`);
+        });
     }
 
     // New function to filter the table based on search input

@@ -8,8 +8,8 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Today</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Daily Control Surface</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">One focused view for active work, commitments, neglected relationships, and the few next moves that matter today.</p>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Your Daily Operating Loop</h1>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Today is where Rasbhari recomposes itself: active work, due commitments, neglected relationships, reflection, and the few next moves that matter right now.</p>
             </div>
             <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
                 <a href="/projects/home" class="btn-secondary px-4 py-3 text-sm">Projects</a>
@@ -46,8 +46,9 @@
     <section class="shell-card p-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div class="max-w-3xl">
-                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Mental Model</div>
+                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ rasbhari_mental_model.identity.title }}</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Capture, Structure, Commit, Grow, Reflect, Act</h2>
+                <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ rasbhari_mental_model.identity.body }}</p>
                 <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ rasbhari_mental_model.summary }}</p>
             </div>
             <a href="/docs/mental-model.md" class="btn-secondary px-4 py-3 text-sm">Read Full Model</a>

@@ -112,6 +112,13 @@ class QueueProcessor(Generic[T], Process):
         else:
             self.log.warning(f"Failed to persist queue progress at id {self.q_stats.last_consumed_id}")
 
+    def reload_queue_state(self, last_consumed_id: int):
+        self.q_stats.last_consumed_id = last_consumed_id
+        self.queue = []
+        self._items_since_persist = 0
+        self._persist_queue_stats()
+        self.log.info(f"Reloaded queue state to id {last_consumed_id}")
+
     def _mark_checkpoint_progress(self):
         self._items_since_persist += 1
 

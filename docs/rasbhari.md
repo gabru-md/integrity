@@ -1,6 +1,6 @@
 # Rasbhari
 
-Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts. It combines a Flask Today surface, an operational dashboard, contract-based framework primitives, PostgreSQL-backed runtime services, and background workers to track activities, projects, promises, notifications, devices, and skill progression.
+Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts. It is designed to feel like one daily operating loop, not a set of disconnected apps: capture what happened, structure it, compare it against commitments, accumulate growth, reflect on the result, and act on what matters next. The product combines a Flask Today surface, an operational dashboard, contract-based framework primitives, PostgreSQL-backed runtime services, and background workers to track activities, projects, promises, notifications, devices, and skill progression.
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.1%2B-green)](https://flask.palletsprojects.com/)
@@ -9,6 +9,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 
 ## What It Does
 
+- Explains itself in-product as one event-driven ecosystem instead of a menu of unrelated tools.
 - Gives the system one clear mental model: capture, structure, commit, grow, reflect, and act.
 - Stores everything important as events.
 - Uses queue processors to react to those events in the background.
@@ -78,6 +79,8 @@ The default home page is now `Today`, a focused daily control surface rather tha
 
 The goal of `Today` is to answer: what matters now, what is drifting, and what should move next.
 
+It is also the clearest product framing surface. If a user forgets what Rasbhari is, `Today` should remind them that the rest of the apps exist to feed the same loop rather than compete for attention separately.
+
 ## First-Run Tutorial
 
 Rasbhari now includes a first-run walkthrough for signed-in users. It is:
@@ -120,12 +123,15 @@ Widget pinning, collapsing, and ordering are persisted locally in the browser.
 Each app home page also includes an `Instructions` block for end users. These in-app explanations are intentionally separate from developer docs and now follow one helper pattern:
 
 - what the app is for
+- how it fits the shared Rasbhari loop
 - how it fits the Rasbhari ecosystem
 - what setup makes it more useful
 - what important terms mean
 - what key fields do
 
 The admin `Processes` page also includes dependency health cards for configured external services such as OpenWebUI, ntfy, and SendGrid so operator mistakes and external outages are easier to spot.
+
+For queue-backed workers, the `Processes` page also lets admins adjust `last_consumed_id` directly from the UI. This is meant for operational recovery cases like replaying events after a processor fix.
 
 The `Reports` app adds a local-first behavioral mirror. It currently computes:
 
