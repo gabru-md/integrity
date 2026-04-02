@@ -10,3 +10,7 @@ testing.py
 *.pt
 AGENTS.md
 .aider*
+GEMINI.md
+RULES.md
+.aierules
+.cursorrules
