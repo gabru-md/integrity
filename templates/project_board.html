@@ -171,6 +171,10 @@
                                 </div>
                             </div>
                             <div class="flex shrink-0 items-center gap-2">
+                                <button @click="startEditing(ticket)"
+                                        class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200">
+                                    Edit
+                                </button>
                                 <button v-if="ticket.state !== boardStates[boardStates.length - 1]" @click="moveTicket(ticket)"
                                         class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
                                     Next
@@ -200,6 +204,24 @@
                             </button>
                         </div>
                         <div v-if="isTicketExpanded(ticket.id)" class="mt-4 border-t border-slate-200 pt-4 dark:border-gray-700">
+                            <div v-if="editingTicketId === ticket.id" class="mb-4 rounded-2xl border border-slate-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/80">
+                                <div class="space-y-3">
+                                    <input v-model="editForm.title" type="text"
+                                           class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                                    <textarea v-model="editForm.description" rows="4"
+                                              class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></textarea>
+                                    <div class="flex justify-end gap-2">
+                                        <button @click="cancelEditing" type="button"
+                                                class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200">
+                                            Cancel
+                                        </button>
+                                        <button @click="saveTicketEdit(ticket)" type="button"
+                                                class="rounded-full bg-slate-600 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-700">
+                                            Save
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <div v-if="ticket.description" class="mb-3">
                                 <p class="whitespace-pre-wrap text-sm text-slate-600 dark:text-gray-300">{% raw %}{{ ticket.description }}{% endraw %}</p>
                             </div>
@@ -276,6 +298,8 @@
             const newTicket = ref({ title: "", description: "" });
             const expandedTickets = ref({});
             const collapsedColumns = ref({});
+            const editingTicketId = ref(null);
+            const editForm = ref({ title: "", description: "" });
             const sortTickets = (items) => [...items].sort((left, right) => new Date(right.updated_at || 0) - new Date(left.updated_at || 0));
 
             const loadTickets = async () => {
@@ -338,6 +362,42 @@
                 }
             };
 
+            const startEditing = (ticket) => {
+                editingTicketId.value = ticket.id;
+                editForm.value = {
+                    title: ticket.title || "",
+                    description: ticket.description || "",
+                };
+                expandedTickets.value = {
+                    ...expandedTickets.value,
+                    [ticket.id]: true,
+                };
+            };
+
+            const cancelEditing = () => {
+                editingTicketId.value = null;
+                editForm.value = { title: "", description: "" };
+            };
+
+            const saveTicketEdit = async (ticket) => {
+                errorMessage.value = "";
+                try {
+                    const res = await fetch(`/kanbantickets/${ticket.id}/board-edit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: editForm.value.title,
+                            description: editForm.value.description,
+                        })
+                    });
+                    if (!res.ok) throw new Error("Failed to update ticket");
+                    cancelEditing();
+                    await loadTickets();
+                } catch (error) {
+                    errorMessage.value = error.message || "Failed to update ticket";
+                }
+            };
+
             const ticketsByState = (state) => tickets.value.filter((ticket) => ticket.state === state);
             const formatDate = (value) => value ? new Date(value).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown';
             const isTicketExpanded = (ticketId) => Boolean(expandedTickets.value[ticketId]);
@@ -365,12 +425,17 @@
                 createTicket,
                 moveTicket,
                 archiveTicket,
+                startEditing,
+                cancelEditing,
+                saveTicketEdit,
                 ticketsByState,
                 formatDate,
                 isTicketExpanded,
                 isColumnCollapsed,
                 toggleColumn,
-                toggleTicketDetails
+                toggleTicketDetails,
+                editingTicketId,
+                editForm,
             };
         }
     }).mount('#project-board-app');

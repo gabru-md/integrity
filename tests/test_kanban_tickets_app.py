@@ -53,6 +53,25 @@ class KanbanTicketsAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         archive_mock.assert_called_once_with(4)
 
+    def test_board_edit_route_updates_title_and_description_only(self):
+        client = self._build_client()
+        ticket = mock.Mock()
+        ticket.id = 7
+        ticket.title = "Old title"
+        ticket.description = "Old description"
+        ticket.dict = lambda: {"id": 7, "project_id": 3, "title": "New title", "description": "New description", "state": "backlog"}
+        with mock.patch.object(PermissionManager, "is_authenticated", return_value=True), \
+             mock.patch.object(PermissionManager, "can_write", return_value=True), \
+             mock.patch.object(PermissionManager, "can_access_route", return_value=True), \
+             mock.patch.object(kanban_tickets_app.service, "get_by_id", return_value=ticket), \
+             mock.patch.object(kanban_tickets_app.service, "update", return_value=True) as update_mock:
+            response = client.post("/kanbantickets/7/board-edit", json={"title": "New title", "description": "New description"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ticket.title, "New title")
+        self.assertEqual(ticket.description, "New description")
+        update_mock.assert_called_once_with(ticket)
+
 
 if __name__ == "__main__":
     unittest.main()

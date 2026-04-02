@@ -69,3 +69,24 @@ def archive_ticket(ticket_id):
     if not ticket:
         return jsonify({"error": "Ticket not found"}), 404
     return jsonify(ticket.dict()), 200
+
+
+@kanban_tickets_app.blueprint.route("/<int:ticket_id>/board-edit", methods=["POST"])
+@write_access_required
+def board_edit_ticket(ticket_id):
+    ticket = kanban_tickets_app.service.get_by_id(ticket_id)
+    if not ticket:
+        return jsonify({"error": "Ticket not found"}), 404
+
+    data = request.get_json(silent=True) or {}
+    title = (data.get("title") or "").strip()
+    description = (data.get("description") or "").strip()
+    if not title:
+        return jsonify({"error": "Title is required"}), 400
+
+    ticket.title = title
+    ticket.description = description
+    ticket.updated_at = datetime.now()
+    if not kanban_tickets_app.service.update(ticket):
+        return jsonify({"error": "Failed to update ticket"}), 500
+    return jsonify(ticket.dict()), 200
