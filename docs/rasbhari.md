@@ -136,6 +136,15 @@ For Pi-hosted remote use, the admin overview now also acts as a quick remote hea
 - queue drift, so backlog and stalled processing are visible quickly
 - dependency issues, so external delivery or AI-related failures are obvious
 
+It also exposes the most important Rasbhari-level recovery actions directly from the admin surface:
+
+- restart stopped processors
+- replay queue processors from zero
+- jump queue processors to latest
+- re-enable disabled apps
+
+That means common product-level recovery should no longer require SSH most of the time.
+
 Operational boundary:
 
 - Inside Rasbhari: app activation, widget participation, process controls, queue recovery, dependency checks, approvals, and product-level health

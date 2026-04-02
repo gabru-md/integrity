@@ -127,13 +127,18 @@
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Replayable Processors</h2>
                 <div class="mt-5 grid gap-3">
                     {% for process in admin_data.admin_health.queue_drift.processors %}
-                    <a href="/processes" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
                         <div class="flex items-center justify-between gap-3">
                             <div class="text-sm font-bold text-[var(--text)]">{{ process.name }}</div>
                             <span class="ui-badge{% if process.status == 'Healthy' %} ui-badge-success{% elif process.status == 'Broken' %} ui-badge-danger{% else %} ui-badge-warning{% endif %}">{{ process.lag }}</span>
                         </div>
                         <div class="mt-2 text-sm text-[var(--text-soft)]">Owner: {{ process.owner_app }} · last consumed {{ process.last_consumed_id }}</div>
-                    </a>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <button type="button" onclick="jumpQueueToLatest('{{ process.name }}')" class="btn-secondary px-4 py-2 text-sm">Jump To Latest</button>
+                            <button type="button" onclick="replayQueueFromZero('{{ process.name }}')" class="btn-ghost px-4 py-2 text-sm">Replay From Zero</button>
+                            <a href="/processes" class="btn-ghost px-4 py-2 text-sm">Open Runtime</a>
+                        </div>
+                    </div>
                     {% else %}
                     <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No queue processors are registered yet.</div>
                     {% endfor %}
@@ -147,15 +152,38 @@
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Stuck Processors</h2>
                 <div class="mt-5 grid gap-3">
                     {% for process in admin_data.stuck_processors %}
-                    <a href="{{ process.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
                         <div class="flex items-center justify-between gap-3">
                             <div class="text-sm font-bold text-[var(--text)]">{{ process.name }}</div>
                             <span class="ui-badge ui-badge-danger">Stopped</span>
                         </div>
                         <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ process.owner_app }} · {{ process.summary }}</div>
-                    </a>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <button type="button" onclick="restartProcess('{{ process.name }}')" class="btn-primary px-4 py-2 text-sm">Restart</button>
+                            <a href="{{ process.href }}" class="btn-ghost px-4 py-2 text-sm">Open Runtime</a>
+                        </div>
+                    </div>
                     {% else %}
                     <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No enabled processors are currently stuck.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">App State</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Disabled Apps</h2>
+                <div class="mt-5 grid gap-3">
+                    {% for app in admin_data.inactive_apps %}
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                        <div class="text-sm font-bold text-[var(--text)]">{{ app.name }}</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ app.summary }}</div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <button type="button" onclick="toggleAppState('{{ app.name | lower }}', true)" class="btn-secondary px-4 py-2 text-sm">Enable App</button>
+                            <a href="/apps" class="btn-ghost px-4 py-2 text-sm">Open Registry</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No disabled apps need operator attention right now.</div>
                     {% endfor %}
                 </div>
             </article>
@@ -209,4 +237,53 @@
         </div>
     </section>
 </div>
+<script>
+    async function restartProcess(processName) {
+        if (!confirm(`Restart ${processName}?`)) return;
+        const response = await fetch(`/restart_process/${encodeURIComponent(processName)}`, { method: 'POST' });
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+        const payload = await response.json().catch(() => ({}));
+        alert(payload.error || `Failed to restart ${processName}.`);
+    }
+
+    async function replayQueueFromZero(processName) {
+        if (!confirm(`Replay ${processName} from zero? This will reprocess the full queue.`)) return;
+        const response = await fetch(`/process_progress/${encodeURIComponent(processName)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ last_consumed_id: 0 }),
+        });
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+        const payload = await response.json().catch(() => ({}));
+        alert(payload.error || `Failed to replay ${processName} from zero.`);
+    }
+
+    async function jumpQueueToLatest(processName) {
+        if (!confirm(`Jump ${processName} to the latest item? This skips backlog replay.`)) return;
+        const response = await fetch(`/process_progress/${encodeURIComponent(processName)}/latest`, { method: 'POST' });
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+        const payload = await response.json().catch(() => ({}));
+        alert(payload.error || `Failed to jump ${processName} to latest.`);
+    }
+
+    async function toggleAppState(appName, enabled) {
+        const action = enabled ? 'enable' : 'disable';
+        const response = await fetch(`/${action}_app/${encodeURIComponent(appName)}`, { method: 'POST' });
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+        const payload = await response.json().catch(() => ({}));
+        alert(payload.error || `Failed to ${action} ${appName}.`);
+    }
+</script>
 {% endblock %}

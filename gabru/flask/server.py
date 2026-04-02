@@ -776,6 +776,14 @@ class Server:
             "attention_items": operator_issues,
             "degraded_capabilities": degraded_capabilities,
             "stuck_processors": stuck_processors,
+            "inactive_apps": [
+                {
+                    "name": app.get("name"),
+                    "href": app.get("home_href"),
+                    "summary": app.get("purpose") or "Currently disabled.",
+                }
+                for app in inactive_apps[:5]
+            ],
             "pending_approvals": pending_approvals,
             "dependency_health": dependency_health_data[:4],
             "recent_queue_processors": queue_processors[:5],

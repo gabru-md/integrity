@@ -421,6 +421,8 @@ class TodayRouteTests(unittest.TestCase):
         self.assertIn(b"Pi Health Snapshot", admin_response.data)
         self.assertIn(b"Server Availability", admin_response.data)
         self.assertIn(b"Queue Drift", admin_response.data)
+        self.assertIn(b"Replayable Processors", admin_response.data)
+        self.assertIn(b"Disabled Apps", admin_response.data)
         self.assertIn(b"Degraded Capabilities", admin_response.data)
         self.assertIn(b"Stuck Processors", admin_response.data)
         self.assertIn(b"Pending Approvals", admin_response.data)
