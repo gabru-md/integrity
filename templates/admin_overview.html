@@ -83,49 +83,78 @@
 
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">System Health</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Degraded Capabilities</h2>
-                <div class="mt-5 grid gap-3">
-                    {% for item in admin_data.degraded_capabilities %}
-                    <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
-                        <div class="flex items-center justify-between gap-3">
-                            <div class="text-sm font-bold text-[var(--text)]">{{ item.title }}</div>
-                            <span class="ui-badge{% if item.severity == 'danger' %} ui-badge-danger{% elif item.severity == 'attention' %} ui-badge-warning{% endif %}">{{ item.severity | capitalize }}</span>
+                <details class="disclosure mt-4" {% if admin_data.degraded_capabilities %}open{% endif %}>
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Degraded Capabilities</div>
+                            <div class="disclosure-summary-meta">
+                                {% if admin_data.degraded_capabilities %}
+                                {{ admin_data.degraded_capabilities|length }} issue(s) currently affecting the product loop.
+                                {% else %}
+                                No degraded capabilities are surfaced right now.
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
-                    </a>
-                    {% else %}
-                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No degraded capabilities are surfaced right now.</div>
-                    {% endfor %}
-                </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body grid gap-3">
+                        {% for item in admin_data.degraded_capabilities %}
+                        <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="text-sm font-bold text-[var(--text)]">{{ item.title }}</div>
+                                <span class="ui-badge{% if item.severity == 'danger' %} ui-badge-danger{% elif item.severity == 'attention' %} ui-badge-warning{% endif %}">{{ item.severity | capitalize }}</span>
+                            </div>
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
+                        </a>
+                        {% else %}
+                        <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No degraded capabilities are surfaced right now.</div>
+                        {% endfor %}
+                    </div>
+                </details>
             </article>
 
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Control Plane</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Primary Operator Surfaces</h2>
-                <div class="mt-5 grid gap-4">
-                    {% for area in admin_data.focus_areas %}
-                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <div class="text-base font-bold text-[var(--text)]">{{ area["title"] }}</div>
-                                <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ area["summary"] }}</div>
+                <details class="disclosure mt-4">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Primary Operator Surfaces</div>
+                            <div class="disclosure-summary-meta">Reference view for what each admin surface owns. Useful, but lower priority than live issues.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body grid gap-4">
+                        {% for area in admin_data.focus_areas %}
+                        <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <div class="text-base font-bold text-[var(--text)]">{{ area["title"] }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ area["summary"] }}</div>
+                                </div>
+                                <a href="{{ area["href"] }}" class="btn-secondary px-4 py-2 text-sm">{{ area["action_label"] }}</a>
                             </div>
-                            <a href="{{ area["href"] }}" class="btn-secondary px-4 py-2 text-sm">{{ area["action_label"] }}</a>
+                            <div class="mt-4 grid gap-2">
+                                {% for item in area["items"] %}
+                                <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">{{ item }}</div>
+                                {% endfor %}
+                            </div>
                         </div>
-                        <div class="mt-4 grid gap-2">
-                            {% for item in area["items"] %}
-                            <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">{{ item }}</div>
-                            {% endfor %}
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
+                </details>
             </article>
 
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Queue Recovery</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Replayable Processors</h2>
-                <div class="mt-5 grid gap-3">
+                <details class="disclosure mt-4">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Replayable Processors</div>
+                            <div class="disclosure-summary-meta">Queue maintenance is available here, but usually only matters when drift or matching logic changed.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body grid gap-3">
                     {% for process in admin_data.admin_health.queue_drift.processors %}
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
                         <div class="flex items-center justify-between gap-3">
@@ -142,7 +171,8 @@
                     {% else %}
                     <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No queue processors are registered yet.</div>
                     {% endfor %}
-                </div>
+                    </div>
+                </details>
             </article>
         </div>
 
@@ -171,8 +201,21 @@
 
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">App State</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Disabled Apps</h2>
-                <div class="mt-5 grid gap-3">
+                <details class="disclosure mt-4">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Disabled Apps</div>
+                            <div class="disclosure-summary-meta">
+                                {% if admin_data.inactive_apps %}
+                                {{ admin_data.inactive_apps|length }} app(s) currently disabled.
+                                {% else %}
+                                No disabled apps need operator attention right now.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body grid gap-3">
                     {% for app in admin_data.inactive_apps %}
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
                         <div class="text-sm font-bold text-[var(--text)]">{{ app.name }}</div>
@@ -185,7 +228,8 @@
                     {% else %}
                     <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No disabled apps need operator attention right now.</div>
                     {% endfor %}
-                </div>
+                    </div>
+                </details>
             </article>
 
             <article class="shell-card p-6">
@@ -219,8 +263,15 @@
 
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Dependency Health</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Critical Services</h2>
-                <div class="mt-5 grid gap-3">
+                <details class="disclosure mt-4">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Critical Services</div>
+                            <div class="disclosure-summary-meta">External dependency visibility is useful, but usually secondary to product health and stuck workers.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body grid gap-3">
                     {% for item in admin_data.dependency_health %}
                     <a href="/processes" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
                         <div class="flex items-center justify-between gap-3">
@@ -232,7 +283,8 @@
                     {% else %}
                     <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No dependency health data is available.</div>
                     {% endfor %}
-                </div>
+                    </div>
+                </details>
             </article>
         </div>
     </section>

@@ -122,34 +122,46 @@
     </section>
 
     <section class="mb-8" id="dependency-health">
-        <div class="mb-3 flex items-center justify-between">
-            <h2 class="text-sm font-bold uppercase tracking-[0.2em] text-[var(--text-soft)]">Dependency Health</h2>
-            <div class="text-xs text-[var(--text-soft)]">Live checks against configured external services.</div>
-        </div>
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {% for item in dependency_health_data %}
-            <div class="shell-card p-5">
-                <div class="mb-3 flex items-center justify-between gap-3">
-                    <div class="text-sm font-semibold text-[var(--text)]">{{ item.name }}</div>
-                    {% if item.status == 'Healthy' %}
-                    <span class="ui-badge ui-badge-success">{{ item.status }}</span>
-                    {% elif item.status == 'Delayed' %}
-                    <span class="ui-badge ui-badge-warning">{{ item.status }}</span>
-                    {% elif item.status == 'Broken' %}
-                    <span class="ui-badge ui-badge-danger">{{ item.status }}</span>
-                    {% else %}
-                    <span class="ui-badge">{{ item.status }}</span>
-                    {% endif %}
+        <details class="disclosure" {% if dependency_health_data | selectattr('status', 'in', ['Delayed', 'Broken']) | list %}open{% endif %}>
+            <summary class="disclosure-summary">
+                <div class="disclosure-summary-copy">
+                    <div class="disclosure-summary-title">Dependency Health</div>
+                    <div class="disclosure-summary-meta">Live checks against configured external services. Expand when delivery or AI-adjacent features feel degraded.</div>
                 </div>
-                <div class="text-lg font-bold text-[var(--text)]">{{ item.summary }}</div>
-                <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ item.detail }}</div>
+                <span class="disclosure-summary-chevron">⌄</span>
+            </summary>
+            <div class="disclosure-body grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {% for item in dependency_health_data %}
+                <div class="shell-card p-5">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <div class="text-sm font-semibold text-[var(--text)]">{{ item.name }}</div>
+                        {% if item.status == 'Healthy' %}
+                        <span class="ui-badge ui-badge-success">{{ item.status }}</span>
+                        {% elif item.status == 'Delayed' %}
+                        <span class="ui-badge ui-badge-warning">{{ item.status }}</span>
+                        {% elif item.status == 'Broken' %}
+                        <span class="ui-badge ui-badge-danger">{{ item.status }}</span>
+                        {% else %}
+                        <span class="ui-badge">{{ item.status }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-lg font-bold text-[var(--text)]">{{ item.summary }}</div>
+                    <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ item.detail }}</div>
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
+        </details>
     </section>
 
-    <div class="shell-card table-shell overflow-hidden">
-
+    <details class="shell-card table-shell overflow-hidden disclosure">
+        <summary class="disclosure-summary">
+            <div class="disclosure-summary-copy">
+                <div class="disclosure-summary-title">Full Process Registry</div>
+                <div class="disclosure-summary-meta">Low-level runtime table for exact inspection and manual operator control.</div>
+            </div>
+            <span class="disclosure-summary-chevron">⌄</span>
+        </summary>
+        <div class="disclosure-body !p-0">
         <div class="border-b border-[var(--border)] p-6">
             <input type="text" id="processSearchInput" onkeyup="filterProcesses()" placeholder="Search processes by name, app, or type...">
         </div>
@@ -294,7 +306,8 @@
         <div id="no-results-message" class="hidden border-t border-[var(--border)] px-6 py-12 text-center text-[var(--text-soft)]">
             No processes match your search query.
         </div>
-    </div>
+        </div>
+    </details>
 
 </div>
 

@@ -175,6 +175,12 @@ For remote use over Tailscale, Rasbhari now also exposes a dedicated `/capture` 
 
 That keeps urgent remote logging on the normal event pipeline without requiring the full dashboard or shell access.
 
+Rasbhari now also applies more progressive disclosure on dense pages so the first screen stays calmer:
+
+- `Admin Overview` keeps live health visible, but collapses lower-signal reference and maintenance sections until needed
+- `Processes` keeps recovery actions prominent while collapsing dependency detail and the full low-level registry
+- `Promises` collapses the overview metrics so the actual promise cards stay primary
+
 Each app home page also includes an `Instructions` block for end users. These in-app explanations are intentionally separate from developer docs and now follow one helper pattern:
 
 - what the app is for
