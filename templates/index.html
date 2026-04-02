@@ -56,7 +56,7 @@
 
             <div class="min-h-0 overflow-y-auto px-2 py-4">
                 <div class="space-y-3">
-                    <details class="sidebar-group" {% if request.path == '/' or request.path == '/dashboard' or '/promises' in request.path or '/projects' in request.path or '/activities' in request.path or '/skills' in request.path or '/events' in request.path or '/thoughts' in request.path or '/connections' in request.path or '/reports' in request.path or '/blogs' in request.path or '/network_signatures' in request.path %}open{% endif %}>
+                    <details class="sidebar-group" {% if request.path == '/' or request.path == '/dashboard' or '/promises' in request.path or '/projects' in request.path or '/activities' in request.path or '/skills' in request.path or '/events' in request.path or '/thoughts' in request.path or '/connections' in request.path or '/reports' in request.path or '/blogs' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">
                             <span>Apps</span>
                             <span class="sidebar-group-chevron">⌄</span>
@@ -74,7 +74,6 @@
                             {% if PermissionManager.can_view_app('connections') and 'connections' in active_app_names %}<li><a href="/connections/home" class="nav-link {% if '/connections' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">∞</span><span>Connections</span></a></li>{% endif %}
                             {% if PermissionManager.can_view_app('reports') and 'reports' in active_app_names %}<li><a href="/reports/home" class="nav-link {% if '/reports' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▤</span><span>Reports</span></a></li>{% endif %}
                             {% if PermissionManager.can_view_app('blogs') and 'blogs' in active_app_names %}<li><a href="/blogs/home" class="nav-link {% if '/blogs' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Blogs</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('network_signatures') and 'network_signatures' in active_app_names %}<li><a href="/network_signatures/home" class="nav-link {% if '/network_signatures' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌁</span><span>Network Signatures</span></a></li>{% endif %}
                         </ul>
                     </details>
 

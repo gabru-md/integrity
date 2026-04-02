@@ -56,7 +56,6 @@ APP_NAMES = [
     "Connections",
     "Reports",
     "Users",
-    "NetworkSignatures",
 ]
 
 

@@ -63,7 +63,6 @@ Rasbhari currently uses these background processes:
 - `ReportProcessor`
 - `Atmos`
 - `Heimdall`
-- `NetworkSniffer`
 
 See [processes/README.md](processes/README.md) for details.
 

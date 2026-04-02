@@ -10,7 +10,7 @@ def build_rasbhari_mental_model() -> dict:
             {
                 "name": "Capture",
                 "description": "Events, activities, local signals, thoughts, and future imports turn real life into a shared record.",
-                "apps": ["Events", "Activities", "Thoughts", "NetworkSignatures", "Devices"],
+                "apps": ["Events", "Activities", "Thoughts", "Devices"],
             },
             {
                 "name": "Structure",
@@ -312,7 +312,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Add devices only when a process or automation actually needs a named endpoint.",
                 "Keep names and locations human-readable so system panels stay legible.",
             ],
-            "pairs_with": ["NetworkSignatures", "Processes", "Imports"],
+            "pairs_with": ["Processes", "Imports"],
             "glossary": [
                 {"term": "Location", "meaning": "The room or place where the device belongs, such as Kitchen or Desk."},
                 {"term": "Type", "meaning": "The category of device, such as Camera, Beacon, Light, or Sensor."},
@@ -538,32 +538,6 @@ def build_app_user_guidance(app_name: str) -> dict:
                 {"term": "Active", "meaning": "Whether the account is allowed to sign in."},
             ],
         },
-        "NetworkSignatures": {
-            "overview": "The Network Signatures app allows Rasbhari to monitor your local network for specific devices. When a device (like your phone) is detected, Rasbhari can automatically log an event in your timeline.",
-            "app_purpose": "Use Network Signatures as one passive capture source for presence and environment signals that can emit events without manual interaction.",
-            "how_to_use": [
-                "To start tracking, add a new signature with your device's MAC address.",
-                "You can find this in your phone's Wi-Fi settings.",
-                "Once saved, the Network Sniffer process will scan for your device every 30 seconds.",
-            ],
-            "setup_leverage": [
-                "Only track signatures that create meaningful downstream signals.",
-                "Make emitted event types and tags align with the rest of your event vocabulary.",
-            ],
-            "pairs_with": ["Events", "Today", "Reports", "Devices"],
-            "glossary": [
-                {"term": "Name",
-                 "meaning": "A friendly name for this signature (e.g., 'My iPhone')."},
-                {"term": "MAC Address",
-                 "meaning": "The unique hardware address of your device (e.g., 00:11:22:33:44:55)."},
-                {"term": "Event Type",
-                 "meaning": "The type of event to log when the device is detected (e.g., 'presence' or 'habit')."},
-                {"term": "Tags",
-                 "meaning": "Comma-separated tags to add to the generated event."},
-                {"term": "Is Active",
-                 "meaning": "Whether this signature should currently be monitored."}
-            ]
-        }
     }
     guidance = dict(docs.get(app_name, {}))
     mental_model = build_rasbhari_mental_model()
@@ -587,7 +561,6 @@ def build_app_user_guidance(app_name: str) -> dict:
             "Reports": "Reports reflect the whole system back to you and expose drift between visible intent and recorded behavior.",
             "Thoughts": "Thoughts capture fast human context before it turns into an event, project, or report input.",
             "Users": "Users define who owns a private workspace and who operates the system.",
-            "NetworkSignatures": "Network Signatures are one capture source for passive presence and environment signals.",
         }.get(app_name, "This app is one part of the shared Rasbhari loop."),
         "stages": stage_lookup.get(app_name, []),
     }

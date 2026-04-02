@@ -149,18 +149,6 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - protected routes also accept `X-API-Key` or `Authorization: ApiKey <key>` for non-session access
   - **Signup & Approval**: Users can self-signup at `/signup`. New accounts are disabled (`is_approved=False`) until an admin approves them in the Users panel. Accounts created directly by admins are auto-approved.
 
-### 12. Network-Signatures
-
-- File: `apps/network_signatures.py`
-- Model: `NetworkSignature`
-- Widget: `basic`
-- Processes:
-  - `NetworkSniffer`
-- Notes:
-  - monitors local network for specific device MAC addresses
-  - emits events when a device is detected after its cooldown period
-  - uses standard `crud.html` for management
-
 ## User-Facing Instructions
 
 `gabru.flask.app.App` now passes `user_guidance` into the app home template. The shared instructions panel can render:

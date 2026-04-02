@@ -20,7 +20,6 @@ def build_service_bootstrap():
     from services.devices import DeviceService
     from services.events import EventService
     from services.kanban_tickets import KanbanTicketService
-    from services.network_signatures import NetworkSignatureService
     from services.notifications import NotificationService
     from services.projects import ProjectService
     from services.promises import PromiseService
@@ -47,7 +46,6 @@ def build_service_bootstrap():
             ConnectionService(),
             ConnectionInteractionService(),
             KanbanTicketService(),
-            NetworkSignatureService(),
         ],
         "events": [EventService()],
         "queue": [QueueService()],

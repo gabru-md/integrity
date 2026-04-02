@@ -15,7 +15,6 @@ from apps.connections import connections_app
 from apps.reports import reports_app
 from apps.skills import skills_app
 from apps.users import users_app
-from apps.network_signatures import network_signatures_app
 from gabru.auth import login_required
 from gabru.flask.server import Server
 from gabru.flask.util import render_flask_template
@@ -70,7 +69,6 @@ class RasbhariServer(Server):
         self.register_app(connections_app)
         self.register_app(reports_app)
         self.register_app(users_app)
-        self.register_app(network_signatures_app)
 
 
     def run_server(self):
