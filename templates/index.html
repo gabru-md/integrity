@@ -34,9 +34,8 @@
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <div class="section-kicker text-[10px] font-extrabold uppercase">Integrity OS</div>
                         <div class="truncate text-2xl font-extrabold text-[var(--text)]">Rasbhari</div>
-                        <div class="mt-1 text-sm text-[var(--text-soft)]">Event-driven personal operating system for work, commitments, and reflection.</div>
+                        <div class="mt-1 text-sm text-[var(--text-soft)]">Daily operating loop</div>
                     </div>
                 </div>
             </div>
@@ -64,18 +63,18 @@
                         </ul>
                     </details>
 
-                    <details class="sidebar-group" {% if '/users/profile' in request.path %}open{% endif %}>
+                    <details class="sidebar-group" {% if '/users/profile' in request.path or request.path == '/docs' or '/docs/' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">
                             <span>Settings</span>
                             <span class="sidebar-group-chevron">⌄</span>
                         </summary>
                         <div class="space-y-2 pt-2">
                             <a href="/users/profile" class="nav-link {% if '/users/profile' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⚙</span><span>Profile</span></a>
-                            <a href="/docs" class="nav-link {% if request.path == '/docs' or '/docs/' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Docs</span></a>
+                            <a href="/docs" class="nav-link {% if request.path == '/docs' or '/docs/' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Help</span></a>
 
-                            <details class="sidebar-subgroup mt-2" open>
+                            <details class="sidebar-subgroup mt-2">
                                 <summary class="sidebar-subgroup-summary">
-                                    <span>Theme</span>
+                                    <span>Appearance</span>
                                     <span class="sidebar-group-chevron">⌄</span>
                                 </summary>
                                 <div class="mt-3 grid gap-4">
@@ -140,13 +139,12 @@
         </div>
 
         <div class="border-t border-[var(--border)] px-3 py-4 space-y-3">
+            {% if build_info.commit %}
             <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3">
                 <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Deployment</div>
-<!--                <div class="mt-1 text-sm font-semibold text-[var(&#45;&#45;text)]">{{ build_info.label }}</div>-->
-                {% if build_info.commit %}
                 <div class="mt-1 text-xs font-bold text-[var(--text-soft)]">{{ build_info.label }}</div>
-                {% endif %}
             </div>
+            {% endif %}
             {% if current_user %}
             <details id="user-menu" class="shell-card overflow-hidden">
                 <summary class="flex cursor-pointer items-center gap-3 px-3 py-3">
@@ -243,6 +241,7 @@
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Interactive Tutorial</div>
                 <h2 id="onboarding-title" class="mt-2 text-3xl font-extrabold text-[var(--text)]">Meet Rasbhari</h2>
                 <p id="onboarding-headline" class="mt-3 text-sm leading-6 text-[var(--text-soft)]"></p>
+                <div class="onboarding-peek-note">You can still see the page behind this guide. Use it as a live map while you step through Rasbhari.</div>
             </div>
             <button type="button" id="onboarding-dismiss" class="btn-ghost px-4 py-2 text-sm">Skip</button>
         </div>
@@ -268,6 +267,11 @@
                 <div class="metric-label">Do this here</div>
                 <div id="onboarding-step-checklist" class="mt-3 stack-list"></div>
             </div>
+        </div>
+
+        <div class="onboarding-page-peek">
+            <div class="metric-label">Page context</div>
+            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Keep the current screen in view while you read. This tutorial is meant to guide the product, not cover it up.</div>
         </div>
 
         <div class="onboarding-footer">

@@ -193,6 +193,8 @@ It walks through the ecosystem in product order:
 
 The tutorial is intentionally non-AI. It explains the product loop, why each surface exists, and what to look at on each page before the user starts trying to optimize the system.
 
+It is also designed to guide alongside the product instead of covering it up. The current page should remain visible enough that the tutorial feels like a live walkthrough, not a blocking modal.
+
 Users can restart it later from `Profile Settings`.
 
 The `Today` page also includes a guided setup checklist for new users. It marks progress automatically as the user creates the minimum useful structure:

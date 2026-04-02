@@ -19,6 +19,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Generates daily, weekly, and monthly behavioral mirror reports from current activity, thought, project, and skill signals.
 - Includes a consistent helper layer inside each app UI that explains what the app is for, how it connects to the rest of Rasbhari, and what setup makes it more useful.
 - Provides a `Today` front door that unifies active work, due promises, neglected connections, suggested activities, and daily guidance.
+- Keeps the shared shell intentionally lighter by prioritizing navigation over persistent explanatory chrome.
 - Includes a first-run interactive tutorial that walks users through Today, Events, Activities, Projects, Kanban, Promises, Skills, and Reports in product order.
 - Lets Today stage deterministic recommendation follow-ups such as creating a skill, promise, ticket, or project update through the same assistant confirmation flow.
 - Preserves a separate operational dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
@@ -89,7 +90,7 @@ Rasbhari now includes a first-run walkthrough for signed-in users. It is:
 - non-AI
 - lightweight and cross-app
 
-The tutorial explains how the ecosystem works instead of just explaining individual forms. Completion is stored per user and can be reset from `/users/profile`.
+The tutorial explains how the ecosystem works instead of just explaining individual forms. It now uses a lighter, less modal presentation so users can still see the current page while stepping through the guide. Completion is stored per user and can be reset from `/users/profile`.
 
 `Today` also includes a guided setup checklist so a new user can reach a minimum useful Rasbhari environment quickly. The checklist is state-aware and marks progress automatically as the user creates the first activity, project, promise, skill, ticket, and first ticket move.
 

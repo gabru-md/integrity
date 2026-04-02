@@ -792,26 +792,31 @@ input[readonly] {
     inset: 0;
     z-index: 70;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-end;
+    justify-content: flex-end;
     padding: 1.5rem;
+    pointer-events: none;
 }
 
 .onboarding-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(15, 23, 42, 0.62);
-    backdrop-filter: blur(8px);
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.12) 0%, rgba(15, 23, 42, 0.2) 100%);
 }
 
 .onboarding-panel {
     position: relative;
-    width: min(960px, 100%);
-    max-height: min(88vh, 920px);
+    width: min(880px, 100%);
+    max-height: min(84vh, 860px);
     overflow: auto;
     padding: 1.5rem;
     display: grid;
     gap: 1.25rem;
+    pointer-events: auto;
+    border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+    background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+    box-shadow: 0 32px 86px color-mix(in srgb, var(--shadow-color) 16%, transparent);
 }
 
 .onboarding-header,
@@ -825,6 +830,16 @@ input[readonly] {
 .onboarding-progress-wrap {
     display: grid;
     gap: 0.65rem;
+}
+
+.onboarding-peek-note {
+    margin-top: 0.85rem;
+    max-width: 38rem;
+    border-left: 3px solid color-mix(in srgb, var(--accent) 42%, transparent);
+    padding-left: 0.85rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--text-soft);
 }
 
 .onboarding-progress-bar {
@@ -851,12 +866,20 @@ input[readonly] {
 .onboarding-step-shell {
     border-radius: calc(var(--card-radius) - 8px);
     border: 1px solid var(--border);
-    background: color-mix(in srgb, var(--surface-muted) 74%, transparent);
+    background: color-mix(in srgb, var(--surface-muted) 82%, transparent);
     padding: 1.2rem;
 }
 
 .onboarding-why {
     margin-top: 1rem;
+}
+
+.onboarding-page-peek {
+    border-radius: calc(var(--card-radius) - 10px);
+    border: 1px dashed color-mix(in srgb, var(--accent) 20%, var(--border));
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--surface-muted) 82%, transparent) 0%, color-mix(in srgb, var(--surface) 70%, transparent) 100%);
+    padding: 1rem 1.15rem;
 }
 
 .onboarding-actions {
@@ -867,6 +890,12 @@ input[readonly] {
 }
 
 @media (max-width: 880px) {
+    .onboarding-overlay {
+        align-items: flex-end;
+        justify-content: stretch;
+        padding: 0.85rem;
+    }
+
     .onboarding-body {
         grid-template-columns: 1fr;
     }
