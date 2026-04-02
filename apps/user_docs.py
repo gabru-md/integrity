@@ -250,16 +250,18 @@ def build_rasbhari_admin_guide() -> dict:
 def build_app_user_guidance(app_name: str) -> dict:
     docs = {
         "Activities": {
-            "overview": "Activities are reusable actions you want to trigger from the dashboard. When you trigger one, Rasbhari turns it into an event so the rest of the system can react.",
-            "app_purpose": "Use Activities when you want repeated real-world actions to become consistent event-producing shortcuts instead of manual form work.",
+            "overview": "Activities are reusable actions you want to trigger from the dashboard. When you trigger one, Rasbhari turns it into an event so promises, skills, Today, and reports can react.",
+            "app_purpose": "Use Activities when you want repeated real-world actions to become consistent event-producing shortcuts instead of manual form work, and when you want those triggers to stay visibly connected to the rest of the ecosystem.",
             "how_to_use": [
                 "Create an activity once, then trigger it whenever that action happens in real life.",
                 "Use a stable event type so processors and dashboards can recognize the action consistently.",
                 "Add tags when you want skills, promises, or filters to pick up the event later.",
+                "Use the activity catalog to verify which promises or skills the emitted event will actually satisfy.",
             ],
             "setup_leverage": [
                 "Create activities for the 3 to 5 actions you repeat most often.",
                 "Choose stable event types and tags so the rest of Rasbhari can react consistently.",
+                "Prefer tags that already exist in promises or skills so each trigger visibly contributes elsewhere.",
             ],
             "pairs_with": ["Events", "Skills", "Promises", "Today"],
             "glossary": [
