@@ -3,6 +3,17 @@
 <div class="app-instructions-drawer">
     <input id="{{ instructions_id }}" type="checkbox" class="peer sr-only" aria-hidden="true">
 
+    {% if instructions_inline %}
+    <div>
+        <label
+            for="{{ instructions_id }}"
+            class="btn-secondary inline-flex cursor-pointer rounded-full px-4 py-3 text-sm"
+        >
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent-soft)] text-xs font-bold text-[var(--accent)]">i</span>
+            <span>Instructions</span>
+        </label>
+    </div>
+    {% else %}
     <div class="pointer-events-none fixed bottom-24 right-6 z-40">
         <label
             for="{{ instructions_id }}"
@@ -12,6 +23,7 @@
             <span>Instructions</span>
         </label>
     </div>
+    {% endif %}
 
     <label
         for="{{ instructions_id }}"
