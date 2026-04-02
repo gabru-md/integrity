@@ -5,6 +5,7 @@ import os
 from typing import Optional
 
 from gabru.contracts import (
+    AdminOpsProvider,
     AppStatusStore,
     AssistantCommandProvider,
     AuthProvider,
@@ -23,6 +24,7 @@ from services.skill_level_history import SkillLevelHistoryService
 from services.skills import SkillService
 from services.timeline import TimelineService
 from services.activities import ActivityService
+from services.admin_updates import AdminUpdateService
 from services.connections import ConnectionService
 from services.kanban_tickets import KanbanTicketService
 from services.projects import ProjectService
@@ -102,6 +104,17 @@ class RasbhariAppStatusStore(AppStatusStore):
 
     def set_app_state(self, app_name: str, is_active: bool) -> bool:
         return self.application_service.set_active_status(app_name, is_active)
+
+
+class RasbhariAdminOpsProvider(AdminOpsProvider):
+    def __init__(self, admin_update_service: Optional[AdminUpdateService] = None):
+        self.admin_update_service = admin_update_service or AdminUpdateService()
+
+    def get_update_status(self) -> dict[str, object]:
+        return self.admin_update_service.get_update_status()
+
+    def trigger_update(self, actor_username: Optional[str] = None) -> dict[str, object]:
+        return self.admin_update_service.trigger_update(actor_username=actor_username)
 
 
 class RasbhariDashboardDataProvider(DashboardDataProvider):

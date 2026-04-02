@@ -125,6 +125,26 @@ Notes:
 - `RASBHARI_BACKUP_RETENTION_DAYS` controls how long timestamped backup directories are retained before pruning
 - See [backup-restore.md](backup-restore.md) for the full workflow
 
+## Admin Updates
+
+- `RASBHARI_UPDATE_REPO_DIR`
+- `RASBHARI_UPDATE_SCRIPT`
+- `RASBHARI_UPDATE_REMOTE`
+- `RASBHARI_UPDATE_BRANCH`
+- `RASBHARI_UPDATE_SERVICE_NAME`
+- `RASBHARI_UPDATE_HEALTHCHECK_URL`
+- `RASBHARI_UPDATE_VALIDATION_CMD`
+- `RASBHARI_UPDATE_HEALTHCHECK_ATTEMPTS`
+- `RASBHARI_UPDATE_HEALTHCHECK_DELAY_SECONDS`
+
+Notes:
+
+- The admin control plane uses these values to compare the current local commit with the latest remote commit and to trigger a deterministic host-side update flow.
+- `RASBHARI_UPDATE_SCRIPT` should point at `scripts/update_rasbhari_host.sh` inside the deployed repo unless you intentionally wrap it with your own host script.
+- The update script refuses to run when the repo working tree is dirty.
+- The script fetches the target branch, validates the checkout, restarts the configured service, and rolls back to the previous commit if the health check fails.
+- `RASBHARI_UPDATE_VALIDATION_CMD` runs inside the repo directory before restart; keep it lightweight and deterministic for Raspberry Pi use.
+
 ## Courier / Notifications
 
 - `NTFY_BASE_URL`
@@ -176,6 +196,15 @@ THOUGHTS_POSTGRES_PORT=5432
 LOG_DIR=/tmp/rasbhari/logs
 RASBHARI_BACKUP_DIR=/var/backups/rasbhari
 RASBHARI_BACKUP_RETENTION_DAYS=14
+RASBHARI_UPDATE_REPO_DIR=~/Desktop/apps/integrity
+RASBHARI_UPDATE_SCRIPT=~/Desktop/apps/integrity/scripts/update_rasbhari_host.sh
+RASBHARI_UPDATE_REMOTE=origin
+RASBHARI_UPDATE_BRANCH=main
+RASBHARI_UPDATE_SERVICE_NAME=rasbhari
+RASBHARI_UPDATE_HEALTHCHECK_URL=http://127.0.0.1:5000/login
+RASBHARI_UPDATE_VALIDATION_CMD=python3 -m py_compile server.py
+RASBHARI_UPDATE_HEALTHCHECK_ATTEMPTS=12
+RASBHARI_UPDATE_HEALTHCHECK_DELAY_SECONDS=5
 SERVER_FILES_FOLDER=/tmp/rasbhari/files
 SERVER_PORT=5000
 SERVER_DEBUG=False

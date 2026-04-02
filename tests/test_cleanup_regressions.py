@@ -144,6 +144,34 @@ class FakeDashboardProvider:
         return []
 
 
+class FakeAdminOpsProvider:
+    def get_update_status(self):
+        return {
+            "configured": True,
+            "configuration_error": None,
+            "repo_dir": "~/Desktop/apps/integrity",
+            "service_name": "rasbhari",
+            "script_path": "~/Desktop/apps/integrity/scripts/update_rasbhari_host.sh",
+            "branch_name": "main",
+            "remote_name": "origin",
+            "healthcheck_url": "http://127.0.0.1:5000/login",
+            "current_commit": "abc123def456",
+            "latest_remote_commit": "fed456abc123",
+            "update_available": True,
+            "dirty_worktree": False,
+            "state": "idle",
+            "message": "Update is available.",
+            "started_at": None,
+            "finished_at": None,
+            "actor_username": None,
+            "output_lines": ["Current commit: abc123def456", "Target commit: fed456abc123"],
+            "last_result": "success",
+        }
+
+    def trigger_update(self, actor_username=None):
+        return {"started": True, "status": self.get_update_status()}
+
+
 class FakeQueueStats:
     def __init__(self, last_consumed_id=0):
         self.last_consumed_id = last_consumed_id
@@ -358,6 +386,7 @@ class TodayRouteTests(unittest.TestCase):
             auth_provider=fake_auth_provider,
             app_status_store=FakeAppStatusStore(),
             dashboard_provider=FakeDashboardProvider(),
+            admin_ops_provider=FakeAdminOpsProvider(),
         )
         client = server.app.test_client()
 
@@ -385,6 +414,7 @@ class TodayRouteTests(unittest.TestCase):
             auth_provider=fake_auth_provider,
             app_status_store=FakeAppStatusStore(),
             dashboard_provider=FakeDashboardProvider(),
+            admin_ops_provider=FakeAdminOpsProvider(),
         )
         client = server.app.test_client()
 
@@ -411,6 +441,7 @@ class TodayRouteTests(unittest.TestCase):
             auth_provider=fake_auth_provider,
             app_status_store=FakeAppStatusStore(),
             dashboard_provider=FakeDashboardProvider(),
+            admin_ops_provider=FakeAdminOpsProvider(),
         )
         client = server.app.test_client()
 
@@ -436,6 +467,7 @@ class TodayRouteTests(unittest.TestCase):
             auth_provider=fake_auth_provider,
             app_status_store=FakeAppStatusStore(),
             dashboard_provider=FakeDashboardProvider(),
+            admin_ops_provider=FakeAdminOpsProvider(),
         )
         client = server.app.test_client()
 
@@ -466,6 +498,7 @@ class TodayRouteTests(unittest.TestCase):
             auth_provider=fake_auth_provider,
             app_status_store=FakeAppStatusStore(),
             dashboard_provider=FakeDashboardProvider(),
+            admin_ops_provider=FakeAdminOpsProvider(),
         )
         client = server.app.test_client()
 
@@ -493,6 +526,41 @@ class TodayRouteTests(unittest.TestCase):
         self.assertIn(b"Degraded Capabilities", admin_response.data)
         self.assertIn(b"Stuck Processors", admin_response.data)
         self.assertIn(b"Pending Approvals", admin_response.data)
+        self.assertIn(b"Code Update", admin_response.data)
+        self.assertIn(b"Update To Latest", admin_response.data)
+
+    def test_admin_update_routes_require_admin_and_return_status(self):
+        fake_auth_provider = FakeAuthProvider()
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+            admin_ops_provider=FakeAdminOpsProvider(),
+        )
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+
+        self.assertEqual(client.get("/admin/update/status").status_code, 403)
+        self.assertEqual(client.post("/admin/update").status_code, 403)
+
+        with client.session_transaction() as session:
+            session["is_admin"] = True
+
+        status_response = client.get("/admin/update/status")
+        trigger_response = client.post("/admin/update")
+
+        self.assertEqual(status_response.status_code, 200)
+        self.assertEqual(status_response.get_json()["current_commit"], "abc123def456")
+        self.assertEqual(trigger_response.status_code, 202)
+        self.assertTrue(trigger_response.get_json()["started"])
 
     def test_app_registry_renders_operator_framing_and_app_metadata(self):
         fake_auth_provider = FakeAuthProvider()

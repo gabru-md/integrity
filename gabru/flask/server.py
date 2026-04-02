@@ -8,6 +8,7 @@ from typing import Optional
 from flask import Flask, redirect, send_from_directory, jsonify, request
 from gabru.log import Logger
 from gabru.contracts import AppStatusStore, AssistantCommandProvider, AuthProvider, DashboardDataProvider
+from gabru.contracts import AdminOpsProvider
 from gabru.flask.app import App
 from gabru.auth import PermissionManager, Role, admin_required, login_required
 
@@ -34,6 +35,7 @@ class Server:
         app_status_store: Optional[AppStatusStore] = None,
         dashboard_provider: Optional[DashboardDataProvider] = None,
         assistant_provider: Optional[AssistantCommandProvider] = None,
+        admin_ops_provider: Optional[AdminOpsProvider] = None,
     ):
         self.name = name
         self.app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
@@ -47,6 +49,7 @@ class Server:
         self.app_status_store = app_status_store
         self.dashboard_provider = dashboard_provider
         self.assistant_provider = assistant_provider
+        self.admin_ops_provider = admin_ops_provider
         if self.auth_provider:
             PermissionManager.configure(self.auth_provider)
         self.process_manager = None
@@ -246,6 +249,29 @@ class Server:
         @admin_required
         def admin_overview():
             return render_flask_template('admin_overview.html', admin_data=self.get_admin_control_plane_data())
+
+        @self.app.route('/admin/update/status')
+        @admin_required
+        def admin_update_status():
+            if not self.admin_ops_provider:
+                return jsonify({"error": "Admin update provider is not configured"}), 500
+            return jsonify(self.admin_ops_provider.get_update_status()), 200
+
+        @self.app.route('/admin/update', methods=['POST'])
+        @admin_required
+        def admin_trigger_update():
+            if not self.admin_ops_provider:
+                return jsonify({"error": "Admin update provider is not configured"}), 500
+
+            actor_username = None
+            current_user = PermissionManager.get_current_user()
+            if isinstance(current_user, dict):
+                actor_username = current_user.get("username")
+
+            result = self.admin_ops_provider.trigger_update(actor_username=actor_username)
+            if result.get("started"):
+                return jsonify(result), 202
+            return jsonify(result), 400
 
         @self.app.route('/devices')
         @admin_required
@@ -799,6 +825,11 @@ class Server:
             "dependency_health": dependency_health_data[:4],
             "recent_queue_processors": queue_processors[:5],
             "admin_health": admin_health,
+            "update_status": self.admin_ops_provider.get_update_status() if self.admin_ops_provider else {
+                "configured": False,
+                "configuration_error": "Admin update provider is not configured.",
+                "state": "idle",
+            },
         }
 
     def get_universal_timeline_data(self, limit: int = 20) -> list[dict]:

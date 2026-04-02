@@ -28,6 +28,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Uses a typed notification model so outbound alerts are classed as `urgent`, `today`, `review`, `suggestion`, `digest`, or `system` instead of a single generic stream.
 - Includes a shared import foundation so future calendar, device, and external adapters normalize records once, dedupe them, and emit compatible events into the same event bus.
 - Includes a native `Rasbhari AI` command layer that can interpret natural-language commands, route them through app-specific resolvers, and execute safe actions through the existing apps and event bus.
+- Includes a safe admin-triggered update flow that compares the deployed repo commit with the latest remote commit and runs a script-backed upgrade with rollback on failed health checks.
 - Runs comfortably on a Raspberry Pi while staying inspectable and hackable.
 
 ## Current Apps
@@ -46,7 +47,6 @@ Rasbhari currently registers these apps in [server.py](server.py):
 - `Connections`
 - `Reports`
 - `Users`
-- `Network-Signatures`
 
 The `Projects` app now includes a per-project board view backed by the `KanbanTickets` app.
 Projects can also issue stable per-project ticket references through a configurable `ticket_prefix`, so tickets become identifiers like `RSB-14` or `QDS-123`.
@@ -126,6 +126,7 @@ This is the operator front door for the Rasbhari ecosystem. It is meant to unify
 - user stewardship and pending approvals
 - dependency health and degraded capabilities
 - stuck processors and operator-facing issues
+- deployment update visibility and safe upgrade orchestration
 
 The goal is to let admins oversee most Rasbhari-level operational work from inside Rasbhari itself instead of treating the web UI as read-only and the shell as the real control plane.
 
@@ -135,6 +136,7 @@ The admin overview is intentionally high-signal. It should quickly surface:
 - enabled processors that are stopped and need recovery
 - pending approvals that block onboarding
 - operator-facing issues before they disappear into lower-level pages
+- whether the deployed Raspberry Pi repo is behind the latest remote commit
 
 For Pi-hosted remote use, the admin overview now also acts as a quick remote health snapshot:
 
@@ -148,6 +150,7 @@ It also exposes the most important Rasbhari-level recovery actions directly from
 - restart stopped processors
 - replay queue processors from zero
 - jump queue processors to latest
+- trigger a deterministic script-backed code update with rollback on failed health checks
 - re-enable disabled apps
 
 That means common product-level recovery should no longer require SSH most of the time.

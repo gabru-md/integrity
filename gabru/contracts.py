@@ -108,6 +108,15 @@ class AssistantCommandProvider(Protocol):
         ...
 
 
+@runtime_checkable
+class AdminOpsProvider(Protocol):
+    def get_update_status(self) -> dict[str, Any]:
+        ...
+
+    def trigger_update(self, actor_username: Optional[str] = None) -> dict[str, Any]:
+        ...
+
+
 @dataclass
 class TimelineEventView:
     event_type: str

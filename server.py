@@ -19,6 +19,7 @@ from gabru.auth import login_required
 from gabru.flask.server import Server
 from gabru.flask.util import render_flask_template
 from runtime.providers import (
+    RasbhariAdminOpsProvider,
     RasbhariAppStatusStore,
     RasbhariAssistantCommandProvider,
     RasbhariAuthProvider,
@@ -39,6 +40,7 @@ class RasbhariServer(Server):
             app_status_store=RasbhariAppStatusStore(),
             dashboard_provider=RasbhariDashboardDataProvider(),
             assistant_provider=RasbhariAssistantCommandProvider(),
+            admin_ops_provider=RasbhariAdminOpsProvider(),
         )
         self.setup_datetime_filter()
         self.setup_apps()
