@@ -255,6 +255,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             report_summary=report_summary,
             recent_events_today=recent_events_today,
         )
+        setup_checklist = self._build_setup_checklist()
 
         return {
             "active_work": active_work[:6],
@@ -263,6 +264,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             "neglected_connections": neglected_connections[:5],
             "suggested_activities": suggested_activities[:4],
             "guidance": guidance,
+            "setup_checklist": setup_checklist,
             "recommended_follow_ups": self.recommendation_followup_service.get_follow_ups(
                 user_id=active_projects[0].user_id if active_projects else 0
             ) if active_projects else [],
@@ -345,6 +347,67 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
     @staticmethod
     def _priority_rank(priority: str) -> int:
         return {"High": 3, "Medium": 2, "Low": 1}.get(priority, 0)
+
+    def _build_setup_checklist(self) -> dict[str, object]:
+        activity_count = self.activity_service.count()
+        project_count = self.project_service.count()
+        promise_count = self.promise_service.count()
+        skill_count = self.skill_service.count()
+        ticket_count = self.kanban_ticket_service.count()
+        ticket_items = self.kanban_ticket_service.find_all(sort_by={"id": "DESC"}) if ticket_count else []
+        moved_ticket_count = sum(
+            1
+            for ticket in ticket_items
+            if (ticket.state.value if hasattr(ticket.state, "value") else ticket.state) != "backlog"
+        )
+
+        items = [
+            {
+                "title": "Create one activity",
+                "description": "Activities make repeated actions easy to capture as clean events.",
+                "href": "/activities/home",
+                "completed": activity_count > 0,
+            },
+            {
+                "title": "Create one project",
+                "description": "Projects give larger work a home so Today, reports, and kanban have context.",
+                "href": "/projects/home",
+                "completed": project_count > 0,
+            },
+            {
+                "title": "Create one promise",
+                "description": "Promises turn intent into something Rasbhari can verify against event evidence.",
+                "href": "/promises/home",
+                "completed": promise_count > 0,
+            },
+            {
+                "title": "Create one skill",
+                "description": "Skills let repeated tagged work turn into visible growth instead of staying implicit.",
+                "href": "/skills/home",
+                "completed": skill_count > 0,
+            },
+            {
+                "title": "Create one ticket",
+                "description": "A ticket makes project execution concrete enough for Today and reports to reflect.",
+                "href": "/kanbantickets/home",
+                "completed": ticket_count > 0,
+            },
+            {
+                "title": "Move one ticket forward",
+                "description": "Move a ticket out of backlog once so Rasbhari sees a real execution signal.",
+                "href": "/kanbantickets/home",
+                "completed": moved_ticket_count > 0,
+            },
+        ]
+        completed_count = sum(1 for item in items if item["completed"])
+        return {
+            "title": "Minimal Useful Setup",
+            "summary": "Get one small loop working first: capture, structure, commit, grow, then move one ticket so Today has something real to reason about.",
+            "items": items,
+            "completed_count": completed_count,
+            "total_count": len(items),
+            "is_complete": completed_count == len(items),
+        }
 
     def _build_today_guidance(
         self,

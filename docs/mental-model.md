@@ -173,3 +173,23 @@ It walks through the ecosystem in product order:
 The tutorial is intentionally non-AI. It explains the product loop, why each surface exists, and what to look at on each page before the user starts trying to optimize the system.
 
 Users can restart it later from `Profile Settings`.
+
+The `Today` page also includes a guided setup checklist for new users. It marks progress automatically as the user creates the minimum useful structure:
+
+- one activity
+- one project
+- one promise
+- one skill
+- one ticket
+- one ticket move out of backlog
+
+## App-Level Helpers
+
+Every app also includes a shared helper layer in its `Instructions` drawer. The goal is not only to explain local fields, but to explain:
+
+- what the app is for
+- how it connects to the rest of Rasbhari
+- what setup makes it more useful
+- which other apps it works especially well with
+
+This keeps the ecosystem legible even after the first-run tutorial is finished.

@@ -134,12 +134,13 @@
                     </section>
 
                     {% if current_user and current_user.is_admin %}
-                    <details class="sidebar-group" {% if request.path == '/apps' or request.path == '/processes' or request.path == '/heimdall' or '/devices' in request.path %}open{% endif %}>
+                    <details class="sidebar-group" {% if request.path == '/apps' or request.path == '/processes' or request.path == '/heimdall' or request.path == '/admin/guide' or '/devices' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">
                             <span>Admin</span>
                             <span class="sidebar-group-chevron">⌄</span>
                         </summary>
                         <ul class="space-y-1.5 pt-2">
+                            <li><a href="/admin/guide" class="nav-link {% if request.path == '/admin/guide' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Admin Guide</span></a></li>
                             <li><a href="/apps" class="nav-link {% if request.path == '/apps' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌘</span><span>System Apps</span></a></li>
                             <li><a href="/processes" class="nav-link {% if request.path == '/processes' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◫</span><span>Processes</span></a></li>
                             {% if PermissionManager.can_view_app('devices') and 'devices' in active_app_names %}<li><a href="/devices/home" class="nav-link {% if '/devices' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⬡</span><span>Devices</span></a></li>{% endif %}

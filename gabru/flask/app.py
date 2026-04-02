@@ -217,7 +217,11 @@ class App(Generic[T]):
 
         return {
             "overview": guidance.get("overview", ""),
+            "app_purpose": guidance.get("app_purpose", ""),
             "how_to_use": guidance.get("how_to_use", []),
+            "setup_leverage": guidance.get("setup_leverage", []),
+            "pairs_with": guidance.get("pairs_with", []),
+            "ecosystem_fit": guidance.get("ecosystem_fit"),
             "glossary": guidance.get("glossary", []),
             "examples": guidance.get("examples", []),
             "fields": guidance.get("fields", described_fields),

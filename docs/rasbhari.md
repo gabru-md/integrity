@@ -16,7 +16,7 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Adds project-scoped kanban boards with minimal tickets that emit workflow events into the shared event bus.
 - Lets projects declare shared focus tags so ticket moves and timeline updates can contribute directly to promises and skills through the same event bus.
 - Generates daily, weekly, and monthly behavioral mirror reports from current activity, thought, project, and skill signals.
-- Includes user-facing instructions inside each app UI so non-developers can understand the meaning of fields and terms.
+- Includes a consistent helper layer inside each app UI that explains what the app is for, how it connects to the rest of Rasbhari, and what setup makes it more useful.
 - Provides a `Today` front door that unifies active work, due promises, neglected connections, suggested activities, and daily guidance.
 - Includes a first-run interactive tutorial that walks users through Today, Events, Activities, Projects, Kanban, Promises, Skills, and Reports in product order.
 - Lets Today stage deterministic recommendation follow-ups such as creating a skill, promise, ticket, or project update through the same assistant confirmation flow.
@@ -88,6 +88,22 @@ Rasbhari now includes a first-run walkthrough for signed-in users. It is:
 
 The tutorial explains how the ecosystem works instead of just explaining individual forms. Completion is stored per user and can be reset from `/users/profile`.
 
+`Today` also includes a guided setup checklist so a new user can reach a minimum useful Rasbhari environment quickly. The checklist is state-aware and marks progress automatically as the user creates the first activity, project, promise, skill, ticket, and first ticket move.
+
+## Admin Guide
+
+Rasbhari also includes a separate admin-only guide at `/admin/guide`.
+
+This path is distinct from the end-user tutorial and focuses on:
+
+- process health
+- notification delivery and signal quality
+- user onboarding and approval flow
+- app relationships inside the Rasbhari ecosystem
+- operational setup and configuration hygiene
+
+The admin guide is meant to explain how to operate Rasbhari, not how to use it as an end user.
+
 ## Dashboard
 
 The operational dashboard is still available at `/dashboard`. It includes:
@@ -101,7 +117,13 @@ The operational dashboard is still available at `/dashboard`. It includes:
 
 Widget pinning, collapsing, and ordering are persisted locally in the browser.
 
-Each app home page also includes an `Instructions` block for end users. These in-app explanations are intentionally separate from developer docs and should explain what an app does, what important terms mean, and how to fill in the main fields.
+Each app home page also includes an `Instructions` block for end users. These in-app explanations are intentionally separate from developer docs and now follow one helper pattern:
+
+- what the app is for
+- how it fits the Rasbhari ecosystem
+- what setup makes it more useful
+- what important terms mean
+- what key fields do
 
 The admin `Processes` page also includes dependency health cards for configured external services such as OpenWebUI, ntfy, and SendGrid so operator mistakes and external outages are easier to spot.
 

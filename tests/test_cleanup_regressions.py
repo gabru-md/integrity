@@ -249,6 +249,31 @@ class MentalModelContextTests(unittest.TestCase):
         self.assertIn("How Rasbhari Works", rendered)
         self.assertIn("Meet Rasbhari", rendered)
 
+    def test_app_instructions_render_helper_sections(self):
+        app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
+        app.secret_key = "test-secret"
+
+        with app.test_request_context("/events/home"):
+            rendered = render_flask_template(
+                "_app_instructions.html",
+                app_name="Events",
+                user_guidance={
+                    "overview": "Overview",
+                    "app_purpose": "Purpose copy",
+                    "how_to_use": ["Use it well"],
+                    "setup_leverage": ["Make setup count"],
+                    "pairs_with": ["Promises", "Skills"],
+                    "ecosystem_fit": {"headline": "How this app fits Rasbhari", "summary": "Connected", "stages": ["Capture"]},
+                    "glossary": [],
+                    "fields": [],
+                    "examples": [],
+                },
+            )
+
+        self.assertIn("What This App Is For", rendered)
+        self.assertIn("How to get more from it", rendered)
+        self.assertIn("Works especially well with", rendered)
+
 
 class TodayRouteTests(unittest.TestCase):
     def test_home_uses_today_template_and_dashboard_route_still_exists(self):
@@ -276,6 +301,36 @@ class TodayRouteTests(unittest.TestCase):
         self.assertIn(b"Daily Control Surface", home_response.data)
         self.assertEqual(dashboard_response.status_code, 200)
         self.assertIn(b"Rasbhari Apps Dashboard", dashboard_response.data)
+
+    def test_admin_guide_requires_admin_and_renders_for_admin(self):
+        fake_auth_provider = FakeAuthProvider()
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+            session["onboarding_completed"] = False
+
+        non_admin_response = client.get("/admin/guide")
+        self.assertEqual(non_admin_response.status_code, 403)
+
+        with client.session_transaction() as session:
+            session["is_admin"] = True
+
+        admin_response = client.get("/admin/guide")
+        self.assertEqual(admin_response.status_code, 200)
+        self.assertIn(b"Admin Guide", admin_response.data)
+        self.assertIn(b"Process Health", admin_response.data)
 
 
 if __name__ == "__main__":

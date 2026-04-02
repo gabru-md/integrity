@@ -14,6 +14,7 @@ from gabru.auth import PermissionManager, Role, admin_required, login_required
 from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
 from gabru.flask.util import render_flask_template
+from apps.user_docs import build_rasbhari_admin_guide
 
 from dotenv import load_dotenv
 
@@ -223,6 +224,11 @@ class Server:
         @admin_required
         def heimdall():
             return render_flask_template('heimdall.html')
+
+        @self.app.route('/admin/guide')
+        @admin_required
+        def admin_guide():
+            return render_flask_template('admin_guide.html', admin_guide=build_rasbhari_admin_guide())
 
         @self.app.route('/devices')
         @admin_required

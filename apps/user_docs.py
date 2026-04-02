@@ -152,15 +152,97 @@ def build_rasbhari_tutorial() -> dict:
     }
 
 
+def build_rasbhari_admin_guide() -> dict:
+    sections = [
+        {
+            "title": "Process Health",
+            "summary": "Use the Processes page as the operational heartbeat of Rasbhari. Dependency health, process state, and queue movement tell you whether the system is merely up or actually functioning.",
+            "actions": [
+                {"label": "Open Processes", "href": "/processes"},
+                {"label": "Check Dependency Health", "href": "/processes"},
+            ],
+            "checklist": [
+                "Confirm critical processes are enabled before expecting features to work.",
+                "Use dependency health cards to catch ntfy, SendGrid, or OpenWebUI issues early.",
+                "Treat stalled queue processors as product problems, not only infrastructure noise.",
+            ],
+        },
+        {
+            "title": "Notifications",
+            "summary": "Notifications are now intentional and classed. As an admin, your job is to make sure delivery works and that the system stays high-signal instead of noisy.",
+            "actions": [
+                {"label": "Review Environment", "href": "/docs/environment.md"},
+                {"label": "Open Processes", "href": "/processes"},
+            ],
+            "checklist": [
+                "Make sure ntfy and email credentials are configured before relying on outbound alerts.",
+                "Understand the difference between urgent, today, review, suggestion, digest, and system notifications.",
+                "Investigate Courier failures before users assume Rasbhari is quiet by design.",
+            ],
+        },
+        {
+            "title": "User Onboarding",
+            "summary": "Admins own the first impression. New users need approval, a clean mental model, the guided tutorial, and a minimum useful setup path to feel the ecosystem instead of just seeing many apps.",
+            "actions": [
+                {"label": "Open Users", "href": "/users/home"},
+                {"label": "Open Today", "href": "/"},
+            ],
+            "checklist": [
+                "Approve legitimate signups promptly so onboarding momentum is not lost.",
+                "Point new users to the Today page, tutorial, and setup checklist rather than every app at once.",
+                "Encourage one real activity, project, promise, skill, and ticket before expecting reports or recommendations to feel useful.",
+            ],
+        },
+        {
+            "title": "App Relationships",
+            "summary": "Rasbhari works when apps reinforce one another. Admins should understand and explain the chain from capture to action so operators and users configure things coherently.",
+            "actions": [
+                {"label": "Open Mental Model", "href": "/docs/mental-model.md"},
+                {"label": "Open System Apps", "href": "/apps"},
+            ],
+            "checklist": [
+                "Events are the shared language. Activities, imports, and processes should feed that stream cleanly.",
+                "Projects and kanban structure work. Promises and skills should latch onto stable tags or event types.",
+                "Today and Reports become useful only after the earlier layers produce honest evidence.",
+            ],
+        },
+        {
+            "title": "Operational Setup",
+            "summary": "Operator work is not only running the server. It includes environment hygiene, app activation, process activation, and keeping the system understandable as it grows.",
+            "actions": [
+                {"label": "Open System Apps", "href": "/apps"},
+                {"label": "Open Setup Docs", "href": "/docs/setup.md"},
+            ],
+            "checklist": [
+                "Only enable apps and widgets that are actually supported by the current environment.",
+                "Verify core databases, logs, and secrets before debugging higher-level product behavior.",
+                "Use the admin guide as the operator narrative and the user tutorial as the end-user narrative.",
+            ],
+        },
+    ]
+
+    return {
+        "headline": "Admin Guide",
+        "summary": "This path is for operators, not end users. It explains how to keep Rasbhari healthy, understandable, and ready for onboarding.",
+        "sections": sections,
+    }
+
+
 def build_app_user_guidance(app_name: str) -> dict:
     docs = {
         "Activities": {
             "overview": "Activities are reusable actions you want to trigger from the dashboard. When you trigger one, Rasbhari turns it into an event so the rest of the system can react.",
+            "app_purpose": "Use Activities when you want repeated real-world actions to become consistent event-producing shortcuts instead of manual form work.",
             "how_to_use": [
                 "Create an activity once, then trigger it whenever that action happens in real life.",
                 "Use a stable event type so processors and dashboards can recognize the action consistently.",
                 "Add tags when you want skills, promises, or filters to pick up the event later.",
             ],
+            "setup_leverage": [
+                "Create activities for the 3 to 5 actions you repeat most often.",
+                "Choose stable event types and tags so the rest of Rasbhari can react consistently.",
+            ],
+            "pairs_with": ["Events", "Skills", "Promises", "Today"],
             "glossary": [
                 {"term": "Activity",
                  "meaning": "A reusable action template such as Clean Kitchen, Study Session, or Water Plants."},
@@ -177,11 +259,17 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Blogs": {
             "overview": "Blogs let you publish longer notes or articles inside Rasbhari. Posts support markdown and can also create timeline-friendly history for your work.",
+            "app_purpose": "Use Blogs when a project update or reflection deserves longer narrative form than an event, thought, or short project update.",
             "how_to_use": [
                 "Use draft status while writing, then switch to published when the post is ready to share on the site.",
                 "Keep slugs short and stable because they become part of the post URL.",
                 "Use tags to group related posts and make them easier to scan later.",
             ],
+            "setup_leverage": [
+                "Write blogs only for material that benefits from longer narrative context.",
+                "Use tags that align with projects or recurring themes so reports and browsing stay coherent.",
+            ],
+            "pairs_with": ["Projects", "Reports"],
             "glossary": [
                 {"term": "Slug", "meaning": "The URL-safe identifier for a post, such as weekly-review-12."},
                 {"term": "Markdown",
@@ -195,11 +283,17 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Devices": {
             "overview": "Devices describe physical or network-connected things Rasbhari can reason about, monitor, or control.",
+            "app_purpose": "Use Devices to describe the physical endpoints future automation, imports, and system processes may need to reference consistently.",
             "how_to_use": [
                 "Create one record per real device so automation and monitoring can reference it consistently.",
                 "Use location and type values that make sense to you when scanning the dashboard.",
                 "Only enable devices for apps that should be allowed to use them.",
             ],
+            "setup_leverage": [
+                "Add devices only when a process or automation actually needs a named endpoint.",
+                "Keep names and locations human-readable so system panels stay legible.",
+            ],
+            "pairs_with": ["NetworkSignatures", "Processes", "Imports"],
             "glossary": [
                 {"term": "Location", "meaning": "The room or place where the device belongs, such as Kitchen or Desk."},
                 {"term": "Type", "meaning": "The category of device, such as Camera, Beacon, Light, or Sensor."},
@@ -209,12 +303,18 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Connections": {
             "overview": "Connections represent people or relationships you want Rasbhari to help you maintain with intention.",
+            "app_purpose": "Use Connections when you want relationships to be visible enough for Today and Reports to surface neglect, cadence drift, and social balance.",
             "how_to_use": [
                 "Create one record per person or relationship that matters enough to track.",
                 "Set cadence days to the maximum gap you want between meaningful touchpoints.",
                 "Use priority to distinguish relationships that should affect integrity scoring more strongly in your own review process.",
                 "Log interactions directly inside the Connections page so the relationship record and its timeline stay together.",
             ],
+            "setup_leverage": [
+                "Start with only the people you actually want Rasbhari to remind you about.",
+                "Set cadence days honestly so overdue signals are meaningful instead of noisy.",
+            ],
+            "pairs_with": ["Today", "Reports", "Events"],
             "glossary": [
                 {"term": "Cadence",
                  "meaning": "How many days can pass before the relationship is considered overdue for contact."},
@@ -231,11 +331,17 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Events": {
             "overview": "Events are the shared language of Rasbhari. Most automation, tracking, and history features work by creating or consuming events.",
+            "app_purpose": "Use Events to record meaningful facts and inspect the shared evidence stream that powers promises, skills, reports, notifications, and imports.",
             "how_to_use": [
                 "Log an event whenever something meaningful happens.",
                 "Keep event types consistent so background processors can match them reliably.",
                 "Use tags for cross-cutting labels like python, workout, notification, or project names.",
             ],
+            "setup_leverage": [
+                "Standardize event types early so downstream processors stay reliable.",
+                "Use tags for cross-app linkage rather than inventing too many similar event types.",
+            ],
+            "pairs_with": ["Activities", "Promises", "Skills", "Reports", "Today"],
             "glossary": [
                 {"term": "Event", "meaning": "A record of something that happened at a point in time."},
                 {"term": "Event Type", "meaning": "The main event identifier, usually written like domain:action."},
@@ -248,6 +354,7 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Projects": {
             "overview": "Projects track larger bodies of work. Use the project page to manage the project record, then open a project to post updates, maintain a lightweight kanban board, or add blog-style progress notes.",
+            "app_purpose": "Use Projects to give larger work a durable home so execution, updates, promises, skills, and reports all point back to the same body of work.",
             "how_to_use": [
                 "Create a project first, then use View Progress to maintain its timeline.",
                 "Use Open Board when you want to track concrete tickets from backlog to shipped.",
@@ -255,6 +362,11 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Add focus tags when project work should count toward promises or skills, for example python, writing, or deep-work.",
                 "Post short updates for milestones and choose Blog when an update deserves a fuller write-up.",
             ],
+            "setup_leverage": [
+                "Add focus tags for any project whose work should count toward promises or skills.",
+                "Use the board for execution and the timeline for narrative progress.",
+            ],
+            "pairs_with": ["KanbanTickets", "Reports", "Skills", "Promises", "Today"],
             "glossary": [
                 {"term": "Project Type", "meaning": "A simple category such as Code, DIY, or Other."},
                 {"term": "Focus Tags", "meaning": "Shared tags Rasbhari adds to project work events so tickets, promises, skills, and Today can line up around the same work."},
@@ -266,6 +378,7 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "KanbanTickets": {
             "overview": "Kanban tickets are minimal project work items. Each ticket belongs to one project and moves through a fixed board from backlog to shipped.",
+            "app_purpose": "Use KanbanTickets to turn project intent into concrete execution that Rasbhari can reflect through events, Today, skills, and reports.",
             "how_to_use": [
                 "Keep tickets short and concrete so the board stays fast to scan.",
                 "Use the board for day-to-day execution and the project timeline for narrative updates.",
@@ -273,6 +386,11 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Project focus tags are automatically added to ticket workflow events so project work can contribute to promises and skills.",
                 "Archive shipped or stale tickets when you want them out of the active board without deleting their history.",
             ],
+            "setup_leverage": [
+                "Only keep the next layer of concrete work on the board so it stays fast to scan.",
+                "Make sure the parent project has useful focus tags so ticket work contributes elsewhere.",
+            ],
+            "pairs_with": ["Projects", "Today", "Reports", "Skills", "Promises"],
             "glossary": [
                 {"term": "Backlog", "meaning": "Work that exists but is not yet selected."},
                 {"term": "Prioritized", "meaning": "Work chosen as likely next."},
@@ -284,11 +402,17 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Promises": {
             "overview": "Promises track commitments over time. They watch events and decide whether a recurring promise is currently on track, fulfilled, or broken.",
+            "app_purpose": "Use Promises to convert intentions into commitments that Rasbhari can verify against real event evidence instead of self-story alone.",
             "how_to_use": [
                 "Use either a target event type, a target tag, or both to describe what counts toward the promise.",
                 "Set required count to the number of matching events needed in each period.",
                 "Use refresh when you want the UI to recount recent matching events immediately.",
             ],
+            "setup_leverage": [
+                "Attach promises to event types or tags that already appear in your real workflow.",
+                "Prefer a few meaningful promises over many weak ones with noisy criteria.",
+            ],
+            "pairs_with": ["Events", "Today", "Reports", "Projects"],
             "glossary": [
                 {"term": "Frequency",
                  "meaning": "How often the promise resets, such as daily, weekly, monthly, or once."},
@@ -303,11 +427,17 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Skills": {
             "overview": "Skills convert repeated tagged activity into progression. Rasbhari reads matching events, adds XP, and levels a skill up over time.",
+            "app_purpose": "Use Skills to make growth visible by rewarding repeated tagged work across activities, project work, and imported signals.",
             "how_to_use": [
                 "Create one skill per thing you want to intentionally improve.",
                 "Pick a stable tag key because that is what incoming event tags are matched against first.",
                 "Add aliases when people or systems might log the same skill under different names.",
             ],
+            "setup_leverage": [
+                "Choose stable tag keys that already appear in activities, projects, or events.",
+                "Keep aliases limited to real naming variations so XP does not become noisy.",
+            ],
+            "pairs_with": ["Events", "Projects", "KanbanTickets", "Today", "Reports"],
             "glossary": [
                 {"term": "Skill",
                  "meaning": "A capability you want to grow over time, such as Python, Cooking, or Counter Strike."},
@@ -325,12 +455,18 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Reports": {
             "overview": "Reports turn raw activity into a behavioral mirror. They compare projects, events, skills, and thoughts to surface integrity gaps instead of only listing what happened.",
+            "app_purpose": "Use Reports to reflect the whole Rasbhari system back to yourself so missing action, drift, and integrity gaps become visible.",
             "how_to_use": [
                 "Generate daily, weekly, or monthly mirrors from the Reports page.",
                 "Use the asynchronous option when you want generation to happen through the event pipeline and background processor.",
                 "Use the print view when you want a clean local page that can be saved as PDF without uploading data anywhere.",
                 "Add Connections and log interactions inside their ledger if you want the report to score social balance and neglected relationships.",
             ],
+            "setup_leverage": [
+                "Reports become useful only after events, projects, promises, skills, or connections have real data.",
+                "Use reports to adjust system structure, not just to admire outputs.",
+            ],
+            "pairs_with": ["Today", "Projects", "Promises", "Skills", "Connections", "Events"],
             "glossary": [
                 {"term": "Integrity Score",
                  "meaning": "A 0 to 100 score estimating how closely your behavior matched your visible commitments and growth signals."},
@@ -347,22 +483,34 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Thoughts": {
             "overview": "Thoughts are quick captures for ideas, reflections, or reminders. They are lighter than blog posts and faster than creating a full project or event entry.",
+            "app_purpose": "Use Thoughts for fast human context that matters but is not yet structured enough to become an event, project update, or blog post.",
             "how_to_use": [
                 "Use thoughts for short captures you do not want to lose.",
                 "Prefer blogs when you need formatting and longer writing.",
                 "Prefer events when the main goal is to record that something happened rather than what you are thinking about it.",
             ],
+            "setup_leverage": [
+                "Capture thoughts quickly, then later convert the important ones into projects, events, or reports.",
+                "Use thoughts for context and reflection, not as a substitute for all structured data.",
+            ],
+            "pairs_with": ["Reports", "Projects", "Today"],
             "glossary": [
                 {"term": "Thought", "meaning": "A quick note captured with minimal structure."},
             ],
         },
         "Users": {
             "overview": "Users manage who can sign into this Rasbhari instance. Each person gets their own private workspace, while admin access only unlocks system panels.",
+            "app_purpose": "Use Users to manage ownership and operator access without collapsing everyone into one shared data space.",
             "how_to_use": [
                 "Create one account per family member or operator who should use this Rasbhari installation.",
                 "Only mark trusted operator accounts as admin. Admins can manage the system but do not automatically see other users' personal records.",
                 "Set a password when creating a user. Enter a new password later only when you want to rotate or reset it.",
             ],
+            "setup_leverage": [
+                "Keep admin accounts limited to trusted operators.",
+                "Treat onboarding and profile settings as part of user adoption, not just account management.",
+            ],
+            "pairs_with": ["Today", "Processes", "Profile"],
             "glossary": [
                 {"term": "Admin",
                  "meaning": "An operator who can access system panels like Processes, Devices, and dependency health."},
@@ -373,11 +521,17 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "NetworkSignatures": {
             "overview": "The Network Signatures app allows Rasbhari to monitor your local network for specific devices. When a device (like your phone) is detected, Rasbhari can automatically log an event in your timeline.",
+            "app_purpose": "Use Network Signatures as one passive capture source for presence and environment signals that can emit events without manual interaction.",
             "how_to_use": [
                 "To start tracking, add a new signature with your device's MAC address.",
                 "You can find this in your phone's Wi-Fi settings.",
                 "Once saved, the Network Sniffer process will scan for your device every 30 seconds.",
             ],
+            "setup_leverage": [
+                "Only track signatures that create meaningful downstream signals.",
+                "Make emitted event types and tags align with the rest of your event vocabulary.",
+            ],
+            "pairs_with": ["Events", "Today", "Reports", "Devices"],
             "glossary": [
                 {"term": "Name",
                  "meaning": "A friendly name for this signature (e.g., 'My iPhone')."},
