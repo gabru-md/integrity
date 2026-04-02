@@ -1237,6 +1237,7 @@ input[readonly] {
     min-height: 100vh;
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(420px, 520px);
+    align-items: stretch;
 }
 
 @media (max-width: 980px) {
@@ -1249,6 +1250,15 @@ input[readonly] {
     position: relative;
     overflow: hidden;
     padding: 3rem;
+}
+
+.auth-side-balanced {
+    padding-top: clamp(2.5rem, 7vh, 5rem);
+    padding-bottom: 2.5rem;
+}
+
+.auth-form-side {
+    padding-top: clamp(2rem, 6vh, 4rem);
 }
 
 .auth-side::before {
@@ -1293,6 +1303,13 @@ input[readonly] {
     border: 1px solid var(--border);
     background: color-mix(in srgb, var(--surface-muted) 74%, transparent);
     padding: 1rem 1.1rem;
+}
+
+@media (max-width: 980px) {
+    .auth-side-balanced,
+    .auth-form-side {
+        padding-top: 2rem;
+    }
 }
 
 .ui-alert {
