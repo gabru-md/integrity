@@ -122,6 +122,8 @@ class FakeQueueProcessor:
         self.q_stats = FakeQueueStats(last_consumed_id=last_consumed_id)
         self.queue = [1, 2, 3]
         self.reloaded_to = None
+        self.service = mock.Mock()
+        self.service.get_recent_items.return_value = [mock.Mock(id=99)]
 
     def reload_queue_state(self, last_consumed_id):
         self.reloaded_to = last_consumed_id
@@ -456,6 +458,64 @@ class ProcessAdminRouteTests(unittest.TestCase):
         response = client.post("/process_progress/PromiseProcessor", json={"last_consumed_id": 42})
 
         self.assertEqual(response.status_code, 403)
+
+    def test_admin_can_jump_queue_processor_to_latest(self):
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True))
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        server.process_manager = FakeProcessManager()
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = True
+
+        with mock.patch("gabru.flask.server.QueueService") as queue_service_cls:
+            queue_service = queue_service_cls.return_value
+            queue_service.set_last_consumed_id.return_value = mock.Mock(last_consumed_id=99)
+
+            response = client.post("/process_progress/PromiseProcessor/latest")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["last_consumed_id"], 99)
+        queue_service.set_last_consumed_id.assert_called_once_with("PromiseProcessor", 99)
+        self.assertEqual(server.process_manager.all_processes_map["PromiseProcessor"].reloaded_to, 99)
+
+    def test_admin_can_restart_process(self):
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True))
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        process_manager = FakeProcessManager()
+        process_manager.pause_process = mock.Mock(return_value=True)
+        process_manager.run_process = mock.Mock(return_value=True)
+        server.process_manager = process_manager
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = True
+
+        response = client.post("/restart_process/PromiseProcessor")
+
+        self.assertEqual(response.status_code, 200)
+        process_manager.pause_process.assert_called_once_with("PromiseProcessor")
+        process_manager.run_process.assert_called_once_with("PromiseProcessor")
 
 
 if __name__ == "__main__":

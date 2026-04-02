@@ -360,6 +360,18 @@ class Server:
                 return jsonify({"message": f"Process {process_name} stopped successfully"}), 200
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
+        @self.app.route('/restart_process/<process_name>', methods=['POST'])
+        @admin_required
+        def restart_process(process_name):
+            if not self.process_manager:
+                return jsonify({"error": "Process Manager is not initialized"}), 500
+
+            self.process_manager.pause_process(process_name)
+            success = self.process_manager.run_process(process_name)
+            if success:
+                return jsonify({"message": f"Process {process_name} restarted successfully"}), 200
+            return jsonify({"error": f"Failed to restart process {process_name}"}), 500
+
         @self.app.route('/process_logs/<process_name>')
         @admin_required
         def get_process_logs(process_name):
@@ -423,6 +435,48 @@ class Server:
                 "last_consumed_id": updated_stats.last_consumed_id,
             }), 200
 
+        @self.app.route('/process_progress/<process_name>/latest', methods=['POST'])
+        @admin_required
+        def jump_process_progress_to_latest(process_name):
+            process_instance = self.process_manager.all_processes_map.get(process_name) if self.process_manager else None
+            if process_instance is not None and not hasattr(process_instance, "q_stats"):
+                return jsonify({"error": f"Process {process_name} is not a queue processor"}), 400
+
+            process_type = None
+            if process_instance is None:
+                for app in self.registered_apps:
+                    for p_class, _args, kwargs in app.get_processes():
+                        name = kwargs.get('name', p_class.__name__)
+                        if name == process_name:
+                            process_type = p_class
+                            break
+                    if process_type is not None:
+                        break
+
+                if process_type is None:
+                    return jsonify({"error": f"Process {process_name} not found"}), 404
+                if not issubclass(process_type, QueueProcessor):
+                    return jsonify({"error": f"Process {process_name} is not a queue processor"}), 400
+
+            service = process_instance.service if process_instance is not None else process_type(enabled=False, name=process_name).service
+            latest_items = service.get_recent_items(limit=1)
+            latest_id = latest_items[0].id if latest_items else 0
+
+            queue_service = QueueService()
+            updated_stats = queue_service.set_last_consumed_id(process_name, latest_id)
+
+            if process_instance is not None:
+                if hasattr(process_instance, "reload_queue_state"):
+                    process_instance.reload_queue_state(latest_id)
+                else:
+                    process_instance.q_stats.last_consumed_id = latest_id
+
+            return jsonify({
+                "message": f"Moved {process_name} to latest id {latest_id}",
+                "process_name": process_name,
+                "last_consumed_id": updated_stats.last_consumed_id,
+            }), 200
+
     def get_processes_data(self) -> list:
         processes_data = []
         if not self.process_manager: return []
@@ -433,11 +487,26 @@ class Server:
                 is_alive = self.process_manager.get_process_status(name) if instance else False
                 is_enabled = instance.enabled if instance else kwargs.get('enabled', False)
                 
-                p_data = { 'name': name, 'is_alive': is_alive, 'is_enabled': is_enabled, 'owner_app': app.name }
+                p_data = {
+                    'name': name,
+                    'is_alive': is_alive,
+                    'is_enabled': is_enabled,
+                    'owner_app': app.name,
+                }
                 if issubclass(p_class, QueueProcessor) and instance:
-                    p_data.update({'type': 'QueueProcessor', 'last_consumed_id': getattr(instance.q_stats, 'last_consumed_id', None)})
+                    p_data.update({
+                        'type': 'QueueProcessor',
+                        'last_consumed_id': getattr(instance.q_stats, 'last_consumed_id', None),
+                        'recovery_summary': 'Replay, jump, and restart controls available.',
+                    })
                 else:
-                    p_data.update({'type': 'Process', 'last_consumed_id': None})
+                    p_data.update({
+                        'type': 'Process',
+                        'last_consumed_id': None,
+                        'recovery_summary': 'Restart and log inspection available.',
+                    })
+                p_data['status_label'] = 'Running' if is_alive else ('Disabled' if not is_enabled else 'Stopped')
+                p_data['health_state'] = 'healthy' if is_alive else ('idle' if not is_enabled else 'attention')
                 processes_data.append(p_data)
         return processes_data
 

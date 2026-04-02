@@ -144,7 +144,13 @@ Each app home page also includes an `Instructions` block for end users. These in
 
 The admin `Processes` page also includes dependency health cards for configured external services such as OpenWebUI, ntfy, and SendGrid so operator mistakes and external outages are easier to spot.
 
-For queue-backed workers, the `Processes` page also lets admins adjust `last_consumed_id` directly from the UI. This is meant for operational recovery cases like replaying events after a processor fix.
+For queue-backed workers, the `Processes` page now provides clearer maintenance actions for operational recovery:
+- `Replay From 0` to rebuild a processor from the start of the queue
+- `Replay From Exact ID` for targeted reprocessing
+- `Jump To Latest` to skip backlog and resume from the newest known item
+- `Restart` to recycle the running processor without dropping into the shell
+
+These controls update persisted queue progress and reload the live processor state so recovery actions take effect immediately.
 
 The `Reports` app adds a local-first behavioral mirror. It currently computes:
 
