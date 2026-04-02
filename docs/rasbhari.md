@@ -190,6 +190,8 @@ Each app home page also includes an `Instructions` block for end users. These in
 - what important terms mean
 - what key fields do
 
+Appearance is now its own first-class destination at `/appearance` instead of a nested sidebar subgroup. That keeps `Profile`, `Help`, and `Appearance` visually consistent and gives theme, density, surface, and motion controls a clearer home.
+
 The admin `Processes` page also includes dependency health cards for configured external services such as OpenWebUI, ntfy, and SendGrid so operator mistakes and external outages are easier to spot.
 
 For queue-backed workers, the `Processes` page now provides clearer maintenance actions for operational recovery:

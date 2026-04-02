@@ -64,57 +64,15 @@
                         </ul>
                     </details>
 
-                    <details class="sidebar-group" {% if '/users/profile' in request.path or request.path == '/docs' or '/docs/' in request.path %}open{% endif %}>
+                    <details class="sidebar-group" {% if '/users/profile' in request.path or request.path == '/appearance' or request.path == '/docs' or '/docs/' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">
                             <span>Settings</span>
                             <span class="sidebar-group-chevron">⌄</span>
                         </summary>
                         <div class="space-y-2 pt-2">
                             <a href="/users/profile" class="nav-link {% if '/users/profile' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⚙</span><span>Profile</span></a>
+                            <a href="/appearance" class="nav-link {% if request.path == '/appearance' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◫</span><span>Appearance</span></a>
                             <a href="/docs" class="nav-link {% if request.path == '/docs' or '/docs/' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Help</span></a>
-
-                            <details class="sidebar-subgroup mt-2">
-                                <summary class="sidebar-subgroup-summary">
-                                    <span>Appearance</span>
-                                    <span class="sidebar-group-chevron">⌄</span>
-                                </summary>
-                                <div class="mt-3 grid gap-4">
-                                    <div>
-                                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Themes</div>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <button type="button" onclick="setPreference('theme','slate')" data-pref="theme" data-value="slate" class="btn-secondary px-3 py-2 text-sm">Slate</button>
-                                            <button type="button" onclick="setPreference('theme','dawn')" data-pref="theme" data-value="dawn" class="btn-secondary px-3 py-2 text-sm">Dawn</button>
-                                            <button type="button" onclick="setPreference('theme','forest')" data-pref="theme" data-value="forest" class="btn-secondary px-3 py-2 text-sm">Forest</button>
-                                            <button type="button" onclick="setPreference('theme','noir')" data-pref="theme" data-value="noir" class="btn-secondary px-3 py-2 text-sm">Noir</button>
-                                            <button type="button" onclick="setPreference('theme','console')" data-pref="theme" data-value="console" class="btn-secondary col-span-2 px-3 py-2 text-sm">Console</button>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Density</div>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <button type="button" onclick="setPreference('density','comfy')" data-pref="density" data-value="comfy" class="btn-secondary px-3 py-2 text-sm">Comfy</button>
-                                            <button type="button" onclick="setPreference('density','compact')" data-pref="density" data-value="compact" class="btn-secondary px-3 py-2 text-sm">Compact</button>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Surface</div>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <button type="button" onclick="setPreference('chrome','glass')" data-pref="chrome" data-value="glass" class="btn-secondary px-3 py-2 text-sm">Glass</button>
-                                            <button type="button" onclick="setPreference('chrome','solid')" data-pref="chrome" data-value="solid" class="btn-secondary px-3 py-2 text-sm">Solid</button>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="mb-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Motion</div>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <button type="button" onclick="setPreference('motion','full')" data-pref="motion" data-value="full" class="btn-secondary px-3 py-2 text-sm">Full</button>
-                                            <button type="button" onclick="setPreference('motion','reduced')" data-pref="motion" data-value="reduced" class="btn-secondary px-3 py-2 text-sm">Reduced</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </details>
                         </div>
                     </details>
 

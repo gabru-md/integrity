@@ -1,0 +1,63 @@
+{% extends "index.html" %}
+{% block title %}Appearance{% endblock %}
+
+{% block content %}
+<div class="space-y-6 px-1 py-2">
+    <header class="shell-card hero-card px-6 py-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Appearance</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Tune how Rasbhari feels</h1>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Themes, density, surface style, and motion live here now so appearance settings feel like a real part of the product instead of a nested sidebar control.</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <a href="/users/profile" class="btn-secondary px-4 py-3 text-sm">Profile</a>
+                <a href="/docs" class="btn-secondary px-4 py-3 text-sm">Help</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <article class="shell-card p-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Theme</div>
+            <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Color Direction</h2>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+                <button type="button" onclick="setPreference('theme','slate')" data-pref="theme" data-value="slate" class="btn-secondary px-4 py-3 text-sm">Slate</button>
+                <button type="button" onclick="setPreference('theme','dawn')" data-pref="theme" data-value="dawn" class="btn-secondary px-4 py-3 text-sm">Dawn</button>
+                <button type="button" onclick="setPreference('theme','forest')" data-pref="theme" data-value="forest" class="btn-secondary px-4 py-3 text-sm">Forest</button>
+                <button type="button" onclick="setPreference('theme','noir')" data-pref="theme" data-value="noir" class="btn-secondary px-4 py-3 text-sm">Noir</button>
+                <button type="button" onclick="setPreference('theme','console')" data-pref="theme" data-value="console" class="btn-secondary col-span-2 px-4 py-3 text-sm">Console</button>
+            </div>
+        </article>
+
+        <article class="shell-card p-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Density</div>
+            <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Information Weight</h2>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+                <button type="button" onclick="setPreference('density','comfy')" data-pref="density" data-value="comfy" class="btn-secondary px-4 py-3 text-sm">Comfy</button>
+                <button type="button" onclick="setPreference('density','compact')" data-pref="density" data-value="compact" class="btn-secondary px-4 py-3 text-sm">Compact</button>
+            </div>
+            <div class="mt-4 text-sm leading-6 text-[var(--text-soft)]">Use compact when you want to see more structure at once. Use comfy when you want more breathing room and slower reading.</div>
+        </article>
+
+        <article class="shell-card p-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Surface</div>
+            <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Shell Chrome</h2>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+                <button type="button" onclick="setPreference('chrome','glass')" data-pref="chrome" data-value="glass" class="btn-secondary px-4 py-3 text-sm">Glass</button>
+                <button type="button" onclick="setPreference('chrome','solid')" data-pref="chrome" data-value="solid" class="btn-secondary px-4 py-3 text-sm">Solid</button>
+            </div>
+        </article>
+
+        <article class="shell-card p-6">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Motion</div>
+            <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Interaction Style</h2>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+                <button type="button" onclick="setPreference('motion','full')" data-pref="motion" data-value="full" class="btn-secondary px-4 py-3 text-sm">Full</button>
+                <button type="button" onclick="setPreference('motion','reduced')" data-pref="motion" data-value="reduced" class="btn-secondary px-4 py-3 text-sm">Reduced</button>
+            </div>
+            <div class="mt-4 text-sm leading-6 text-[var(--text-soft)]">Reduced motion keeps transitions and animated polish to a minimum while preserving the same layout and controls.</div>
+        </article>
+    </section>
+</div>
+{% endblock %}

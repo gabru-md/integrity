@@ -114,6 +114,11 @@ class Server:
                 universal_timeline=universal_timeline
             )
 
+        @self.app.route('/appearance')
+        @login_required
+        def appearance():
+            return render_flask_template('appearance.html')
+
         @self.app.route('/capture')
         @login_required
         def capture():

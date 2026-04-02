@@ -402,6 +402,31 @@ class TodayRouteTests(unittest.TestCase):
         self.assertIn(b"Recent Activities", response.data)
         self.assertIn(b"Quick Log", response.data)
 
+    def test_appearance_route_renders_first_class_preferences_surface(self):
+        fake_auth_provider = FakeAuthProvider()
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+
+        response = client.get("/appearance")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Tune how Rasbhari feels", response.data)
+        self.assertIn(b"Color Direction", response.data)
+        self.assertIn(b"Information Weight", response.data)
+
     def test_admin_guide_requires_admin_and_renders_for_admin(self):
         fake_auth_provider = FakeAuthProvider()
         server = Server(
