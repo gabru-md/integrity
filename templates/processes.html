@@ -1,7 +1,7 @@
 {% extends "index.html" %}
 {% block title %}Active Background Processes{% endblock %}
 {% block shell_title %}Process Runtime{% endblock %}
-{% block shell_subtitle %}Review dependency health, process state, and logs from a cleaner operations view while preserving the existing controls.{% endblock %}
+{% block shell_subtitle %}Inspect health, recover queues, and restart workers from one operator surface.{% endblock %}
 
 {% block content %}
 <div class="space-y-6 px-1 py-2">
@@ -11,7 +11,7 @@
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Runtime</div>
                 <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Background Processes</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Use this page like an operator surface: inspect health first, then recover queue processors or restart runtime workers without leaving Rasbhari.</p>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Inspect health first, then recover queue processors or restart workers without leaving Rasbhari.</p>
             </div>
             <div class="flex flex-wrap gap-3">
                 <a href="/admin" class="btn-secondary px-4 py-3 text-sm">Admin Overview</a>

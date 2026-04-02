@@ -223,6 +223,19 @@ def build_rasbhari_admin_guide() -> dict:
                 "Use the admin guide as the operator narrative and the user tutorial as the end-user narrative.",
             ],
         },
+        {
+            "title": "Operational Boundaries",
+            "summary": "Admins should be able to operate the Rasbhari ecosystem from inside Rasbhari, but host-level infrastructure still belongs outside the product.",
+            "actions": [
+                {"label": "Open Admin Overview", "href": "/admin"},
+                {"label": "Open Processes", "href": "/processes"},
+            ],
+            "checklist": [
+                "Manage app activation, widgets, process state, queue recovery, user approvals, and dependency health from inside Rasbhari.",
+                "Keep PostgreSQL schema surgery, Docker/service restarts, backups, and filesystem repair as infrastructure work outside Rasbhari.",
+                "Add future admin features only when they operate the product itself rather than the host machine underneath it.",
+            ],
+        },
     ]
 
     return {

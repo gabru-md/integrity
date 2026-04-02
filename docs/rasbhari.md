@@ -129,6 +129,11 @@ The admin overview is intentionally high-signal. It should quickly surface:
 - pending approvals that block onboarding
 - operator-facing issues before they disappear into lower-level pages
 
+Operational boundary:
+
+- Inside Rasbhari: app activation, widget participation, process controls, queue recovery, dependency checks, approvals, and product-level health
+- Outside Rasbhari: database repair, container or service restarts, backups, filesystem repair, package installation, and host-level networking
+
 ## Dashboard
 
 The operational dashboard is still available at `/dashboard`. It includes:

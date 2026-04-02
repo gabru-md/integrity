@@ -1,7 +1,7 @@
 {% extends "index.html" %}
 {% block title %}Admin Guide{% endblock %}
 {% block shell_title %}Admin Guide{% endblock %}
-{% block shell_subtitle %}Operator onboarding for the event-driven Rasbhari ecosystem: health, notifications, onboarding, app relationships, and setup.{% endblock %}
+{% block shell_subtitle %}Operator onboarding for health, runtime, approvals, and ecosystem clarity.{% endblock %}
 
 {% block content %}
 <div class="space-y-6 px-1 py-2">
@@ -9,12 +9,12 @@
         <div class="shell-card hero-card px-6 py-6">
             <div class="section-kicker text-[10px] font-extrabold uppercase">Admin Onboarding</div>
             <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">{{ admin_guide.headline }}</h1>
-            <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">{{ admin_guide.summary }}</p>
+            <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Use this guide to operate Rasbhari itself. Keep host-level infrastructure work outside the product.</p>
         </div>
         <div class="shell-card px-6 py-6">
             <div class="metric-label">Admin Focus</div>
             <div class="mt-3 text-2xl font-extrabold text-[var(--text)]">Operate the loop</div>
-            <div class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Keep Rasbhari healthy, understandable, and coherent as one event-driven product. This guide is distinct from the end-user tutorial on purpose.</div>
+            <div class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Keep Rasbhari healthy and understandable. This guide is distinct from the end-user tutorial on purpose.</div>
             <div class="mt-5 flex flex-wrap gap-2">
                 <a href="/admin" class="btn-secondary px-4 py-3 text-sm">Admin Overview</a>
                 <a href="/processes" class="btn-secondary px-4 py-3 text-sm">Processes</a>

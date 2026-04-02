@@ -751,6 +751,16 @@ class Server:
                     "href": "/users/home",
                     "action_label": "Open Users",
                 },
+                {
+                    "title": "Operational Boundaries",
+                    "summary": "Use Rasbhari for product operations. Keep host-level repair outside the product.",
+                    "items": [
+                        "Inside Rasbhari: apps, widgets, processes, queue recovery, approvals, and dependency checks",
+                        "Outside Rasbhari: database repair, container/service restarts, backups, and filesystem work",
+                    ],
+                    "href": "/admin/guide",
+                    "action_label": "Open Admin Guide",
+                },
             ],
             "attention_items": operator_issues,
             "degraded_capabilities": degraded_capabilities,

@@ -3,14 +3,19 @@ import unittest
 from datetime import datetime
 from unittest import mock
 
+from flask import Flask
+
 os.environ.setdefault("LOG_DIR", "/tmp/rasbhari-test-logs")
 
+from gabru.flask.util import render_flask_template
 from model.kanban_ticket import KanbanTicket
 from model.project import Project, ProjectState
 from model.promise import Promise
 from model.skill import Skill
 from runtime.providers import RasbhariDashboardDataProvider
 from services.kanban_tickets import KanbanTicketService
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
 class ProjectWorkLinkingTests(unittest.TestCase):
@@ -122,6 +127,41 @@ class ProjectWorkLinkingTests(unittest.TestCase):
         self.assertTrue(checklist["items"][0]["completed"])
         self.assertEqual(checklist["items"][-1]["title"], "Move one ticket forward")
         self.assertFalse(checklist["items"][-1]["completed"])
+
+    def test_today_template_hides_completed_setup_checklist(self):
+        app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
+        app.secret_key = "test-secret"
+
+        with app.test_request_context("/"):
+            rendered = render_flask_template(
+                "today.html",
+                today_data={
+                    "guidance": [],
+                    "active_work": [],
+                    "prioritized_work": [],
+                    "due_promises": [],
+                    "neglected_connections": [],
+                    "suggested_activities": [],
+                    "recommended_follow_ups": [],
+                    "active_project_count": 0,
+                    "latest_report": None,
+                    "events_today_count": 0,
+                    "setup_checklist": {
+                        "title": "Minimal Useful Setup",
+                        "summary": "Done.",
+                        "items": [],
+                        "completed_count": 6,
+                        "total_count": 6,
+                        "is_complete": True,
+                    },
+                },
+                PermissionManager=mock.Mock(can_view_app=lambda *_: False),
+                active_app_names=set(),
+                current_user={"id": 1, "username": "tester", "display_name": "Tester", "is_admin": False, "onboarding_completed": True},
+                Role=mock.Mock(),
+            )
+
+        self.assertNotIn("Minimal Useful Setup", rendered)
 
 
 if __name__ == "__main__":
