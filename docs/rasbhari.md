@@ -49,6 +49,7 @@ Rasbhari currently registers these apps in [server.py](server.py):
 - `Network-Signatures`
 
 The `Projects` app now includes a per-project board view backed by the `KanbanTickets` app.
+Projects can also issue stable per-project ticket references through a configurable `ticket_prefix`, so tickets become identifiers like `RSB-14` or `QDS-123`.
 The `Skills` app now has a dedicated progress-focused page that mirrors the stronger dashboard widget language with XP rings, level momentum, and a level-up timeline while preserving the existing skill data model and CRUD flow.
 
 ## Current Background Processes

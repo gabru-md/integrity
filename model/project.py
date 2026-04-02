@@ -31,7 +31,22 @@ class Project(WidgetUIModel):
         widget_enabled=True,
         description="Shared tags this project should emit so tickets, updates, skills, and promises line up."
     )
+    ticket_prefix: Optional[str] = Field(
+        default=None,
+        widget_enabled=True,
+        description="Short ticket code prefix such as RSB or QDS. New project tickets will be issued as PREFIX-1, PREFIX-2, and so on."
+    )
     start_date: datetime = Field(default_factory=datetime.now, description="When the project started")
+
+    @field_validator("ticket_prefix", mode="before")
+    @classmethod
+    def validate_ticket_prefix(cls, value):
+        if value is None:
+            return None
+        normalized = str(value).strip().upper()
+        if not normalized:
+            return None
+        return "".join(char for char in normalized if char.isalnum() or char == "-")[:12] or None
 
     state: ProjectState = Field(
         default=ProjectState.ACTIVE,

@@ -201,6 +201,9 @@
                         <a href="{{ ticket.href }}" class="block rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
                             <div class="flex items-start justify-between gap-3">
                                 <div>
+                                    {% if ticket.ticket_code %}
+                                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ ticket.ticket_code }}</div>
+                                    {% endif %}
                                     <div class="text-sm font-bold text-[var(--text)]">{{ ticket.title }}</div>
                                     <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ ticket.project_name }}</div>
                                 </div>
@@ -240,6 +243,9 @@
                     <div class="mt-5 space-y-3">
                         {% for ticket in today_data.prioritized_work or [] %}
                         <a href="{{ ticket.href }}" class="block rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                            {% if ticket.ticket_code %}
+                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ ticket.ticket_code }}</div>
+                            {% endif %}
                             <div class="text-sm font-bold text-[var(--text)]">{{ ticket.title }}</div>
                             <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ ticket.project_name }}</div>
                             {% if ticket.description %}

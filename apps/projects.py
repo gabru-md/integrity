@@ -120,6 +120,7 @@ def _serialize_board_tickets(project, tickets) -> list[dict]:
         linked_promises = _match_promises_for_tags(shared_tags, promise_index)
         linked_skills = _match_skills_for_tags(shared_tags, skill_index)
         ticket_data = ticket.dict()
+        ticket_data["ticket_code"] = ticket.ticket_code
         ticket_data["focus_tags"] = shared_tags
         ticket_data["linked_promises"] = linked_promises
         ticket_data["linked_skills"] = linked_skills

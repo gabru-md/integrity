@@ -26,6 +26,7 @@ class ProjectWorkLinkingTests(unittest.TestCase):
             name="Rasbhari",
             project_type="Code",
             focus_tags=["python", "deep-work"],
+            ticket_prefix="RSB",
             start_date=datetime(2026, 4, 2, 9, 0, 0),
             state=ProjectState.ACTIVE,
         )
@@ -47,6 +48,7 @@ class ProjectWorkLinkingTests(unittest.TestCase):
             name="Rasbhari",
             project_type="Code",
             focus_tags=["python", "deep-work"],
+            ticket_prefix="RSB",
             start_date=datetime(2026, 4, 2, 9, 0, 0),
             state=ProjectState.ACTIVE,
         )
@@ -54,6 +56,7 @@ class ProjectWorkLinkingTests(unittest.TestCase):
             id=9,
             user_id=1,
             project_id=3,
+            ticket_code="RSB-9",
             title="Build project linking",
             description="Make project work visible to promises and skills",
             state="in_progress",
@@ -95,6 +98,7 @@ class ProjectWorkLinkingTests(unittest.TestCase):
         self.assertEqual(active_ticket["linked_promises"][0]["name"], "Daily deep work")
         self.assertEqual(active_ticket["linked_skills"][0]["name"], "Python")
         self.assertEqual(active_ticket["contribution_summary"], "Supports 1 promise and 1 skill")
+        self.assertEqual(active_ticket["ticket_code"], "RSB-9")
 
     def test_today_data_includes_minimal_setup_checklist(self):
         provider = RasbhariDashboardDataProvider(

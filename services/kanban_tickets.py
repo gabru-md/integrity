@@ -26,6 +26,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                         id SERIAL PRIMARY KEY,
                         user_id INTEGER NOT NULL,
                         project_id INTEGER NOT NULL,
+                        ticket_code VARCHAR(64),
                         title VARCHAR(255) NOT NULL,
                         description TEXT,
                         state VARCHAR(50) NOT NULL DEFAULT 'backlog',
@@ -36,12 +37,14 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                     )
                     """
                 )
+                cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS ticket_code VARCHAR(64)")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS description TEXT")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS state VARCHAR(50) NOT NULL DEFAULT 'backlog'")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT NOW()")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS state_changed_at TIMESTAMP NOT NULL DEFAULT NOW()")
+                cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_kanban_tickets_project_code ON kanban_tickets(project_id, ticket_code) WHERE ticket_code IS NOT NULL")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_kanban_tickets_project_state ON kanban_tickets(project_id, state)")
                 self.db.conn.commit()
 
@@ -50,6 +53,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
         return (
             entity.user_id,
             entity.project_id,
+            entity.ticket_code,
             entity.title,
             entity.description,
             state_value,
@@ -64,29 +68,32 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
             id=row[0],
             user_id=row[1],
             project_id=row[2],
-            title=row[3],
-            description=row[4] or "",
-            state=row[5],
-            is_archived=bool(row[6]),
-            created_at=row[7],
-            updated_at=row[8],
-            state_changed_at=row[9],
+            ticket_code=row[3],
+            title=row[4],
+            description=row[5] or "",
+            state=row[6],
+            is_archived=bool(row[7]),
+            created_at=row[8],
+            updated_at=row[9],
+            state_changed_at=row[10],
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["user_id", "project_id", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
+        return ["user_id", "project_id", "ticket_code", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["user_id", "project_id", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
+        return ["user_id", "project_id", "ticket_code", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "user_id", "project_id", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
+        return ["id", "user_id", "project_id", "ticket_code", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def create(self, obj: KanbanTicket) -> Optional[int]:
         now = datetime.now()
         obj.created_at = obj.created_at or now
         obj.updated_at = now
         obj.state_changed_at = obj.state_changed_at or now
+        if not obj.ticket_code:
+            obj.ticket_code = self._issue_ticket_code(obj.project_id)
         ticket_id = super().create(obj)
         if ticket_id:
             project = self.project_service.get_by_id(obj.project_id)
@@ -108,6 +115,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
         new_state = obj.state.value if hasattr(obj.state, "value") else obj.state
         old_state = existing.state.value if hasattr(existing.state, "value") else existing.state
         obj.created_at = existing.created_at
+        obj.ticket_code = existing.ticket_code
         obj.updated_at = now
         obj.state_changed_at = now if new_state != old_state else existing.state_changed_at
         updated = super().update(obj)
@@ -177,6 +185,76 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
             )
             return self.get_by_id(ticket_id)
         return None
+
+    def _issue_ticket_code(self, project_id: int) -> Optional[str]:
+        project = self.project_service.get_by_id(project_id)
+        prefix = getattr(project, "ticket_prefix", None) if project else None
+        if not prefix:
+            return None
+
+        def operation(conn):
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT ticket_code
+                    FROM kanban_tickets
+                    WHERE project_id = %s AND ticket_code IS NOT NULL
+                    ORDER BY id ASC
+                    """,
+                    (project_id,),
+                )
+                max_sequence = 0
+                prefix_with_dash = f"{prefix}-"
+                for row in cursor.fetchall():
+                    code = row[0] or ""
+                    if code.startswith(prefix_with_dash):
+                        suffix = code[len(prefix_with_dash):]
+                        if suffix.isdigit():
+                            max_sequence = max(max_sequence, int(suffix))
+                return f"{prefix}-{max_sequence + 1}"
+
+        return self._run_with_connection_retry(operation, fallback=None, action_name="issue kanban ticket code")
+
+    def backfill_ticket_codes_for_project(self, project_id: int, prefix: Optional[str] = None) -> int:
+        project = self.project_service.get_by_id(project_id)
+        if not project:
+            return 0
+        effective_prefix = prefix or getattr(project, "ticket_prefix", None)
+        if not effective_prefix:
+            return 0
+
+        def operation(conn):
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT id, ticket_code
+                    FROM kanban_tickets
+                    WHERE project_id = %s
+                    ORDER BY id ASC
+                    """,
+                    (project_id,),
+                )
+                next_sequence = 1
+                updates = []
+                prefix_with_dash = f"{effective_prefix}-"
+                for ticket_id, ticket_code in cursor.fetchall():
+                    if ticket_code:
+                        if ticket_code.startswith(prefix_with_dash):
+                            suffix = ticket_code[len(prefix_with_dash):]
+                            if suffix.isdigit():
+                                next_sequence = max(next_sequence, int(suffix) + 1)
+                        continue
+                    updates.append((f"{effective_prefix}-{next_sequence}", ticket_id))
+                    next_sequence += 1
+                for ticket_code, ticket_id in updates:
+                    cursor.execute(
+                        "UPDATE kanban_tickets SET ticket_code = %s WHERE id = %s",
+                        (ticket_code, ticket_id),
+                    )
+                conn.commit()
+                return len(updates)
+
+        return self._run_with_connection_retry(operation, fallback=0, action_name="backfill kanban ticket codes")
 
     @staticmethod
     def _build_event_tags(project, state_value, ticket_id: Optional[int], previous_state: Optional[str] = None) -> List[str]:

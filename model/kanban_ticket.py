@@ -19,6 +19,7 @@ class KanbanTicket(WidgetUIModel):
     id: Optional[int] = Field(default=None, edit_enabled=False)
     user_id: Optional[int] = Field(default=None, edit_enabled=False, ui_enabled=False)
     project_id: int = Field(default=0, widget_enabled=True, description="Project that owns this ticket")
+    ticket_code: Optional[str] = Field(default=None, edit_enabled=False, widget_enabled=True, description="Stable project ticket identifier such as RSB-14")
     title: str = Field(default="", widget_enabled=True, description="Short ticket title shown on the board")
     description: Optional[str] = Field(default="", widget_enabled=True, description="Optional ticket detail")
     state: KanbanTicketState = Field(default=KanbanTicketState.BACKLOG, widget_enabled=True, description="Current workflow state")

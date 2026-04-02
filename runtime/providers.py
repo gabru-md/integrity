@@ -168,6 +168,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
                     "id": ticket.id,
                     "project_id": project.id,
                     "project_name": project.name,
+                    "ticket_code": ticket.ticket_code,
                     "title": ticket.title,
                     "description": ticket.description,
                     "state": ticket.state.value if hasattr(ticket.state, "value") else ticket.state,
