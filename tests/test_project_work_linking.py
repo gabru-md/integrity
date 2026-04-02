@@ -209,6 +209,56 @@ class ProjectWorkLinkingTests(unittest.TestCase):
         self.assertEqual(len(today_data["recommended_follow_ups"]), 1)
         self.assertEqual(today_data["recommended_follow_ups"][0]["title"], "First")
 
+    def test_project_board_template_renders_project_recommendations(self):
+        app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
+        app.secret_key = "test-secret"
+        app.jinja_env.filters["projectdatetimeformat"] = lambda value: value.strftime("%b %d, %Y, %I:%M %p") if value else ""
+
+        project = Project(
+            id=3,
+            user_id=1,
+            name="Rasbhari",
+            project_type="Code",
+            focus_tags=["python"],
+            ticket_prefix="RSB",
+            start_date=datetime(2026, 4, 2, 9, 0, 0),
+            state=ProjectState.ACTIVE,
+        )
+
+        with app.test_request_context("/projects/3/board"):
+            rendered = render_flask_template(
+                "project_board.html",
+                project=project,
+                initial_tickets=[],
+                board_states=["backlog", "prioritized"],
+                ticket_state_labels={"backlog": "Backlog", "prioritized": "Prioritized"},
+                app_name="KanbanTickets",
+                user_guidance={"overview": "Kanban guidance"},
+                board_last_updated=None,
+                archived_count=0,
+                recent_activity=[],
+                project_recommendations=[{
+                    "id": "skill:3:python",
+                    "title": "Create skill for python",
+                    "body": "Project work on Rasbhari already emits `python`.",
+                    "action": "create_skill",
+                    "action_label": "Stage Skill",
+                    "kind": "stage_action",
+                    "confidence": 0.82,
+                    "reasoning": "This project already has a stable focus tag but no matching skill.",
+                    "scope": "item",
+                    "scope_id": 3,
+                }],
+                PermissionManager=mock.Mock(can_view_app=lambda *_: False),
+                active_app_names=set(),
+                current_user={"id": 1, "username": "tester", "display_name": "Tester", "is_admin": False, "onboarding_completed": True},
+                Role=mock.Mock(),
+            )
+
+        self.assertIn("Recommendations", rendered)
+        self.assertIn("Create skill for python", rendered)
+        self.assertIn("Stage Skill", rendered)
+
 
 if __name__ == "__main__":
     unittest.main()

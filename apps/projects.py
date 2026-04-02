@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from apps.user_docs import build_app_user_guidance
-from gabru.auth import write_access_required
+from gabru.auth import PermissionManager, write_access_required
 from gabru.flask.app import App
 from model.kanban_ticket import KanbanTicketState
 from model.blog import BlogPost
@@ -13,6 +13,8 @@ from services.events import EventService
 from services.promises import PromiseService
 from services.skills import SkillService
 from services.blogs import BlogService
+from services.recommendation_followups import RecommendationFollowUpService
+from services.users import UserService
 from model.event import Event
 from processes.project_updater import ProjectUpdater
 from datetime import datetime
@@ -23,6 +25,7 @@ kanban_ticket_service = KanbanTicketService()
 promise_service = PromiseService()
 skill_service = SkillService()
 blog_service = BlogService()
+user_service = UserService()
 
 project_app = App(
     'Projects',
@@ -37,6 +40,13 @@ project_app = App(
 )
 
 project_app.register_process(ProjectUpdater, enabled=True)
+
+recommendation_followup_service = RecommendationFollowUpService(
+    project_service=project_app.service,
+    kanban_ticket_service=kanban_ticket_service,
+    promise_service=promise_service,
+    skill_service=skill_service,
+)
 
 timeline_service = TimelineService()
 
@@ -131,6 +141,30 @@ def _serialize_board_tickets(project, tickets) -> list[dict]:
         serialized.append(ticket_data)
     return serialized
 
+
+def _build_project_recommendations(project) -> list[dict]:
+    user_id = PermissionManager.get_current_user_id() or getattr(project, "user_id", None)
+    if not user_id:
+        return []
+
+    user = user_service.get_by_id(user_id)
+    recommendation_limit = 2
+    if user:
+        if not getattr(user, "recommendations_enabled", True):
+            recommendation_limit = 0
+        else:
+            recommendation_limit = max(0, int(getattr(user, "recommendation_limit", 2) or 0))
+    if recommendation_limit <= 0:
+        return []
+
+    recommendations = recommendation_followup_service.recommendation_engine.get_recommendations(
+        user_id=user_id,
+        app_name="Projects",
+        scope_id=project.id,
+        limit=recommendation_limit,
+    )
+    return [RecommendationFollowUpService._to_follow_up_payload(item) for item in recommendations]
+
 @project_app.blueprint.route('/<int:project_id>/view', methods=['GET'])
 def view_project(project_id):
     project = project_app.service.get_by_id(project_id)
@@ -175,6 +209,7 @@ def view_project_board(project_id):
                 break
     except Exception:
         recent_activity = []
+    project_recommendations = _build_project_recommendations(project)
     return render_flask_template(
         'project_board.html',
         project=project,
@@ -186,6 +221,7 @@ def view_project_board(project_id):
         board_last_updated=last_updated,
         archived_count=archived_count,
         recent_activity=recent_activity,
+        project_recommendations=project_recommendations,
     )
 
 
