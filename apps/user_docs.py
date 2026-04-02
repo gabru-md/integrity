@@ -485,6 +485,7 @@ def build_app_user_guidance(app_name: str) -> dict:
             "how_to_use": [
                 "Generate daily, weekly, or monthly mirrors from the Reports page.",
                 "Use the asynchronous option when you want generation to happen through the event pipeline and background processor.",
+                "Start with the headline and score, then open observations or the full report only when the summary suggests something worth investigating.",
                 "Use the print view when you want a clean local page that can be saved as PDF without uploading data anywhere.",
                 "Add Connections and log interactions inside their ledger if you want the report to score social balance and neglected relationships.",
             ],

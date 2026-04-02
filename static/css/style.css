@@ -481,7 +481,13 @@ html[data-chrome='solid'] .widget-card {
 
 .sidebar-group-chevron {
     color: var(--text-soft);
-    transition: transform var(--transition-speed) ease;
+    font-size: 0;
+    line-height: 1;
+}
+
+.sidebar-group-chevron::before {
+    content: "▾";
+    font-size: 0.9rem;
 }
 
 .disclosure {
@@ -524,14 +530,14 @@ html[data-chrome='solid'] .widget-card {
 
 .disclosure-summary-chevron {
     color: var(--text-soft);
-    font-size: 1rem;
+    font-size: 0;
     font-weight: 800;
-    transition: transform var(--transition-speed) ease;
     line-height: 1;
 }
 
-.disclosure[open] .disclosure-summary-chevron {
-    transform: rotate(180deg);
+.disclosure-summary-chevron::before {
+    content: "▾";
+    font-size: 1rem;
 }
 
 .disclosure-body {
@@ -540,9 +546,13 @@ html[data-chrome='solid'] .widget-card {
     padding: 1rem 0 0;
 }
 
-.sidebar-group[open] > .sidebar-group-summary .sidebar-group-chevron,
-.sidebar-subgroup[open] > .sidebar-subgroup-summary .sidebar-group-chevron {
-    transform: rotate(180deg);
+.disclosure[open] .disclosure-summary-chevron::before {
+    content: "▴";
+}
+
+.sidebar-group[open] > .sidebar-group-summary .sidebar-group-chevron::before,
+.sidebar-subgroup[open] > .sidebar-subgroup-summary .sidebar-group-chevron::before {
+    content: "▴";
 }
 
 .ui-pill {

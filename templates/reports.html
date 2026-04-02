@@ -14,11 +14,21 @@
         </div>
 
         <div class="shell-card px-6 py-6">
-            <div class="metric-label">Current Lens</div>
-            <div class="mt-4 space-y-4 text-sm leading-6 text-[var(--text-soft)]">
-                <p>The current engine scores integrity from observable signals already present in Rasbhari: events, projects, skills, thoughts, and connection activity.</p>
-                <p>Use async mode when you want event-driven generation, or generate immediately when you need the result right now.</p>
-            </div>
+            <details class="disclosure">
+                <summary class="disclosure-summary">
+                    <div class="disclosure-summary-copy">
+                        <div class="disclosure-summary-title">Current Lens</div>
+                        <div class="disclosure-summary-meta">How reports currently interpret your recorded behavior.</div>
+                    </div>
+                    <span class="disclosure-summary-chevron">⌄</span>
+                </summary>
+                <div class="disclosure-body">
+                    <div class="space-y-4 text-sm leading-6 text-[var(--text-soft)]">
+                        <p>The current engine scores integrity from observable signals already present in Rasbhari: events, projects, skills, thoughts, and connection activity.</p>
+                        <p>Use async mode when you want event-driven generation, or generate immediately when you need the result right now.</p>
+                    </div>
+                </div>
+            </details>
         </div>
     </section>
 
@@ -59,54 +69,87 @@
         </div>
 
         <div class="shell-card px-6 py-6">
-            <div class="metric-label">Signal Inputs</div>
-            <div class="mt-4 stack-list">
-                <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Event cadence and action completion</div>
-                <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Project momentum and unfinished loops</div>
-                <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Thought-to-work mismatch patterns</div>
-                <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Connection and relationship maintenance</div>
-            </div>
+            <details class="disclosure">
+                <summary class="disclosure-summary">
+                    <div class="disclosure-summary-copy">
+                        <div class="disclosure-summary-title">Signal Inputs</div>
+                        <div class="disclosure-summary-meta">The current evidence streams used in the mirror.</div>
+                    </div>
+                    <span class="disclosure-summary-chevron">⌄</span>
+                </summary>
+                <div class="disclosure-body">
+                    <div class="stack-list">
+                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Event cadence and action completion</div>
+                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Project momentum and unfinished loops</div>
+                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Thought-to-work mismatch patterns</div>
+                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Connection and relationship maintenance</div>
+                    </div>
+                </div>
+            </details>
         </div>
     </section>
 
     <section class="shell-card px-6 py-6">
-        <div class="mb-5 flex items-center justify-between gap-3">
-            <div>
-                <div class="section-kicker text-[10px] font-extrabold uppercase">History</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Recent Mirrors</h2>
-                <p class="mt-2 text-sm text-[var(--text-soft)]">Open a full report, or use the print view to save as PDF locally.</p>
+        <details class="disclosure">
+            <summary class="disclosure-summary">
+                <div class="disclosure-summary-copy">
+                    <div class="disclosure-summary-title">Recent Mirrors</div>
+                    <div class="disclosure-summary-meta">Open a full report, or save a print view locally.</div>
+                </div>
+                <span class="disclosure-summary-chevron">⌄</span>
+            </summary>
+            <div class="disclosure-body">
+                {% if reports %}
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    {% for report in reports %}
+                    <article class="shell-card-strong rounded-[calc(var(--card-radius)-6px)] border border-[var(--border)] px-5 py-5">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <div class="section-kicker text-[10px] font-extrabold uppercase">{{ report.report_type }}</div>
+                                <h3 class="mt-2 text-xl font-extrabold text-[var(--text)]">{{ report.title }}</h3>
+                                <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ report.headline }}</p>
+                            </div>
+                            <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-center">
+                                <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Score</div>
+                                <div class="mt-1 text-2xl font-extrabold text-[var(--accent)]">{{ report.integrity_score }}</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-[var(--text-soft)]">
+                            <span>{{ report.anchor_date }}</span>
+                            <span>{{ report.generated_at.strftime("%Y-%m-%d %H:%M") if report.generated_at else "" }}</span>
+                        </div>
+                        {% if report.observations %}
+                        <details class="disclosure mt-4">
+                            <summary class="disclosure-summary">
+                                <div class="disclosure-summary-copy">
+                                    <div class="disclosure-summary-title">Observations</div>
+                                    <div class="disclosure-summary-meta">{{ report.observations|length }} reflective note{{ '' if report.observations|length == 1 else 's' }}</div>
+                                </div>
+                                <span class="disclosure-summary-chevron">⌄</span>
+                            </summary>
+                            <div class="disclosure-body">
+                                <div class="space-y-3">
+                                    {% for observation in report.observations %}
+                                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm leading-6 text-[var(--text-soft)]">
+                                        {{ observation }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </details>
+                        {% endif %}
+                        <div class="mt-5 flex flex-wrap gap-3">
+                            <a href="/reports/{{ report.id }}/view" class="btn-primary px-4 py-3 text-sm">Open Report</a>
+                            <a href="/reports/{{ report.id }}/print" class="btn-secondary px-4 py-3 text-sm">Print View</a>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">No reports generated yet.</div>
+                {% endif %}
             </div>
-        </div>
-
-        {% if reports %}
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {% for report in reports %}
-            <article class="shell-card-strong rounded-[calc(var(--card-radius)-6px)] border border-[var(--border)] px-5 py-5">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <div class="section-kicker text-[10px] font-extrabold uppercase">{{ report.report_type }}</div>
-                        <h3 class="mt-2 text-xl font-extrabold text-[var(--text)]">{{ report.title }}</h3>
-                        <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ report.headline }}</p>
-                    </div>
-                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-center">
-                        <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Score</div>
-                        <div class="mt-1 text-2xl font-extrabold text-[var(--accent)]">{{ report.integrity_score }}</div>
-                    </div>
-                </div>
-                <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-[var(--text-soft)]">
-                    <span>{{ report.anchor_date }}</span>
-                    <span>{{ report.generated_at.strftime("%Y-%m-%d %H:%M") if report.generated_at else "" }}</span>
-                </div>
-                <div class="mt-5 flex flex-wrap gap-3">
-                    <a href="/reports/{{ report.id }}/view" class="btn-primary px-4 py-3 text-sm">Open Report</a>
-                    <a href="/reports/{{ report.id }}/print" class="btn-secondary px-4 py-3 text-sm">Print View</a>
-                </div>
-            </article>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="empty-state">No reports generated yet.</div>
-        {% endif %}
+        </details>
     </section>
 </div>
 
