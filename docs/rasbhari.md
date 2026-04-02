@@ -108,6 +108,8 @@ This path is distinct from the end-user tutorial and focuses on:
 
 The admin guide is meant to explain how to operate Rasbhari, not how to use it as an end user.
 
+For Raspberry Pi-hosted remote use, the operator runbook lives in [remote-pi-ops.md](remote-pi-ops.md). It documents the actual remote triage path, what to check first, which failures can be recovered from inside Rasbhari, and where the boundary shifts back to SSH or host access.
+
 ## Admin Control Plane
 
 Rasbhari now includes an admin overview at `/admin`.

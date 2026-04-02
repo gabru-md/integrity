@@ -8,6 +8,7 @@ Useful entry points:
 - [AI Command Layer](docs/AI.md)
 - [Backup And Restore](docs/backup-restore.md)
 - [Environment Reference](docs/environment.md)
+- [Remote Pi Operations](docs/remote-pi-ops.md)
 - [Rasbhari Overview](docs/rasbhari.md)
 - [Setup Guide](docs/setup.md)
 - [Testing Sandbox](docs/testing-sandbox.md)

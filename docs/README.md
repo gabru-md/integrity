@@ -18,6 +18,7 @@ Use it as the primary place to find:
 - [macOS Local Signals](./mac-agent.md)
 - [Mental Model](./mental-model.md)
 - [Mental Model](./mental-model.md) also documents the first-run guided tutorial flow
+- [Remote Pi Operations](./remote-pi-ops.md)
 - [Rasbhari Overview](./rasbhari.md)
 - [Testing Sandbox](./testing-sandbox.md)
 - [Test Suite](./testing.md)

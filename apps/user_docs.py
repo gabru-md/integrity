@@ -216,6 +216,7 @@ def build_rasbhari_admin_guide() -> dict:
             "actions": [
                 {"label": "Open System Apps", "href": "/apps"},
                 {"label": "Open Setup Docs", "href": "/docs/setup.md"},
+                {"label": "Remote Pi Ops", "href": "/docs/remote-pi-ops.md"},
             ],
             "checklist": [
                 "Only enable apps and widgets that are actually supported by the current environment.",
@@ -229,6 +230,7 @@ def build_rasbhari_admin_guide() -> dict:
             "actions": [
                 {"label": "Open Admin Overview", "href": "/admin"},
                 {"label": "Open Processes", "href": "/processes"},
+                {"label": "Remote Pi Ops", "href": "/docs/remote-pi-ops.md"},
             ],
             "checklist": [
                 "Manage app activation, widgets, process state, queue recovery, user approvals, and dependency health from inside Rasbhari.",
