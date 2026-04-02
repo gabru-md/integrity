@@ -40,6 +40,7 @@ class PermissionManager:
                 "username": session.get("username", ""),
                 "display_name": session.get("display_name", ""),
                 "is_admin": bool(session.get("is_admin")),
+                "onboarding_completed": bool(session.get("onboarding_completed")),
                 "auth_type": "session",
             }
             g._authenticated_user = user
@@ -67,6 +68,7 @@ class PermissionManager:
             "display_name": user.display_name,
             "is_admin": user.is_admin,
             "api_key": user.api_key,
+            "onboarding_completed": getattr(user, "onboarding_completed", False),
             "auth_type": "api_key",
         }
         g._authenticated_user_resolved = True
@@ -103,6 +105,7 @@ class PermissionManager:
             "username": user.get("username", ""),
             "display_name": user.get("display_name", ""),
             "is_admin": bool(user.get("is_admin")),
+            "onboarding_completed": bool(user.get("onboarding_completed")),
             "auth_type": user.get("auth_type", "session"),
         }
 
@@ -112,12 +115,14 @@ class PermissionManager:
         session["username"] = user.username
         session["display_name"] = user.display_name
         session["is_admin"] = user.is_admin
+        session["onboarding_completed"] = getattr(user, "onboarding_completed", False)
         g._authenticated_user = {
             "id": user.id,
             "username": user.username,
             "display_name": user.display_name,
             "is_admin": user.is_admin,
             "api_key": getattr(user, "api_key", None),
+            "onboarding_completed": getattr(user, "onboarding_completed", False),
             "auth_type": "session",
         }
         g._authenticated_user_resolved = True
@@ -128,6 +133,7 @@ class PermissionManager:
         session.pop("username", None)
         session.pop("display_name", None)
         session.pop("is_admin", None)
+        session.pop("onboarding_completed", None)
         g._authenticated_user = None
         g._authenticated_user_resolved = True
 

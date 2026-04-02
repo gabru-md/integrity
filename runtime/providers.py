@@ -86,6 +86,7 @@ class RasbhariAuthProvider(AuthProvider):
             display_name=user.display_name,
             is_admin=user.is_admin,
             api_key=getattr(user, "api_key", None),
+            onboarding_completed=getattr(user, "onboarding_completed", False),
         )
 
 

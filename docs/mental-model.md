@@ -154,3 +154,22 @@ If Rasbhari feels confusing, ask:
 - did I generate enough evidence for reflection?
 
 If the answer is no to most of those, the system will feel fragmented. If the answer is yes, Rasbhari starts to feel like one system instead of many apps.
+
+## Guided Tutorial
+
+Rasbhari includes a first-run interactive tutorial for signed-in users.
+
+It walks through the ecosystem in product order:
+
+1. `Today`
+2. `Events`
+3. `Activities`
+4. `Projects`
+5. `KanbanTickets`
+6. `Promises`
+7. `Skills`
+8. `Reports`
+
+The tutorial is intentionally non-AI. It explains the product loop, why each surface exists, and what to look at on each page before the user starts trying to optimize the system.
+
+Users can restart it later from `Profile Settings`.

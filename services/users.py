@@ -30,6 +30,7 @@ class UserService(CRUDService[User]):
                         is_admin BOOLEAN NOT NULL DEFAULT FALSE,
                         is_active BOOLEAN NOT NULL DEFAULT TRUE,
                         is_approved BOOLEAN NOT NULL DEFAULT FALSE,
+                        onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
                         ntfy_topic TEXT,
                         encrypted_data_key TEXT,
                         key_version INTEGER NOT NULL DEFAULT 1,
@@ -38,6 +39,7 @@ class UserService(CRUDService[User]):
                     )
                 """)
                 cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(5)")
+                cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE")
                 cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_api_key ON users (api_key) WHERE api_key IS NOT NULL")
                 self.db.conn.commit()
 
@@ -67,11 +69,12 @@ class UserService(CRUDService[User]):
             is_admin=row[4],
             is_active=row[5],
             is_approved=row[6],
-            ntfy_topic=row[7],
-            encrypted_data_key=row[8],
-            key_version=row[9],
-            created_at=row[10],
-            updated_at=row[11],
+            onboarding_completed=row[7],
+            ntfy_topic=row[8],
+            encrypted_data_key=row[9],
+            key_version=row[10],
+            created_at=row[11],
+            updated_at=row[12],
         )
 
     def _get_columns_for_insert(self) -> List[str]:
@@ -83,6 +86,7 @@ class UserService(CRUDService[User]):
             "is_admin",
             "is_active",
             "is_approved",
+            "onboarding_completed",
             "ntfy_topic",
             "encrypted_data_key",
             "key_version",
@@ -102,6 +106,7 @@ class UserService(CRUDService[User]):
             "is_admin",
             "is_active",
             "is_approved",
+            "onboarding_completed",
             "ntfy_topic",
             "encrypted_data_key",
             "key_version",
@@ -119,9 +124,9 @@ class UserService(CRUDService[User]):
         query = """
             INSERT INTO users (
                 username, display_name, password_hash, api_key, is_admin, is_active, is_approved,
-                ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
+                onboarding_completed, ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
         params = (
@@ -132,6 +137,7 @@ class UserService(CRUDService[User]):
             obj.is_admin,
             obj.is_active,
             obj.is_approved,
+            obj.onboarding_completed,
             obj.ntfy_topic,
             obj.encrypted_data_key,
             obj.key_version,
@@ -165,6 +171,7 @@ class UserService(CRUDService[User]):
                 is_admin=%s,
                 is_active=%s,
                 is_approved=%s,
+                onboarding_completed=%s,
                 ntfy_topic=%s,
                 encrypted_data_key=%s,
                 key_version=%s,
@@ -180,6 +187,7 @@ class UserService(CRUDService[User]):
             obj.is_admin,
             obj.is_active,
             obj.is_approved,
+            obj.onboarding_completed,
             obj.ntfy_topic,
             obj.encrypted_data_key,
             obj.key_version,
@@ -210,7 +218,7 @@ class UserService(CRUDService[User]):
         if not self.db.get_conn():
             return None
         query = """
-            SELECT id, username, display_name, password_hash, api_key, is_admin, is_active, is_approved,
+            SELECT id, username, display_name, password_hash, api_key, is_admin, is_active, is_approved, onboarding_completed,
                    ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
             FROM users
             WHERE id = %s
@@ -229,18 +237,19 @@ class UserService(CRUDService[User]):
                 "is_admin": row[5],
                 "is_active": row[6],
                 "is_approved": row[7],
-                "ntfy_topic": row[8],
-                "encrypted_data_key": row[9],
-                "key_version": row[10],
-                "created_at": row[11],
-                "updated_at": row[12],
+                "onboarding_completed": row[8],
+                "ntfy_topic": row[9],
+                "encrypted_data_key": row[10],
+                "key_version": row[11],
+                "created_at": row[12],
+                "updated_at": row[13],
             }
 
     def authenticate(self, username: str, password: str) -> Optional[User]:
         if not self.db.get_conn():
             return None
         query = """
-            SELECT id, username, display_name, password_hash, api_key, is_admin, is_active, is_approved,
+            SELECT id, username, display_name, password_hash, api_key, is_admin, is_active, is_approved, onboarding_completed,
                    ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
             FROM users
             WHERE username = %s
@@ -265,11 +274,12 @@ class UserService(CRUDService[User]):
                 is_admin=row[5],
                 is_active=row[6],
                 is_approved=row[7],
-                ntfy_topic=row[8],
-                encrypted_data_key=row[9],
-                key_version=row[10],
-                created_at=row[11],
-                updated_at=row[12],
+                onboarding_completed=row[8],
+                ntfy_topic=row[9],
+                encrypted_data_key=row[10],
+                key_version=row[11],
+                created_at=row[12],
+                updated_at=row[13],
             )
 
     def authenticate_api_key(self, api_key: str) -> Optional[User]:
@@ -279,7 +289,7 @@ class UserService(CRUDService[User]):
         if not safe_api_key:
             return None
         query = """
-            SELECT id, username, display_name, api_key, is_admin, is_active, is_approved,
+            SELECT id, username, display_name, api_key, is_admin, is_active, is_approved, onboarding_completed,
                    ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
             FROM users
             WHERE api_key = %s
@@ -299,11 +309,12 @@ class UserService(CRUDService[User]):
                 is_admin=row[4],
                 is_active=row[5],
                 is_approved=row[6],
-                ntfy_topic=row[7],
-                encrypted_data_key=row[8],
-                key_version=row[9],
-                created_at=row[10],
-                updated_at=row[11],
+                onboarding_completed=row[7],
+                ntfy_topic=row[8],
+                encrypted_data_key=row[9],
+                key_version=row[10],
+                created_at=row[11],
+                updated_at=row[12],
             )
 
     def regenerate_api_key(self, user_id: int) -> Optional[str]:

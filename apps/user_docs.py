@@ -44,6 +44,114 @@ def build_rasbhari_mental_model() -> dict:
     }
 
 
+def build_rasbhari_tutorial() -> dict:
+    steps = [
+        {
+            "id": "today",
+            "title": "Today is the front door",
+            "target_label": "Today",
+            "target_path": "/",
+            "summary": "Start here each day. Today pulls active work, due promises, neglected relationships, suggested activities, and high-signal guidance into one control surface.",
+            "why_it_matters": "If Rasbhari feels fragmented, Today is where the system recomposes itself.",
+            "checklist": [
+                "Scan the guidance cards before opening other apps.",
+                "Look for active tickets, due promises, or neglected connections.",
+            ],
+        },
+        {
+            "id": "events",
+            "title": "Events are the shared language",
+            "target_label": "Events",
+            "target_path": "/events/home",
+            "summary": "Most of Rasbhari works because meaningful things become events. Events are the signals other apps react to.",
+            "why_it_matters": "Promises, skills, reports, notifications, and imports all depend on stable event evidence.",
+            "checklist": [
+                "Notice the event type and tag vocabulary.",
+                "Keep names stable when you log new signals.",
+            ],
+        },
+        {
+            "id": "activities",
+            "title": "Activities make capture fast",
+            "target_label": "Activities",
+            "target_path": "/activities/home",
+            "summary": "Activities are reusable buttons for actions you repeat. Triggering one creates an event without making you fill the same form every time.",
+            "why_it_matters": "Good activities reduce friction and improve event consistency.",
+            "checklist": [
+                "Create activities for repeated actions, not rare one-offs.",
+                "Use tags if the action should count toward skills or promises.",
+            ],
+        },
+        {
+            "id": "projects",
+            "title": "Projects give work a home",
+            "target_label": "Projects",
+            "target_path": "/projects/home",
+            "summary": "Projects organize larger bodies of work. Their timelines tell the story, and their focus tags link work back to promises and skills.",
+            "why_it_matters": "Projects turn isolated events into ongoing intent and visible progress.",
+            "checklist": [
+                "Use focus tags when project work should count elsewhere.",
+                "Open a project when work needs context, not just logging.",
+            ],
+        },
+        {
+            "id": "kanban",
+            "title": "Kanban turns projects into execution",
+            "target_label": "Kanban",
+            "target_path": "/kanbantickets/home",
+            "summary": "Kanban tickets are the concrete units of project work. They move from backlog to shipped and emit project-work signals as they change.",
+            "why_it_matters": "Tickets make Today, reports, and project history reflect actual execution instead of abstract plans.",
+            "checklist": [
+                "Keep tickets short and concrete.",
+                "Move tickets when the state changes so the event bus stays honest.",
+            ],
+        },
+        {
+            "id": "promises",
+            "title": "Promises make commitments visible",
+            "target_label": "Promises",
+            "target_path": "/promises/home",
+            "summary": "Promises watch for the event types and tags that should exist over time. They are how Rasbhari compares intent to evidence.",
+            "why_it_matters": "A promise only works if your events and tags actually describe the behavior you care about.",
+            "checklist": [
+                "Use a real event type or tag as the promise target.",
+                "Check due or drifting promises from Today and reports.",
+            ],
+        },
+        {
+            "id": "skills",
+            "title": "Skills reward repeated effort",
+            "target_label": "Skills",
+            "target_path": "/skills/home",
+            "summary": "Skills turn tagged work into XP and levels. They show whether repeated effort is accumulating into growth.",
+            "why_it_matters": "Stable tags make growth visible across activities, tickets, and imports.",
+            "checklist": [
+                "Use one stable tag key per skill.",
+                "Prefer skill names that reflect capabilities you actually want to grow.",
+            ],
+        },
+        {
+            "id": "reports",
+            "title": "Reports reflect the whole system",
+            "target_label": "Reports",
+            "target_path": "/reports/home",
+            "summary": "Reports are the behavioral mirror. They compare projects, promises, skills, thoughts, and events to reveal both progress and drift.",
+            "why_it_matters": "This is where Rasbhari stops being a tracker and starts helping you see integrity gaps.",
+            "checklist": [
+                "Generate a report once real activity exists.",
+                "Use it to adjust capture, structure, or commitments.",
+            ],
+        },
+    ]
+
+    return {
+        "headline": "Rasbhari works best when you move through one shared loop, not isolated apps.",
+        "summary": "This guided walkthrough shows how each app participates in the same system so you can understand the ecosystem before trying to optimize it.",
+        "steps": steps,
+        "completion_copy": "You have seen the core loop. The next useful move is to create a little real structure and then return to Today.",
+    }
+
+
 def build_app_user_guidance(app_name: str) -> dict:
     docs = {
         "Activities": {

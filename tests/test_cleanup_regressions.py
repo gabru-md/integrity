@@ -20,12 +20,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
 class FakeUser:
-    def __init__(self, user_id=1, username="tester", display_name="Tester", is_admin=False, api_key="abcde"):
+    def __init__(self, user_id=1, username="tester", display_name="Tester", is_admin=False, api_key="abcde", onboarding_completed=False):
         self.id = user_id
         self.username = username
         self.display_name = display_name
         self.is_admin = is_admin
         self.api_key = api_key
+        self.onboarding_completed = onboarding_completed
 
 
 class FakeAuthProvider:
@@ -170,10 +171,20 @@ class PermissionManagerTests(unittest.TestCase):
             session["username"] = "session-user"
             session["display_name"] = "Session User"
             session["is_admin"] = True
+            session["onboarding_completed"] = False
             self.assertTrue(PermissionManager.is_authenticated())
             self.assertEqual(PermissionManager.get_current_user_id(), 3)
             self.assertEqual(PermissionManager.get_current_user()["auth_type"], "session")
+            self.assertFalse(PermissionManager.get_current_user()["onboarding_completed"])
             self.assertEqual(fake_service.calls, 0)
+
+    def test_login_stores_onboarding_state_in_session(self):
+        app = Flask(__name__)
+        app.secret_key = "test-secret"
+
+        with app.test_request_context("/"):
+            PermissionManager.login(FakeUser(user_id=4, onboarding_completed=True))
+            self.assertTrue(PermissionManager.get_current_user()["onboarding_completed"])
 
 
 class AppRequestParsingTests(unittest.TestCase):
@@ -230,12 +241,13 @@ class MentalModelContextTests(unittest.TestCase):
                 today_data={"guidance": [], "active_work": [], "prioritized_work": [], "due_promises": [], "neglected_connections": [], "suggested_activities": [], "recommended_follow_ups": [], "active_project_count": 0, "latest_report": None, "events_today_count": 0},
                 PermissionManager=mock.Mock(can_view_app=lambda *_: False),
                 active_app_names=set(),
-                current_user=None,
+                current_user={"id": 1, "username": "tester", "display_name": "Tester", "is_admin": False, "onboarding_completed": False},
                 Role=mock.Mock(),
             )
 
         self.assertIn("Capture, Structure, Commit, Grow, Reflect, Act", rendered)
         self.assertIn("How Rasbhari Works", rendered)
+        self.assertIn("Meet Rasbhari", rendered)
 
 
 class TodayRouteTests(unittest.TestCase):

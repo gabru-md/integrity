@@ -16,6 +16,7 @@ Use it as the primary place to find:
 - [Import Foundation](./imports.md)
 - [macOS Local Signals](./mac-agent.md)
 - [Mental Model](./mental-model.md)
+- [Mental Model](./mental-model.md) also documents the first-run guided tutorial flow
 - [Rasbhari Overview](./rasbhari.md)
 - [Testing Sandbox](./testing-sandbox.md)
 - [Test Suite](./testing.md)

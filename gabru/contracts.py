@@ -33,6 +33,7 @@ class AuthenticatedUser:
     display_name: str
     is_admin: bool
     api_key: Optional[str] = None
+    onboarding_completed: bool = False
 
 
 @runtime_checkable

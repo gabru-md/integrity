@@ -241,6 +241,60 @@
     </div>
 </main>
 
+{% if current_user %}
+<div
+    id="onboarding-overlay"
+    class="onboarding-overlay hidden"
+    data-user-id="{{ current_user.id }}"
+    data-onboarding-completed="{{ 'true' if current_user.onboarding_completed else 'false' }}"
+>
+    <div class="onboarding-backdrop"></div>
+    <section class="onboarding-panel shell-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+        <div class="onboarding-header">
+            <div>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Interactive Tutorial</div>
+                <h2 id="onboarding-title" class="mt-2 text-3xl font-extrabold text-[var(--text)]">Meet Rasbhari</h2>
+                <p id="onboarding-headline" class="mt-3 text-sm leading-6 text-[var(--text-soft)]"></p>
+            </div>
+            <button type="button" id="onboarding-dismiss" class="btn-ghost px-4 py-2 text-sm">Skip</button>
+        </div>
+
+        <div class="onboarding-progress-wrap">
+            <div id="onboarding-progress-label" class="metric-label">Step 1</div>
+            <div class="onboarding-progress-bar">
+                <div id="onboarding-progress-fill" class="onboarding-progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="onboarding-body">
+            <div class="onboarding-step-shell">
+                <div class="metric-label" id="onboarding-target-label"></div>
+                <h3 id="onboarding-step-title" class="mt-2 text-2xl font-extrabold text-[var(--text)]"></h3>
+                <p id="onboarding-step-summary" class="mt-3 text-sm leading-6 text-[var(--text-soft)]"></p>
+                <div class="onboarding-why">
+                    <div class="metric-label">Why it matters</div>
+                    <p id="onboarding-step-why" class="mt-2 text-sm leading-6 text-[var(--text-soft)]"></p>
+                </div>
+            </div>
+            <div class="onboarding-step-shell">
+                <div class="metric-label">Do this here</div>
+                <div id="onboarding-step-checklist" class="mt-3 stack-list"></div>
+            </div>
+        </div>
+
+        <div class="onboarding-footer">
+            <div id="onboarding-step-hint" class="text-sm text-[var(--text-soft)]"></div>
+            <div class="onboarding-actions">
+                <button type="button" id="onboarding-back" class="btn-ghost px-4 py-3 text-sm">Back</button>
+                <button type="button" id="onboarding-primary" class="btn-primary px-5 py-3 text-sm">Open</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script id="rasbhari-tutorial-data" type="application/json">{{ rasbhari_tutorial | tojson }}</script>
+{% endif %}
+
 {% block scripts %}
 <script>
     function applyThemeMeta(themeName) {
@@ -336,6 +390,172 @@
                 pendingConfirmation = sessionStorage.getItem(assistantPendingKey);
                 pendingCardId = sessionStorage.getItem(assistantPendingCardKey);
             } catch (_) {}
+        }
+
+        const onboardingOverlay = document.getElementById('onboarding-overlay');
+        const onboardingDataElement = document.getElementById('rasbhari-tutorial-data');
+        const onboardingState = {
+            tutorial: null,
+            steps: [],
+            stepIndex: 0,
+            storageKey: null,
+        };
+
+        function parseTutorialData() {
+            if (!onboardingDataElement) return null;
+            try {
+                return JSON.parse(onboardingDataElement.textContent || '{}');
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function getTutorialStorageKey(userId) {
+            return `rasbhari_tutorial_step_v1:${userId}`;
+        }
+
+        function loadTutorialStep() {
+            if (!onboardingState.storageKey) return 0;
+            try {
+                const value = Number(localStorage.getItem(onboardingState.storageKey) || '0');
+                if (Number.isFinite(value) && value >= 0) return value;
+            } catch (_) {}
+            return 0;
+        }
+
+        function saveTutorialStep() {
+            if (!onboardingState.storageKey) return;
+            try {
+                localStorage.setItem(onboardingState.storageKey, String(onboardingState.stepIndex));
+            } catch (_) {}
+        }
+
+        function setTutorialOverlayVisible(visible) {
+            if (!onboardingOverlay) return;
+            onboardingOverlay.classList.toggle('hidden', !visible);
+            document.body.classList.toggle('tutorial-open', visible);
+        }
+
+        function renderTutorialStep() {
+            if (!onboardingOverlay || !onboardingState.steps.length) return;
+            const step = onboardingState.steps[onboardingState.stepIndex];
+            if (!step) return;
+
+            const progressLabel = document.getElementById('onboarding-progress-label');
+            const progressFill = document.getElementById('onboarding-progress-fill');
+            const headline = document.getElementById('onboarding-headline');
+            const targetLabel = document.getElementById('onboarding-target-label');
+            const title = document.getElementById('onboarding-step-title');
+            const summary = document.getElementById('onboarding-step-summary');
+            const why = document.getElementById('onboarding-step-why');
+            const checklist = document.getElementById('onboarding-step-checklist');
+            const hint = document.getElementById('onboarding-step-hint');
+            const primaryButton = document.getElementById('onboarding-primary');
+            const backButton = document.getElementById('onboarding-back');
+
+            if (progressLabel) progressLabel.textContent = `Step ${onboardingState.stepIndex + 1} of ${onboardingState.steps.length}`;
+            if (progressFill) progressFill.style.width = `${((onboardingState.stepIndex + 1) / onboardingState.steps.length) * 100}%`;
+            if (headline) headline.textContent = onboardingState.tutorial?.summary || '';
+            if (targetLabel) targetLabel.textContent = step.target_label || 'Rasbhari';
+            if (title) title.textContent = step.title || '';
+            if (summary) summary.textContent = step.summary || '';
+            if (why) why.textContent = step.why_it_matters || '';
+            if (checklist) {
+                checklist.innerHTML = '';
+                (step.checklist || []).forEach((item) => {
+                    const row = document.createElement('div');
+                    row.className = 'stack-row text-sm leading-6 text-[var(--text-soft)]';
+                    row.textContent = item;
+                    checklist.appendChild(row);
+                });
+            }
+            const onTargetPage = window.location.pathname === step.target_path;
+            if (hint) {
+                hint.textContent = onTargetPage
+                    ? 'You are on the right page. Read the short guidance, then move to the next stop.'
+                    : `Open ${step.target_label} to continue the walkthrough.`;
+            }
+            if (primaryButton) {
+                const isLastStep = onboardingState.stepIndex === onboardingState.steps.length - 1;
+                primaryButton.textContent = onTargetPage
+                    ? (isLastStep ? 'Finish Tutorial' : 'Next Step')
+                    : `Open ${step.target_label}`;
+            }
+            if (backButton) {
+                backButton.disabled = onboardingState.stepIndex === 0;
+                backButton.classList.toggle('opacity-50', onboardingState.stepIndex === 0);
+            }
+            saveTutorialStep();
+        }
+
+        async function updateTutorialCompletion(completed) {
+            try {
+                const response = await fetch('/users/profile/onboarding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ completed }),
+                });
+                return response.ok;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        async function finishTutorial() {
+            const completed = await updateTutorialCompletion(true);
+            if (completed) {
+                setTutorialOverlayVisible(false);
+            }
+        }
+
+        function setupTutorial() {
+            if (!onboardingOverlay) return;
+            const alreadyCompleted = onboardingOverlay.dataset.onboardingCompleted === 'true';
+            const userId = onboardingOverlay.dataset.userId;
+            const tutorial = parseTutorialData();
+            if (!tutorial || !Array.isArray(tutorial.steps) || !tutorial.steps.length || !userId) return;
+
+            onboardingState.tutorial = tutorial;
+            onboardingState.steps = tutorial.steps;
+            onboardingState.storageKey = getTutorialStorageKey(userId);
+            onboardingState.stepIndex = Math.min(loadTutorialStep(), onboardingState.steps.length - 1);
+
+            const dismissButton = document.getElementById('onboarding-dismiss');
+            const backButton = document.getElementById('onboarding-back');
+            const primaryButton = document.getElementById('onboarding-primary');
+
+            dismissButton?.addEventListener('click', async () => {
+                await finishTutorial();
+            });
+
+            backButton?.addEventListener('click', () => {
+                if (onboardingState.stepIndex === 0) return;
+                onboardingState.stepIndex -= 1;
+                renderTutorialStep();
+            });
+
+            primaryButton?.addEventListener('click', async () => {
+                const step = onboardingState.steps[onboardingState.stepIndex];
+                if (!step) return;
+                const onTargetPage = window.location.pathname === step.target_path;
+                if (!onTargetPage) {
+                    window.location.href = step.target_path;
+                    return;
+                }
+                const isLastStep = onboardingState.stepIndex === onboardingState.steps.length - 1;
+                if (isLastStep) {
+                    await finishTutorial();
+                    return;
+                }
+                onboardingState.stepIndex += 1;
+                renderTutorialStep();
+            });
+
+            if (!alreadyCompleted) {
+                setTutorialOverlayVisible(true);
+                renderTutorialStep();
+            }
         }
 
         function syncAssistantLock() {
@@ -624,6 +844,8 @@
                 }
             });
         }
+
+        setupTutorial();
     });
 </script>
 {% endblock %}

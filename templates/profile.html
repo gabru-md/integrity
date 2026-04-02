@@ -88,6 +88,21 @@
                     <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">UI appearance settings are managed globally from the sidebar and stored locally in your browser.</div>
                 </div>
             </div>
+
+            <div class="shell-card px-6 py-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Tutorial</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Interactive Walkthrough</h2>
+                <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Rerun the first-run Rasbhari tutorial whenever you want a quick guided refresher on how the ecosystem fits together.</p>
+
+                <div class="mt-4 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--text-soft)]">
+                    Status: {{ 'Completed' if user.onboarding_completed else 'Not completed yet' }}
+                </div>
+
+                <form action="{{ url_for('Users.update_onboarding') }}" method="POST" class="mt-4">
+                    <input type="hidden" name="completed" value="false">
+                    <button type="submit" class="btn-secondary w-full px-5 py-3">Restart Tutorial</button>
+                </form>
+            </div>
         </div>
     </section>
 </div>

@@ -15,6 +15,7 @@ class User(WidgetUIModel):
     is_admin: bool = Field(default=False, widget_enabled=True, description="Whether this account can access Rasbhari admin panels.")
     is_active: bool = Field(default=True, widget_enabled=True, description="Whether this account can sign in.")
     is_approved: bool = Field(default=False, widget_enabled=True, description="Whether this account has been approved by an admin.")
+    onboarding_completed: bool = Field(default=False, widget_enabled=True, description="Whether the guided product tutorial has been completed for this user.")
     ntfy_topic: Optional[str] = Field(default=None, widget_enabled=True, description="Personal ntfy.sh topic for notifications. If empty, uses system default.")
     encrypted_data_key: Optional[str] = Field(default=None, edit_enabled=False, ui_enabled=False)
     key_version: int = Field(default=1, edit_enabled=False, ui_enabled=False)
