@@ -9,6 +9,7 @@ from model.activity import Activity
 from model.promise import Promise
 from model.skill import Skill
 from services.assistant_command import AssistantCommandService
+from services.recommendation_engine import RecommendationEngineService
 from services.recommendation_followups import RecommendationFollowUpService
 
 
@@ -170,6 +171,49 @@ class RecommendationFollowUpServiceTests(unittest.TestCase):
         actions = [item["action"] for item in items]
 
         self.assertIn("update_promise_target_tag", actions)
+
+    def test_engine_emits_ranked_structured_recommendations(self):
+        project = Project(
+            id=3,
+            user_id=7,
+            name="Rasbhari",
+            project_type="Code",
+            focus_tags=["python"],
+            start_date=datetime(2026, 4, 1, 9, 0, 0),
+            state=ProjectState.ACTIVE,
+            last_updated=datetime.now() - timedelta(days=10),
+        )
+        promise = Promise(
+            id=11,
+            user_id=7,
+            name="Keep Amazon orders visible",
+            frequency="daily",
+            target_event_type="amazon:order",
+            target_event_tag=None,
+        )
+        activity = Activity(
+            id=5,
+            user_id=7,
+            name="Amazon Order",
+            event_type="amazon:order",
+            tags=["amazon"],
+        )
+        engine = RecommendationEngineService(
+            project_service=FakeProjectService([project]),
+            kanban_ticket_service=FakeKanbanTicketService(),
+            promise_service=FakePromiseService([promise]),
+            skill_service=FakeSkillService(),
+            activity_service=FakeActivityService([activity]),
+        )
+
+        items = engine.get_recommendations(user_id=7, limit=6)
+
+        self.assertTrue(items)
+        self.assertGreaterEqual(items[0].priority, items[-1].priority)
+        self.assertEqual(items[0].app_name, "Promises")
+        self.assertEqual(items[0].scope, "item")
+        self.assertIsNotNone(items[0].action)
+        self.assertTrue(items[0].reasoning)
 
 
 class RecommendationActionBridgeTests(unittest.TestCase):
