@@ -3,6 +3,7 @@ from apps.user_docs import build_app_user_guidance
 from gabru.auth import write_access_required
 from gabru.flask.app import App
 from model.kanban_ticket import KanbanTicketState
+from model.blog import BlogPost
 from model.project import Project
 from model.timeline import TimelineItem
 from services.projects import ProjectService
@@ -11,6 +12,7 @@ from services.timeline import TimelineService
 from services.events import EventService
 from services.promises import PromiseService
 from services.skills import SkillService
+from services.blogs import BlogService
 from model.event import Event
 from processes.project_updater import ProjectUpdater
 from datetime import datetime
@@ -20,6 +22,7 @@ event_service = EventService()
 kanban_ticket_service = KanbanTicketService()
 promise_service = PromiseService()
 skill_service = SkillService()
+blog_service = BlogService()
 
 project_app = App(
     'Projects',
@@ -208,17 +211,63 @@ def add_timeline_item(project_id):
         if not project:
             return jsonify({"error": "Project not found"}), 404
 
-        # Validate and create
+        item_type = data.get('item_type', 'Update')
+        timestamp = datetime.now()
+        content = (data.get('content') or '').strip()
+        title = (data.get('title') or '').strip() or None
+        if not content:
+            return jsonify({"error": "Content is required"}), 400
+
+        blog_post_id = data.get("blog_post_id")
+        blog_slug = None
+        if item_type == "Blog":
+            if blog_post_id:
+                linked_post = blog_service.get_by_id(int(blog_post_id))
+                if not linked_post:
+                    return jsonify({"error": "Linked blog post not found"}), 404
+                blog_post_id = linked_post.id
+                blog_slug = linked_post.slug
+                if not title:
+                    title = linked_post.title
+                content = linked_post.content
+            else:
+                blog_title = title or f"{project.name} update {timestamp.strftime('%Y-%m-%d %H:%M')}"
+                slug = blog_service.build_unique_slug(blog_title, data.get("slug"))
+                tags = [project.name.strip().lower().replace(" ", "-"), *(project.focus_tags or [])]
+                deduped_tags = []
+                for tag in tags:
+                    if tag and tag not in deduped_tags:
+                        deduped_tags.append(tag)
+                blog_post = BlogPost(
+                    user_id=project.user_id,
+                    title=blog_title,
+                    slug=slug,
+                    content=content,
+                    tags=deduped_tags,
+                    status=(data.get("status") or "draft").strip().lower(),
+                    created_at=timestamp,
+                    updated_at=timestamp,
+                )
+                blog_post_id = blog_service.create(blog_post)
+                if not blog_post_id:
+                    return jsonify({"error": "Failed to create blog post"}), 500
+                blog_slug = slug
+                title = blog_title
+
         item = TimelineItem(
             user_id=project.user_id,
             project_id=project_id,
-            content=data.get('content'),
-            item_type=data.get('item_type', 'Update')
+            title=title,
+            content=content,
+            blog_post_id=blog_post_id,
+            blog_slug=blog_slug,
+            timestamp=timestamp,
+            item_type=item_type
         )
         timeline_service.create(item)
         
         # Update project's last_updated time and progress count
-        project.last_updated = datetime.now()
+        project.last_updated = timestamp
         if item.item_type == 'Update':
             project.progress_count += 1
         project_app.service.update(project)
@@ -229,17 +278,18 @@ def add_timeline_item(project_id):
         new_event = Event(
             user_id=project.user_id,
             event_type=event_type,
-            timestamp=datetime.now(),
-            description=f"Timeline update for project: {project.name}",
+            timestamp=timestamp,
+            description=f"Timeline {'blog' if item_type == 'Blog' else 'update'} for project: {project.name}",
             tags=[
                 "progress",
                 f"project:{project_name_dashed}",
                 f"project_work:{project_name_dashed}",
+                *(["blog"] if item_type == "Blog" else []),
                 *(project.focus_tags or []),
             ]
         )
         event_service.create(new_event)
             
-        return jsonify({"message": "Timeline item added"}), 201
+        return jsonify({"message": "Timeline item added", "blog_post_id": blog_post_id, "blog_slug": blog_slug}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 400

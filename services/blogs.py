@@ -33,6 +33,18 @@ class BlogService(CRUDService[BlogPost]):
     def get_published(self) -> List[BlogPost]:
         return self.find_all(filters={"status": "published"}, sort_by={"created_at": "DESC"})
 
+    def build_unique_slug(self, title: str, preferred_slug: Optional[str] = None) -> str:
+        base = (preferred_slug or title or "post").strip().lower()
+        slug = "-".join(segment for segment in base.replace("_", "-").split() if segment)
+        slug = "".join(char for char in slug if char.isalnum() or char == "-").strip("-") or "post"
+        if not self.get_by_slug(slug):
+            return slug
+
+        counter = 2
+        while self.get_by_slug(f"{slug}-{counter}"):
+            counter += 1
+        return f"{slug}-{counter}"
+
     def _to_tuple(self, obj: BlogPost) -> tuple:
         return (
             obj.user_id, obj.title, obj.slug, obj.content, obj.tags,

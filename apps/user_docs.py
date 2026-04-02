@@ -372,15 +372,15 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
         },
         "Projects": {
-            "overview": "Projects track larger bodies of work. Use the project page to manage the project record, then open a project to post updates, maintain a lightweight kanban board, or add blog-style progress notes.",
-            "app_purpose": "Use Projects to give larger work a durable home so execution, updates, promises, skills, and reports all point back to the same body of work.",
+            "overview": "Projects track larger bodies of work. Use the project page to manage the project record, then open a project to maintain its narrative timeline, real linked blog posts, and execution board.",
+            "app_purpose": "Use Projects to give larger work a durable home so execution, narrative updates, blog writing, promises, skills, and reports all point back to the same body of work.",
             "how_to_use": [
-                "Create a project first, then use View Progress to maintain its timeline.",
+                "Create a project first, then use View Progress to maintain its narrative timeline.",
                 "Use Open Board when you want to track concrete tickets from backlog to shipped.",
                 "Use project type for broad grouping only. The timeline carries the detailed story.",
                 "Add focus tags when project work should count toward promises or skills, for example python, writing, or deep-work.",
                 "Set a ticket prefix like RSB or QDS when you want tickets to get stable references such as RSB-14.",
-                "Post short updates for milestones and choose Blog when an update deserves a fuller write-up.",
+                "Post short updates for milestones and choose Blog when an update deserves a fuller markdown write-up that should also exist in Blogs.",
             ],
             "setup_leverage": [
                 "Add focus tags for any project whose work should count toward promises or skills.",
