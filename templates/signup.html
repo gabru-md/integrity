@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link id="app-favicon" rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>Sign Up | Rasbhari</title>
     <script>
@@ -13,20 +13,43 @@
             const chrome = localStorage.getItem('chrome') || 'glass';
             const motion = localStorage.getItem('motion') || 'full';
             const density = localStorage.getItem('density') || 'comfy';
+            const darkThemes = ['noir', 'console'];
             const html = document.documentElement;
             html.setAttribute('data-theme', theme);
             html.setAttribute('data-chrome', chrome);
             html.setAttribute('data-motion', motion);
             html.setAttribute('data-density', density);
-            html.classList.toggle('dark', ['noir', 'console'].includes(theme));
+            html.classList.toggle('dark', darkThemes.includes(theme));
+            const logoSrc = darkThemes.includes(theme)
+                ? "{{ url_for('static', filename='favicon-light.png') }}"
+                : "{{ url_for('static', filename='favicon.png') }}";
+            const favicon = document.getElementById('app-favicon');
+            if (favicon) {
+                favicon.href = logoSrc;
+            }
+            window.__rasbhariLogoSrc = logoSrc;
         })();
     </script>
 </head>
 <body class="shell-fade-in">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const signupLogo = document.getElementById('signup-logo');
+            if (signupLogo && window.__rasbhariLogoSrc) {
+                signupLogo.src = window.__rasbhariLogoSrc;
+            }
+        });
+    </script>
     <main class="auth-layout">
         <section class="auth-side flex items-end">
             <div class="relative z-10 w-full max-w-2xl">
-                <div class="auth-kicker">Integrity OS</div>
+                <div class="flex items-center gap-4">
+                    <img id="signup-logo" src="{{ url_for('static', filename='favicon.png') }}" alt="Rasbhari logo" class="h-16 w-16 object-contain">
+                    <div>
+                        <div class="auth-kicker">Rasbhari</div>
+                        <div class="mt-2 text-sm font-semibold text-[var(--text-soft)]">Integrity OS</div>
+                    </div>
+                </div>
                 <h1 class="auth-title mt-5 text-[var(--text)]">Request access to the Rasbhari workspace.</h1>
                 <p class="auth-copy mt-5 max-w-xl">New accounts stay pending until an administrator approves them. Once approved, you can operate the full dashboard, event stream, and application workspace.</p>
 

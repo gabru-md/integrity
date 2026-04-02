@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link id="app-favicon" rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>{% block title %}Rasbhari{% endblock %}</title>
     <script>
@@ -19,19 +19,33 @@
             const html = document.documentElement;
             Object.entries(prefs).forEach(([key, value]) => html.setAttribute(`data-${key}`, value));
             html.classList.toggle('dark', darkThemes.includes(prefs.theme));
+            const logoSrc = darkThemes.includes(prefs.theme)
+                ? "{{ url_for('static', filename='favicon-light.png') }}"
+                : "{{ url_for('static', filename='favicon.png') }}";
+            const favicon = document.getElementById('app-favicon');
+            if (favicon) {
+                favicon.href = logoSrc;
+            }
+            window.__rasbhariLogoSrc = logoSrc;
         })();
     </script>
 </head>
 <body class="shell-fade-in">
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const shellLogo = document.getElementById('shell-logo');
+        if (shellLogo && window.__rasbhariLogoSrc) {
+            shellLogo.src = window.__rasbhariLogoSrc;
+        }
+    });
+</script>
 <nav id="sidebar" class="fixed left-0 top-0 z-30 h-screen -translate-x-full overflow-y-auto p-3 transition-transform duration-300 md:translate-x-0 md:p-4">
     <div class="flex min-h-full flex-col justify-between">
         <div class="min-h-0">
             <div class="border-b border-[var(--border)] px-4 pb-5 pt-4">
                 <div class="flex items-center gap-4">
                     <div class="sidebar-brand-mark flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-[var(--accent-soft)] text-[var(--accent)] shadow-sm">
-                        <svg width="28" height="28" viewBox="-2.5 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                            <path d="m13.656 17.338c-.857.989-1.334 2.79-.709 3.371.6.449 2.2.391 3.385-1.23.344-.487.551-1.093.551-1.747 0-.603-.175-1.164-.477-1.637l.007.012c-.73-.555-1.778.164-2.757 1.243zm-8.057.3c-.908-1.04-2.088-1.658-2.851-1.2-.51.382-.605 1.685.123 2.967 1.078 1.524 2.6 1.679 3.221 1.307.659-.488.3-2.137-.493-3.075zm4.105 3.145c-1.1-.026-2.8.439-2.776 1.032-.018.4 1.331 1.572 2.7 1.513 1.326.03 2.7-1.139 2.682-1.649s-1.5-.927-2.607-.884zm-.075-13.944c-1.275-.032-2.5.933-2.5 1.493 0 .68 1.008 1.376 2.51 1.394 1.543.01 2.518-.559 2.532-1.26.016-.794-1.394-1.639-2.518-1.627zm-3.071.532c-2.135-.345-3.913.9-3.842 3.192.07.884 4.63-3.041 3.843-3.177v-.015zm9.749 3.251c.071-2.277-1.709-3.521-3.844-3.176-.787.135 3.772 4.061 3.844 3.176zm.364.824c-1.239-.329-.42 5.049.588 4.615.551-.525.894-1.265.894-2.084 0-1.077-.592-2.015-1.468-2.508l-.014-.007v-.015zm-14.9 4.675c1.007.45 1.827-4.929.589-4.6-.891.504-1.483 1.445-1.483 2.525 0 .821.343 1.563.893 2.089l.001.001zm9.415-5.948c-.63.49-1.032 1.249-1.032 2.101 0 .624.215 1.197.575 1.65l-.004-.005c.492.838 1.388 1.392 2.414 1.392.467 0 .908-.115 1.295-.318l-.015.007c.631-.49 1.034-1.248 1.034-2.101 0-.624-.215-1.197-.576-1.65l.004.005c-.484-.835-1.374-1.388-2.393-1.388-.476 0-.923.121-1.314.333l.015-.007zm-3.1.135c-.373-.199-.816-.315-1.286-.315-1.02 0-1.911.548-2.395 1.366l-.007.013c-.357.45-.572 1.026-.572 1.652 0 .855.402 1.616 1.027 2.105l.006.004c.376.205.823.325 1.298.325 1.019 0 1.909-.553 2.386-1.376l.007-.013c.352-.448.564-1.019.564-1.64 0-.853-.4-1.612-1.024-2.1l-.006-.004zm4.369 7.162c-.077-1.399-1.23-2.504-2.641-2.504-.049 0-.098.001-.147.004h.007c-.028-.001-.062-.002-.095-.002-1.423 0-2.585 1.119-2.653 2.526v.006.029c.078 1.399 1.232 2.504 2.643 2.504.049 0 .098-.001.147-.004h-.007c.035.002.076.003.117.003 1.413 0 2.566-1.116 2.625-2.514v-.005-.029l.01-.015zm3.215-15.133c-1.69.771-3.14 1.756-4.396 2.945l.007-.007c.377 1.5 2.344 1.558 3.063 1.512-.139-.044-.251-.141-.314-.266l-.001-.003c.18-.12.821-.611 1.002-.777 1.838-1.528.273-4.22-1.661-4.908z"/>
-                        </svg>
+                        <img id="shell-logo" src="{{ url_for('static', filename='favicon.png') }}" alt="Rasbhari logo" class="h-8 w-8 object-contain">
                     </div>
                     <div class="min-w-0">
                         <div class="truncate text-2xl font-extrabold text-[var(--text)]">Rasbhari</div>
