@@ -509,10 +509,11 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
         },
         "Thoughts": {
-            "overview": "Thoughts are quick captures for ideas, reflections, or reminders. They are lighter than blog posts and faster than creating a full project or event entry.",
-            "app_purpose": "Use Thoughts for fast human context that matters but is not yet structured enough to become an event, project update, or blog post.",
+            "overview": "Thoughts are a private posting stream for ideas, reflections, reminders, and fragments you want to capture before they disappear. They are lighter than blog posts and faster than creating a full project or event entry.",
+            "app_purpose": "Use Thoughts as a personal micro-posting engine for fast human context that matters but is not yet structured enough to become an event, project update, or blog post.",
             "how_to_use": [
                 "Use thoughts for short captures you do not want to lose.",
+                "Treat the stream like a private feed: post quickly, scan later, and edit only when the wording matters.",
                 "Prefer blogs when you need formatting and longer writing.",
                 "Prefer events when the main goal is to record that something happened rather than what you are thinking about it.",
             ],
@@ -522,7 +523,7 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
             "pairs_with": ["Reports", "Projects", "Today"],
             "glossary": [
-                {"term": "Thought", "meaning": "A quick note captured with minimal structure."},
+                {"term": "Thought", "meaning": "A short private post captured with minimal structure."},
             ],
         },
         "Users": {

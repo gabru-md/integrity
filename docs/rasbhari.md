@@ -53,6 +53,7 @@ Projects can also issue stable per-project ticket references through a configura
 The project timeline is now a narrative surface: lightweight updates stay inline, while blog-style writing creates real markdown `BlogPost` records that remain linked back into the project history.
 The `Activities` app now exposes each activity as a visible orchestrator, showing the event type it emits plus the promises and skills that can react to that trigger.
 The `Reports` page now uses progressive disclosure so explanatory context and observation blocks stay available without overwhelming the summary view.
+The `Thoughts` app now behaves more like a private personal posting stream than a generic notes CRUD page, with a lightweight composer and timestamped feed.
 The `Skills` app now has a dedicated progress-focused page that mirrors the stronger dashboard widget language with XP rings, level momentum, and a level-up timeline while preserving the existing skill data model and CRUD flow.
 
 ## Current Background Processes

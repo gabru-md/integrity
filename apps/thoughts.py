@@ -7,11 +7,11 @@ from services.thoughts import ThoughtService
 
 
 def process_data(json_data):
-    current_timestamp = datetime.now()
-    json_data["created_at"] = int(current_timestamp.timestamp())
+    json_data["created_at"] = datetime.now()
     return json_data
 
 
-thoughts_app = App('Thoughts', ThoughtService(), Thought, _process_model_data_func=process_data, get_recent_limit=10,
+thoughts_app = App('Thoughts', ThoughtService(), Thought, _process_model_data_func=process_data, get_recent_limit=20,
+                   home_template="thoughts.html",
                    widget_type="timeline", widget_recent_limit=3,
                    user_guidance=build_app_user_guidance("Thoughts"))
