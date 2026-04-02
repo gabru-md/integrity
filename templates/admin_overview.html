@@ -188,34 +188,29 @@
                                 <span class="ui-badge{% if admin_data.update_status.update_available %} ui-badge-warning{% elif admin_data.update_status.state == 'succeeded' %} ui-badge-success{% elif admin_data.update_status.state == 'failed' %} ui-badge-danger{% endif %}" id="update-state-badge">
                                     {{ admin_data.update_status.state | capitalize }}
                                 </span>
-                                {% if admin_data.update_status.update_available %}
-                                <span class="ui-badge ui-badge-warning">Update Available</span>
-                                {% endif %}
+                                <span class="ui-badge ui-badge-warning {% if not admin_data.update_status.update_available %}hidden{% endif %}" id="update-available-badge">Update Available</span>
                             </div>
-                            <div class="text-sm font-bold text-[var(--text)]">
+                            <div class="text-sm font-bold text-[var(--text)]" id="update-commit-line">
                                 Current {{ admin_data.update_status.current_commit or "unknown" }} · Latest {{ admin_data.update_status.latest_remote_commit or "unknown" }}
                             </div>
                             <div class="text-sm leading-6 text-[var(--text-soft)]" id="update-status-message">
                                 {{ admin_data.update_status.message or "Check latest commit, then run the deterministic update script if a new build is available." }}
                             </div>
-                            <div class="text-xs leading-5 text-[var(--text-soft)]">
+                            <div class="text-xs leading-5 text-[var(--text-soft)]" id="update-config-line">
                                 Repo: {{ admin_data.update_status.repo_dir }} · Service: {{ admin_data.update_status.service_name }}
                             </div>
-                            {% if admin_data.update_status.dirty_worktree %}
-                            <div class="text-xs font-semibold text-rose-500">Update is blocked because the working tree is dirty.</div>
-                            {% endif %}
+                            <div id="update-dirty-warning" class="text-xs font-semibold text-rose-500 {% if not admin_data.update_status.dirty_worktree %}hidden{% endif %}">Update is blocked because the working tree is dirty.</div>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <button type="button" onclick="refreshUpdateStatus()" class="btn-secondary px-4 py-2 text-sm">Refresh Check</button>
-                            <button type="button" onclick="triggerAdminUpdate()" class="btn-primary px-4 py-2 text-sm" {% if admin_data.update_status.dirty_worktree or admin_data.update_status.state == 'running' %}disabled{% endif %}>Update To Latest</button>
+                            <button id="refresh-update-button" type="button" onclick="refreshUpdateStatus()" class="btn-secondary px-4 py-2 text-sm">Refresh Check</button>
+                            <button id="trigger-update-button" type="button" onclick="triggerAdminUpdate()" class="btn-primary px-4 py-2 text-sm" {% if admin_data.update_status.dirty_worktree or admin_data.update_status.state == 'running' %}disabled{% endif %}>Update To Latest</button>
                         </div>
                     </div>
-                    {% if admin_data.update_status.output_lines %}
-                    <details class="disclosure mt-4">
+                    <details id="update-output-details" class="disclosure mt-4 {% if not admin_data.update_status.output_lines %}hidden{% endif %}">
                         <summary class="disclosure-summary">
                             <div class="disclosure-summary-copy">
                                 <div class="disclosure-summary-title">Last Update Output</div>
-                                <div class="disclosure-summary-meta">{{ admin_data.update_status.output_lines|length }} line(s) retained from the latest run.</div>
+                                <div class="disclosure-summary-meta" id="update-output-meta">{{ admin_data.update_status.output_lines|length }} line(s) retained from the latest run.</div>
                             </div>
                             <span class="disclosure-summary-chevron">⌄</span>
                         </summary>
@@ -223,9 +218,6 @@
                             <pre id="update-output-lines" class="overflow-x-auto rounded-2xl bg-gray-950/95 p-4 text-xs leading-6 text-gray-100">{{ admin_data.update_status.output_lines | join('\n') }}</pre>
                         </div>
                     </details>
-                    {% else %}
-                    <pre id="update-output-lines" class="hidden"></pre>
-                    {% endif %}
                     {% else %}
                     <div class="text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.update_status.configuration_error }}</div>
                     {% endif %}
@@ -345,23 +337,131 @@
     </section>
 </div>
 <script>
-    async function refreshUpdateStatus() {
+    let updateStatusPollHandle = null;
+
+    function updateBadgeClasses(element, state, updateAvailable) {
+        if (!element) return;
+        element.className = 'ui-badge';
+        if (updateAvailable) {
+            element.classList.add('ui-badge-warning');
+            return;
+        }
+        if (state === 'succeeded') {
+            element.classList.add('ui-badge-success');
+            return;
+        }
+        if (state === 'failed') {
+            element.classList.add('ui-badge-danger');
+            return;
+        }
+        if (state === 'running') {
+            element.classList.add('ui-badge-warning');
+        }
+    }
+
+    function renderUpdateStatus(status) {
+        if (!status) return;
+        const badge = document.getElementById('update-state-badge');
+        const availableBadge = document.getElementById('update-available-badge');
+        const commitLine = document.getElementById('update-commit-line');
+        const message = document.getElementById('update-status-message');
+        const configLine = document.getElementById('update-config-line');
+        const dirtyWarning = document.getElementById('update-dirty-warning');
+        const refreshButton = document.getElementById('refresh-update-button');
+        const triggerButton = document.getElementById('trigger-update-button');
+        const outputDetails = document.getElementById('update-output-details');
+        const outputMeta = document.getElementById('update-output-meta');
+        const outputLines = document.getElementById('update-output-lines');
+
+        if (badge) {
+            badge.textContent = (status.state || 'idle').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+            updateBadgeClasses(badge, status.state, false);
+        }
+        if (availableBadge) {
+            availableBadge.classList.toggle('hidden', !status.update_available);
+        }
+        if (commitLine) {
+            commitLine.textContent = `Current ${status.current_commit || 'unknown'} · Latest ${status.latest_remote_commit || 'unknown'}`;
+        }
+        if (message) {
+            message.textContent = status.message || 'Check latest commit, then run the deterministic update script if a new build is available.';
+        }
+        if (configLine) {
+            configLine.textContent = `Repo: ${status.repo_dir || 'unknown'} · Service: ${status.service_name || 'unknown'}`;
+        }
+        if (dirtyWarning) {
+            dirtyWarning.classList.toggle('hidden', !status.dirty_worktree);
+        }
+        if (refreshButton) {
+            refreshButton.disabled = status.state === 'running';
+        }
+        if (triggerButton) {
+            triggerButton.disabled = Boolean(status.dirty_worktree || status.state === 'running' || !status.configured);
+            triggerButton.textContent = status.state === 'running' ? 'Updating…' : 'Update To Latest';
+        }
+        if (outputDetails && outputMeta && outputLines) {
+            const lines = Array.isArray(status.output_lines) ? status.output_lines : [];
+            outputDetails.classList.toggle('hidden', lines.length === 0);
+            outputMeta.textContent = `${lines.length} line(s) retained from the latest run.`;
+            outputLines.textContent = lines.join('\n');
+            if (lines.length > 0 && status.state === 'running') {
+                outputDetails.open = true;
+            }
+        }
+
+        if (status.state === 'running') {
+            startUpdateStatusPolling();
+        } else {
+            stopUpdateStatusPolling();
+        }
+    }
+
+    function stopUpdateStatusPolling() {
+        if (updateStatusPollHandle) {
+            window.clearTimeout(updateStatusPollHandle);
+            updateStatusPollHandle = null;
+        }
+    }
+
+    function startUpdateStatusPolling() {
+        stopUpdateStatusPolling();
+        updateStatusPollHandle = window.setTimeout(async () => {
+            await refreshUpdateStatus({ silent: true });
+        }, 2000);
+    }
+
+    async function refreshUpdateStatus(options = {}) {
         const response = await fetch('/admin/update/status');
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
-            alert(payload.error || 'Failed to refresh update status.');
+            if (!options.silent) {
+                alert(payload.error || 'Failed to refresh update status.');
+            }
             return;
         }
-        window.location.reload();
+        renderUpdateStatus(payload);
     }
 
     async function triggerAdminUpdate() {
         if (!confirm('Update Rasbhari to the latest remote commit? This will restart the rasbhari service and roll back if health checks fail.')) return;
+        const triggerButton = document.getElementById('trigger-update-button');
+        const message = document.getElementById('update-status-message');
+        if (triggerButton) {
+            triggerButton.disabled = true;
+            triggerButton.textContent = 'Starting…';
+        }
+        if (message) {
+            message.textContent = 'Starting update script...';
+        }
         const response = await fetch('/admin/update', { method: 'POST' });
         const payload = await response.json().catch(() => ({}));
         if (response.ok) {
-            window.location.reload();
+            renderUpdateStatus(payload.status || payload);
             return;
+        }
+        if (triggerButton) {
+            triggerButton.disabled = false;
+            triggerButton.textContent = 'Update To Latest';
         }
         alert(payload.error || 'Failed to start update.');
     }
@@ -413,5 +513,12 @@
         const payload = await response.json().catch(() => ({}));
         alert(payload.error || `Failed to ${action} ${appName}.`);
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const initialState = '{{ admin_data.update_status.state }}';
+        if (initialState === 'running') {
+            startUpdateStatusPolling();
+        }
+    });
 </script>
 {% endblock %}
