@@ -31,7 +31,7 @@
         </div>
     </section>
 
-    <form id="profile-form" action="{{ url_for('Users.update_profile') }}" method="POST" class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+    <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div class="space-y-6">
             <div class="shell-card px-6 py-6">
                 <details class="disclosure" open>
@@ -46,13 +46,13 @@
                         <div class="grid gap-5 md:grid-cols-2">
                             <label class="block space-y-2">
                                 <span class="text-sm font-semibold text-[var(--text)]">Username</span>
-                                <input type="text" id="username" name="username" value="{{ user.username }}" readonly aria-describedby="username-help">
+                                <input type="text" id="username" name="username" value="{{ user.username }}" readonly aria-describedby="username-help" form="profile-form">
                                 <span id="username-help" class="text-xs text-[var(--text-soft)]">Your username is fixed and cannot be changed.</span>
                             </label>
 
                             <label class="block space-y-2">
                                 <span class="text-sm font-semibold text-[var(--text)]">Display Name</span>
-                                <input type="text" id="display_name" name="display_name" value="{{ user.display_name }}" required>
+                                <input type="text" id="display_name" name="display_name" value="{{ user.display_name }}" required form="profile-form">
                             </label>
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                     <div class="disclosure-body">
                         <label class="block space-y-2">
                             <span class="text-sm font-semibold text-[var(--text)]">Ntfy Topic</span>
-                            <input type="text" id="ntfy_topic" name="ntfy_topic" value="{{ user.ntfy_topic or '' }}" placeholder="e.g., my-personal-alerts">
+                            <input type="text" id="ntfy_topic" name="ntfy_topic" value="{{ user.ntfy_topic or '' }}" placeholder="e.g., my-personal-alerts" form="profile-form">
                             <span class="text-xs text-[var(--text-soft)]">Leave blank to fall back to the system topic.</span>
                         </label>
                     </div>
@@ -91,12 +91,12 @@
                         <div class="grid gap-5 md:grid-cols-2">
                             <label class="block space-y-2">
                                 <span class="text-sm font-semibold text-[var(--text)]">New Password</span>
-                                <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
+                                <input type="password" id="password" name="password" placeholder="Leave blank to keep current password" form="profile-form">
                             </label>
 
                             <label class="block space-y-2">
                                 <span class="text-sm font-semibold text-[var(--text)]">Confirm New Password</span>
-                                <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter new password">
+                                <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter new password" form="profile-form">
                             </label>
                         </div>
                     </div>
@@ -208,10 +208,11 @@
         <div class="xl:col-span-2">
             <div class="shell-card px-6 py-5">
                 <div class="flex justify-end border-t border-[var(--border)] pt-4">
-                    <button type="submit" class="btn-primary px-5 py-3">Update Profile</button>
+                    <button type="submit" form="profile-form" class="btn-primary px-5 py-3">Update Profile</button>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
+    <form id="profile-form" action="{{ url_for('Users.update_profile') }}" method="POST" class="hidden"></form>
 </div>
 {% endblock %}
