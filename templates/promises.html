@@ -61,92 +61,126 @@
     <!-- Promises List -->
     <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {% for promise in promises %}
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200">
-            <div class="p-6 flex-1">
-                <div class="flex justify-between items-start mb-4">
+        <details class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200">
+            <summary class="list-none cursor-pointer">
+                <div class="p-6 flex flex-col gap-4">
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap mb-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if promise.status == 'active' %}bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400
+                                    {% elif promise.status == 'fulfilled' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400
+                                    {% elif promise.status == 'broken' %}bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400
+                                    {% else %}bg-slate-100 text-slate-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+                                    {{ promise.status|capitalize }}
+                                </span>
+                                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{{ promise.frequency }}</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800 dark:text-gray-100">{{ promise.name }}</h3>
+                            {% if promise.description %}
+                            <p class="text-slate-500 dark:text-gray-400 text-sm mt-2 line-clamp-2">{{ promise.description }}</p>
+                            {% endif %}
+                        </div>
+                        <span class="disclosure-summary-chevron text-slate-400 shrink-0">⌄</span>
+                    </div>
+
                     <div>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            {% if promise.status == 'active' %}bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400
-                            {% elif promise.status == 'fulfilled' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400
-                            {% elif promise.status == 'broken' %}bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400
-                            {% else %}bg-slate-100 text-slate-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
-                            {{ promise.status|capitalize }}
-                        </span>
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span class="text-slate-400 uppercase">
+                                {% if promise.is_negative %} Limit: {{ promise.max_allowed }} {% else %} Progress {% endif %}
+                            </span>
+                            <span class="{% if promise.is_negative and promise.current_count > promise.max_allowed %}text-rose-600{% else %}text-indigo-600 dark:text-indigo-400{% endif %}">
+                                {{ promise.current_count }} / {% if promise.is_negative %}{{ promise.max_allowed }}{% else %}{{ promise.required_count }}{% endif %}
+                            </span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-gray-700 rounded-full h-2.5">
+                            {% if promise.is_negative %}
+                                <div class="{% if promise.current_count > promise.max_allowed %}bg-rose-500{% else %}bg-amber-400{% endif %} h-2.5 rounded-full transition-all duration-500"
+                                     style="width: {{ [100, (promise.current_count / (promise.max_allowed or 1) * 100)]|min }}%"></div>
+                            {% else %}
+                                <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500"
+                                     style="width: {{ [100, (promise.current_count / promise.required_count * 100)]|min }}%"></div>
+                            {% endif %}
+                        </div>
                     </div>
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ promise.frequency }}</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-800 dark:text-gray-100 mb-2">{{ promise.name }}</h3>
-                <p class="text-slate-500 dark:text-gray-400 text-sm mb-4 line-clamp-2">{{ promise.description }}</p>
 
-                <!-- Progress Bar -->
-                <div class="mb-4">
-                    <div class="flex justify-between text-xs font-bold mb-1">
-                        <span class="text-slate-400 uppercase">
-                            {% if promise.is_negative %} Limit: {{ promise.max_allowed }} {% else %} Progress {% endif %}
-                        </span>
-                        <span class="{% if promise.is_negative and promise.current_count > promise.max_allowed %}text-rose-600{% else %}text-indigo-600 dark:text-indigo-400{% endif %}">
-                            {{ promise.current_count }} / {% if promise.is_negative %}{{ promise.max_allowed }}{% else %}{{ promise.required_count }}{% endif %}
-                        </span>
-                    </div>
-                    <div class="w-full bg-slate-100 dark:bg-gray-700 rounded-full h-2">
-                        {% if promise.is_negative %}
-                            {# Negative Promise: Bar grows as you approach the limit, turns red if exceeded #}
-                            <div class="{% if promise.current_count > promise.max_allowed %}bg-rose-500{% else %}bg-amber-400{% endif %} h-2 rounded-full transition-all duration-500"
-                                 style="width: {{ [100, (promise.current_count / (promise.max_allowed or 1) * 100)]|min }}%"></div>
-                        {% else %}
-                            {# Standard Promise #}
-                            <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500"
-                                 style="width: {{ [100, (promise.current_count / promise.required_count * 100)]|min }}%"></div>
-                        {% endif %}
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="rounded-xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-3 py-2">
+                            <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Next Check</div>
+                            <div class="font-semibold text-slate-700 dark:text-gray-200">{{ promise.next_check_at|datetimeformat }}</div>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-3 py-2">
+                            <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Current Streak</div>
+                            <div class="font-semibold text-slate-700 dark:text-gray-200 flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.454A1 1 0 005.05 5.554 6.981 6.981 0 003 10a7 7 0 1014 0c0-1.18-.266-2.3-.74-3.31-.514-1.09-1.157-2.1-1.882-3.032a1 1 0 00-1.122-.352 6.53 6.53 0 01-1.861.247z" clip-rule="evenodd"></path>
+                                </svg>
+                                {{ promise.streak }}
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </summary>
 
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-slate-500 dark:text-gray-400">Current Streak</span>
-                        <span class="font-bold text-slate-800 dark:text-gray-100 flex items-center">
-                            <svg class="w-4 h-4 mr-1 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.454A1 1 0 005.05 5.554 6.981 6.981 0 003 10a7 7 0 1014 0c0-1.18-.266-2.3-.74-3.31-.514-1.09-1.157-2.1-1.882-3.032a1 1 0 00-1.122-.352 6.53 6.53 0 01-1.861.247z" clip-rule="evenodd"></path>
-                            </svg>
-                            {{ promise.streak }}
-                        </span>
+            <div class="px-6 pb-6 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="rounded-xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-4 py-3">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Best Streak</div>
+                        <div class="font-semibold text-slate-800 dark:text-gray-100">{{ promise.best_streak }}</div>
                     </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-slate-500 dark:text-gray-400">Best Streak</span>
-                        <span class="font-bold text-slate-800 dark:text-gray-100">{{ promise.best_streak }}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-slate-500 dark:text-gray-400">Completion Rate</span>
-                        <span class="font-bold text-slate-800 dark:text-gray-100">
+                    <div class="rounded-xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-4 py-3">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Completion Rate</div>
+                        <div class="font-semibold text-slate-800 dark:text-gray-100">
                             {% if promise.total_periods > 0 %}
                                 {{ (promise.total_completions / promise.total_periods * 100)|round|int }}%
                             {% else %}
                                 0%
                             {% endif %}
-                        </span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if promise.target_event_type or promise.target_event_tag %}
+                <div class="rounded-2xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-4 py-4">
+                    <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-3">Targets</div>
+                    <div class="space-y-2 text-sm">
+                        {% if promise.target_event_type %}
+                        <div class="flex justify-between gap-3">
+                            <span class="text-slate-500 dark:text-gray-400">Event Type</span>
+                            <span class="font-medium text-slate-700 dark:text-gray-200 text-right break-all">{{ promise.target_event_type }}</span>
+                        </div>
+                        {% endif %}
+                        {% if promise.target_event_tag %}
+                        <div class="flex justify-between gap-3">
+                            <span class="text-slate-500 dark:text-gray-400">Target Tag</span>
+                            <span class="font-medium text-slate-700 dark:text-gray-200 text-right break-all">{{ promise.target_event_tag }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="flex justify-between items-center pt-1">
+                    <div class="text-[10px] text-slate-400 uppercase tracking-widest">
+                        {{ promise.total_completions }} completions across {{ promise.total_periods }} periods
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="event.preventDefault(); visualizePromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Circadian Chart">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                        </button>
+                        <button onclick="event.preventDefault(); refreshPromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" title="Sync Stats">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </button>
+                        <button onclick="event.preventDefault(); editPromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        <button onclick="event.preventDefault(); deletePromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                     </div>
                 </div>
             </div>
-            <div class="px-6 py-4 bg-slate-50 dark:bg-gray-800/50 border-t border-slate-100 dark:border-gray-700 flex justify-between items-center">
-                <div class="text-[10px] text-slate-400 uppercase tracking-widest">
-                    Next: {{ promise.next_check_at|datetimeformat }}
-                </div>
-                <div class="flex space-x-2">
-                    <button onclick="visualizePromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Circadian Chart">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
-                    </button>
-                    <button onclick="refreshPromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" title="Sync Stats">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    </button>
-                    <button onclick="editPromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    </button>
-                    <button onclick="deletePromise({{ promise.id }})" class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                </div>
-            </div>
-        </div>
+        </details>
         {% endfor %}
     </div>
 </div>
