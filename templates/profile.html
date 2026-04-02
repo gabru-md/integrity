@@ -34,128 +34,174 @@
     <form id="profile-form" action="{{ url_for('Users.update_profile') }}" method="POST" class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div class="space-y-6">
             <div class="shell-card px-6 py-6">
-                <div class="mb-6">
-                    <div class="section-kicker text-[10px] font-extrabold uppercase">Identity</div>
-                    <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Account Basics</h2>
-                    <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">The parts of your account that define who you are inside Rasbhari.</p>
-                </div>
+                <details class="disclosure" open>
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Account Basics</div>
+                            <div class="disclosure-summary-meta">The parts of your account that define who you are inside Rasbhari.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body">
+                        <div class="grid gap-5 md:grid-cols-2">
+                            <label class="block space-y-2">
+                                <span class="text-sm font-semibold text-[var(--text)]">Username</span>
+                                <input type="text" id="username" name="username" value="{{ user.username }}" readonly aria-describedby="username-help">
+                                <span id="username-help" class="text-xs text-[var(--text-soft)]">Your username is fixed and cannot be changed.</span>
+                            </label>
 
-                <div class="grid gap-5 md:grid-cols-2">
-                    <label class="block space-y-2">
-                        <span class="text-sm font-semibold text-[var(--text)]">Username</span>
-                        <input type="text" id="username" name="username" value="{{ user.username }}" readonly aria-describedby="username-help">
-                        <span id="username-help" class="text-xs text-[var(--text-soft)]">Your username is fixed and cannot be changed.</span>
-                    </label>
-
-                    <label class="block space-y-2">
-                        <span class="text-sm font-semibold text-[var(--text)]">Display Name</span>
-                        <input type="text" id="display_name" name="display_name" value="{{ user.display_name }}" required>
-                    </label>
-                </div>
+                            <label class="block space-y-2">
+                                <span class="text-sm font-semibold text-[var(--text)]">Display Name</span>
+                                <input type="text" id="display_name" name="display_name" value="{{ user.display_name }}" required>
+                            </label>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <div class="shell-card px-6 py-6">
-                <div class="mb-6">
-                    <div class="section-kicker text-[10px] font-extrabold uppercase">Notifications</div>
-                    <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Personal Routing</h2>
-                    <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Control where Rasbhari sends personal ntfy notifications when they are routed to you.</p>
-                </div>
-
-                <label class="block space-y-2">
-                    <span class="text-sm font-semibold text-[var(--text)]">Ntfy Topic</span>
-                    <input type="text" id="ntfy_topic" name="ntfy_topic" value="{{ user.ntfy_topic or '' }}" placeholder="e.g., my-personal-alerts">
-                    <span class="text-xs text-[var(--text-soft)]">Leave blank to fall back to the system topic.</span>
-                </label>
+                <details class="disclosure">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Personal Routing</div>
+                            <div class="disclosure-summary-meta">Control where Rasbhari sends personal ntfy notifications when they are routed to you.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body">
+                        <label class="block space-y-2">
+                            <span class="text-sm font-semibold text-[var(--text)]">Ntfy Topic</span>
+                            <input type="text" id="ntfy_topic" name="ntfy_topic" value="{{ user.ntfy_topic or '' }}" placeholder="e.g., my-personal-alerts">
+                            <span class="text-xs text-[var(--text-soft)]">Leave blank to fall back to the system topic.</span>
+                        </label>
+                    </div>
+                </details>
             </div>
 
             <div class="shell-card px-6 py-6">
-                <div class="mb-6">
-                    <div class="section-kicker text-[10px] font-extrabold uppercase">Security</div>
-                    <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Password</h2>
-                    <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Change your password here when needed. Leave both fields empty to keep the current one.</p>
-                </div>
+                <details class="disclosure">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Password</div>
+                            <div class="disclosure-summary-meta">Change your password here when needed. Leave both fields empty to keep the current one.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body">
+                        <div class="grid gap-5 md:grid-cols-2">
+                            <label class="block space-y-2">
+                                <span class="text-sm font-semibold text-[var(--text)]">New Password</span>
+                                <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
+                            </label>
 
-                <div class="grid gap-5 md:grid-cols-2">
-                    <label class="block space-y-2">
-                        <span class="text-sm font-semibold text-[var(--text)]">New Password</span>
-                        <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
-                    </label>
-
-                    <label class="block space-y-2">
-                        <span class="text-sm font-semibold text-[var(--text)]">Confirm New Password</span>
-                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter new password">
-                    </label>
-                </div>
+                            <label class="block space-y-2">
+                                <span class="text-sm font-semibold text-[var(--text)]">Confirm New Password</span>
+                                <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter new password">
+                            </label>
+                        </div>
+                    </div>
+                </details>
             </div>
         </div>
 
         <div class="space-y-6">
             <div class="shell-card px-6 py-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Recommendations</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Contextual Guidance</h2>
-                <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Choose whether Rasbhari shows contextual recommendations at all, and how many it may surface at once across the product. Set the limit to `0` to hide them completely.</p>
-
-                <div class="mt-5 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-                    <label class="flex items-center justify-between gap-4">
-                        <div>
-                            <div class="text-sm font-semibold text-[var(--text)]">Enable recommendations</div>
-                            <div class="mt-1 text-xs text-[var(--text-soft)]">This applies across Rasbhari.</div>
+                <details class="disclosure">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Contextual Guidance</div>
+                            <div class="disclosure-summary-meta">Control whether Rasbhari shows recommendations and how many it may surface at once.</div>
                         </div>
-                        <input type="checkbox" name="recommendations_enabled" form="profile-form" {% if user.recommendations_enabled %}checked{% endif %}
-                               class="h-5 w-5 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500">
-                    </label>
-                </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body">
+                        <div class="rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+                            <label class="flex items-center justify-between gap-4">
+                                <div>
+                                    <div class="text-sm font-semibold text-[var(--text)]">Enable recommendations</div>
+                                    <div class="mt-1 text-xs text-[var(--text-soft)]">This applies across Rasbhari.</div>
+                                </div>
+                                <input type="checkbox" name="recommendations_enabled" form="profile-form" {% if user.recommendations_enabled %}checked{% endif %}
+                                       class="h-5 w-5 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500">
+                            </label>
+                        </div>
 
-                <label class="mt-4 flex items-center justify-between gap-4 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3">
-                    <div>
-                        <div class="text-sm font-semibold text-[var(--text)]">Visible recommendation limit</div>
-                        <div class="mt-1 text-xs text-[var(--text-soft)]">How many contextual recommendations Rasbhari may show at once.</div>
+                        <label class="mt-4 flex items-center justify-between gap-4 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3">
+                            <div>
+                                <div class="text-sm font-semibold text-[var(--text)]">Visible recommendation limit</div>
+                                <div class="mt-1 text-xs text-[var(--text-soft)]">How many contextual recommendations Rasbhari may show at once.</div>
+                            </div>
+                            <input type="number" min="0" max="8" step="1"
+                                   name="recommendation_limit"
+                                   form="profile-form"
+                                   value="{{ user.recommendation_limit if user.recommendation_limit is not none else 2 }}"
+                                   class="w-24 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)]">
+                        </label>
                     </div>
-                    <input type="number" min="0" max="8" step="1"
-                           name="recommendation_limit"
-                           form="profile-form"
-                           value="{{ user.recommendation_limit if user.recommendation_limit is not none else 2 }}"
-                           class="w-24 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)]">
-                </label>
+                </details>
             </div>
 
             <div class="shell-card px-6 py-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Access</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">API Key</h2>
-                <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use this key in the `X-API-Key` header or as `Authorization: ApiKey &lt;key&gt;` when you need trusted script or client access without a browser session.</p>
+                <details class="disclosure">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">API Key</div>
+                            <div class="disclosure-summary-meta">Trusted script or client access without a browser session.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body">
+                        <div class="rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+                            <div class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Current Key</div>
+                            <input type="text" id="api_key" value="{{ user.api_key or '' }}" readonly class="mono mt-3 tracking-[0.3em]">
+                        </div>
 
-                <div class="mt-5 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-                    <div class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Current Key</div>
-                    <input type="text" id="api_key" value="{{ user.api_key or '' }}" readonly class="mono mt-3 tracking-[0.3em]">
-                </div>
-
-                <form action="{{ url_for('Users.regenerate_api_key') }}" method="POST" class="mt-4">
-                    <button type="submit" class="btn-secondary w-full px-5 py-3">Regenerate API Key</button>
-                </form>
+                        <form action="{{ url_for('Users.regenerate_api_key') }}" method="POST" class="mt-4">
+                            <button type="submit" class="btn-secondary w-full px-5 py-3">Regenerate API Key</button>
+                        </form>
+                    </div>
+                </details>
             </div>
 
             <div class="shell-card px-6 py-6">
-                <div class="metric-label">Usage Notes</div>
-                <div class="mt-4 stack-list">
-                    <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Regenerating invalidates the old key immediately.</div>
-                    <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Treat the key like a password and only store it in trusted systems.</div>
-                    <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">UI appearance settings are managed globally from the sidebar and stored locally in your browser.</div>
-                </div>
+                <details class="disclosure">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Usage Notes</div>
+                            <div class="disclosure-summary-meta">A few practical reminders about API key handling and local UI preferences.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body">
+                        <div class="stack-list">
+                            <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Regenerating invalidates the old key immediately.</div>
+                            <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Treat the key like a password and only store it in trusted systems.</div>
+                            <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">UI appearance settings are managed globally from the sidebar and stored locally in your browser.</div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <div class="shell-card px-6 py-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Tutorial</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Interactive Walkthrough</h2>
-                <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Rerun the first-run Rasbhari tutorial whenever you want a quick guided refresher on how the ecosystem fits together.</p>
+                <details class="disclosure">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Interactive Walkthrough</div>
+                            <div class="disclosure-summary-meta">Rerun the guided refresher on how the Rasbhari ecosystem fits together.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body">
+                        <div class="rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--text-soft)]">
+                            Status: {{ 'Completed' if user.onboarding_completed else 'Not completed yet' }}
+                        </div>
 
-                <div class="mt-4 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--text-soft)]">
-                    Status: {{ 'Completed' if user.onboarding_completed else 'Not completed yet' }}
-                </div>
-
-                <form action="{{ url_for('Users.update_onboarding') }}" method="POST" class="mt-4">
-                    <input type="hidden" name="completed" value="false">
-                    <button type="submit" class="btn-secondary w-full px-5 py-3">Restart Tutorial</button>
-                </form>
+                        <form action="{{ url_for('Users.update_onboarding') }}" method="POST" class="mt-4">
+                            <input type="hidden" name="completed" value="false">
+                            <button type="submit" class="btn-secondary w-full px-5 py-3">Restart Tutorial</button>
+                        </form>
+                    </div>
+                </details>
             </div>
         </div>
 

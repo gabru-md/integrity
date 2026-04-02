@@ -38,6 +38,8 @@ class AdminUpdateService:
         latest_commit = self._get_latest_remote_commit() if config["configured"] else None
         dirty_worktree = self._is_worktree_dirty() if config["configured"] else None
         update_available = bool(current_commit and latest_commit and current_commit != latest_commit)
+        if config["configured"]:
+            base_status = self._refresh_stale_running_status(base_status, current_commit, latest_commit)
 
         return {
             "configured": config["configured"],
@@ -60,6 +62,29 @@ class AdminUpdateService:
             "output_lines": base_status.get("output_lines", []),
             "last_result": base_status.get("last_result"),
         }
+
+    def _refresh_stale_running_status(
+        self,
+        base_status: dict[str, Any],
+        current_commit: Optional[str],
+        latest_commit: Optional[str],
+    ) -> dict[str, Any]:
+        if base_status.get("state") != "running":
+            return base_status
+        if not current_commit or not latest_commit:
+            return base_status
+        if current_commit != latest_commit:
+            return base_status
+
+        refreshed_status = {
+            **base_status,
+            "state": "succeeded",
+            "message": "Update completed successfully.",
+            "finished_at": base_status.get("finished_at") or self._now_iso(),
+            "last_result": "success",
+        }
+        self._write_status_file(refreshed_status)
+        return refreshed_status
 
     def trigger_update(self, actor_username: Optional[str] = None) -> dict[str, Any]:
         with self._lock:
