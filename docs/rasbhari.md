@@ -150,6 +150,8 @@ Operational boundary:
 - Inside Rasbhari: app activation, widget participation, process controls, queue recovery, dependency checks, approvals, and product-level health
 - Outside Rasbhari: database repair, container or service restarts, backups, filesystem repair, package installation, and host-level networking
 
+For Raspberry Pi-hosted deployments, use the documented PostgreSQL backup workflow in [backup-restore.md](backup-restore.md). The bundled [backup_rasbhari_postgres.sh](../scripts/backup_rasbhari_postgres.sh) script backs up all five Rasbhari databases, writes checksums and a manifest, and is intended to be scheduled outside the app with cron or `systemd`.
+
 ## Dashboard
 
 The operational dashboard is still available at `/dashboard`. It includes:

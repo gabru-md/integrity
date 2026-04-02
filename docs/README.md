@@ -13,6 +13,7 @@ Use it as the primary place to find:
 ## Core Docs
 
 - [AI Command Layer](./AI.md)
+- [Backup And Restore](./backup-restore.md)
 - [Import Foundation](./imports.md)
 - [macOS Local Signals](./mac-agent.md)
 - [Mental Model](./mental-model.md)

@@ -113,6 +113,18 @@ Gabru writes:
 - `exceptions.log`
 - one log file per logger, for example `Courier.log`
 
+## Backups
+
+- `RASBHARI_BACKUP_DIR`
+- `RASBHARI_BACKUP_RETENTION_DAYS`
+
+Notes:
+
+- `scripts/backup_rasbhari_postgres.sh` uses these values
+- `RASBHARI_BACKUP_DIR` should point to persistent storage on the Raspberry Pi
+- `RASBHARI_BACKUP_RETENTION_DAYS` controls how long timestamped backup directories are retained before pruning
+- See [backup-restore.md](backup-restore.md) for the full workflow
+
 ## Courier / Notifications
 
 - `NTFY_BASE_URL`
@@ -162,6 +174,8 @@ THOUGHTS_POSTGRES_HOST=localhost
 THOUGHTS_POSTGRES_PORT=5432
 
 LOG_DIR=/tmp/rasbhari/logs
+RASBHARI_BACKUP_DIR=/var/backups/rasbhari
+RASBHARI_BACKUP_RETENTION_DAYS=14
 SERVER_FILES_FOLDER=/tmp/rasbhari/files
 SERVER_PORT=5000
 SERVER_DEBUG=False

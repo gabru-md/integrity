@@ -87,6 +87,7 @@ cp .env.example .env
 - **DB Settings**: Update `*_POSTGRES_DB`, `*_POSTGRES_USER`, and `*_POSTGRES_PASSWORD` for all 5 databases.
 - **Security**: Set a strong `FLASK_SECRET_KEY`.
 - **Paths**: Set `LOG_DIR` and `SERVER_FILES_FOLDER` to valid absolute paths.
+- **Backups**: Set `RASBHARI_BACKUP_DIR` to persistent storage and review [backup-restore.md](backup-restore.md).
 
 ## 4. First Run & User Approval
 
@@ -187,7 +188,26 @@ To access your Rasbhari instance from outside your local network using ngrok:
 2. Authenticate: `ngrok config add-authtoken <YOUR_TOKEN>`
 3. Start tunnel: `ngrok http 5000`
 
-## 6. Verification
+## 7. Backups And Restore
+
+If you are running Rasbhari on a Raspberry Pi or any long-lived personal host, define a real PostgreSQL backup path before you rely on the system remotely.
+
+Recommended backup command:
+
+```bash
+./scripts/backup_rasbhari_postgres.sh
+```
+
+Recommended env:
+
+```bash
+RASBHARI_BACKUP_DIR=/var/backups/rasbhari
+RASBHARI_BACKUP_RETENTION_DAYS=14
+```
+
+The full workflow, including restore steps and verification, is documented in [backup-restore.md](backup-restore.md).
+
+## 8. Verification
 
 ### Test Event Creation
 ```bash
