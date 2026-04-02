@@ -605,6 +605,16 @@ class Server:
         apps_data = self.get_apps_data()
         processes_data = self.get_processes_data()
         dependency_health_data = self.get_dependency_health_data()
+        admin_health = self.dashboard_provider.get_admin_health_data(processes_data) if self.dashboard_provider else {
+            "checked_at": None,
+            "checked_at_display": "unknown",
+            "host": "unknown",
+            "server": {"status": "Healthy", "summary": "Admin surface reachable now", "detail": ""},
+            "event_flow": {"status": "Paused", "summary": "No event data", "detail": ""},
+            "queue_drift": {"status": "Paused", "summary": "No queue data", "detail": "", "processors": []},
+            "dependencies": {"status": "Paused", "summary": "No dependency data", "detail": ""},
+            "reliability_cards": [],
+        }
 
         users_app = next((app for app in self.registered_apps if app.name.lower() == "users" and getattr(app, "is_active", False)), None)
         pending_approvals = 0
@@ -712,11 +722,12 @@ class Server:
             "headline": "Admin Control Plane",
             "summary": "Use Rasbhari itself to operate the Rasbhari ecosystem: inspect health, spot degraded capabilities, resolve approvals, and recover processes before users feel the drift.",
             "metrics": [
+                {"label": "Server", "value": admin_health["server"]["status"], "detail": f"{admin_health['host']} · {admin_health['checked_at_display']}"},
                 {"label": "Active Apps", "value": len(active_apps), "detail": f"{len(inactive_apps)} disabled"},
                 {"label": "Running Processes", "value": len(running_processes), "detail": f"{len(stopped_enabled_processes)} enabled but stopped"},
                 {"label": "Users", "value": total_users, "detail": f"{pending_approvals} pending approval"},
-                {"label": "Dependencies", "value": len(dependency_health_data), "detail": f"{len(unhealthy_dependencies)} need attention"},
-                {"label": "Degraded Capabilities", "value": len(degraded_capabilities), "detail": "High-signal operator issues"},
+                {"label": "Queue Drift", "value": admin_health["queue_drift"]["summary"], "detail": admin_health["queue_drift"]["status"]},
+                {"label": "Dependencies", "value": admin_health["dependencies"]["summary"], "detail": admin_health["dependencies"]["status"]},
             ],
             "focus_areas": [
                 {
@@ -768,6 +779,7 @@ class Server:
             "pending_approvals": pending_approvals,
             "dependency_health": dependency_health_data[:4],
             "recent_queue_processors": queue_processors[:5],
+            "admin_health": admin_health,
         }
 
     def get_universal_timeline_data(self, limit: int = 20) -> list[dict]:

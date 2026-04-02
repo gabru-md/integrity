@@ -24,11 +24,11 @@
         </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-4 lg:grid-cols-5">
+    <section class="grid grid-cols-1 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         {% for metric in admin_data.metrics %}
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ metric.label }}</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ metric.value }}</div>
+            <div class="mt-2 text-2xl font-black text-[var(--text)]">{{ metric.value }}</div>
             <div class="mt-1 text-sm text-[var(--text-soft)]">{{ metric.detail }}</div>
         </article>
         {% endfor %}
@@ -36,6 +36,51 @@
 
     <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div class="space-y-6">
+            <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Remote Ops</div>
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-[var(--text)]">Pi Health Snapshot</h2>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Checked {{ admin_data.admin_health.checked_at_display }} on {{ admin_data.admin_health.host }}.</div>
+                    </div>
+                    <a href="/processes" class="btn-secondary px-4 py-2 text-sm">Open Runtime</a>
+                </div>
+                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">Server Availability</div>
+                            <span class="ui-badge{% if admin_data.admin_health.server.status == 'Healthy' %} ui-badge-success{% endif %}">{{ admin_data.admin_health.server.status }}</span>
+                        </div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.admin_health.server.summary }}</div>
+                        <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ admin_data.admin_health.server.detail }}</div>
+                    </div>
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">Event Flow</div>
+                            <span class="ui-badge{% if admin_data.admin_health.event_flow.status == 'Healthy' %} ui-badge-success{% elif admin_data.admin_health.event_flow.status == 'Paused' %}{% else %} ui-badge-warning{% endif %}">{{ admin_data.admin_health.event_flow.status }}</span>
+                        </div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.admin_health.event_flow.summary }}</div>
+                        <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ admin_data.admin_health.event_flow.detail }}</div>
+                    </div>
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">Queue Drift</div>
+                            <span class="ui-badge{% if admin_data.admin_health.queue_drift.status == 'Healthy' %} ui-badge-success{% elif admin_data.admin_health.queue_drift.status == 'Broken' %} ui-badge-danger{% else %} ui-badge-warning{% endif %}">{{ admin_data.admin_health.queue_drift.status }}</span>
+                        </div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.admin_health.queue_drift.summary }}</div>
+                        <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ admin_data.admin_health.queue_drift.detail }}</div>
+                    </div>
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">Dependency Issues</div>
+                            <span class="ui-badge{% if admin_data.admin_health.dependencies.status == 'Healthy' %} ui-badge-success{% elif admin_data.admin_health.dependencies.status == 'Broken' %} ui-badge-danger{% else %} ui-badge-warning{% endif %}">{{ admin_data.admin_health.dependencies.status }}</span>
+                        </div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.admin_health.dependencies.summary }}</div>
+                        <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ admin_data.admin_health.dependencies.detail }}</div>
+                    </div>
+                </div>
+            </article>
+
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">System Health</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Degraded Capabilities</h2>
@@ -81,13 +126,13 @@
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Queue Recovery</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Replayable Processors</h2>
                 <div class="mt-5 grid gap-3">
-                    {% for process in admin_data.recent_queue_processors %}
+                    {% for process in admin_data.admin_health.queue_drift.processors %}
                     <a href="/processes" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
                         <div class="flex items-center justify-between gap-3">
                             <div class="text-sm font-bold text-[var(--text)]">{{ process.name }}</div>
-                            <span class="ui-badge">{{ process.last_consumed_id if process.last_consumed_id is not none else 0 }}</span>
+                            <span class="ui-badge{% if process.status == 'Healthy' %} ui-badge-success{% elif process.status == 'Broken' %} ui-badge-danger{% else %} ui-badge-warning{% endif %}">{{ process.lag }}</span>
                         </div>
-                        <div class="mt-2 text-sm text-[var(--text-soft)]">Owner: {{ process.owner_app }} · {{ 'Running' if process.is_alive else 'Stopped' }}</div>
+                        <div class="mt-2 text-sm text-[var(--text-soft)]">Owner: {{ process.owner_app }} · last consumed {{ process.last_consumed_id }}</div>
                     </a>
                     {% else %}
                     <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No queue processors are registered yet.</div>

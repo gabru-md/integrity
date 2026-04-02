@@ -565,6 +565,68 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             },
         ]
 
+    def get_admin_health_data(self, processes_data: list[dict]) -> dict[str, object]:
+        reliability_cards = self.get_reliability_data(processes_data)
+        latest_event = next(iter(self.event_service.get_recent_items(1)), None)
+        latest_event_id = latest_event.id if latest_event else 0
+        latest_event_age = self._format_age(latest_event.timestamp if latest_event else None)
+        queue_stats = self.queue_service.get_all()
+        dependency_cards = self.get_dependency_health_data()
+        unhealthy_dependencies = [item for item in dependency_cards if item.get("status") not in {"Healthy", "Configured"}]
+
+        queue_drift_processors = []
+        for process in processes_data:
+            if process.get("type") != "QueueProcessor":
+                continue
+            last_consumed_id = process.get("last_consumed_id") or 0
+            lag = max(0, latest_event_id - last_consumed_id)
+            queue_drift_processors.append({
+                "name": process.get("name"),
+                "owner_app": process.get("owner_app"),
+                "last_consumed_id": last_consumed_id,
+                "lag": lag,
+                "status": "Healthy" if lag <= 20 else ("Delayed" if lag <= 100 else "Broken"),
+            })
+
+        queue_drift_processors.sort(key=lambda item: item["lag"], reverse=True)
+        max_queue_lag = queue_drift_processors[0]["lag"] if queue_drift_processors else 0
+        queue_drift_status = "Healthy"
+        if max_queue_lag > 100:
+            queue_drift_status = "Broken"
+        elif max_queue_lag > 20:
+            queue_drift_status = "Delayed"
+        elif not queue_stats:
+            queue_drift_status = "Paused"
+
+        checked_at = datetime.now(timezone.utc)
+        return {
+            "checked_at": checked_at.isoformat(),
+            "checked_at_display": checked_at.strftime("%Y-%m-%d %H:%M UTC"),
+            "host": os.getenv("HOSTNAME") or os.uname().nodename,
+            "server": {
+                "status": "Healthy",
+                "summary": "Admin surface reachable now",
+                "detail": "If you can load this page over Tailscale, the Pi-hosted Rasbhari server is currently responding.",
+            },
+            "event_flow": {
+                "status": "Healthy" if latest_event else "Paused",
+                "summary": f"Last event {latest_event_age}" if latest_event else "No events recorded yet",
+                "detail": f"Latest event id: {latest_event_id}" if latest_event else "The event stream is currently empty.",
+            },
+            "queue_drift": {
+                "status": queue_drift_status,
+                "summary": f"Max lag {max_queue_lag} events",
+                "detail": f"{len(queue_drift_processors)} queue processor(s) tracked against event stream id {latest_event_id}.",
+                "processors": queue_drift_processors[:5],
+            },
+            "dependencies": {
+                "status": "Healthy" if not unhealthy_dependencies else ("Delayed" if len(unhealthy_dependencies) == 1 else "Broken"),
+                "summary": f"{len(unhealthy_dependencies)} issue(s) detected",
+                "detail": "Dependency health reflects services like ntfy, SendGrid, and OpenWebUI.",
+            },
+            "reliability_cards": reliability_cards,
+        }
+
     def get_universal_timeline_data(self, limit: int = 20) -> list[dict]:
         items = []
 

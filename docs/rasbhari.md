@@ -129,6 +129,13 @@ The admin overview is intentionally high-signal. It should quickly surface:
 - pending approvals that block onboarding
 - operator-facing issues before they disappear into lower-level pages
 
+For Pi-hosted remote use, the admin overview now also acts as a quick remote health snapshot:
+
+- server availability, as observed by the fact that the admin surface is reachable
+- event-flow freshness, so you can tell whether the system is still receiving signals
+- queue drift, so backlog and stalled processing are visible quickly
+- dependency issues, so external delivery or AI-related failures are obvious
+
 Operational boundary:
 
 - Inside Rasbhari: app activation, widget participation, process controls, queue recovery, dependency checks, approvals, and product-level health

@@ -82,6 +82,9 @@ class DashboardDataProvider(Protocol):
     def get_reliability_data(self, processes_data: list[dict]) -> list[dict]:
         ...
 
+    def get_admin_health_data(self, processes_data: list[dict]) -> dict[str, Any]:
+        ...
+
     def get_universal_timeline_data(self, limit: int = 20) -> list[dict]:
         ...
 

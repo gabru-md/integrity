@@ -112,6 +112,18 @@ class FakeDashboardProvider:
     def get_reliability_data(self, processes_data):
         return []
 
+    def get_admin_health_data(self, processes_data):
+        return {
+            "checked_at": "2026-04-02T12:00:00+00:00",
+            "checked_at_display": "2026-04-02 12:00 UTC",
+            "host": "rasbhari-pi",
+            "server": {"status": "Healthy", "summary": "Admin surface reachable now", "detail": "Server is responding."},
+            "event_flow": {"status": "Healthy", "summary": "Last event 3m ago", "detail": "Latest event id: 42"},
+            "queue_drift": {"status": "Healthy", "summary": "Max lag 2 events", "detail": "1 queue processor tracked.", "processors": []},
+            "dependencies": {"status": "Healthy", "summary": "0 issue(s) detected", "detail": "All checks healthy."},
+            "reliability_cards": [],
+        }
+
     def get_universal_timeline_data(self, limit=20):
         return []
 
@@ -406,6 +418,9 @@ class TodayRouteTests(unittest.TestCase):
         self.assertEqual(admin_response.status_code, 200)
         self.assertIn(b"Admin Control Plane", admin_response.data)
         self.assertIn(b"Operate the ecosystem", admin_response.data)
+        self.assertIn(b"Pi Health Snapshot", admin_response.data)
+        self.assertIn(b"Server Availability", admin_response.data)
+        self.assertIn(b"Queue Drift", admin_response.data)
         self.assertIn(b"Degraded Capabilities", admin_response.data)
         self.assertIn(b"Stuck Processors", admin_response.data)
         self.assertIn(b"Pending Approvals", admin_response.data)
