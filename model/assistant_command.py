@@ -11,6 +11,8 @@ AssistantAction = Literal[
     "create_skill",
     "create_ticket",
     "create_project_update",
+    "update_promise_target_tag",
+    "append_activity_tags",
     "answer",
 ]
 
@@ -42,6 +44,8 @@ class AssistantCommandPlan(BaseModel):
     project_id: Optional[int] = None
     project_update_content: Optional[str] = None
     project_update_type: Optional[str] = None
+    promise_id: Optional[int] = None
+    activity_tag_updates: List[str] = Field(default_factory=list)
     response: Optional[str] = None
 
 

@@ -37,6 +37,8 @@ class AssistantCommandService:
         "create_skill": 0.72,
         "create_ticket": 0.68,
         "create_project_update": 0.68,
+        "update_promise_target_tag": 0.72,
+        "append_activity_tags": 0.72,
         "answer": 0.0,
     }
     AFFIRMATIVE_MESSAGES = {
@@ -594,6 +596,66 @@ class AssistantCommandService:
                 payload={"timeline_id": timeline_id, "project_id": plan.project_id},
             )
 
+        if plan.action == "update_promise_target_tag":
+            if not plan.promise_id or not plan.promise_target_event_tag:
+                return self._execution_failure(plan, raw_text, "Promise update is missing the promise id or target tag.")
+            promise = self.promise_service.get_by_id(plan.promise_id)
+            if not promise:
+                return self._execution_failure(plan, raw_text, "Promise not found.")
+            promise.target_event_tag = plan.promise_target_event_tag.strip()
+            promise.updated_at = datetime.now()
+            if not self.promise_service.update(promise):
+                return self._execution_failure(plan, raw_text, "Failed to update promise target tag.")
+            return AssistantCommandResult(
+                ok=True,
+                executed=True,
+                action=plan.action,
+                confidence=plan.confidence,
+                summary=plan.summary or f"Linked promise {promise.name} to tag {promise.target_event_tag}.",
+                reasoning=plan.reasoning,
+                user_message=raw_text,
+                response=self._format_executed_response(
+                    title="Promise linked",
+                    action_line=f"Updated promise `{promise.name}` to watch `{promise.target_event_tag}`.",
+                    plan=plan,
+                    details=[
+                        f"Promise ID: {promise.id}",
+                        f"Target event type: {promise.target_event_type or 'none'}",
+                    ],
+                ),
+                payload={"promise_id": promise.id, "promise_target_event_tag": promise.target_event_tag},
+            )
+
+        if plan.action == "append_activity_tags":
+            if not plan.activity_id or not plan.activity_tag_updates:
+                return self._execution_failure(plan, raw_text, "Activity update is missing the activity id or tags.")
+            activity = self.activity_service.get_by_id(plan.activity_id)
+            if not activity:
+                return self._execution_failure(plan, raw_text, "Activity not found.")
+            merged_tags = self._normalize_tags([*(activity.tags or []), *plan.activity_tag_updates])
+            activity.tags = merged_tags
+            if not self.activity_service.update(activity):
+                return self._execution_failure(plan, raw_text, "Failed to update activity tags.")
+            return AssistantCommandResult(
+                ok=True,
+                executed=True,
+                action=plan.action,
+                confidence=plan.confidence,
+                summary=plan.summary or f"Updated activity {activity.name}.",
+                reasoning=plan.reasoning,
+                user_message=raw_text,
+                response=self._format_executed_response(
+                    title="Activity linked",
+                    action_line=f"Updated activity `{activity.name}` with ecosystem tags.",
+                    plan=plan,
+                    details=[
+                        f"Activity ID: {activity.id}",
+                        f"Tags: {', '.join(activity.tags) if activity.tags else 'none'}",
+                    ],
+                ),
+                payload={"activity_id": activity.id, "activity_tags": activity.tags},
+            )
+
         return AssistantCommandResult(
             ok=True,
             executed=False,
@@ -705,6 +767,12 @@ class AssistantCommandService:
         return normalized
 
     def _normalize_action_value(self, payload: dict) -> str:
+        action = payload.get("action")
+        if isinstance(action, str):
+            candidate = action.strip().lower()
+            if candidate in self.SAFE_AUTO_EXECUTE_THRESHOLDS:
+                return candidate
+
         raw_signal = " ".join(
             str(value) for value in (
                 payload.get("action"),
@@ -728,11 +796,8 @@ class AssistantCommandService:
         if payload.get("thought_message") or "note that" in raw_signal or raw_signal.startswith("note "):
             return "create_thought"
 
-        action = payload.get("action")
         if isinstance(action, str):
             candidate = action.strip().lower()
-            if candidate in self.SAFE_AUTO_EXECUTE_THRESHOLDS:
-                return candidate
             alias_map = {
                 "event": "create_event",
                 "create event": "create_event",
@@ -750,6 +815,10 @@ class AssistantCommandService:
                 "create ticket": "create_ticket",
                 "project update": "create_project_update",
                 "create project update": "create_project_update",
+                "link promise tag": "update_promise_target_tag",
+                "update promise tag": "update_promise_target_tag",
+                "add activity tag": "append_activity_tags",
+                "append activity tags": "append_activity_tags",
                 "reply": "answer",
                 "respond": "answer",
             }
@@ -782,7 +851,7 @@ class AssistantCommandService:
 
     def _change_pending_action(self, user_id: int, pending_entry: dict, change_action: str) -> AssistantCommandResult:
         raw_action = (change_action or "").strip()
-        if raw_action not in ("create_event", "trigger_activity", "create_thought", "create_promise", "create_skill", "create_ticket", "create_project_update"):
+        if raw_action not in ("create_event", "trigger_activity", "create_thought", "create_promise", "create_skill", "create_ticket", "create_project_update", "update_promise_target_tag", "append_activity_tags"):
             return AssistantCommandResult(
                 ok=False,
                 executed=False,
@@ -954,6 +1023,30 @@ class AssistantCommandService:
                 }
             )
 
+        if target_action == "update_promise_target_tag":
+            if not plan.promise_id or not plan.promise_target_event_tag:
+                return None
+            return plan.model_copy(
+                update={
+                    **base_updates,
+                    "summary": f"Link promise to tag `{plan.promise_target_event_tag}`.",
+                    "reasoning": f"Restaged by user as `{target_action}`.",
+                    "response": None,
+                }
+            )
+
+        if target_action == "append_activity_tags":
+            if not plan.activity_id or not plan.activity_tag_updates:
+                return None
+            return plan.model_copy(
+                update={
+                    **base_updates,
+                    "summary": f"Add ecosystem tags to activity `{plan.activity_name or plan.activity_id}`.",
+                    "reasoning": f"Restaged by user as `{target_action}`.",
+                    "response": None,
+                }
+            )
+
         return None
 
     def _format_staged_response(self, plan: AssistantCommandPlan) -> str:
@@ -1028,6 +1121,16 @@ class AssistantCommandService:
                 f"Project ID: {plan.project_id or 'unspecified'}",
                 f"Type: {plan.project_update_type or 'Update'}",
                 f"Content: {plan.project_update_content or 'none'}",
+            ]
+        if plan.action == "update_promise_target_tag":
+            return [
+                f"Promise ID: {plan.promise_id or 'unspecified'}",
+                f"Target event tag: {plan.promise_target_event_tag or 'none'}",
+            ]
+        if plan.action == "append_activity_tags":
+            return [
+                f"Activity ID: {plan.activity_id or 'unspecified'}",
+                f"Tags to add: {', '.join(plan.activity_tag_updates) if plan.activity_tag_updates else 'none'}",
             ]
         return []
 

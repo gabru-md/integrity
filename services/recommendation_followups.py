@@ -7,6 +7,7 @@ from services.kanban_tickets import KanbanTicketService
 from services.projects import ProjectService
 from services.promises import PromiseService
 from services.skills import SkillService
+from services.activities import ActivityService
 
 
 class RecommendationFollowUpService:
@@ -16,23 +17,33 @@ class RecommendationFollowUpService:
         kanban_ticket_service: Optional[KanbanTicketService] = None,
         promise_service: Optional[PromiseService] = None,
         skill_service: Optional[SkillService] = None,
+        activity_service: Optional[ActivityService] = None,
     ):
         self.project_service = project_service or ProjectService()
         self.kanban_ticket_service = kanban_ticket_service or KanbanTicketService()
         self.promise_service = promise_service or PromiseService()
         self.skill_service = skill_service or SkillService()
+        self.activity_service = activity_service or ActivityService()
 
     def get_follow_ups(self, user_id: int, limit: int = 4) -> list[dict]:
         projects = self.project_service.find_all(filters={"user_id": user_id, "state": "Active"}, sort_by={"last_updated": "ASC"})
         promises = self.promise_service.find_all(filters={"user_id": user_id}, sort_by={"name": "ASC"})
         skills = self.skill_service.find_all(filters={"user_id": user_id}, sort_by={"name": "ASC"})
+        activities = self.activity_service.find_all(filters={"user_id": user_id}, sort_by={"name": "ASC"})
 
         promise_tags = {str(p.target_event_tag).strip().lower() for p in promises if p.target_event_tag}
+        promise_tags_by_event_type = {}
+        for promise in promises:
+            if promise.target_event_type and promise.target_event_tag:
+                promise_tags_by_event_type.setdefault(str(promise.target_event_type).strip().lower(), set()).add(str(promise.target_event_tag).strip().lower())
         skill_tags = set()
         for skill in skills:
             skill_tags.update(self.skill_service.get_match_keys(skill))
 
         follow_ups = []
+        follow_ups.extend(self._build_promise_link_follow_ups(promises, activities))
+        follow_ups.extend(self._build_activity_link_follow_ups(activities, promise_tags, skill_tags))
+
         now = datetime.now()
         for project in projects:
             project_slug = project.name.lower().replace(" ", "-")
@@ -122,3 +133,74 @@ class RecommendationFollowUpService:
             if len(deduped) >= limit:
                 break
         return deduped
+
+    def _build_promise_link_follow_ups(self, promises, activities) -> list[dict]:
+        follow_ups = []
+        activities_by_event_type = {}
+        for activity in activities:
+            event_type = str(activity.event_type or "").strip().lower()
+            if not event_type:
+                continue
+            activities_by_event_type.setdefault(event_type, []).append(activity)
+
+        for promise in promises:
+            if promise.target_event_tag or not promise.target_event_type:
+                continue
+            matching_activities = activities_by_event_type.get(str(promise.target_event_type).strip().lower(), [])
+            candidate_tags = []
+            for activity in matching_activities:
+                for tag in (activity.tags or []):
+                    normalized = str(tag).strip().lower()
+                    if normalized and normalized not in candidate_tags:
+                        candidate_tags.append(normalized)
+            if not candidate_tags:
+                continue
+            chosen_tag = candidate_tags[0]
+            follow_ups.append({
+                "id": f"promise-link:{promise.id}:{chosen_tag}",
+                "title": f"Link promise {promise.name} to `{chosen_tag}`",
+                "body": f"Activities already emit `{promise.target_event_type}` with the `{chosen_tag}` tag. Add that tag to the promise so the relationship stays visible across Rasbhari.",
+                "action": "update_promise_target_tag",
+                "confidence": 0.78,
+                "reasoning": "The promise already watches this event type, and matching activities consistently carry the suggested tag.",
+                "payload": {
+                    "promise_id": promise.id,
+                    "promise_name": promise.name,
+                    "promise_target_event_type": promise.target_event_type,
+                    "promise_target_event_tag": chosen_tag,
+                },
+            })
+        return follow_ups
+
+    def _build_activity_link_follow_ups(self, activities, promise_tags: set[str], skill_tags: set[str]) -> list[dict]:
+        follow_ups = []
+        candidate_tags = sorted({tag for tag in [*promise_tags, *skill_tags] if tag})
+        for activity in activities:
+            existing_tags = {str(tag).strip().lower() for tag in (activity.tags or []) if str(tag).strip()}
+            tokens = self._extract_match_tokens(activity)
+            matching_tag = next((tag for tag in candidate_tags if tag not in existing_tags and tag in tokens), None)
+            if not matching_tag:
+                continue
+            follow_ups.append({
+                "id": f"activity-link:{activity.id}:{matching_tag}",
+                "title": f"Add `{matching_tag}` to {activity.name}",
+                "body": f"{activity.name} already reads like `{matching_tag}` work, but the activity is not tagged that way yet. Add the tag so promises and skills can react consistently.",
+                "action": "append_activity_tags",
+                "confidence": 0.76,
+                "reasoning": "The activity name or event type already matches an existing promise or skill tag.",
+                "payload": {
+                    "activity_id": activity.id,
+                    "activity_name": activity.name,
+                    "activity_tag_updates": [matching_tag],
+                },
+            })
+        return follow_ups
+
+    @staticmethod
+    def _extract_match_tokens(activity) -> set[str]:
+        raw_parts = [activity.name or "", activity.event_type or ""]
+        tokens = set()
+        for part in raw_parts:
+            normalized = str(part).strip().lower().replace(":", " ").replace("-", " ").replace("_", " ")
+            tokens.update(token for token in normalized.split() if token)
+        return tokens
