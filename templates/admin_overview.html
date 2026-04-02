@@ -24,7 +24,7 @@
         </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+    <section class="grid grid-cols-1 gap-4 lg:grid-cols-5">
         {% for metric in admin_data.metrics %}
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ metric.label }}</div>
@@ -34,8 +34,26 @@
         {% endfor %}
     </section>
 
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div class="space-y-6">
+            <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">System Health</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Degraded Capabilities</h2>
+                <div class="mt-5 grid gap-3">
+                    {% for item in admin_data.degraded_capabilities %}
+                    <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">{{ item.title }}</div>
+                            <span class="ui-badge{% if item.severity == 'danger' %} ui-badge-danger{% elif item.severity == 'attention' %} ui-badge-warning{% endif %}">{{ item.severity | capitalize }}</span>
+                        </div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No degraded capabilities are surfaced right now.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Control Plane</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Primary Operator Surfaces</h2>
@@ -80,8 +98,40 @@
 
         <div class="space-y-6">
             <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Runtime Recovery</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Stuck Processors</h2>
+                <div class="mt-5 grid gap-3">
+                    {% for process in admin_data.stuck_processors %}
+                    <a href="{{ process.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm font-bold text-[var(--text)]">{{ process.name }}</div>
+                            <span class="ui-badge ui-badge-danger">Stopped</span>
+                        </div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ process.owner_app }} · {{ process.summary }}</div>
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No enabled processors are currently stuck.</div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="shell-card p-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">User Stewardship</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Pending Approvals</h2>
+                <div class="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <div class="text-sm font-bold text-[var(--text)]">{{ admin_data.pending_approvals }} account(s) waiting</div>
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Keep first-run momentum high by clearing legitimate signups quickly.</div>
+                        </div>
+                        <a href="/users/home" class="btn-secondary px-4 py-2 text-sm">Open Users</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Attention</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Operator Queue</h2>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Operator Issues</h2>
                 <div class="mt-5 grid gap-3">
                     {% for item in admin_data.attention_items %}
                     <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">

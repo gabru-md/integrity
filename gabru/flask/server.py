@@ -627,23 +627,105 @@ class Server:
         stopped_enabled_processes = [process for process in processes_data if process.get("is_enabled") and not process.get("is_alive")]
         queue_processors = [process for process in processes_data if process.get("type") == "QueueProcessor"]
         unhealthy_dependencies = [item for item in dependency_health_data if item.get("status") not in {"Healthy", "Configured"}]
+        apps_needing_attention = [app for app in apps_data if app.get("health_state") == "attention"]
+        disabled_widget_apps = [app for app in active_apps if not app.get("widget_enabled")]
+        degraded_capabilities = []
+        operator_issues = []
+
+        if pending_approvals:
+            degraded_capabilities.append({
+                "title": "User onboarding is blocked",
+                "body": f"{pending_approvals} user account(s) are waiting for approval, which slows first-run momentum.",
+                "href": "/users/home",
+                "severity": "attention",
+            })
+            operator_issues.append({
+                "title": "Pending approvals",
+                "body": f"{pending_approvals} account(s) are waiting for admin action.",
+                "href": "/users/home",
+            })
+
+        if stopped_enabled_processes:
+            degraded_capabilities.append({
+                "title": "Background automation is degraded",
+                "body": f"{len(stopped_enabled_processes)} enabled process(es) are stopped, so parts of the event loop are not advancing.",
+                "href": "/processes",
+                "severity": "danger",
+            })
+            operator_issues.append({
+                "title": "Stopped enabled processors",
+                "body": f"{len(stopped_enabled_processes)} enabled processor(s) need restart or replay.",
+                "href": "/processes",
+            })
+
+        if unhealthy_dependencies:
+            degraded_capabilities.append({
+                "title": "External integrations are degraded",
+                "body": f"{len(unhealthy_dependencies)} dependency check(s) are unhealthy, which may suppress notifications or AI-assisted flows.",
+                "href": "/processes",
+                "severity": "attention",
+            })
+            operator_issues.append({
+                "title": "Dependency issues",
+                "body": f"{len(unhealthy_dependencies)} integration dependency issue(s) need attention.",
+                "href": "/processes",
+            })
+
+        if apps_needing_attention:
+            degraded_capabilities.append({
+                "title": "Some app-owned workers need attention",
+                "body": f"{len(apps_needing_attention)} app surface(s) have enabled workers that are not healthy.",
+                "href": "/apps",
+                "severity": "attention",
+            })
+
+        if not active_apps:
+            degraded_capabilities.append({
+                "title": "No product apps are active",
+                "body": "Rasbhari cannot function as an ecosystem until at least one app surface is enabled.",
+                "href": "/apps",
+                "severity": "danger",
+            })
+
+        if not unhealthy_dependencies and not stopped_enabled_processes and not pending_approvals:
+            operator_issues.append({
+                "title": "Control plane is calm",
+                "body": "No high-signal operator interruptions are surfaced right now.",
+                "href": "/admin",
+            })
+
+        stuck_processors = []
+        for process in stopped_enabled_processes:
+            last_consumed_id = process.get("last_consumed_id")
+            if last_consumed_id is None:
+                summary = "Enabled but stopped"
+            else:
+                summary = f"Stopped at queue item {last_consumed_id}"
+            stuck_processors.append({
+                "name": process.get("name"),
+                "owner_app": process.get("owner_app"),
+                "summary": summary,
+                "href": "/processes",
+            })
 
         return {
             "headline": "Admin Control Plane",
-            "summary": "Use Rasbhari itself to operate the Rasbhari ecosystem: oversee apps, processes, users, dependencies, and recovery actions from one place.",
+            "summary": "Use Rasbhari itself to operate the Rasbhari ecosystem: inspect health, spot degraded capabilities, resolve approvals, and recover processes before users feel the drift.",
             "metrics": [
                 {"label": "Active Apps", "value": len(active_apps), "detail": f"{len(inactive_apps)} disabled"},
                 {"label": "Running Processes", "value": len(running_processes), "detail": f"{len(stopped_enabled_processes)} enabled but stopped"},
                 {"label": "Users", "value": total_users, "detail": f"{pending_approvals} pending approval"},
                 {"label": "Dependencies", "value": len(dependency_health_data), "detail": f"{len(unhealthy_dependencies)} need attention"},
+                {"label": "Degraded Capabilities", "value": len(degraded_capabilities), "detail": "High-signal operator issues"},
             ],
             "focus_areas": [
                 {
                     "title": "App Registry",
-                    "summary": "Control which product surfaces are active and whether their widgets participate in the shell.",
+                    "summary": "Control which product surfaces are active, what they own, and whether their widgets participate in the shell.",
                     "items": [
                         f"{len(active_apps)} apps currently active",
                         f"{len(inactive_apps)} apps currently disabled",
+                        f"{len(disabled_widget_apps)} active app(s) hidden from the dashboard",
                     ],
                     "href": "/apps",
                     "action_label": "Open App Registry",
@@ -654,6 +736,7 @@ class Server:
                     "items": [
                         f"{len(running_processes)} processes currently running",
                         f"{len(queue_processors)} queue processors with replayable progress",
+                        f"{len(stopped_enabled_processes)} enabled process(es) currently stopped",
                     ],
                     "href": "/processes",
                     "action_label": "Open Processes",
@@ -669,28 +752,10 @@ class Server:
                     "action_label": "Open Users",
                 },
             ],
-            "attention_items": [
-                {
-                    "title": "Pending User Approvals",
-                    "body": f"{pending_approvals} user account(s) are waiting for approval.",
-                    "href": "/users/home",
-                }
-                for _ in ([1] if pending_approvals else [])
-            ] + [
-                {
-                    "title": "Enabled Processes Not Running",
-                    "body": f"{len(stopped_enabled_processes)} enabled process(es) are currently stopped.",
-                    "href": "/processes",
-                }
-                for _ in ([1] if stopped_enabled_processes else [])
-            ] + [
-                {
-                    "title": "Dependency Issues",
-                    "body": f"{len(unhealthy_dependencies)} dependency check(s) need attention before some features behave normally.",
-                    "href": "/processes",
-                }
-                for _ in ([1] if unhealthy_dependencies else [])
-            ],
+            "attention_items": operator_issues,
+            "degraded_capabilities": degraded_capabilities,
+            "stuck_processors": stuck_processors,
+            "pending_approvals": pending_approvals,
             "dependency_health": dependency_health_data[:4],
             "recent_queue_processors": queue_processors[:5],
         }

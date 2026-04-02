@@ -406,6 +406,9 @@ class TodayRouteTests(unittest.TestCase):
         self.assertEqual(admin_response.status_code, 200)
         self.assertIn(b"Admin Control Plane", admin_response.data)
         self.assertIn(b"Operate the ecosystem", admin_response.data)
+        self.assertIn(b"Degraded Capabilities", admin_response.data)
+        self.assertIn(b"Stuck Processors", admin_response.data)
+        self.assertIn(b"Pending Approvals", admin_response.data)
 
     def test_app_registry_renders_operator_framing_and_app_metadata(self):
         fake_auth_provider = FakeAuthProvider()

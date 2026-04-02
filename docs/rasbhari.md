@@ -117,8 +117,16 @@ This is the operator front door for the Rasbhari ecosystem. It is meant to unify
 - process runtime and queue recovery
 - user stewardship and pending approvals
 - dependency health and degraded capabilities
+- stuck processors and operator-facing issues
 
 The goal is to let admins oversee most Rasbhari-level operational work from inside Rasbhari itself instead of treating the web UI as read-only and the shell as the real control plane.
+
+The admin overview is intentionally high-signal. It should quickly surface:
+
+- degraded capabilities that affect the product loop
+- enabled processors that are stopped and need recovery
+- pending approvals that block onboarding
+- operator-facing issues before they disappear into lower-level pages
 
 ## Dashboard
 
