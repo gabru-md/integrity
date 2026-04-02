@@ -32,6 +32,8 @@ class UserService(CRUDService[User]):
                         is_approved BOOLEAN NOT NULL DEFAULT FALSE,
                         onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
                         ntfy_topic TEXT,
+                        recommendations_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                        recommendation_limit INTEGER NOT NULL DEFAULT 2,
                         encrypted_data_key TEXT,
                         key_version INTEGER NOT NULL DEFAULT 1,
                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -40,6 +42,8 @@ class UserService(CRUDService[User]):
                 """)
                 cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(5)")
                 cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE")
+                cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS recommendations_enabled BOOLEAN NOT NULL DEFAULT TRUE")
+                cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS recommendation_limit INTEGER NOT NULL DEFAULT 2")
                 cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_api_key ON users (api_key) WHERE api_key IS NOT NULL")
                 self.db.conn.commit()
 
@@ -71,10 +75,12 @@ class UserService(CRUDService[User]):
             is_approved=row[6],
             onboarding_completed=row[7],
             ntfy_topic=row[8],
-            encrypted_data_key=row[9],
-            key_version=row[10],
-            created_at=row[11],
-            updated_at=row[12],
+            recommendations_enabled=row[9],
+            recommendation_limit=row[10] if row[10] is not None else 2,
+            encrypted_data_key=row[11],
+            key_version=row[12],
+            created_at=row[13],
+            updated_at=row[14],
         )
 
     def _get_columns_for_insert(self) -> List[str]:
@@ -88,6 +94,8 @@ class UserService(CRUDService[User]):
             "is_approved",
             "onboarding_completed",
             "ntfy_topic",
+            "recommendations_enabled",
+            "recommendation_limit",
             "encrypted_data_key",
             "key_version",
             "created_at",
@@ -108,6 +116,8 @@ class UserService(CRUDService[User]):
             "is_approved",
             "onboarding_completed",
             "ntfy_topic",
+            "recommendations_enabled",
+            "recommendation_limit",
             "encrypted_data_key",
             "key_version",
             "created_at",
@@ -124,9 +134,9 @@ class UserService(CRUDService[User]):
         query = """
             INSERT INTO users (
                 username, display_name, password_hash, api_key, is_admin, is_active, is_approved,
-                onboarding_completed, ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
+                onboarding_completed, ntfy_topic, recommendations_enabled, recommendation_limit, encrypted_data_key, key_version, created_at, updated_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
         params = (
@@ -139,6 +149,8 @@ class UserService(CRUDService[User]):
             obj.is_approved,
             obj.onboarding_completed,
             obj.ntfy_topic,
+            obj.recommendations_enabled,
+            max(0, int(obj.recommendation_limit if obj.recommendation_limit is not None else 2)),
             obj.encrypted_data_key,
             obj.key_version,
             obj.created_at or now,
@@ -173,6 +185,8 @@ class UserService(CRUDService[User]):
                 is_approved=%s,
                 onboarding_completed=%s,
                 ntfy_topic=%s,
+                recommendations_enabled=%s,
+                recommendation_limit=%s,
                 encrypted_data_key=%s,
                 key_version=%s,
                 created_at=%s,
@@ -189,6 +203,8 @@ class UserService(CRUDService[User]):
             obj.is_approved,
             obj.onboarding_completed,
             obj.ntfy_topic,
+            obj.recommendations_enabled,
+            max(0, int(obj.recommendation_limit if obj.recommendation_limit is not None else 2)),
             obj.encrypted_data_key,
             obj.key_version,
             obj.created_at or existing["created_at"],
@@ -219,7 +235,7 @@ class UserService(CRUDService[User]):
             return None
         query = """
             SELECT id, username, display_name, password_hash, api_key, is_admin, is_active, is_approved, onboarding_completed,
-                   ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
+                   ntfy_topic, recommendations_enabled, recommendation_limit, encrypted_data_key, key_version, created_at, updated_at
             FROM users
             WHERE id = %s
         """
@@ -239,10 +255,12 @@ class UserService(CRUDService[User]):
                 "is_approved": row[7],
                 "onboarding_completed": row[8],
                 "ntfy_topic": row[9],
-                "encrypted_data_key": row[10],
-                "key_version": row[11],
-                "created_at": row[12],
-                "updated_at": row[13],
+                "recommendations_enabled": row[10],
+                "recommendation_limit": row[11] if row[11] is not None else 2,
+                "encrypted_data_key": row[12],
+                "key_version": row[13],
+                "created_at": row[14],
+                "updated_at": row[15],
             }
 
     def authenticate(self, username: str, password: str) -> Optional[User]:
@@ -250,7 +268,7 @@ class UserService(CRUDService[User]):
             return None
         query = """
             SELECT id, username, display_name, password_hash, api_key, is_admin, is_active, is_approved, onboarding_completed,
-                   ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
+                   ntfy_topic, recommendations_enabled, recommendation_limit, encrypted_data_key, key_version, created_at, updated_at
             FROM users
             WHERE username = %s
         """
@@ -276,10 +294,12 @@ class UserService(CRUDService[User]):
                 is_approved=row[7],
                 onboarding_completed=row[8],
                 ntfy_topic=row[9],
-                encrypted_data_key=row[10],
-                key_version=row[11],
-                created_at=row[12],
-                updated_at=row[13],
+                recommendations_enabled=row[10],
+                recommendation_limit=row[11] if row[11] is not None else 2,
+                encrypted_data_key=row[12],
+                key_version=row[13],
+                created_at=row[14],
+                updated_at=row[15],
             )
 
     def authenticate_api_key(self, api_key: str) -> Optional[User]:
@@ -290,7 +310,7 @@ class UserService(CRUDService[User]):
             return None
         query = """
             SELECT id, username, display_name, api_key, is_admin, is_active, is_approved, onboarding_completed,
-                   ntfy_topic, encrypted_data_key, key_version, created_at, updated_at
+                   ntfy_topic, recommendations_enabled, recommendation_limit, encrypted_data_key, key_version, created_at, updated_at
             FROM users
             WHERE api_key = %s
         """
@@ -311,10 +331,12 @@ class UserService(CRUDService[User]):
                 is_approved=row[6],
                 onboarding_completed=row[7],
                 ntfy_topic=row[8],
-                encrypted_data_key=row[9],
-                key_version=row[10],
-                created_at=row[11],
-                updated_at=row[12],
+                recommendations_enabled=row[9],
+                recommendation_limit=row[10] if row[10] is not None else 2,
+                encrypted_data_key=row[11],
+                key_version=row[12],
+                created_at=row[13],
+                updated_at=row[14],
             )
 
     def regenerate_api_key(self, user_id: int) -> Optional[str]:

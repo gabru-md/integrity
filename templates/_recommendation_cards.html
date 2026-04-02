@@ -1,0 +1,54 @@
+{% set recommendation_items = recommendations or [] %}
+{% set recommendation_scope = recommendation_scope or 'app' %}
+{% for item in recommendation_items %}
+<div class="recommendation-card rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
+     data-recommendation-card
+     data-recommendation-key="{{ item.id or ((item.action or 'none') ~ ':' ~ (item.scope or recommendation_scope) ~ ':' ~ (item.scope_id or item.title))|replace(' ', '-')|lower }}"
+     data-recommendation-kind="{{ item.kind or 'stage_action' }}">
+    <div class="flex items-start justify-between gap-3">
+        <div>
+            <div class="text-base font-bold text-[var(--text)]">{{ item.title }}</div>
+            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if item.action %}
+            <span class="ui-badge">{{ (item.action_label or item.action or 'Suggestion').replace('_', ' ') }}</span>
+            {% endif %}
+            <button type="button"
+                    class="recommendation-dismiss text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-soft)] transition hover:text-[var(--text)]"
+                    data-dismiss-recommendation>
+                Dismiss
+            </button>
+        </div>
+    </div>
+    {% if item.reasoning %}
+    <details class="recommendation-reasoning mt-3">
+        <summary class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-soft)]">Why</summary>
+        <div class="mt-2 text-xs leading-6 text-[var(--text-soft)]">{{ item.reasoning }}</div>
+    </details>
+    {% elif item.confidence is not none %}
+    <div class="mt-3 text-xs text-[var(--text-soft)]">Confidence {{ '%.2f'|format(item.confidence or 0) }}</div>
+    {% endif %}
+    {% if item.action %}
+    <div class="mt-4 flex flex-wrap gap-2">
+        {% if item.kind == 'quick_apply' %}
+        <button
+            type="button"
+            class="btn-secondary px-4 py-2 text-sm"
+            data-apply-recommendation='{{ item|tojson }}'
+        >
+            {{ item.action_label or 'Apply' }}
+        </button>
+        {% elif item.kind == 'stage_action' %}
+        <button
+            type="button"
+            class="btn-primary px-4 py-2 text-sm"
+            data-stage-recommendation='{{ item|tojson }}'
+        >
+            {{ item.action_label or 'Stage Action' }}
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}

@@ -718,9 +718,99 @@
             }
         }
 
+        async function applyRecommendation(recommendation) {
+            if (!assistantThread) return;
+            try {
+                const response = await fetch('/assistant/recommendation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ recommendation, execute: true }),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    appendAssistantBubble(payload.error || payload.response || 'Failed to apply recommendation.');
+                    return false;
+                }
+                appendAssistantResponse(payload);
+                pendingConfirmation = null;
+                pendingCardId = null;
+                saveAssistantState();
+                syncAssistantLock();
+                if (chatWindow) {
+                    chatWindow.classList.remove('hidden');
+                    chatWindow.classList.add('chat-window-active');
+                }
+                return true;
+            } catch (_) {
+                appendAssistantBubble('Failed to apply recommendation.');
+                return false;
+            }
+        }
+
+        function dismissRecommendationCard(card) {
+            if (!card) return;
+            const userId = '{{ current_user.id if current_user and current_user.id is not none else "guest" }}';
+            const storageKey = `rasbhari-dismissed-recommendations:${userId}`;
+            const recommendationKey = card.getAttribute('data-recommendation-key');
+            const dismissed = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
+            if (!dismissed.includes(recommendationKey)) {
+                dismissed.push(recommendationKey);
+                sessionStorage.setItem(storageKey, JSON.stringify(dismissed));
+            }
+            card.style.display = 'none';
+        }
+
         window.rasbhariAssistant = {
             stageRecommendation,
+            applyRecommendation,
         };
+
+        document.addEventListener('click', async (event) => {
+            const dismissButton = event.target.closest('[data-dismiss-recommendation]');
+            if (dismissButton) {
+                dismissRecommendationCard(dismissButton.closest('[data-recommendation-card]'));
+                return;
+            }
+
+            const stageButton = event.target.closest('[data-stage-recommendation]');
+            if (stageButton && window.rasbhariAssistant?.stageRecommendation) {
+                try {
+                    const recommendation = JSON.parse(stageButton.getAttribute('data-stage-recommendation'));
+                    stageButton.disabled = true;
+                    await window.rasbhariAssistant.stageRecommendation(recommendation);
+                } finally {
+                    stageButton.disabled = false;
+                }
+                return;
+            }
+
+            const applyButton = event.target.closest('[data-apply-recommendation]');
+            if (applyButton && window.rasbhariAssistant?.applyRecommendation) {
+                try {
+                    const recommendation = JSON.parse(applyButton.getAttribute('data-apply-recommendation'));
+                    applyButton.disabled = true;
+                    const ok = await window.rasbhariAssistant.applyRecommendation(recommendation);
+                    if (ok) {
+                        dismissRecommendationCard(applyButton.closest('[data-recommendation-card]'));
+                    }
+                } finally {
+                    applyButton.disabled = false;
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = '{{ current_user.id if current_user and current_user.id is not none else "guest" }}';
+            const storageKey = `rasbhari-dismissed-recommendations:${userId}`;
+            const dismissed = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
+            document.querySelectorAll('[data-recommendation-card]').forEach((card) => {
+                const recommendationKey = card.getAttribute('data-recommendation-key');
+                if (dismissed.includes(recommendationKey)) {
+                    card.style.display = 'none';
+                }
+            });
+        });
 
         if (chatButton && chatWindow && closeChatButton && assistantThread && assistantForm && assistantInput) {
             restoreAssistantState();

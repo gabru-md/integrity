@@ -158,31 +158,14 @@
                         <span class="disclosure-summary-chevron">⌄</span>
                     </summary>
                     <div class="disclosure-body grid gap-4">
-                        {% for item in today_data.recommended_follow_ups or [] %}
-                        <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <div class="text-base font-bold text-[var(--text)]">{{ item.title }}</div>
-                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
-                                </div>
-                                <span class="ui-badge">{{ item.action.replace('_', ' ') }}</span>
-                            </div>
-                            <div class="mt-3 text-xs text-[var(--text-soft)]">Confidence {{ '%.2f'|format(item.confidence or 0) }}{% if item.reasoning %} · {{ item.reasoning }}{% endif %}</div>
-                            <div class="mt-4">
-                                <button
-                                    type="button"
-                                    class="btn-primary px-4 py-2 text-sm"
-                                    data-stage-recommendation='{{ item|tojson }}'
-                                >
-                                    Stage Action
-                                </button>
-                            </div>
-                        </div>
+                        {% if today_data.recommended_follow_ups %}
+                        {% set recommendations = today_data.recommended_follow_ups %}
+                        {% include "_recommendation_cards.html" with context %}
                         {% else %}
                         <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">
                             No recommendation follow-ups are ready right now.
                         </div>
-                        {% endfor %}
+                        {% endif %}
                     </div>
                 </details>
             </article>
@@ -409,17 +392,4 @@
 
 {% block scripts %}
 {{ super() }}
-<script>
-document.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-stage-recommendation]');
-    if (!button || !window.rasbhariAssistant?.stageRecommendation) return;
-    try {
-        const recommendation = JSON.parse(button.getAttribute('data-stage-recommendation'));
-        button.disabled = true;
-        await window.rasbhariAssistant.stageRecommendation(recommendation);
-    } finally {
-        button.disabled = false;
-    }
-});
-</script>
 {% endblock %}

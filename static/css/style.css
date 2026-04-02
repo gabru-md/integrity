@@ -600,6 +600,26 @@ html[data-chrome='solid'] .widget-card {
     color: var(--danger);
 }
 
+.recommendation-card {
+    position: relative;
+}
+
+.recommendation-reasoning summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.recommendation-reasoning summary::-webkit-details-marker {
+    display: none;
+}
+
+.recommendation-dismiss {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
 .ui-input,
 input,
 textarea,

@@ -7,7 +7,7 @@ load_dotenv()
 
 class Logger:
     @staticmethod
-    def get_log(name: str, log_dir: str = os.getenv('LOG_DIR')):
+    def get_log(name: str, log_dir: str = None):
         """
         Retrieves a logger instance, configuring it to write to multiple files
         based on log level and purpose.
@@ -17,28 +17,34 @@ class Logger:
             log_dir (str): The directory where the log files should be stored.
         """
         logger = logging.getLogger(name)
-
         logger.setLevel(logging.INFO)
 
         if not logger.handlers:
-            # Ensure the log directory exists
-            if not os.path.exists(log_dir):
-                os.makedirs(log_dir)
+            resolved_log_dir = log_dir or os.getenv('LOG_DIR')
 
-            # --- Define File Paths ---
-            main_logfile_path = os.path.join(log_dir, f"main.log")
-            warnings_errors_logfile_path = os.path.join(log_dir, f"warnings.log")
-            exceptions_logfile_path = os.path.join(log_dir, f"exceptions.log")
-            specific_logfile_path = os.path.join(log_dir, f"{name}.log")
-
-            # --- Define Formatter ---
             formatter = logging.Formatter(
                 '%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s'
             )
-            # A more verbose formatter for exceptions might be useful
             exception_formatter = logging.Formatter(
                 '%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s\n%(exc_info)s'
             )
+
+            if not resolved_log_dir:
+                stream_handler = logging.StreamHandler()
+                stream_handler.setFormatter(formatter)
+                stream_handler.setLevel(logging.INFO)
+                logger.addHandler(stream_handler)
+                return logger
+
+            # Ensure the log directory exists
+            if not os.path.exists(resolved_log_dir):
+                os.makedirs(resolved_log_dir)
+
+            # --- Define File Paths ---
+            main_logfile_path = os.path.join(resolved_log_dir, f"main.log")
+            warnings_errors_logfile_path = os.path.join(resolved_log_dir, f"warnings.log")
+            exceptions_logfile_path = os.path.join(resolved_log_dir, f"exceptions.log")
+            specific_logfile_path = os.path.join(resolved_log_dir, f"{name}.log")
 
             # 1. Main log file (INFO and above)
             main_handler = logging.FileHandler(main_logfile_path)

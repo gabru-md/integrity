@@ -30,7 +30,7 @@
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Personal settings</h2>
             </div>
 
-            <form action="{{ url_for('Users.update_profile') }}" method="POST" class="space-y-5">
+            <form id="profile-form" action="{{ url_for('Users.update_profile') }}" method="POST" class="space-y-5">
                 <label class="block space-y-2">
                     <span class="text-sm font-semibold text-[var(--text)]">Username</span>
                     <input type="text" id="username" name="username" value="{{ user.username }}" readonly aria-describedby="username-help">
@@ -64,7 +64,36 @@
             </form>
         </div>
 
-        <div class="space-y-6">
+            <div class="space-y-6">
+            <div class="shell-card px-6 py-6">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Recommendations</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Contextual Guidance</h2>
+                <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Choose whether Rasbhari shows contextual recommendations at all, and how many it may show at once across the product. Set the limit to `0` to hide them.</p>
+
+                <div class="mt-5 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+                    <label class="flex items-center justify-between gap-4">
+                        <div>
+                            <div class="text-sm font-semibold text-[var(--text)]">Enable recommendations</div>
+                            <div class="mt-1 text-xs text-[var(--text-soft)]">This applies across Rasbhari.</div>
+                        </div>
+                        <input type="checkbox" name="recommendations_enabled" form="profile-form" {% if user.recommendations_enabled %}checked{% endif %}
+                               class="h-5 w-5 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500">
+                    </label>
+                </div>
+
+                <label class="mt-4 flex items-center justify-between gap-4 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3">
+                    <div>
+                        <div class="text-sm font-semibold text-[var(--text)]">Visible recommendation limit</div>
+                        <div class="mt-1 text-xs text-[var(--text-soft)]">How many contextual recommendations Rasbhari may show at once.</div>
+                    </div>
+                    <input type="number" min="0" max="8" step="1"
+                           name="recommendation_limit"
+                           form="profile-form"
+                           value="{{ user.recommendation_limit if user.recommendation_limit is not none else 2 }}"
+                           class="w-24 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)]">
+                </label>
+            </div>
+
             <div class="shell-card px-6 py-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Access</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">API Key</h2>

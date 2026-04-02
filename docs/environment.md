@@ -105,6 +105,7 @@ Notes:
 ## Logging
 
 - `LOG_DIR`
+  Optional. If unset, Rasbhari falls back to stdout/stderr logging, which is suitable for platforms like Render.
 
 Gabru writes:
 

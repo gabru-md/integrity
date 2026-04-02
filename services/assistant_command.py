@@ -195,7 +195,7 @@ class AssistantCommandService:
             payload=self._payload_for_plan(plan),
         )
 
-    def handle_recommendation(self, user_id: int, recommendation: dict) -> AssistantCommandResult:
+    def handle_recommendation(self, user_id: int, recommendation: dict, execute: bool = False) -> AssistantCommandResult:
         pending_entry = self.pending_plans.get(user_id)
         if pending_entry:
             pending_plan = pending_entry["plan"]
@@ -220,6 +220,10 @@ class AssistantCommandService:
                 user_message=str(recommendation.get("title") or ""),
                 response="This recommendation could not be turned into an actionable follow-up.",
             )
+
+        if execute:
+            result = self._execute_plan(user_id, str(recommendation.get("title") or plan.summary or "Recommendation follow-up"), plan)
+            return result
 
         user_message = str(recommendation.get("title") or plan.summary or "Recommendation follow-up")
         self.pending_plans[user_id] = {"plan": plan, "user_message": user_message}

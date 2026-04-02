@@ -12,6 +12,7 @@ from model.kanban_ticket import KanbanTicket
 from model.project import Project, ProjectState
 from model.promise import Promise
 from model.skill import Skill
+from model.user import User
 from runtime.providers import RasbhariDashboardDataProvider
 from services.kanban_tickets import KanbanTicketService
 
@@ -166,6 +167,47 @@ class ProjectWorkLinkingTests(unittest.TestCase):
             )
 
         self.assertNotIn("Minimal Useful Setup", rendered)
+
+    def test_today_data_respects_global_recommendation_limit(self):
+        project = Project(
+            id=3,
+            user_id=1,
+            name="Rasbhari",
+            project_type="Code",
+            focus_tags=["python"],
+            ticket_prefix="RSB",
+            start_date=datetime(2026, 4, 2, 9, 0, 0),
+            state=ProjectState.ACTIVE,
+        )
+        user = User(id=1, username="tester", display_name="Tester", recommendation_limit=1, recommendations_enabled=True)
+        follow_ups = [
+            {"title": "First", "action": "one", "confidence": 0.9},
+            {"title": "Second", "action": "two", "confidence": 0.8},
+        ]
+        provider = RasbhariDashboardDataProvider(
+            project_service=mock.Mock(find_all=mock.Mock(return_value=[project]), count=mock.Mock(return_value=0)),
+            kanban_ticket_service=mock.Mock(get_by_project_id=mock.Mock(return_value=[]), count=mock.Mock(return_value=0), find_all=mock.Mock(return_value=[])),
+            promise_service=mock.Mock(get_due_promises=mock.Mock(return_value=[]), find_all=mock.Mock(return_value=[]), count=mock.Mock(return_value=0)),
+            skill_service=mock.Mock(find_all=mock.Mock(return_value=[]), get_match_keys=mock.Mock(return_value=set()), count=mock.Mock(return_value=0)),
+            connection_service=mock.Mock(get_active=mock.Mock(return_value=[])),
+            activity_service=mock.Mock(get_recent_items=mock.Mock(return_value=[]), count=mock.Mock(return_value=0)),
+            report_service=mock.Mock(get_recent_items=mock.Mock(return_value=[])),
+            event_service=mock.Mock(find_all=mock.Mock(return_value=[])),
+            notification_service=mock.Mock(),
+            device_service=mock.Mock(),
+            queue_service=mock.Mock(),
+            skill_history_service=mock.Mock(),
+            timeline_service=mock.Mock(),
+            recommendation_followup_service=mock.Mock(get_follow_ups=mock.Mock(return_value=follow_ups)),
+            user_service=mock.Mock(get_by_id=mock.Mock(return_value=user)),
+        )
+
+        app = Flask(__name__)
+        with app.test_request_context("/"), mock.patch("runtime.providers.PermissionManager.get_current_user_id", return_value=1):
+            today_data = provider.get_today_data()
+
+        self.assertEqual(len(today_data["recommended_follow_ups"]), 1)
+        self.assertEqual(today_data["recommended_follow_ups"][0]["title"], "First")
 
 
 if __name__ == "__main__":

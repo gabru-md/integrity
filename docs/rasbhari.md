@@ -23,6 +23,8 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 - Includes a first-run interactive tutorial that walks users through Today, Events, Activities, Projects, Kanban, Promises, Skills, and Reports in product order.
 - Lets Today stage deterministic recommendation follow-ups such as creating a skill, promise, ticket, or project update, and now also suggests explicit ecosystem-linking edits like connecting promises to tags or adding matching tags to activities through the same assistant confirmation flow.
 - Uses a central deterministic recommendation engine that ranks structured ecosystem-linking opportunities with app scope, item scope, priority, confidence, reasoning, and action metadata so future apps can plug into the same recommendation layer.
+- Lets each user opt contextual recommendations in or out globally and set one global visible recommendation limit across Rasbhari, while keeping dismissals lightweight and temporary on the client side.
+- Uses a shared inline recommendation component so app-level or item-level suggestions can be rendered consistently, dismissed temporarily, and either staged or directly applied depending on recommendation type.
 - Preserves a separate operational dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
 - Includes a low-friction macOS local signal collector that can autonomously emit normalized raw machine events into the event bus.
 - Includes a rule-based session inference layer that turns raw local signals into grounded session boundary events such as coding, writing, planning, and research.
@@ -316,6 +318,7 @@ Minimum required values:
 
 - all `EVENTS_*`, `QUEUE_*`, `RASBHARI_*`, `NOTIFICATIONS_*`, and `THOUGHTS_*` DB variables
 - `LOG_DIR`
+  Optional. If omitted, Rasbhari logs to stdout instead of file-backed logs, which is useful on hosted platforms such as Render.
 - `SERVER_FILES_FOLDER`
 
 Optional but useful:

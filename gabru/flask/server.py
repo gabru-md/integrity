@@ -325,7 +325,12 @@ class Server:
             if self.assistant_provider is None:
                 return jsonify({"error": "Assistant provider is not configured"}), 500
 
-            result = self.assistant_provider.handle_recommendation(user_id=user_id, recommendation=recommendation)
+            execute = bool(data.get("execute"))
+            result = self.assistant_provider.handle_recommendation(
+                user_id=user_id,
+                recommendation=recommendation,
+                execute=execute,
+            )
             status_code = 200 if result.ok else 500
             return jsonify(result.model_dump()), status_code
 

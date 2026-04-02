@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 import os
 from typing import Optional
 
+from flask import has_request_context
+from gabru.auth import PermissionManager
 from gabru.contracts import (
     AdminOpsProvider,
     AppStatusStore,
@@ -134,6 +136,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         kanban_ticket_service: Optional[KanbanTicketService] = None,
         report_service: Optional[ReportService] = None,
         recommendation_followup_service: Optional[RecommendationFollowUpService] = None,
+        user_service: Optional[UserService] = None,
     ):
         self.event_service = event_service or EventService()
         self.notification_service = notification_service or NotificationService()
@@ -148,6 +151,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         self.project_service = project_service or ProjectService()
         self.kanban_ticket_service = kanban_ticket_service or KanbanTicketService()
         self.report_service = report_service or ReportService()
+        self.user_service = user_service
         self.recommendation_followup_service = recommendation_followup_service or RecommendationFollowUpService(
             project_service=self.project_service,
             kanban_ticket_service=self.kanban_ticket_service,
@@ -270,6 +274,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             recent_events_today=recent_events_today,
         )
         setup_checklist = self._build_setup_checklist()
+        recommended_follow_ups = self._get_recommended_follow_ups(active_projects=active_projects)
 
         return {
             "active_work": active_work[:6],
@@ -279,9 +284,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             "suggested_activities": suggested_activities[:4],
             "guidance": guidance,
             "setup_checklist": setup_checklist,
-            "recommended_follow_ups": self.recommendation_followup_service.get_follow_ups(
-                user_id=active_projects[0].user_id if active_projects else 0
-            ) if active_projects else [],
+            "recommended_follow_ups": recommended_follow_ups,
             "active_project_count": len(active_project_ids),
             "latest_report": report_summary,
             "events_today_count": len(recent_events_today),
@@ -394,6 +397,32 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         if not parts:
             return None
         return "Supports " + " and ".join(parts)
+
+    def _get_recommended_follow_ups(self, *, active_projects: list) -> list[dict]:
+        user = None
+        current_user_id = PermissionManager.get_current_user_id() if has_request_context() else None
+        if current_user_id and self.user_service:
+            user = self.user_service.get_by_id(current_user_id)
+
+        if user and not getattr(user, "recommendations_enabled", True):
+            return []
+
+        limit = 2
+        if user and getattr(user, "recommendation_limit", None) is not None:
+            limit = max(0, int(user.recommendation_limit))
+        if limit <= 0:
+            return []
+
+        follow_up_user_id = None
+        if user and user.id is not None:
+            follow_up_user_id = user.id
+        elif active_projects:
+            follow_up_user_id = getattr(active_projects[0], "user_id", None)
+
+        if not follow_up_user_id:
+            return []
+
+        return self.recommendation_followup_service.get_follow_ups(user_id=follow_up_user_id)[:limit]
 
     @staticmethod
     def _priority_rank(priority: str) -> int:
@@ -827,5 +856,5 @@ class RasbhariAssistantCommandProvider(AssistantCommandProvider):
             change_action=change_action,
         )
 
-    def handle_recommendation(self, user_id: int, recommendation: dict):
-        return self.assistant_command_service.handle_recommendation(user_id=user_id, recommendation=recommendation)
+    def handle_recommendation(self, user_id: int, recommendation: dict, execute: bool = False):
+        return self.assistant_command_service.handle_recommendation(user_id=user_id, recommendation=recommendation, execute=execute)

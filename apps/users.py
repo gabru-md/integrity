@@ -60,6 +60,8 @@ def update_profile():
     
     display_name = request.form.get("display_name")
     ntfy_topic = request.form.get("ntfy_topic")
+    recommendations_enabled = request.form.get("recommendations_enabled") == "on"
+    recommendation_limit_raw = request.form.get("recommendation_limit", "").strip()
     password = request.form.get("password")
     confirm_password = request.form.get("confirm_password")
     
@@ -70,6 +72,11 @@ def update_profile():
     # Update user object
     user.display_name = display_name
     user.ntfy_topic = ntfy_topic
+    user.recommendations_enabled = recommendations_enabled
+    try:
+        user.recommendation_limit = max(0, int(recommendation_limit_raw))
+    except ValueError:
+        user.recommendation_limit = max(0, int(user.recommendation_limit if user.recommendation_limit is not None else 2))
     if password:
         user.password = password
     
