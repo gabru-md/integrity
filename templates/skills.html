@@ -124,39 +124,36 @@
                     <div class="mt-3 grid gap-3">
                         <div v-for="recommendation in skillRecommendations[String(skill.id)]"
                              :key="recommendation.id"
-                             class="recommendation-card rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
+                             class="recommendation-card rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3"
                              data-recommendation-card
                              :data-recommendation-key="recommendation.id || `${recommendation.action || 'none'}:${recommendation.scope || 'item'}:${recommendation.scope_id || recommendation.title}`.replace(/\\s+/g, '-').toLowerCase()"
                              :data-recommendation-kind="recommendation.kind || 'info'">
                             <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <div class="text-base font-bold text-[var(--text)]">{{ recommendation.title }}</div>
-                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ recommendation.body }}</div>
+                                <div class="min-w-0">
+                                    <div class="text-sm font-semibold text-[var(--text)]">{{ recommendation.title }}</div>
+                                    <div class="mt-1 text-xs leading-5 text-[var(--text-soft)]">{{ recommendation.body }}</div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <span v-if="recommendation.action" class="ui-badge">{{ (recommendation.action_label || recommendation.action || 'Suggestion').replaceAll('_', ' ') }}</span>
-                                    <button type="button"
-                                            class="recommendation-dismiss text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-soft)] transition hover:text-[var(--text)]"
-                                            data-dismiss-recommendation>
-                                        Dismiss
-                                    </button>
-                                </div>
+                                <button type="button"
+                                        class="recommendation-dismiss btn-warning px-3 py-1 text-[11px]"
+                                        data-dismiss-recommendation>
+                                    Dismiss
+                                </button>
                             </div>
-                            <details v-if="recommendation.reasoning" class="recommendation-reasoning mt-3">
-                                <summary class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-soft)]">Why</summary>
-                                <div class="mt-2 text-xs leading-6 text-[var(--text-soft)]">{{ recommendation.reasoning }}</div>
+                            <details v-if="recommendation.reasoning" class="recommendation-reasoning mt-2">
+                                <summary class="text-[11px] font-semibold text-[var(--text-soft)]">Why this?</summary>
+                                <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ recommendation.reasoning }}</div>
                             </details>
-                            <div v-else class="mt-3 text-xs text-[var(--text-soft)]">Confidence {{ Number(recommendation.confidence || 0).toFixed(2) }}</div>
-                            <div v-if="recommendation.action" class="mt-4 flex flex-wrap gap-2">
+                            <div v-else class="mt-2 text-[11px] text-[var(--text-soft)]">Confidence {{ Number(recommendation.confidence || 0).toFixed(2) }}</div>
+                            <div v-if="recommendation.action" class="mt-3 flex flex-wrap gap-2">
                                 <button v-if="recommendation.kind === 'quick_apply'"
                                         type="button"
-                                        class="btn-secondary px-4 py-2 text-sm"
+                                        class="btn-purple px-3 py-1 text-[11px]"
                                         :data-apply-recommendation="JSON.stringify(recommendation)">
                                     {{ recommendation.action_label || 'Apply' }}
                                 </button>
                                 <button v-else-if="recommendation.kind === 'stage_action'"
                                         type="button"
-                                        class="btn-primary px-4 py-2 text-sm"
+                                        class="btn-purple px-3 py-1 text-[11px]"
                                         :data-stage-recommendation="JSON.stringify(recommendation)">
                                     {{ recommendation.action_label || 'Stage Action' }}
                                 </button>

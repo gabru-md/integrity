@@ -602,22 +602,57 @@ html[data-chrome='solid'] .widget-card {
 
 .recommendation-card {
     position: relative;
+    box-shadow: none;
 }
 
 .recommendation-reasoning summary {
     cursor: pointer;
     list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 .recommendation-reasoning summary::-webkit-details-marker {
     display: none;
 }
 
+.recommendation-reasoning summary::before {
+    content: '▾';
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+.recommendation-reasoning[open] summary::before {
+    content: '▴';
+}
+
 .recommendation-dismiss {
-    background: transparent;
-    border: 0;
-    padding: 0;
     cursor: pointer;
+}
+
+.btn-purple {
+    border-radius: var(--pill-radius);
+    border: 1px solid color-mix(in srgb, #7c3aed 22%, transparent);
+    background: color-mix(in srgb, #7c3aed 12%, transparent);
+    color: #7c3aed;
+    font-weight: 700;
+}
+
+.btn-purple:hover {
+    background: color-mix(in srgb, #7c3aed 18%, transparent);
+}
+
+.btn-warning {
+    border-radius: var(--pill-radius);
+    border: 1px solid color-mix(in srgb, #ea580c 22%, transparent);
+    background: color-mix(in srgb, #ea580c 10%, transparent);
+    color: #ea580c;
+    font-weight: 700;
+}
+
+.btn-warning:hover {
+    background: color-mix(in srgb, #ea580c 16%, transparent);
 }
 
 .ui-input,
