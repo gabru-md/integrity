@@ -15,7 +15,7 @@
                 chrome: localStorage.getItem('chrome') || 'glass',
                 motion: localStorage.getItem('motion') || 'full'
             };
-            const darkThemes = ['noir', 'console'];
+            const darkThemes = ['noir', 'ember', 'console'];
             const html = document.documentElement;
             Object.entries(prefs).forEach(([key, value]) => html.setAttribute(`data-${key}`, value));
             html.classList.toggle('dark', darkThemes.includes(prefs.theme));
@@ -268,12 +268,21 @@
 {% block scripts %}
 <script>
     function applyThemeMeta(themeName) {
-        const darkThemes = ['noir', 'console'];
+        const darkThemes = ['noir', 'ember', 'console'];
         const html = document.documentElement;
+        const isDarkTheme = darkThemes.includes(themeName);
         html.classList.toggle('dark', darkThemes.includes(themeName));
-        const labelMap = { slate: 'Slate', dawn: 'Dawn', forest: 'Forest', noir: 'Noir', console: 'Console' };
+        const labelMap = { slate: 'Slate', dawn: 'Dawn', forest: 'Forest', paper: 'Paper', tide: 'Tide', noir: 'Noir', ember: 'Ember', console: 'Console' };
         const themeLabel = document.getElementById('theme-label');
         if (themeLabel) themeLabel.textContent = labelMap[themeName] || themeName;
+        const logoSrc = isDarkTheme
+            ? "{{ url_for('static', filename='favicon-light.png') }}"
+            : "{{ url_for('static', filename='favicon.png') }}";
+        window.__rasbhariLogoSrc = logoSrc;
+        const favicon = document.getElementById('app-favicon');
+        if (favicon) favicon.href = logoSrc;
+        const shellLogo = document.getElementById('shell-logo');
+        if (shellLogo) shellLogo.src = logoSrc;
     }
 
     function syncPreferenceButtons() {
