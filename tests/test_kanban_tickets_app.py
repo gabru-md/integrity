@@ -72,6 +72,18 @@ class KanbanTicketsAppTests(unittest.TestCase):
         self.assertEqual(ticket.description, "New description")
         update_mock.assert_called_once_with(ticket)
 
+    def test_dependency_route_updates_ticket_dependencies(self):
+        client = self._build_client()
+        updated_ticket = {"id": 7, "project_id": 3, "title": "Board polish", "dependency_ticket_ids": [2, 5], "state": "backlog"}
+        with mock.patch.object(PermissionManager, "is_authenticated", return_value=True), \
+             mock.patch.object(PermissionManager, "can_write", return_value=True), \
+             mock.patch.object(PermissionManager, "can_access_route", return_value=True), \
+             mock.patch.object(kanban_tickets_app.service, "update_dependencies", return_value=mock.Mock(dict=lambda: updated_ticket)) as dependency_mock:
+            response = client.post("/kanbantickets/7/dependencies", json={"dependency_ticket_ids": [2, 5]})
+
+        self.assertEqual(response.status_code, 200)
+        dependency_mock.assert_called_once_with(7, [2, 5])
+
 
 if __name__ == "__main__":
     unittest.main()

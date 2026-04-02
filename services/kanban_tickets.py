@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from typing import List, Optional
 
 from gabru.db.db import DB
@@ -29,6 +30,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                         ticket_code VARCHAR(64),
                         title VARCHAR(255) NOT NULL,
                         description TEXT,
+                        dependency_ticket_ids TEXT NOT NULL DEFAULT '[]',
                         state VARCHAR(50) NOT NULL DEFAULT 'backlog',
                         is_archived BOOLEAN NOT NULL DEFAULT FALSE,
                         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -39,6 +41,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                 )
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS ticket_code VARCHAR(64)")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS description TEXT")
+                cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS dependency_ticket_ids TEXT NOT NULL DEFAULT '[]'")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS state VARCHAR(50) NOT NULL DEFAULT 'backlog'")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE")
                 cursor.execute("ALTER TABLE kanban_tickets ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT NOW()")
@@ -56,6 +59,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
             entity.ticket_code,
             entity.title,
             entity.description,
+            json.dumps(self._normalize_dependency_ids(entity.dependency_ticket_ids)),
             state_value,
             entity.is_archived,
             entity.created_at,
@@ -71,21 +75,22 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
             ticket_code=row[3],
             title=row[4],
             description=row[5] or "",
-            state=row[6],
-            is_archived=bool(row[7]),
-            created_at=row[8],
-            updated_at=row[9],
-            state_changed_at=row[10],
+            dependency_ticket_ids=self._parse_dependency_ids(row[6]),
+            state=row[7],
+            is_archived=bool(row[8]),
+            created_at=row[9],
+            updated_at=row[10],
+            state_changed_at=row[11],
         )
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["user_id", "project_id", "ticket_code", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
+        return ["user_id", "project_id", "ticket_code", "title", "description", "dependency_ticket_ids", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["user_id", "project_id", "ticket_code", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
+        return ["user_id", "project_id", "ticket_code", "title", "description", "dependency_ticket_ids", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "user_id", "project_id", "ticket_code", "title", "description", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
+        return ["id", "user_id", "project_id", "ticket_code", "title", "description", "dependency_ticket_ids", "state", "is_archived", "created_at", "updated_at", "state_changed_at"]
 
     def create(self, obj: KanbanTicket) -> Optional[int]:
         now = datetime.now()
@@ -116,6 +121,7 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
         old_state = existing.state.value if hasattr(existing.state, "value") else existing.state
         obj.created_at = existing.created_at
         obj.ticket_code = existing.ticket_code
+        obj.dependency_ticket_ids = self._normalize_dependency_ids(obj.dependency_ticket_ids)
         obj.updated_at = now
         obj.state_changed_at = now if new_state != old_state else existing.state_changed_at
         updated = super().update(obj)
@@ -183,6 +189,27 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
                 description=f"Archived ticket '{ticket.title}'",
                 tags=self._build_event_tags(project, ticket.state, ticket.id),
             )
+            return self.get_by_id(ticket_id)
+        return None
+
+    def update_dependencies(self, ticket_id: int, dependency_ticket_ids: list[int]) -> Optional[KanbanTicket]:
+        ticket = self.get_by_id(ticket_id)
+        if not ticket:
+            return None
+
+        normalized_ids = self._normalize_dependency_ids(dependency_ticket_ids)
+        if ticket_id in normalized_ids:
+            raise ValueError("A ticket cannot depend on itself")
+
+        if normalized_ids:
+            dependency_tickets = [self.get_by_id(dependency_id) for dependency_id in normalized_ids]
+            if any(dependency_ticket is None for dependency_ticket in dependency_tickets):
+                raise ValueError("Dependency ticket not found")
+            if any(dependency_ticket.project_id != ticket.project_id for dependency_ticket in dependency_tickets):
+                raise ValueError("Dependencies must belong to the same project")
+
+        ticket.dependency_ticket_ids = normalized_ids
+        if self.update(ticket):
             return self.get_by_id(ticket_id)
         return None
 
@@ -278,3 +305,27 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
         if ticket_id is not None:
             tags.append(f"ticket:{ticket_id}")
         return tags
+
+    @staticmethod
+    def _parse_dependency_ids(raw_value) -> list[int]:
+        if raw_value in (None, ""):
+            return []
+        if isinstance(raw_value, list):
+            return KanbanTicketService._normalize_dependency_ids(raw_value)
+        try:
+            parsed = json.loads(raw_value)
+        except (TypeError, ValueError):
+            return []
+        return KanbanTicketService._normalize_dependency_ids(parsed)
+
+    @staticmethod
+    def _normalize_dependency_ids(values) -> list[int]:
+        normalized = []
+        for value in values or []:
+            try:
+                int_value = int(value)
+            except (TypeError, ValueError):
+                continue
+            if int_value not in normalized:
+                normalized.append(int_value)
+        return normalized

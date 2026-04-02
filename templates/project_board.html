@@ -191,6 +191,15 @@
                                 {% raw %}{{ ticket.contribution_summary }}{% endraw %}
                             </div>
                         </div>
+                        <div v-if="ticket.dependencies && ticket.dependencies.length" class="mt-3 flex flex-wrap gap-2">
+                            <span
+                                v-for="dependency in ticket.dependencies"
+                                :key="`${ticket.id}-dependency-${dependency.id}`"
+                                class="rounded-full bg-slate-200 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-700 dark:bg-gray-800 dark:text-gray-300"
+                            >
+                                {% raw %}{{ dependency.ticket_code || `#${dependency.id}` }}{% endraw %}
+                            </span>
+                        </div>
                         <div class="mt-3 flex justify-end">
                             <button
                                 type="button"
@@ -225,10 +234,60 @@
                             <div v-if="ticket.description" class="mb-3">
                                 <p class="whitespace-pre-wrap text-sm text-slate-600 dark:text-gray-300">{% raw %}{{ ticket.description }}{% endraw %}</p>
                             </div>
-                            <div v-if="ticket.ticket_code" class="mb-3">
-                                <span class="inline-flex rounded-full bg-rose-100 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
-                                    {% raw %}{{ ticket.ticket_code }}{% endraw %}
-                                </span>
+                            <div class="mb-4 rounded-2xl border border-slate-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/80">
+                                <div class="flex items-center justify-between gap-3">
+                                    <h4 class="text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">Dependencies</h4>
+                                    <button
+                                        type="button"
+                                        @click="toggleDependencyEditor(ticket.id)"
+                                        class="text-base font-semibold leading-none text-slate-400 transition-transform duration-200 hover:text-slate-700 dark:text-gray-500 dark:hover:text-gray-200"
+                                        :class="{ 'rotate-180': isDependencyEditorOpen(ticket.id) }"
+                                        :aria-expanded="isDependencyEditorOpen(ticket.id) ? 'true' : 'false'"
+                                        aria-label="Toggle dependencies"
+                                    >
+                                        ⌄
+                                    </button>
+                                </div>
+                                <div v-if="ticket.dependencies && ticket.dependencies.length" class="mt-3 flex flex-wrap gap-2">
+                                    <span
+                                        v-for="dependency in ticket.dependencies"
+                                        :key="`${ticket.id}-dependency-expanded-${dependency.id}`"
+                                        class="rounded-full bg-slate-200 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-700 dark:bg-gray-800 dark:text-gray-300"
+                                    >
+                                        {% raw %}{{ dependency.ticket_code || `#${dependency.id}` }}{% endraw %}
+                                    </span>
+                                </div>
+                                <p v-else class="mt-3 text-xs text-slate-500 dark:text-gray-400">No dependencies linked.</p>
+                                <div v-if="isDependencyEditorOpen(ticket.id)" class="mt-4 border-t border-slate-200 pt-4 dark:border-gray-700">
+                                    <div class="max-h-40 space-y-2 overflow-y-auto pr-1">
+                                        <label
+                                            v-for="candidate in ticket.available_dependencies || []"
+                                            :key="`${ticket.id}-candidate-${candidate.id}`"
+                                            class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-xs dark:border-gray-700"
+                                        >
+                                            <div class="min-w-0">
+                                                <div class="font-semibold text-slate-800 dark:text-gray-100">{% raw %}{{ candidate.ticket_code || `#${candidate.id}` }}{% endraw %}</div>
+                                                <div class="truncate text-slate-500 dark:text-gray-400">{% raw %}{{ candidate.title }}{% endraw %}</div>
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                class="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-500 dark:border-gray-600 dark:bg-gray-800"
+                                                :checked="isDependencySelected(ticket.id, candidate.id)"
+                                                @change="toggleDependencySelection(ticket.id, candidate.id)"
+                                            >
+                                        </label>
+                                    </div>
+                                    <div class="mt-3 flex justify-end gap-2">
+                                        <button @click="resetDependencySelection(ticket)" type="button"
+                                                class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200">
+                                            Reset
+                                        </button>
+                                        <button @click="saveDependencies(ticket)" type="button"
+                                                class="rounded-full bg-slate-600 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-700">
+                                            Save Dependencies
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                             <div v-if="ticket.focus_tags && ticket.focus_tags.length" class="flex flex-wrap gap-2">
                                 <span v-for="tag in ticket.focus_tags || []" :key="`${ticket.id}-tag-${tag}`" class="rounded-full bg-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700 dark:bg-gray-800 dark:text-gray-300">
@@ -300,6 +359,8 @@
             const collapsedColumns = ref({});
             const editingTicketId = ref(null);
             const editForm = ref({ title: "", description: "" });
+            const dependencyEditors = ref({});
+            const dependencySelections = ref({});
             const sortTickets = (items) => [...items].sort((left, right) => new Date(right.updated_at || 0) - new Date(left.updated_at || 0));
 
             const loadTickets = async () => {
@@ -398,6 +459,68 @@
                 }
             };
 
+            const dependencyIdsForTicket = (ticket) => (ticket.dependencies || []).map((dependency) => dependency.id);
+
+            const ensureDependencySelection = (ticket) => {
+                if (!dependencySelections.value[ticket.id]) {
+                    dependencySelections.value = {
+                        ...dependencySelections.value,
+                        [ticket.id]: dependencyIdsForTicket(ticket),
+                    };
+                }
+            };
+
+            const isDependencyEditorOpen = (ticketId) => Boolean(dependencyEditors.value[ticketId]);
+
+            const toggleDependencyEditor = (ticketId) => {
+                const ticket = tickets.value.find((item) => item.id === ticketId);
+                if (ticket) ensureDependencySelection(ticket);
+                dependencyEditors.value = {
+                    ...dependencyEditors.value,
+                    [ticketId]: !dependencyEditors.value[ticketId],
+                };
+            };
+
+            const isDependencySelected = (ticketId, dependencyId) => {
+                const selected = dependencySelections.value[ticketId] || [];
+                return selected.includes(dependencyId);
+            };
+
+            const toggleDependencySelection = (ticketId, dependencyId) => {
+                const selected = dependencySelections.value[ticketId] || [];
+                const next = selected.includes(dependencyId)
+                    ? selected.filter((value) => value !== dependencyId)
+                    : [...selected, dependencyId];
+                dependencySelections.value = {
+                    ...dependencySelections.value,
+                    [ticketId]: next,
+                };
+            };
+
+            const resetDependencySelection = (ticket) => {
+                dependencySelections.value = {
+                    ...dependencySelections.value,
+                    [ticket.id]: dependencyIdsForTicket(ticket),
+                };
+            };
+
+            const saveDependencies = async (ticket) => {
+                errorMessage.value = "";
+                try {
+                    const res = await fetch(`/kanbantickets/${ticket.id}/dependencies`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            dependency_ticket_ids: dependencySelections.value[ticket.id] || [],
+                        })
+                    });
+                    if (!res.ok) throw new Error("Failed to update dependencies");
+                    await loadTickets();
+                } catch (error) {
+                    errorMessage.value = error.message || "Failed to update dependencies";
+                }
+            };
+
             const ticketsByState = (state) => tickets.value.filter((ticket) => ticket.state === state);
             const formatDate = (value) => value ? new Date(value).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown';
             const isTicketExpanded = (ticketId) => Boolean(expandedTickets.value[ticketId]);
@@ -428,6 +551,12 @@
                 startEditing,
                 cancelEditing,
                 saveTicketEdit,
+                toggleDependencyEditor,
+                isDependencyEditorOpen,
+                isDependencySelected,
+                toggleDependencySelection,
+                resetDependencySelection,
+                saveDependencies,
                 ticketsByState,
                 formatDate,
                 isTicketExpanded,

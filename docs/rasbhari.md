@@ -53,6 +53,7 @@ Rasbhari currently registers these apps in [server.py](server.py):
 
 The `Projects` app now includes a per-project board view backed by the `KanbanTickets` app.
 Projects can also issue stable per-project ticket references through a configurable `ticket_prefix`, so tickets become identifiers like `RSB-14` or `QDS-123`.
+Kanban tickets can also link explicit same-project dependencies, so a board card can show which other ticket must move first without turning the board into a separate planning tool.
 The project timeline is now a narrative surface: lightweight updates stay inline, while blog-style writing creates real markdown `BlogPost` records that remain linked back into the project history.
 The `Activities` app now exposes each activity as a visible orchestrator, showing the event type it emits plus the promises and skills that can react to that trigger.
 The `Reports` page now uses progressive disclosure so explanatory context and observation blocks stay available without overwhelming the summary view.

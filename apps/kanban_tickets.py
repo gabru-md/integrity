@@ -90,3 +90,17 @@ def board_edit_ticket(ticket_id):
     if not kanban_tickets_app.service.update(ticket):
         return jsonify({"error": "Failed to update ticket"}), 500
     return jsonify(ticket.dict()), 200
+
+
+@kanban_tickets_app.blueprint.route("/<int:ticket_id>/dependencies", methods=["POST"])
+@write_access_required
+def update_ticket_dependencies(ticket_id):
+    data = request.get_json(silent=True) or {}
+    dependency_ticket_ids = data.get("dependency_ticket_ids") or []
+    try:
+        ticket = kanban_tickets_app.service.update_dependencies(ticket_id, dependency_ticket_ids)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if not ticket:
+        return jsonify({"error": "Ticket not found"}), 404
+    return jsonify(ticket.dict()), 200

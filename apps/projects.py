@@ -128,15 +128,40 @@ def _serialize_board_tickets(project, tickets) -> list[dict]:
     shared_tags = _build_project_shared_tags(project)
     promise_index = _build_promise_index()
     skill_index = _build_skill_index()
+    ticket_lookup = {ticket.id: ticket for ticket in tickets}
     serialized = []
     for ticket in tickets:
         linked_promises = _match_promises_for_tags(shared_tags, promise_index)
         linked_skills = _match_skills_for_tags(shared_tags, skill_index)
+        dependencies = []
+        available_dependencies = []
+        for candidate in tickets:
+            if candidate.id == ticket.id:
+                continue
+            candidate_payload = {
+                "id": candidate.id,
+                "title": candidate.title,
+                "ticket_code": candidate.ticket_code,
+                "state": candidate.state.value if hasattr(candidate.state, "value") else candidate.state,
+            }
+            available_dependencies.append(candidate_payload)
+        for dependency_id in ticket.dependency_ticket_ids or []:
+            dependency_ticket = ticket_lookup.get(dependency_id)
+            if not dependency_ticket:
+                continue
+            dependencies.append({
+                "id": dependency_ticket.id,
+                "title": dependency_ticket.title,
+                "ticket_code": dependency_ticket.ticket_code,
+                "state": dependency_ticket.state.value if hasattr(dependency_ticket.state, "value") else dependency_ticket.state,
+            })
         ticket_data = ticket.dict()
         ticket_data["ticket_code"] = ticket.ticket_code
         ticket_data["focus_tags"] = shared_tags
         ticket_data["linked_promises"] = linked_promises
         ticket_data["linked_skills"] = linked_skills
+        ticket_data["dependencies"] = dependencies
+        ticket_data["available_dependencies"] = available_dependencies
         ticket_data["contribution_summary"] = _build_contribution_summary(linked_promises, linked_skills)
         serialized.append(ticket_data)
     return serialized

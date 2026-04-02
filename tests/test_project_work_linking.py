@@ -7,6 +7,7 @@ from flask import Flask
 
 os.environ.setdefault("LOG_DIR", "/tmp/rasbhari-test-logs")
 
+from apps.projects import _serialize_board_tickets
 from gabru.flask.util import render_flask_template
 from model.kanban_ticket import KanbanTicket
 from model.project import Project, ProjectState
@@ -258,6 +259,46 @@ class ProjectWorkLinkingTests(unittest.TestCase):
         self.assertIn("Recommendations", rendered)
         self.assertIn("Create skill for python", rendered)
         self.assertIn("Stage Skill", rendered)
+
+    def test_board_ticket_serialization_includes_dependencies(self):
+        project = Project(
+            id=3,
+            user_id=1,
+            name="Rasbhari",
+            project_type="Code",
+            focus_tags=["python"],
+            ticket_prefix="RSB",
+            start_date=datetime(2026, 4, 2, 9, 0, 0),
+            state=ProjectState.ACTIVE,
+        )
+        dependency_ticket = KanbanTicket(
+            id=4,
+            user_id=1,
+            project_id=3,
+            ticket_code="RSB-4",
+            title="Set up event pipeline",
+            description="",
+            state="prioritized",
+        )
+        ticket = KanbanTicket(
+            id=7,
+            user_id=1,
+            project_id=3,
+            ticket_code="RSB-7",
+            title="Build promise linking",
+            description="",
+            dependency_ticket_ids=[4],
+            state="backlog",
+        )
+
+        with mock.patch("apps.projects._build_promise_index", return_value=[]), \
+             mock.patch("apps.projects._build_skill_index", return_value=[]):
+            serialized = _serialize_board_tickets(project, [ticket, dependency_ticket])
+
+        serialized_ticket = next(item for item in serialized if item["id"] == 7)
+        self.assertEqual(serialized_ticket["dependencies"][0]["id"], 4)
+        self.assertEqual(serialized_ticket["dependencies"][0]["ticket_code"], "RSB-4")
+        self.assertTrue(any(item["id"] == 4 for item in serialized_ticket["available_dependencies"]))
 
 
 if __name__ == "__main__":
