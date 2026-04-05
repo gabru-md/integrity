@@ -90,11 +90,12 @@ class Server:
 
     def run(self):
         debug_enabled = self._env_flag("SERVER_DEBUG")
+        port = int(os.getenv("PORT") or os.getenv("SERVER_PORT", 5000))
         self.app.run(
             debug=debug_enabled,
             use_reloader=debug_enabled,
             host='0.0.0.0',
-            port=int(os.getenv("SERVER_PORT", 5000))
+            port=port
         )
 
     def setup_default_routes(self):

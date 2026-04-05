@@ -89,6 +89,20 @@ cp .env.example .env
 - **Paths**: Set `LOG_DIR` and `SERVER_FILES_FOLDER` to valid absolute paths.
 - **Backups**: Set `RASBHARI_BACKUP_DIR` to persistent storage and review [backup-restore.md](backup-restore.md).
 
+### 3.5 Temporary Hosted Demo Mode
+
+For short-lived hosted deployments on platforms like Render, Rasbhari can now run against a single PostgreSQL database instead of five separate logical databases.
+
+Use:
+
+```bash
+DATABASE_URL=postgres://user:password@host:5432/dbname
+```
+
+When `DATABASE_URL` is set and a specific `*_POSTGRES_*` block is unset, Rasbhari falls back to that shared database.
+
+This is intended for public trial or demo deployments, not the long-term Raspberry Pi architecture.
+
 ## 4. First Run & User Approval
 
 1. **Start the server**:

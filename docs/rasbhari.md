@@ -2,6 +2,8 @@
 
 Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts. It is designed to feel like one daily operating loop, not a set of disconnected apps: capture what happened, structure it, compare it against commitments, accumulate growth, reflect on the result, and act on what matters next. The product combines a Flask Today surface, an operational dashboard, contract-based framework primitives, PostgreSQL-backed runtime services, and background workers to track activities, projects, promises, notifications, devices, and skill progression.
 
+For temporary hosted demos, Rasbhari can also fall back to a single shared PostgreSQL database through `DATABASE_URL`, which is useful on platforms like Render. The long-term intended home is still a user-owned Raspberry Pi or similar host.
+
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.1%2B-green)](https://flask.palletsprojects.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12%2B-blue)](https://www.postgresql.org/)

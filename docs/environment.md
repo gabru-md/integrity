@@ -14,6 +14,14 @@ Each `DB("<name>")` call maps to:
 <NAME>_POSTGRES_PORT
 ```
 
+Hosted demo shortcut:
+
+- `DATABASE_URL`
+
+If a specific `<NAME>_POSTGRES_*` block is unset, Rasbhari falls back to `DATABASE_URL`.
+This is useful for temporary hosted deployments on platforms like Render where one PostgreSQL database is enough for a public trial instance.
+In that mode, all Rasbhari tables live in the same PostgreSQL database.
+
 ## Databases Currently Used
 
 ### Events
@@ -81,6 +89,7 @@ Used by `ThoughtService`.
 
 - `SERVER_DEBUG`
 - `SERVER_PORT`
+- `PORT`
 - `SERVER_FILES_FOLDER`
 - `FLASK_SECRET_KEY`
 - `OPEN_WEBUI_URL`
@@ -99,6 +108,7 @@ Notes:
 - `/chat` redirects to `OPEN_WEBUI_URL`
 - `/assistant/command` uses `OLLAMA_BASE_URL` and `OLLAMA_COMMAND_MODEL`
 - `RASBHARI_VERSION` can be set explicitly in deployments that do not ship `.git`; otherwise Rasbhari falls back to the current git commit when available
+- hosted platforms like Render and Koyeb commonly inject `PORT`; Rasbhari now uses `PORT` first and falls back to `SERVER_PORT`
 - See [docs/AI.md](docs/AI.md) for how the assistant uses these values inside the Rasbhari command pipeline
 - `FLASK_SECRET_KEY` should be set explicitly outside local development
 

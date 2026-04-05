@@ -1,6 +1,7 @@
 import atexit
 import os
 import threading
+from urllib.parse import urlparse
 
 import psycopg2
 from psycopg2 import InterfaceError, OperationalError
@@ -24,11 +25,12 @@ class DB:
 
     def __init__(self, default_dbname: str):
         self.db = default_dbname
-        self.dbname = os.getenv(self.get_db_env('POSTGRES_DB'))
-        self.user = os.getenv(self.get_db_env('POSTGRES_USER'))
-        self.password = os.getenv(self.get_db_env('POSTGRES_PASSWORD'))
-        self.host = os.getenv(self.get_db_env('POSTGRES_HOST'))
-        self.port = os.getenv(self.get_db_env('POSTGRES_PORT'))
+        shared_config = self._get_shared_database_config()
+        self.dbname = os.getenv(self.get_db_env('POSTGRES_DB')) or shared_config.get('dbname')
+        self.user = os.getenv(self.get_db_env('POSTGRES_USER')) or shared_config.get('user')
+        self.password = os.getenv(self.get_db_env('POSTGRES_PASSWORD')) or shared_config.get('password')
+        self.host = os.getenv(self.get_db_env('POSTGRES_HOST')) or shared_config.get('host')
+        self.port = os.getenv(self.get_db_env('POSTGRES_PORT')) or shared_config.get('port')
         self.log = Logger.get_log(f"{self.db.capitalize()}DB")
         self._connection_key = (
             self.db,
@@ -41,6 +43,20 @@ class DB:
 
     def get_db_env(self, key):
         return f"{self.db.upper()}_{key}"
+
+    def _get_shared_database_config(self) -> dict:
+        database_url = os.getenv("DATABASE_URL", "").strip()
+        if not database_url:
+            return {}
+
+        parsed = urlparse(database_url)
+        return {
+            "dbname": parsed.path.lstrip("/") or None,
+            "user": parsed.username,
+            "password": parsed.password,
+            "host": parsed.hostname,
+            "port": str(parsed.port) if parsed.port else None,
+        }
 
     def _register_atexit_once(self):
         if DB._atexit_registered:
