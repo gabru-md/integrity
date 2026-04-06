@@ -4,6 +4,8 @@ Rasbhari is an event-driven personal operating system for Raspberry Pi and light
 
 For temporary hosted demos, Rasbhari can also fall back to a single shared PostgreSQL database through `DATABASE_URL`, which is useful on platforms like Render. The long-term intended home is still a user-owned Raspberry Pi or similar host.
 
+Rasbhari now also has a formal pacing model documented in [experience-modes.md](experience-modes.md): the system should be deep by capability but shallow by default, with `Everyday`, `Structured`, and `System` tiers guiding which surfaces feel primary for different users.
+
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.1%2B-green)](https://flask.palletsprojects.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12%2B-blue)](https://www.postgresql.org/)
@@ -35,6 +37,20 @@ For temporary hosted demos, Rasbhari can also fall back to a single shared Postg
 - Includes a native `Rasbhari AI` command layer that can interpret natural-language commands, route them through app-specific resolvers, and execute safe actions through the existing apps and event bus.
 - Includes a safe admin-triggered update flow that compares the deployed repo commit with the latest remote commit and runs a script-backed upgrade with rollback on failed health checks.
 - Runs comfortably on a Raspberry Pi while staying inspectable and hackable.
+
+## Experience Modes
+
+Rasbhari should not expose the whole machine equally to every user on day one.
+
+The product now defines three formal experience modes:
+
+- `Everyday`: calm daily-use surfaces such as `Today`, `Capture`, `Thoughts`, `Promises`, and `Reports`
+- `Structured`: richer planning and ecosystem-linking surfaces such as `Projects`, `KanbanTickets`, `Activities`, `Skills`, and `Connections`
+- `System`: operator and control-plane surfaces such as `Admin`, `Processes`, `Apps`, update flow, and backup/process visibility
+
+This is a pacing model, not a capability split. Lower tiers should still feel complete, while deeper tiers reveal more of the Rasbhari system when the user actually wants it.
+
+The full tier map and product rationale live in [experience-modes.md](experience-modes.md).
 
 ## Current Apps
 

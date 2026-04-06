@@ -5,6 +5,7 @@ The main Rasbhari documentation now lives in [docs/rasbhari.md](docs/rasbhari.md
 Useful entry points:
 
 - [Docs Hub](docs/README.md)
+- [Experience Modes](docs/experience-modes.md)
 - [AI Command Layer](docs/AI.md)
 - [Backup And Restore](docs/backup-restore.md)
 - [Environment Reference](docs/environment.md)

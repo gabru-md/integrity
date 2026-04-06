@@ -101,11 +101,14 @@ Routes, UI composition, app-specific request shaping, and custom app endpoints b
 - Prefer practical vanilla JS over unnecessary complexity.
 
 ### Frontend Collaboration Rules
+- Treat Rasbhari as layered by experience depth. Design for `Everyday`, `Structured`, and `System` usage, and avoid exposing operator or ecosystem-heavy surfaces with equal visual weight in the default path.
+- Keep daily-use surfaces shallow by default. New or regular users should encounter the smallest helpful loop first: capture, see what matters now, and act on one next thing.
 - Prefer summary-first surfaces. Cards and pages should show the most useful state first, then reveal lower-priority detail only when needed.
 - Use progressive disclosure for dense pages. If a surface is getting loud, prefer collapsible sections or cards over permanently visible secondary detail.
 - Collapsed means hidden, not squeezed. Do not leave cramped half-visible content inside the collapsed state just to imply expandability.
 - Reuse existing disclosure patterns. Prefer the shared disclosure styling, shared recommendation component, existing card spacing, and existing shell/button language before inventing a new local UI pattern.
 - Keep recommendations contextual. Inline recommendations should appear where the mismatch is discovered, stay subtle, and route action through the existing recommendation/chat flow rather than inventing a separate execution path per page.
+- Respect the tier map when changing navigation or hierarchy. `Today`, `Capture`, `Thoughts`, `Promises`, and `Reports` are the calm daily loop; `Projects`, `Activities`, `Skills`, and `Connections` are deeper structured surfaces; `Admin`, `Processes`, and `Apps` belong to system/operator depth.
 - Keep card actions consistent. Primary workflow actions should read like the rest of Rasbhari (`Next`, `Archive`, `Edit`, `Stage Action`) and should stay visually consistent across apps unless there is a clear product reason not to.
 - Default to one strong action per area. Avoid multiple equally loud controls competing in the same card or header when one action is clearly primary.
 - Preserve scanability on boards. Kanban, activity, and promise cards should remain easy to scan at a distance; ecosystem detail can expand, but titles, state, and next-action cues should stay visually stable.

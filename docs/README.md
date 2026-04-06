@@ -14,6 +14,7 @@ Use it as the primary place to find:
 
 - [AI Command Layer](./AI.md)
 - [Backup And Restore](./backup-restore.md)
+- [Experience Modes](./experience-modes.md)
 - [Import Foundation](./imports.md)
 - [macOS Local Signals](./mac-agent.md)
 - [Mental Model](./mental-model.md)
