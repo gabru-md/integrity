@@ -55,6 +55,23 @@ class UserService(CRUDService[User]):
         normalized = (value or "everyday").strip().lower()
         return normalized if normalized in cls.EXPERIENCE_MODES else "everyday"
 
+    @classmethod
+    def recommendation_limit_for_user(cls, user, default_limit: int = 2) -> int:
+        if user and not getattr(user, "recommendations_enabled", True):
+            return 0
+
+        try:
+            base_limit = max(0, int(getattr(user, "recommendation_limit", default_limit) if user else default_limit))
+        except (TypeError, ValueError):
+            base_limit = max(0, int(default_limit))
+
+        experience_mode = cls.normalize_experience_mode(getattr(user, "experience_mode", "everyday") if user else "everyday")
+        if experience_mode == "everyday":
+            return min(base_limit, 1)
+        if experience_mode == "structured":
+            return min(base_limit, 2)
+        return base_limit
+
     def _generate_api_key(self) -> str:
         return "".join(secrets.choice(self.API_KEY_ALPHABET) for _ in range(self.API_KEY_LENGTH))
 

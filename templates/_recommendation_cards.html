@@ -1,27 +1,30 @@
 {% set recommendation_items = recommendations or [] %}
 {% set recommendation_scope = recommendation_scope or 'app' %}
+{% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
+{% set is_everyday_mode = experience_mode == 'everyday' %}
+{% set is_system_mode = experience_mode == 'system' %}
 {% for item in recommendation_items %}
-<div class="recommendation-card rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3"
+<div class="recommendation-card rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] {{ 'px-3 py-2.5' if is_everyday_mode else 'px-3 py-3' }}"
      data-recommendation-card
      data-recommendation-key="{{ item.id or ((item.action or 'none') ~ ':' ~ (item.scope or recommendation_scope) ~ ':' ~ (item.scope_id or item.title))|replace(' ', '-')|lower }}"
      data-recommendation-kind="{{ item.kind or 'stage_action' }}">
     <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-            <div class="text-sm font-semibold text-[var(--text)]">{{ item.title }}</div>
+            <div class="{{ 'text-[13px]' if is_everyday_mode else 'text-sm' }} font-semibold text-[var(--text)]">{{ item.title }}</div>
             <div class="mt-1 text-xs leading-5 text-[var(--text-soft)]">{{ item.body }}</div>
         </div>
         <button type="button"
                     class="recommendation-dismiss btn-warning px-3 py-1 text-[11px]"
                     data-dismiss-recommendation>
-                Dismiss
+                {{ 'Hide' if is_everyday_mode else 'Dismiss' }}
         </button>
     </div>
     {% if item.reasoning %}
     <details class="recommendation-reasoning mt-2">
-        <summary class="text-[11px] font-semibold text-[var(--text-soft)]">Why this?</summary>
+        <summary class="text-[11px] font-semibold text-[var(--text-soft)]">{{ 'Why?' if is_everyday_mode else 'Why this?' }}</summary>
         <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ item.reasoning }}</div>
     </details>
-    {% elif item.confidence is not none %}
+    {% elif item.confidence is not none and is_system_mode %}
     <div class="mt-2 text-[11px] text-[var(--text-soft)]">Confidence {{ '%.2f'|format(item.confidence or 0) }}</div>
     {% endif %}
     {% if item.action %}
@@ -40,7 +43,7 @@
             class="btn-purple px-3 py-1 text-[11px]"
             data-stage-recommendation='{{ item|tojson }}'
         >
-            {{ item.action_label or 'Stage Action' }}
+            {{ item.action_label or ('Stage' if is_everyday_mode else 'Stage Action') }}
         </button>
         {% endif %}
     </div>

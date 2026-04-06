@@ -405,12 +405,7 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
         if current_user_id and self.user_service:
             user = self.user_service.get_by_id(current_user_id)
 
-        if user and not getattr(user, "recommendations_enabled", True):
-            return []
-
-        limit = 2
-        if user and getattr(user, "recommendation_limit", None) is not None:
-            limit = max(0, int(user.recommendation_limit))
+        limit = UserService.recommendation_limit_for_user(user, default_limit=2)
         if limit <= 0:
             return []
 

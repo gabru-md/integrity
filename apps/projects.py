@@ -173,12 +173,7 @@ def _build_project_recommendations(project) -> list[dict]:
         return []
 
     user = user_service.get_by_id(user_id)
-    recommendation_limit = 2
-    if user:
-        if not getattr(user, "recommendations_enabled", True):
-            recommendation_limit = 0
-        else:
-            recommendation_limit = max(0, int(getattr(user, "recommendation_limit", 2) or 0))
+    recommendation_limit = UserService.recommendation_limit_for_user(user, default_limit=2)
     if recommendation_limit <= 0:
         return []
 
