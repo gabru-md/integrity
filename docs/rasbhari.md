@@ -28,6 +28,7 @@ Rasbhari now also has a formal pacing model documented in [experience-modes.md](
 - Lets Today stage deterministic recommendation follow-ups such as creating a skill, promise, ticket, or project update, and now also suggests explicit ecosystem-linking edits like connecting promises to tags or adding matching tags to activities through the same assistant confirmation flow.
 - Uses a central deterministic recommendation engine that ranks structured ecosystem-linking opportunities with app scope, item scope, priority, confidence, reasoning, and action metadata so future apps can plug into the same recommendation layer.
 - Lets each user opt contextual recommendations in or out globally and set one global visible recommendation limit across Rasbhari, while keeping dismissals lightweight and temporary on the client side.
+- Lets each user choose an `experience_mode` of `everyday`, `structured`, or `system`, which becomes the main pacing control for future navigation, density, onboarding, and recommendation behavior.
 - Uses a shared inline recommendation component so app-level or item-level suggestions can be rendered consistently, dismissed temporarily, and either staged or directly applied depending on recommendation type.
 - Preserves a separate operational dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
 - Includes a low-friction macOS local signal collector that can autonomously emit normalized raw machine events into the event bus.

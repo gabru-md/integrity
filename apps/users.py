@@ -62,6 +62,7 @@ def update_profile():
     
     display_name = request.form.get("display_name")
     ntfy_topic = request.form.get("ntfy_topic")
+    experience_mode = request.form.get("experience_mode")
     recommendations_enabled = request.form.get("recommendations_enabled") == "on"
     recommendation_limit_raw = request.form.get("recommendation_limit", "").strip()
     password = request.form.get("password")
@@ -74,6 +75,7 @@ def update_profile():
     # Update user object
     user.display_name = display_name
     user.ntfy_topic = ntfy_topic
+    user.experience_mode = users_app.service.normalize_experience_mode(experience_mode)
     user.recommendations_enabled = recommendations_enabled
     try:
         user.recommendation_limit = max(0, int(recommendation_limit_raw))
@@ -86,6 +88,7 @@ def update_profile():
     if success:
         flash("Profile updated successfully!", "success")
         session["display_name"] = user.display_name
+        session["experience_mode"] = user.experience_mode
     else:
         flash("Failed to update profile.", "error")
         

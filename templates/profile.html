@@ -24,6 +24,7 @@
                     <div class="mt-4 flex flex-wrap gap-2">
                         <span class="ui-badge">Profile</span>
                         <span class="ui-badge">{{ 'Admin' if user.is_admin else 'Standard User' }}</span>
+                        <span class="ui-badge">{{ (user.experience_mode or 'everyday') | title }} Mode</span>
                         <span class="ui-badge">{{ 'Tutorial Complete' if user.onboarding_completed else 'Tutorial Pending' }}</span>
                     </div>
                 </div>
@@ -105,6 +106,29 @@
         </div>
 
         <div class="space-y-6">
+            <div class="shell-card px-6 py-6">
+                <details class="disclosure">
+                    <summary class="disclosure-summary">
+                        <div class="disclosure-summary-copy">
+                            <div class="disclosure-summary-title">Experience Mode</div>
+                            <div class="disclosure-summary-meta">Choose how much of Rasbhari should feel primary in the interface.</div>
+                        </div>
+                        <span class="disclosure-summary-chevron">⌄</span>
+                    </summary>
+                    <div class="disclosure-body">
+                        <label class="block space-y-2">
+                            <span class="text-sm font-semibold text-[var(--text)]">Mode</span>
+                            <select id="experience_mode" name="experience_mode" form="profile-form">
+                                <option value="everyday" {% if (user.experience_mode or 'everyday') == 'everyday' %}selected{% endif %}>Everyday</option>
+                                <option value="structured" {% if user.experience_mode == 'structured' %}selected{% endif %}>Structured</option>
+                                <option value="system" {% if user.experience_mode == 'system' %}selected{% endif %}>System</option>
+                            </select>
+                            <span class="text-xs text-[var(--text-soft)]">This is Rasbhari’s main pacing control. Later it will drive navigation, density, onboarding, and recommendation intensity.</span>
+                        </label>
+                    </div>
+                </details>
+            </div>
+
             <div class="shell-card px-6 py-6">
                 <details class="disclosure">
                     <summary class="disclosure-summary">

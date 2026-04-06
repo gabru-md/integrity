@@ -34,6 +34,7 @@ class AuthenticatedUser:
     is_admin: bool
     api_key: Optional[str] = None
     onboarding_completed: bool = False
+    experience_mode: str = "everyday"
 
 
 @runtime_checkable

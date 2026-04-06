@@ -91,6 +91,7 @@ class RasbhariAuthProvider(AuthProvider):
             is_admin=user.is_admin,
             api_key=getattr(user, "api_key", None),
             onboarding_completed=getattr(user, "onboarding_completed", False),
+            experience_mode=getattr(user, "experience_mode", "everyday") or "everyday",
         )
 
 
