@@ -16,6 +16,7 @@
             <div class="flex flex-wrap items-start gap-3 text-sm">
                 <a href="/projects/{{ project.id }}/view" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300">Open Timeline</a>
                 <a href="/projects/home" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200">Back to Projects</a>
+                {% set instructions_inline = true %}
                 {% include "_app_instructions.html" %}
             </div>
         </div>
