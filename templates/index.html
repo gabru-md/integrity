@@ -53,7 +53,7 @@
                     </div>
                     <div class="min-w-0">
                         <div class="truncate text-2xl font-extrabold text-[var(--text)]">Rasbhari</div>
-                        <div class="mt-1 text-sm text-[var(--text-soft)]" style="font-family: 'Manrope', sans-serif;">Daily operating loop</div>
+                        <div class="mt-1 text-sm text-[var(--text-soft)]" style="font-family: 'Manrope', sans-serif;">Daily life, made clearer</div>
                     </div>
                 </div>
             </div>
@@ -67,11 +67,11 @@
                                 <div class="text-sm font-bold text-[var(--text)]">{{ experience_mode | title }}</div>
                                 <div class="mt-1 text-xs text-[var(--text-soft)]">
                                     {% if is_everyday_mode %}
-                                    Calm daily loop first
+                                    Calm daily essentials first
                                     {% elif is_structured_mode %}
-                                    Projects and ecosystem surfaces visible
+                                    Projects and richer structure visible
                                     {% else %}
-                                    Full Rasbhari system depth visible
+                                    Full depth, including system tools
                                     {% endif %}
                                 </div>
                             </div>
@@ -221,7 +221,7 @@
             </div>
             <div id="assistant-thread" class="assistant-thread flex-1 overflow-y-auto px-4 py-4">
                 <div class="assistant-bubble assistant-bubble-ai">
-                    Describe what happened or what you want Rasbhari to do. I can log events, trigger activities, save thoughts, and create promises.
+                    Tell me what happened or what you want to do next. I can help you log it, save it, or turn it into a small next step.
                 </div>
             </div>
             <div class="border-t border-[var(--border)] px-4 py-4">
@@ -732,7 +732,7 @@
                 </div>
                 <div class="assistant-card-body">
                     <div class="assistant-card-response">${escapeHtml(primaryText)}</div>
-                    ${(!payload.requires_confirmation && payload.response && payload.summary && payload.response !== payload.summary) ? `<div class="assistant-card-summary"><strong>Details:</strong> ${escapeHtml(payload.response)}</div>` : ''}
+                    ${(!payload.requires_confirmation && payload.response && payload.summary && payload.response !== payload.summary) ? `<div class="assistant-card-summary"><strong>More:</strong> ${escapeHtml(payload.response)}</div>` : ''}
                     ${payload.reasoning ? `<div class="assistant-card-reasoning"><strong>Why:</strong> ${escapeHtml(payload.reasoning)}</div>` : ''}
                     ${details.length ? `<div class="assistant-card-grid">${details.map(([label, value]) => `<div class="assistant-detail"><span class="assistant-detail-label">${escapeHtml(label)}</span><span class="assistant-detail-value">${escapeHtml(value)}</span></div>`).join('')}</div>` : ''}
                 </div>
@@ -740,7 +740,7 @@
                     ${confidence ? `<span class="assistant-meta">Confidence ${escapeHtml(confidence)}</span>` : ''}
                     ${payload.requires_confirmation ? `<span class="assistant-meta assistant-meta-accent">Waiting for confirmation</span>` : ''}
                 </div>
-                ${payload.requires_confirmation ? `<div class="assistant-card-actions"><button type="button" class="btn-ghost assistant-inline-change-toggle px-4 py-2 text-sm" data-change-toggle="true">Change</button><button type="button" class="btn-ghost assistant-inline-ignore px-4 py-2 text-sm" data-ignore="true">Ignore</button><button type="button" class="btn-primary assistant-inline-confirm px-4 py-2 text-sm" data-confirm="true">Confirm Action</button></div><div class="assistant-change-panel hidden"><div class="assistant-change-row"><select class="assistant-change-select" aria-label="Choose action type"><option value="trigger_activity" ${payload.action === 'trigger_activity' ? 'selected' : ''}>Trigger Activity</option><option value="create_event" ${payload.action === 'create_event' ? 'selected' : ''}>Create Event</option><option value="create_thought" ${payload.action === 'create_thought' ? 'selected' : ''}>Create Thought</option><option value="create_promise" ${payload.action === 'create_promise' ? 'selected' : ''}>Create Promise</option><option value="create_skill" ${payload.action === 'create_skill' ? 'selected' : ''}>Create Skill</option><option value="create_ticket" ${payload.action === 'create_ticket' ? 'selected' : ''}>Create Ticket</option><option value="create_project_update" ${payload.action === 'create_project_update' ? 'selected' : ''}>Project Update</option></select><button type="button" class="btn-secondary assistant-inline-change-apply px-4 py-2 text-sm" data-change-apply="true">Restage</button></div><div class="assistant-change-copy">This changes the staged action and asks for confirmation again.</div></div>` : ''}
+                ${payload.requires_confirmation ? `<div class="assistant-card-actions"><button type="button" class="btn-ghost assistant-inline-change-toggle px-4 py-2 text-sm" data-change-toggle="true">Change</button><button type="button" class="btn-ghost assistant-inline-ignore px-4 py-2 text-sm" data-ignore="true">Ignore</button><button type="button" class="btn-primary assistant-inline-confirm px-4 py-2 text-sm" data-confirm="true">Confirm</button></div><div class="assistant-change-panel hidden"><div class="assistant-change-row"><select class="assistant-change-select" aria-label="Choose action type"><option value="trigger_activity" ${payload.action === 'trigger_activity' ? 'selected' : ''}>Trigger Activity</option><option value="create_event" ${payload.action === 'create_event' ? 'selected' : ''}>Create Event</option><option value="create_thought" ${payload.action === 'create_thought' ? 'selected' : ''}>Create Thought</option><option value="create_promise" ${payload.action === 'create_promise' ? 'selected' : ''}>Create Promise</option><option value="create_skill" ${payload.action === 'create_skill' ? 'selected' : ''}>Create Skill</option><option value="create_ticket" ${payload.action === 'create_ticket' ? 'selected' : ''}>Create Ticket</option><option value="create_project_update" ${payload.action === 'create_project_update' ? 'selected' : ''}>Project Update</option></select><button type="button" class="btn-secondary assistant-inline-change-apply px-4 py-2 text-sm" data-change-apply="true">Restage</button></div><div class="assistant-change-copy">This changes the staged action and asks for confirmation again.</div></div>` : ''}
             `;
             return card;
         }

@@ -49,12 +49,12 @@
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Events Today</div>
             <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ today_data.events_today_count or 0 }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Recorded signals so far</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Things captured so far</div>
         </article>
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Due Promises</div>
             <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ (today_data.due_promises or [])|length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Commitments needing evidence</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Commitments needing attention</div>
         </article>
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Neglected</div>
@@ -115,9 +115,9 @@
                     </div>
                     <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">
                         {% if today_data.due_promises %}
-                        Refresh the evidence before the day drifts.
+                        Check in before the day drifts.
                         {% else %}
-                        Your commitments are not asking for anything urgent right now.
+                        Nothing urgent is asking for your attention here right now.
                         {% endif %}
                     </div>
                 </a>

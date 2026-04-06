@@ -1,10 +1,10 @@
 def build_rasbhari_mental_model() -> dict:
     return {
-        "headline": "Rasbhari is a personal operating system built around an event bus.",
-        "summary": "Rasbhari is one event-driven loop, not a folder of disconnected tools. Each app either captures reality, structures it, commits to it, grows from it, reflects on it, or helps you act on it.",
+        "headline": "Rasbhari is a personal operating system for daily life.",
+        "summary": "Rasbhari is one connected loop, not a folder of disconnected tools. Each app helps you capture life, add structure, keep commitments, grow, reflect, or decide what to do next.",
         "identity": {
             "title": "What Rasbhari Is",
-            "body": "Rasbhari is a personal operating system for daily life. It records meaningful signals, organizes them into projects and relationships, compares them against commitments, and turns them back into guidance you can act on.",
+            "body": "Rasbhari is a personal operating system for daily life. It helps you record what matters, organize it into projects and relationships, compare it against commitments, and turn it back into useful guidance.",
         },
         "stages": [
             {
@@ -79,7 +79,7 @@ def build_rasbhari_tutorial() -> dict:
             "title": "Today is the front door",
             "target_label": "Today",
             "target_path": "/",
-            "summary": "Start here each day. Today pulls active work, due promises, neglected relationships, suggested activities, and high-signal guidance into one control surface.",
+            "summary": "Start here each day. Today brings active work, due promises, neglected relationships, suggested activities, and useful guidance into one calm home.",
             "why_it_matters": "If Rasbhari feels fragmented, Today is where the system recomposes itself.",
             "checklist": [
                 "Scan the guidance cards before opening other apps.",
@@ -88,10 +88,10 @@ def build_rasbhari_tutorial() -> dict:
         },
         {
             "id": "events",
-            "title": "Events are the shared language",
+            "title": "Events are the shared record",
             "target_label": "Events",
             "target_path": "/events/home",
-            "summary": "Most of Rasbhari works because meaningful things become events. Events are the signals other apps react to.",
+            "summary": "Most of Rasbhari works because meaningful things become events. Other apps use them as the shared record of what actually happened.",
             "why_it_matters": "Promises, skills, reports, notifications, and imports all depend on stable event evidence.",
             "checklist": [
                 "Notice the event type and tag vocabulary.",
@@ -164,7 +164,7 @@ def build_rasbhari_tutorial() -> dict:
             "target_label": "Reports",
             "target_path": "/reports/home",
             "summary": "Reports are the behavioral mirror. They compare projects, promises, skills, thoughts, and events to reveal both progress and drift.",
-            "why_it_matters": "This is where Rasbhari stops being a tracker and starts helping you see integrity gaps.",
+            "why_it_matters": "This is where Rasbhari stops being a tracker and starts helping you see where life is lining up well and where it is drifting.",
             "checklist": [
                 "Generate a report once real activity exists.",
                 "Use it to adjust capture, structure, or commitments.",
