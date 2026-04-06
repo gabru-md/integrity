@@ -10,7 +10,7 @@ from gabru.log import Logger
 from gabru.contracts import AppStatusStore, AssistantCommandProvider, AuthProvider, DashboardDataProvider
 from gabru.contracts import AdminOpsProvider
 from gabru.flask.app import App
-from gabru.auth import PermissionManager, Role, admin_required, login_required
+from gabru.auth import PermissionManager, Role, admin_required, login_required, system_admin_required
 
 from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
@@ -224,42 +224,42 @@ class Server:
             return redirect('/login')
 
         @self.app.route('/apps')
-        @admin_required
+        @system_admin_required
         def apps():
             apps_data = self.get_apps_data()
             return render_flask_template('apps.html', apps_data=apps_data)
 
         @self.app.route('/processes')
-        @admin_required
+        @system_admin_required
         def processes():
             processes_data = self.get_processes_data()
             dependency_health_data = self.get_dependency_health_data()
             return render_flask_template('processes.html', processes_data=processes_data, dependency_health_data=dependency_health_data)
         
         @self.app.route('/heimdall')
-        @admin_required
+        @system_admin_required
         def heimdall():
             return render_flask_template('heimdall.html')
 
         @self.app.route('/admin/guide')
-        @admin_required
+        @system_admin_required
         def admin_guide():
             return render_flask_template('admin_guide.html', admin_guide=build_rasbhari_admin_guide())
 
         @self.app.route('/admin')
-        @admin_required
+        @system_admin_required
         def admin_overview():
             return render_flask_template('admin_overview.html', admin_data=self.get_admin_control_plane_data())
 
         @self.app.route('/admin/update/status')
-        @admin_required
+        @system_admin_required
         def admin_update_status():
             if not self.admin_ops_provider:
                 return jsonify({"error": "Admin update provider is not configured"}), 500
             return jsonify(self.admin_ops_provider.get_update_status()), 200
 
         @self.app.route('/admin/update', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def admin_trigger_update():
             if not self.admin_ops_provider:
                 return jsonify({"error": "Admin update provider is not configured"}), 500
@@ -275,7 +275,7 @@ class Server:
             return jsonify(result), 400
 
         @self.app.route('/devices')
-        @admin_required
+        @system_admin_required
         def devices():
             return redirect('/devices/home')
 
@@ -341,7 +341,7 @@ class Server:
             return send_from_directory(directory=SERVER_FILES_FOLDER, path=filename, as_attachment=True)
 
         @self.app.route('/enable_app/<app_name>', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def enable_app(app_name):
             for app in self.registered_apps:
                 if app.name.lower() == app_name.lower():
@@ -352,7 +352,7 @@ class Server:
             return jsonify({"error": f"App {app_name} not found"}), 404
 
         @self.app.route('/disable_app/<app_name>', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def disable_app(app_name):
             for app in self.registered_apps:
                 if app.name.lower() == app_name.lower():
@@ -363,7 +363,7 @@ class Server:
             return jsonify({"error": f"App {app_name} not found"}), 404
 
         @self.app.route('/enable_process/<process_name>', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def enable_process(process_name):
             if self.process_manager:
                 success = self.process_manager.enable_process(process_name)
@@ -374,7 +374,7 @@ class Server:
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
         @self.app.route('/disable_process/<process_name>', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def disable_process(process_name):
             if self.process_manager:
                 success = self.process_manager.disable_process(process_name)
@@ -385,7 +385,7 @@ class Server:
             return jsonify({"error": "Process Manager is not initialized"}), 500
         
         @self.app.route('/start_process/<process_name>', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def start_process(process_name):
             if self.process_manager:
                 success = self.process_manager.run_process(process_name)
@@ -396,7 +396,7 @@ class Server:
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
         @self.app.route('/stop_process/<process_name>', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def stop_process(process_name):
             if self.process_manager:
                 self.process_manager.pause_process(process_name)
@@ -404,7 +404,7 @@ class Server:
             return jsonify({"error": "Process Manager is not initialized"}), 500
 
         @self.app.route('/restart_process/<process_name>', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def restart_process(process_name):
             if not self.process_manager:
                 return jsonify({"error": "Process Manager is not initialized"}), 500
@@ -416,7 +416,7 @@ class Server:
             return jsonify({"error": f"Failed to restart process {process_name}"}), 500
 
         @self.app.route('/process_logs/<process_name>')
-        @admin_required
+        @system_admin_required
         def get_process_logs(process_name):
             log_dir = os.getenv('LOG_DIR')
             if not log_dir:
@@ -429,7 +429,7 @@ class Server:
                 return jsonify({"logs": lines[-100:]})
 
         @self.app.route('/process_progress/<process_name>', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def update_process_progress(process_name):
             data = request.get_json(silent=True)
             if not isinstance(data, dict):
@@ -479,7 +479,7 @@ class Server:
             }), 200
 
         @self.app.route('/process_progress/<process_name>/latest', methods=['POST'])
-        @admin_required
+        @system_admin_required
         def jump_process_progress_to_latest(process_name):
             process_instance = self.process_manager.all_processes_map.get(process_name) if self.process_manager else None
             if process_instance is not None and not hasattr(process_instance, "q_stats"):

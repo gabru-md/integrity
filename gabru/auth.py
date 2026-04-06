@@ -92,6 +92,13 @@ class PermissionManager:
         return bool(user and user.get("is_admin"))
 
     @staticmethod
+    def is_system_mode() -> bool:
+        user = PermissionManager._get_request_authenticated_user()
+        if not user:
+            return False
+        return (user.get("experience_mode") or "everyday") == "system"
+
+    @staticmethod
     def get_current_user_id() -> Optional[int]:
         user = PermissionManager._get_request_authenticated_user()
         return user.get("id") if user else None
@@ -149,7 +156,7 @@ class PermissionManager:
 
     @staticmethod
     def can_access_admin_panel() -> bool:
-        return PermissionManager.is_admin()
+        return PermissionManager.is_admin() and PermissionManager.is_system_mode()
 
     @staticmethod
     def can_view_app(app_name: str) -> bool:
@@ -164,7 +171,7 @@ class PermissionManager:
         admin_apps = {"devices", "processes", "heimdall", "apps"}
         safe_app_name = (app_name or "").lower()
         if safe_app_name in admin_apps:
-            return PermissionManager.is_admin()
+            return PermissionManager.can_access_admin_panel()
         return True
 
     @staticmethod
@@ -184,7 +191,7 @@ class PermissionManager:
         if safe_app_name == "users":
             if "/profile" in path:
                 return True
-            return is_admin
+            return PermissionManager.can_access_admin_panel()
 
         # Fallback to can_view_app for general apps
         return PermissionManager.can_view_app(app_name)
@@ -215,6 +222,19 @@ def requires_role(required_roles):
 
 def admin_required(f):
     return requires_role([Role.ADMIN])(f)
+
+def system_admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not PermissionManager.is_authenticated():
+            if request.method == "GET":
+                next_path = request.full_path if request.query_string else request.path
+                return redirect(f"/login?next={next_path}")
+            return abort(401, description="Login required")
+        if not PermissionManager.can_access_admin_panel():
+            return abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
 def login_required(f):
     @wraps(f)
