@@ -111,6 +111,7 @@ The tier model should drive future product work in four places:
 - `Everyday` users should see the calm daily loop first
 - `Structured` users can see planning and ecosystem apps more prominently
 - `System` users can access the operator surfaces without hiding the rest of the product
+- operator surfaces should be both visually tucked away and route-gated so a plain admin in a lighter mode does not fall into the control plane accidentally
 
 ### Density
 

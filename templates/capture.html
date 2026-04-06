@@ -3,6 +3,8 @@
 
 {% block content %}
 {% set capture_data = capture_data or {} %}
+{% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
+{% set is_everyday_mode = experience_mode == 'everyday' %}
 <div class="space-y-6 px-1 py-2">
     <header class="shell-card hero-card px-6 py-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -13,57 +15,23 @@
             </div>
             <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
                 <a href="/" class="btn-secondary px-4 py-3 text-sm">Today</a>
-                <a href="/events/home" class="btn-secondary px-4 py-3 text-sm">Events</a>
+                <a href="#quick-log" class="btn-primary px-4 py-3 text-sm">Quick Log</a>
+                {% if not is_everyday_mode %}
                 <a href="/activities/home" class="btn-secondary px-4 py-3 text-sm">Activities</a>
+                <a href="/events/home" class="btn-secondary px-4 py-3 text-sm">Events</a>
+                {% endif %}
             </div>
         </div>
     </header>
 
     <section class="capture-layout grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <article class="shell-card p-6">
-            <div class="flex items-center justify-between gap-3">
+            <div id="quick-log" class="flex items-center justify-between gap-3">
                 <div>
-                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">One-Tap</div>
-                    <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Recent Activities</h2>
+                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Direct Event</div>
+                    <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Quick Log</h2>
                 </div>
-                <a href="/activities/home" class="text-sm font-semibold text-[var(--accent)]">Manage</a>
             </div>
-            <div class="mt-5 grid gap-3">
-                {% for activity in capture_data.recent_activities or [] %}
-                <button
-                    type="button"
-                    class="capture-activity-btn rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-left transition hover:-translate-y-0.5"
-                    data-activity-id="{{ activity.id }}"
-                >
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="text-sm font-bold text-[var(--text)]">{{ activity.name }}</div>
-                            <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ activity.event_type }}</div>
-                        </div>
-                        <span class="ui-badge">Trigger</span>
-                    </div>
-                    {% if activity.description %}
-                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ activity.description }}</div>
-                    {% endif %}
-                    {% if activity.tags %}
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        {% for tag in activity.tags %}
-                        <span class="ui-badge">{{ tag }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </button>
-                {% else %}
-                <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">
-                    No activities yet. Use the direct event form for now, then create activities for things you repeat.
-                </div>
-                {% endfor %}
-            </div>
-        </article>
-
-        <article class="shell-card p-6">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Direct Event</div>
-            <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Quick Log</h2>
             <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Use a short machine-readable event type, then a human summary. Tags are optional but useful if promises or skills depend on them.</p>
 
             <form id="remote-capture-form" class="capture-form mt-5 grid gap-4">
@@ -97,7 +65,7 @@
                 </div>
 
                 <div class="capture-submit-row flex items-center justify-between gap-3">
-                    <button id="capture-submit" type="submit" class="btn-primary px-4 py-3 text-sm">Log Event</button>
+                    <button id="capture-submit" type="submit" class="btn-primary px-4 py-3 text-sm">Save What Happened</button>
                     {% if capture_data.latest_event %}
                     <div class="text-right text-xs text-[var(--text-soft)]">
                         <div class="font-semibold text-[var(--text)]">Last event</div>
@@ -108,6 +76,57 @@
             </form>
 
             <div id="capture-feedback" class="mt-4 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+        </article>
+
+        <article class="shell-card p-6">
+            <details class="disclosure" {% if not is_everyday_mode %}open{% endif %}>
+                <summary class="disclosure-summary">
+                    <div class="disclosure-summary-copy">
+                        <div class="disclosure-summary-title">Reusable Shortcuts</div>
+                        <div class="disclosure-summary-meta">Recent Activities you can trigger in one tap when you do not need to type a fresh event.</div>
+                    </div>
+                    <span class="disclosure-summary-chevron">⌄</span>
+                </summary>
+                <div class="disclosure-body">
+                    <div class="mb-4 flex items-center justify-between gap-3">
+                        <div class="text-sm text-[var(--text-soft)]">Turn repeated real-world actions into easy capture buttons.</div>
+                        {% if not is_everyday_mode %}
+                        <a href="/activities/home" class="text-sm font-semibold text-[var(--accent)]">Manage</a>
+                        {% endif %}
+                    </div>
+                    <div class="grid gap-3">
+                        {% for activity in capture_data.recent_activities or [] %}
+                        <button
+                            type="button"
+                            class="capture-activity-btn rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-left transition hover:-translate-y-0.5"
+                            data-activity-id="{{ activity.id }}"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <div class="text-sm font-bold text-[var(--text)]">{{ activity.name }}</div>
+                                    <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ activity.event_type }}</div>
+                                </div>
+                                <span class="ui-badge">Trigger</span>
+                            </div>
+                            {% if activity.description %}
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ activity.description }}</div>
+                            {% endif %}
+                            {% if activity.tags %}
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                {% for tag in activity.tags %}
+                                <span class="ui-badge">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </button>
+                        {% else %}
+                        <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">
+                            No shortcuts yet. Use the quick log above first, then turn repeated actions into reusable activities later.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </details>
         </article>
     </section>
 </div>

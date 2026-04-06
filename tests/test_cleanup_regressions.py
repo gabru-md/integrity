@@ -20,13 +20,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
 class FakeUser:
-    def __init__(self, user_id=1, username="tester", display_name="Tester", is_admin=False, api_key="abcde", onboarding_completed=False):
+    def __init__(
+        self,
+        user_id=1,
+        username="tester",
+        display_name="Tester",
+        is_admin=False,
+        api_key="abcde",
+        onboarding_completed=False,
+        experience_mode="everyday",
+    ):
         self.id = user_id
         self.username = username
         self.display_name = display_name
         self.is_admin = is_admin
         self.api_key = api_key
         self.onboarding_completed = onboarding_completed
+        self.experience_mode = experience_mode
 
 
 class FakeAuthProvider:
@@ -38,6 +48,7 @@ class FakeAuthProvider:
             display_name=base_user.display_name,
             is_admin=base_user.is_admin,
             api_key=base_user.api_key,
+            experience_mode=base_user.experience_mode,
         )
         self.calls = 0
 
@@ -458,7 +469,7 @@ class TodayRouteTests(unittest.TestCase):
         self.assertIn(b"Color Direction", response.data)
         self.assertIn(b"Information Weight", response.data)
 
-    def test_admin_guide_requires_admin_and_renders_for_admin(self):
+    def test_admin_guide_requires_system_mode_admin_and_renders_for_system_admin(self):
         fake_auth_provider = FakeAuthProvider()
         server = Server(
             "TestServer",
@@ -477,19 +488,27 @@ class TodayRouteTests(unittest.TestCase):
             session["display_name"] = "Tester"
             session["is_admin"] = False
             session["onboarding_completed"] = False
+            session["experience_mode"] = "everyday"
 
         non_admin_response = client.get("/admin/guide")
         self.assertEqual(non_admin_response.status_code, 403)
 
         with client.session_transaction() as session:
             session["is_admin"] = True
+            session["experience_mode"] = "structured"
+
+        structured_admin_response = client.get("/admin/guide")
+        self.assertEqual(structured_admin_response.status_code, 403)
+
+        with client.session_transaction() as session:
+            session["experience_mode"] = "system"
 
         admin_response = client.get("/admin/guide")
         self.assertEqual(admin_response.status_code, 200)
         self.assertIn(b"Admin Guide", admin_response.data)
         self.assertIn(b"Process Health", admin_response.data)
 
-    def test_admin_overview_requires_admin_and_renders_for_admin(self):
+    def test_admin_overview_requires_system_mode_admin_and_renders_for_system_admin(self):
         fake_auth_provider = FakeAuthProvider()
         server = Server(
             "TestServer",
@@ -507,12 +526,20 @@ class TodayRouteTests(unittest.TestCase):
             session["username"] = "tester"
             session["display_name"] = "Tester"
             session["is_admin"] = False
+            session["experience_mode"] = "everyday"
 
         non_admin_response = client.get("/admin")
         self.assertEqual(non_admin_response.status_code, 403)
 
         with client.session_transaction() as session:
             session["is_admin"] = True
+            session["experience_mode"] = "structured"
+
+        structured_admin_response = client.get("/admin")
+        self.assertEqual(structured_admin_response.status_code, 403)
+
+        with client.session_transaction() as session:
+            session["experience_mode"] = "system"
 
         admin_response = client.get("/admin")
         self.assertEqual(admin_response.status_code, 200)
@@ -529,7 +556,7 @@ class TodayRouteTests(unittest.TestCase):
         self.assertIn(b"Code Update", admin_response.data)
         self.assertIn(b"Update To Latest", admin_response.data)
 
-    def test_admin_update_routes_require_admin_and_return_status(self):
+    def test_admin_update_routes_require_system_mode_admin_and_return_status(self):
         fake_auth_provider = FakeAuthProvider()
         server = Server(
             "TestServer",
@@ -547,12 +574,20 @@ class TodayRouteTests(unittest.TestCase):
             session["username"] = "tester"
             session["display_name"] = "Tester"
             session["is_admin"] = False
+            session["experience_mode"] = "everyday"
 
         self.assertEqual(client.get("/admin/update/status").status_code, 403)
         self.assertEqual(client.post("/admin/update").status_code, 403)
 
         with client.session_transaction() as session:
             session["is_admin"] = True
+            session["experience_mode"] = "structured"
+
+        self.assertEqual(client.get("/admin/update/status").status_code, 403)
+        self.assertEqual(client.post("/admin/update").status_code, 403)
+
+        with client.session_transaction() as session:
+            session["experience_mode"] = "system"
 
         status_response = client.get("/admin/update/status")
         trigger_response = client.post("/admin/update")
@@ -597,6 +632,7 @@ class TodayRouteTests(unittest.TestCase):
             session["username"] = "tester"
             session["display_name"] = "Tester"
             session["is_admin"] = True
+            session["experience_mode"] = "system"
 
         response = client.get("/apps")
 
@@ -610,7 +646,7 @@ class TodayRouteTests(unittest.TestCase):
 
 class ProcessAdminRouteTests(unittest.TestCase):
     def test_admin_can_update_queue_processor_progress(self):
-        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True))
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True, experience_mode="system"))
         server = Server(
             "TestServer",
             template_folder=os.path.join(BASE_DIR, "templates"),
@@ -627,6 +663,7 @@ class ProcessAdminRouteTests(unittest.TestCase):
             session["username"] = "tester"
             session["display_name"] = "Tester"
             session["is_admin"] = True
+            session["experience_mode"] = "system"
 
         with mock.patch("gabru.flask.server.QueueService") as queue_service_cls:
             queue_service = queue_service_cls.return_value
@@ -642,7 +679,7 @@ class ProcessAdminRouteTests(unittest.TestCase):
         self.assertEqual(server.process_manager.all_processes_map["PromiseProcessor"].queue, [])
 
     def test_process_progress_rejects_non_admin(self):
-        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=False))
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=False, experience_mode="everyday"))
         server = Server(
             "TestServer",
             template_folder=os.path.join(BASE_DIR, "templates"),
@@ -659,13 +696,14 @@ class ProcessAdminRouteTests(unittest.TestCase):
             session["username"] = "tester"
             session["display_name"] = "Tester"
             session["is_admin"] = False
+            session["experience_mode"] = "everyday"
 
         response = client.post("/process_progress/PromiseProcessor", json={"last_consumed_id": 42})
 
         self.assertEqual(response.status_code, 403)
 
     def test_admin_can_jump_queue_processor_to_latest(self):
-        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True))
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True, experience_mode="system"))
         server = Server(
             "TestServer",
             template_folder=os.path.join(BASE_DIR, "templates"),
@@ -682,6 +720,7 @@ class ProcessAdminRouteTests(unittest.TestCase):
             session["username"] = "tester"
             session["display_name"] = "Tester"
             session["is_admin"] = True
+            session["experience_mode"] = "system"
 
         with mock.patch("gabru.flask.server.QueueService") as queue_service_cls:
             queue_service = queue_service_cls.return_value
@@ -695,7 +734,7 @@ class ProcessAdminRouteTests(unittest.TestCase):
         self.assertEqual(server.process_manager.all_processes_map["PromiseProcessor"].reloaded_to, 99)
 
     def test_admin_can_restart_process(self):
-        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True))
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=True, experience_mode="system"))
         server = Server(
             "TestServer",
             template_folder=os.path.join(BASE_DIR, "templates"),
@@ -715,6 +754,7 @@ class ProcessAdminRouteTests(unittest.TestCase):
             session["username"] = "tester"
             session["display_name"] = "Tester"
             session["is_admin"] = True
+            session["experience_mode"] = "system"
 
         response = client.post("/restart_process/PromiseProcessor")
 

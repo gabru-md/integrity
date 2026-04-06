@@ -36,8 +36,13 @@
 
     <section class="today-mobile-actions md:hidden">
         <a href="/capture" class="btn-primary px-4 py-3 text-sm">Quick Capture</a>
+        <a href="/promises/home" class="btn-secondary px-4 py-3 text-sm">Promises</a>
+        {% if is_everyday_mode %}
+        <a href="/reports/home" class="btn-secondary px-4 py-3 text-sm">Reports</a>
+        {% else %}
         <a href="/projects/home" class="btn-secondary px-4 py-3 text-sm">Projects</a>
         <a href="/dashboard" class="btn-secondary px-4 py-3 text-sm">Dashboard</a>
+        {% endif %}
     </section>
 
     <section class="today-stats-grid grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -206,7 +211,7 @@
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Next Moves</div>
-                        <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">High-Signal Guidance</h2>
+                        <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Other Helpful Moves</h2>
                     </div>
                     <a href="/reports/home" class="text-sm font-semibold text-[var(--accent)]">Reports</a>
                 </div>
@@ -241,12 +246,12 @@
                 <details class="disclosure" {% if today_data.recommended_follow_ups and not is_everyday_mode %}open{% endif %}>
                     <summary class="disclosure-summary">
                         <div class="disclosure-summary-copy">
-                            <div class="disclosure-summary-title">Actionable Recommendations</div>
+                            <div class="disclosure-summary-title">Suggestions</div>
                             <div class="disclosure-summary-meta">
                                 {% if today_data.recommended_follow_ups %}
-                                {{ (today_data.recommended_follow_ups or [])|length }} staged follow-up candidate(s) are ready.
+                                {{ (today_data.recommended_follow_ups or [])|length }} small follow-up idea{{ '' if (today_data.recommended_follow_ups or [])|length == 1 else 's' }} are ready.
                                 {% else %}
-                                No recommendation follow-ups are ready right now.
+                                No extra suggestions are ready right now.
                                 {% endif %}
                             </div>
                         </div>

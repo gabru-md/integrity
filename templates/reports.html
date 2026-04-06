@@ -4,13 +4,20 @@
 {% block shell_subtitle %}Generate, review, and print reports that compare intention, execution, and observed behavior across Rasbhari.{% endblock %}
 
 {% block content %}
+{% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
+{% set is_system_mode = experience_mode == 'system' %}
 <div class="space-y-6 px-1 py-2">
     <section class="split-card">
         <div class="shell-card hero-card px-6 py-6">
             <div class="section-kicker text-[10px] font-extrabold uppercase">Reports</div>
             <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Behavioral Mirror</h1>
             <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Reports are not receipts. They compare visible focus, logged actions, and captured thoughts so you can see where identity and behavior diverged.</p>
-            <div class="mt-5">{% include "_app_instructions.html" %}</div>
+            <div class="mt-5 flex flex-wrap gap-3">
+                <a href="#report-generate-form" class="btn-primary px-5 py-3 text-sm">Create Report</a>
+                {% if reports %}
+                <a href="/reports/{{ reports[0].id }}/view" class="btn-secondary px-5 py-3 text-sm">Open Latest</a>
+                {% endif %}
+            </div>
         </div>
 
         <div class="shell-card px-6 py-6">
@@ -61,7 +68,9 @@
 
                 <div class="md:col-span-2 toolbar-actions">
                     <button type="submit" class="btn-primary px-5 py-3">Generate Mirror</button>
+                    {% if is_system_mode %}
                     <a href="/reports/" class="btn-secondary px-5 py-3">Raw API View</a>
+                    {% endif %}
                 </div>
             </form>
 
@@ -90,11 +99,11 @@
     </section>
 
     <section class="shell-card px-6 py-6">
-        <details class="disclosure">
+        <details class="disclosure" open>
             <summary class="disclosure-summary">
                 <div class="disclosure-summary-copy">
                     <div class="disclosure-summary-title">Recent Mirrors</div>
-                    <div class="disclosure-summary-meta">Open a full report, or save a print view locally.</div>
+                    <div class="disclosure-summary-meta">Read the strongest headline first, then open the full report if you want depth.</div>
                 </div>
                 <span class="disclosure-summary-chevron">⌄</span>
             </summary>
