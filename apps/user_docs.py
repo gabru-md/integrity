@@ -49,6 +49,30 @@ def build_rasbhari_mental_model() -> dict:
 
 
 def build_rasbhari_tutorial() -> dict:
+    goals = [
+        {
+            "id": "daily_clarity",
+            "title": "Stay on top of daily life",
+            "summary": "Start with the calmest version of Rasbhari: quick capture, Today, commitments, and reflection.",
+            "why_it_matters": "This is the best starting point if you mainly want clarity, continuity, and less life drift.",
+            "recommended_mode": "everyday",
+        },
+        {
+            "id": "work_and_routines",
+            "title": "Organize projects and routines",
+            "summary": "Add projects, activities, skills, and richer structure once the daily loop already makes sense.",
+            "why_it_matters": "This fits people who want stronger execution and visible growth without dropping into operator depth.",
+            "recommended_mode": "structured",
+        },
+        {
+            "id": "full_system",
+            "title": "Operate the full Rasbhari system",
+            "summary": "Expose the full ecosystem, including operator surfaces, deeper recommendations, and system-level controls.",
+            "why_it_matters": "This mode is for people who want Rasbhari as an instrumented personal operating environment, not just a daily companion.",
+            "recommended_mode": "system",
+        },
+    ]
+
     steps = [
         {
             "id": "today",
@@ -149,8 +173,10 @@ def build_rasbhari_tutorial() -> dict:
     ]
 
     return {
-        "headline": "Rasbhari works best when you move through one shared loop, not isolated apps.",
-        "summary": "This walkthrough teaches the product story first: how one event-driven system turns capture, structure, commitments, growth, reflection, and action into one daily operating loop.",
+        "headline": "Choose the kind of help you want first.",
+        "summary": "Rasbhari should not introduce the whole machine at once. Start with the use-case that matches you, let Rasbhari recommend a starting experience mode, and then learn the loop from there.",
+        "goals": goals,
+        "goal_summary": "Pick the closest fit. Rasbhari will recommend a starting experience mode and then continue with the walkthrough.",
         "steps": steps,
         "completion_copy": "You have seen the core loop. The next useful move is to create a little real structure and then return to Today.",
     }

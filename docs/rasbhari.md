@@ -120,6 +120,8 @@ Rasbhari now includes a first-run walkthrough for signed-in users. It is:
 
 The tutorial explains how the ecosystem works instead of just explaining individual forms. It now uses a lighter, less modal presentation so users can still see the current page while stepping through the guide. Completion is stored per user and can be reset from `/users/profile`.
 
+The onboarding flow now starts with user goals rather than app architecture. A new user first chooses the kind of help they want from Rasbhari, the tutorial recommends a starting `experience_mode`, and the visible shell then re-paces itself around that depth before the walkthrough continues.
+
 `Today` also includes a guided setup checklist so a new user can reach a minimum useful Rasbhari environment quickly. The checklist is state-aware and marks progress automatically as the user creates the first activity, project, promise, skill, ticket, and first ticket move.
 
 ## Admin Guide

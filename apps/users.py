@@ -140,17 +140,22 @@ def update_onboarding():
 
     data = request.get_json(silent=True) if request.is_json else request.form
     completed_value = data.get("completed")
+    experience_mode = data.get("experience_mode")
     if isinstance(completed_value, str):
         completed = completed_value.strip().lower() in {"1", "true", "yes", "on"}
     else:
         completed = bool(completed_value)
 
     user.onboarding_completed = completed
+    if experience_mode is not None:
+        user.experience_mode = users_app.service.normalize_experience_mode(experience_mode)
     success = users_app.service.update(user)
     if success:
         session["onboarding_completed"] = completed
+        if experience_mode is not None:
+            session["experience_mode"] = user.experience_mode
         if request.is_json:
-            return jsonify({"ok": True, "onboarding_completed": completed}), 200
+            return jsonify({"ok": True, "onboarding_completed": completed, "experience_mode": user.experience_mode}), 200
         flash("Tutorial state updated.", "success")
     else:
         if request.is_json:

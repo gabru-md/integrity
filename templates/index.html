@@ -258,6 +258,14 @@
             <button type="button" id="onboarding-dismiss" class="btn-ghost px-4 py-2 text-sm">Skip</button>
         </div>
 
+        <div id="onboarding-goal-picker" class="hidden space-y-5">
+            <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm leading-6 text-[var(--text-soft)]">
+                <div id="onboarding-goal-summary"></div>
+            </div>
+            <div id="onboarding-goal-list" class="grid gap-4"></div>
+        </div>
+
+        <div id="onboarding-tutorial-shell">
         <div class="onboarding-progress-wrap">
             <div id="onboarding-progress-label" class="metric-label">Step 1</div>
             <div class="onboarding-progress-bar">
@@ -292,6 +300,7 @@
                 <button type="button" id="onboarding-back" class="btn-ghost px-4 py-3 text-sm">Back</button>
                 <button type="button" id="onboarding-primary" class="btn-primary px-5 py-3 text-sm">Open</button>
             </div>
+        </div>
         </div>
     </section>
 </div>
@@ -412,6 +421,8 @@
             steps: [],
             stepIndex: 0,
             storageKey: null,
+            goalStorageKey: null,
+            selectedGoalId: null,
         };
 
         function parseTutorialData() {
@@ -425,6 +436,10 @@
 
         function getTutorialStorageKey(userId) {
             return `rasbhari_tutorial_step_v1:${userId}`;
+        }
+
+        function getTutorialGoalStorageKey(userId) {
+            return `rasbhari_tutorial_goal_v1:${userId}`;
         }
 
         function loadTutorialStep() {
@@ -443,16 +458,95 @@
             } catch (_) {}
         }
 
+        function loadTutorialGoal() {
+            if (!onboardingState.goalStorageKey) return null;
+            try {
+                return localStorage.getItem(onboardingState.goalStorageKey);
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function saveTutorialGoal(goalId) {
+            if (!onboardingState.goalStorageKey) return;
+            try {
+                if (goalId) localStorage.setItem(onboardingState.goalStorageKey, goalId);
+                else localStorage.removeItem(onboardingState.goalStorageKey);
+            } catch (_) {}
+        }
+
+        function getSelectedGoal() {
+            const goals = onboardingState.tutorial?.goals || [];
+            return goals.find((goal) => goal.id === onboardingState.selectedGoalId) || null;
+        }
+
         function setTutorialOverlayVisible(visible) {
             if (!onboardingOverlay) return;
             onboardingOverlay.classList.toggle('hidden', !visible);
             document.body.classList.toggle('tutorial-open', visible);
         }
 
+        function setGoalPickerVisible(visible) {
+            const picker = document.getElementById('onboarding-goal-picker');
+            const tutorialShell = document.getElementById('onboarding-tutorial-shell');
+            if (picker) picker.classList.toggle('hidden', !visible);
+            if (tutorialShell) tutorialShell.classList.toggle('hidden', visible);
+        }
+
+        async function updateTutorialPreferences({ completed = false, experienceMode = null } = {}) {
+            try {
+                const body = { completed };
+                if (experienceMode) body.experience_mode = experienceMode;
+                const response = await fetch('/users/profile/onboarding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(body),
+                });
+                return response.ok;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function renderGoalPicker() {
+            const goalSummary = document.getElementById('onboarding-goal-summary');
+            const goalList = document.getElementById('onboarding-goal-list');
+            const headline = document.getElementById('onboarding-headline');
+            if (!goalList) return;
+            if (headline) headline.textContent = onboardingState.tutorial?.summary || '';
+            if (goalSummary) goalSummary.textContent = onboardingState.tutorial?.goal_summary || '';
+            goalList.innerHTML = '';
+            (onboardingState.tutorial?.goals || []).forEach((goal) => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'text-left rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5';
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="text-base font-bold text-[var(--text)]">${escapeHtml(goal.title || '')}</div>
+                        <span class="ui-badge">${escapeHtml((goal.recommended_mode || 'everyday').replace(/^./, (c) => c.toUpperCase()))}</span>
+                    </div>
+                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">${escapeHtml(goal.summary || '')}</div>
+                    <div class="mt-3 text-xs leading-6 text-[var(--text-soft)]"><strong>Why this mode:</strong> ${escapeHtml(goal.why_it_matters || '')}</div>
+                `;
+                card.addEventListener('click', async () => {
+                    onboardingState.selectedGoalId = goal.id;
+                    saveTutorialGoal(goal.id);
+                    const applied = await updateTutorialPreferences({ completed: false, experienceMode: goal.recommended_mode });
+                    if (applied) {
+                        window.location.reload();
+                    }
+                });
+                goalList.appendChild(card);
+            });
+            setGoalPickerVisible(true);
+        }
+
         function renderTutorialStep() {
             if (!onboardingOverlay || !onboardingState.steps.length) return;
             const step = onboardingState.steps[onboardingState.stepIndex];
             if (!step) return;
+            const goal = getSelectedGoal();
 
             const progressLabel = document.getElementById('onboarding-progress-label');
             const progressFill = document.getElementById('onboarding-progress-fill');
@@ -468,7 +562,11 @@
 
             if (progressLabel) progressLabel.textContent = `Step ${onboardingState.stepIndex + 1} of ${onboardingState.steps.length}`;
             if (progressFill) progressFill.style.width = `${((onboardingState.stepIndex + 1) / onboardingState.steps.length) * 100}%`;
-            if (headline) headline.textContent = onboardingState.tutorial?.summary || '';
+            if (headline) {
+                headline.textContent = goal
+                    ? `${goal.summary} Rasbhari has started you in ${goal.recommended_mode} mode.`
+                    : (onboardingState.tutorial?.summary || '');
+            }
             if (targetLabel) targetLabel.textContent = step.target_label || 'Rasbhari';
             if (title) title.textContent = step.title || '';
             if (summary) summary.textContent = step.summary || '';
@@ -498,21 +596,12 @@
                 backButton.disabled = onboardingState.stepIndex === 0;
                 backButton.classList.toggle('opacity-50', onboardingState.stepIndex === 0);
             }
+            setGoalPickerVisible(false);
             saveTutorialStep();
         }
 
         async function updateTutorialCompletion(completed) {
-            try {
-                const response = await fetch('/users/profile/onboarding', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ completed }),
-                });
-                return response.ok;
-            } catch (_) {
-                return false;
-            }
+            return updateTutorialPreferences({ completed });
         }
 
         async function finishTutorial() {
@@ -532,6 +621,8 @@
             onboardingState.tutorial = tutorial;
             onboardingState.steps = tutorial.steps;
             onboardingState.storageKey = getTutorialStorageKey(userId);
+            onboardingState.goalStorageKey = getTutorialGoalStorageKey(userId);
+            onboardingState.selectedGoalId = loadTutorialGoal();
             onboardingState.stepIndex = Math.min(loadTutorialStep(), onboardingState.steps.length - 1);
 
             const dismissButton = document.getElementById('onboarding-dismiss');
@@ -567,7 +658,11 @@
 
             if (!alreadyCompleted) {
                 setTutorialOverlayVisible(true);
-                renderTutorialStep();
+                if (!onboardingState.selectedGoalId) {
+                    renderGoalPicker();
+                } else {
+                    renderTutorialStep();
+                }
             }
         }
 
