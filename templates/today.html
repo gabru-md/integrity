@@ -3,19 +3,33 @@
 
 {% block content %}
 {% set setup_checklist = today_data.setup_checklist if today_data.setup_checklist is defined else {'title': 'Minimal Useful Setup', 'summary': '', 'items': [], 'completed_count': 0, 'total_count': 0, 'is_complete': False} %}
+{% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
+{% set is_everyday_mode = experience_mode == 'everyday' %}
 <div class="space-y-6 px-1 py-2">
     <header class="shell-card hero-card px-6 py-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Today</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Your Daily Operating Loop</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Active work, due commitments, neglected relationships, and the next few moves that matter.</p>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">What Matters Today</h1>
+                <div class="mt-2 text-sm font-semibold text-[var(--text-soft)]">Your Daily Operating Loop</div>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
+                    {% if is_everyday_mode %}
+                    Capture one meaningful thing, see what needs attention, and move one next item without carrying the whole system in your head.
+                    {% else %}
+                    Active work, due commitments, neglected relationships, and the next few moves that matter.
+                    {% endif %}
+                </p>
             </div>
             <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-                <a href="/projects/home" class="btn-secondary px-4 py-3 text-sm">Projects</a>
+                <a href="/capture" class="btn-primary px-4 py-3 text-sm">Quick Capture</a>
                 <a href="/promises/home" class="btn-secondary px-4 py-3 text-sm">Promises</a>
+                {% if is_everyday_mode %}
+                <a href="/reports/home" class="btn-secondary px-4 py-3 text-sm">Reports</a>
+                {% else %}
+                <a href="/projects/home" class="btn-secondary px-4 py-3 text-sm">Projects</a>
                 <a href="/activities/home" class="btn-secondary px-4 py-3 text-sm">Activities</a>
-                <a href="/dashboard" class="btn-primary px-4 py-3 text-sm">Open Dashboard</a>
+                <a href="/dashboard" class="btn-secondary px-4 py-3 text-sm">Dashboard</a>
+                {% endif %}
             </div>
         </div>
     </header>
@@ -50,11 +64,79 @@
     </section>
 
     <section class="shell-card p-6">
+        {% set primary_guidance = (today_data.guidance or [None])[0] %}
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div class="max-w-3xl">
+                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">What Needs Attention</div>
+                {% if primary_guidance %}
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">{{ primary_guidance.title }}</h2>
+                <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ primary_guidance.body }}</p>
+                <div class="mt-4">
+                    <a href="{{ primary_guidance.href }}" class="btn-primary px-4 py-3 text-sm">Open Next Step</a>
+                </div>
+                {% else %}
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Start with one meaningful move</h2>
+                <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Log something real, move one project ticket, or clear one due commitment so the day has visible shape.</p>
+                <div class="mt-4">
+                    <a href="/capture" class="btn-primary px-4 py-3 text-sm">Capture Something</a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="grid w-full gap-3 sm:grid-cols-2 lg:w-[28rem]">
+                <a href="{% if today_data.active_work %}{{ today_data.active_work[0].href }}{% elif today_data.prioritized_work %}{{ today_data.prioritized_work[0].href }}{% else %}/projects/home{% endif %}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Work</div>
+                    <div class="mt-2 text-base font-bold text-[var(--text)]">
+                        {% if today_data.active_work %}
+                        {{ (today_data.active_work or [])|length }} item(s) already in progress
+                        {% elif today_data.prioritized_work %}
+                        {{ (today_data.prioritized_work or [])|length }} prioritized item(s) waiting
+                        {% else %}
+                        No active work yet
+                        {% endif %}
+                    </div>
+                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">
+                        {% if today_data.active_work %}
+                        Finish or move one active item before adding more.
+                        {% elif today_data.prioritized_work %}
+                        Start the next ready ticket when you have energy.
+                        {% else %}
+                        Create or promote one ticket to give the day a clear direction.
+                        {% endif %}
+                    </div>
+                </a>
+                <a href="{% if today_data.due_promises %}{{ today_data.due_promises[0].href }}{% else %}/promises/home{% endif %}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Commitments</div>
+                    <div class="mt-2 text-base font-bold text-[var(--text)]">
+                        {% if today_data.due_promises %}
+                        {{ (today_data.due_promises or [])|length }} promise check(s) due
+                        {% else %}
+                        No due promise checks
+                        {% endif %}
+                    </div>
+                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">
+                        {% if today_data.due_promises %}
+                        Refresh the evidence before the day drifts.
+                        {% else %}
+                        Your commitments are not asking for anything urgent right now.
+                        {% endif %}
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="shell-card p-6">
         <details class="disclosure">
             <summary class="disclosure-summary">
                 <div class="disclosure-summary-copy">
-                    <div class="disclosure-summary-title">What Rasbhari Is</div>
-                    <div class="disclosure-summary-meta">The mental model is useful context, but it should not crowd your daily view once you already know the loop.</div>
+                    <div class="disclosure-summary-title">How Today Works</div>
+                    <div class="disclosure-summary-meta">
+                        {% if is_everyday_mode %}
+                        The bigger mental model stays available, but it should not crowd the daily home.
+                        {% else %}
+                        The mental model is useful context, but it should not crowd your daily view once you already know the loop.
+                        {% endif %}
+                    </div>
                 </div>
                 <span class="disclosure-summary-chevron">⌄</span>
             </summary>
@@ -123,12 +205,24 @@
             <article class="shell-card p-6">
                 <div class="flex items-center justify-between gap-3">
                     <div>
-                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Guidance</div>
-                        <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">High-Signal Next Moves</h2>
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Next Moves</div>
+                        <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">High-Signal Guidance</h2>
                     </div>
                     <a href="/reports/home" class="text-sm font-semibold text-[var(--accent)]">Reports</a>
                 </div>
                 <div class="mt-5 grid gap-4">
+                    {% if primary_guidance %}
+                    {% for item in (today_data.guidance or [])[1:] %}
+                    <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
+                        <div class="text-base font-bold text-[var(--text)]">{{ item.title }}</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
+                    </a>
+                    {% else %}
+                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">
+                        No extra guidance right now. The main focus card above already highlights the most useful next move.
+                    </div>
+                    {% endfor %}
+                    {% else %}
                     {% for item in today_data.guidance or [] %}
                     <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5">
                         <div class="text-base font-bold text-[var(--text)]">{{ item.title }}</div>
@@ -139,11 +233,12 @@
                         No guidance yet. Start by logging one meaningful action or moving one project ticket.
                     </div>
                     {% endfor %}
+                    {% endif %}
                 </div>
             </article>
 
             <article class="shell-card p-6">
-                <details class="disclosure" {% if today_data.recommended_follow_ups %}open{% endif %}>
+                <details class="disclosure" {% if today_data.recommended_follow_ups and not is_everyday_mode %}open{% endif %}>
                     <summary class="disclosure-summary">
                         <div class="disclosure-summary-copy">
                             <div class="disclosure-summary-title">Actionable Recommendations</div>
@@ -295,7 +390,13 @@
                     <summary class="disclosure-summary">
                         <div class="disclosure-summary-copy">
                             <div class="disclosure-summary-title">Neglected Connections</div>
-                            <div class="disclosure-summary-meta">{{ (today_data.neglected_connections or [])|length }} relationship(s) currently overdue.</div>
+                            <div class="disclosure-summary-meta">
+                                {% if is_everyday_mode %}
+                                Relationship context is available when you want it, without leading the whole page.
+                                {% else %}
+                                {{ (today_data.neglected_connections or [])|length }} relationship(s) currently overdue.
+                                {% endif %}
+                            </div>
                         </div>
                         <span class="disclosure-summary-chevron">⌄</span>
                     </summary>
@@ -332,7 +433,13 @@
                     <summary class="disclosure-summary">
                         <div class="disclosure-summary-copy">
                             <div class="disclosure-summary-title">Suggested Triggers</div>
-                            <div class="disclosure-summary-meta">{{ (today_data.suggested_activities or [])|length }} recent activity shortcut(s) available.</div>
+                            <div class="disclosure-summary-meta">
+                                {% if is_everyday_mode %}
+                                Quick activity shortcuts stay available, but they should not crowd the daily home.
+                                {% else %}
+                                {{ (today_data.suggested_activities or [])|length }} recent activity shortcut(s) available.
+                                {% endif %}
+                            </div>
                         </div>
                         <span class="disclosure-summary-chevron">⌄</span>
                     </summary>
