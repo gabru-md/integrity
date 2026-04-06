@@ -44,9 +44,12 @@ class PromiseService(CRUDService[Promise]):
         """Finds all promises that need checking (next_check_at <= now)."""
         filters = {
             "next_check_at": {"$lt": datetime.now()},
-            "status": "active"
         }
-        return self.find_all(filters=filters)
+        due_promises = self.find_all(filters=filters)
+        return [
+            promise for promise in due_promises
+            if promise.frequency != "once" or promise.status == "active"
+        ]
 
     def get_promises_by_status(self, status: str) -> List[Promise]:
         return self.find_all(filters={"status": status})

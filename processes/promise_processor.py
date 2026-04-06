@@ -23,7 +23,11 @@ class PromiseProcessor(QueueProcessor[Event]):
         if not event.user_id:
             return True
 
-        active_promises = self.promise_service.find_all(filters={"user_id": event.user_id, "status": "active"})
+        user_promises = self.promise_service.find_all(filters={"user_id": event.user_id})
+        active_promises = [
+            promise for promise in user_promises
+            if promise.frequency != "once" or promise.status == "active"
+        ]
         
         # Ensure event.timestamp is timezone-aware (UTC) for comparison
         event_ts_aware = self._make_datetime_utc_aware(event.timestamp)
@@ -121,6 +125,7 @@ class PromiseProcessor(QueueProcessor[Event]):
             self.log.info(f"Promise fulfilled: {promise.name} (Count: {event_count}, Negative: {promise.is_negative})")
         else:
             if promise.frequency != "once":
+                promise.status = "broken"
                 promise.streak = 0
                 self.log.info(f"Promise broken: {promise.name} (Count: {event_count}, Negative: {promise.is_negative})")
             else:
