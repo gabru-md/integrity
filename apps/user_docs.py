@@ -79,6 +79,7 @@ def build_rasbhari_tutorial() -> dict:
             "title": "Today is the front door",
             "target_label": "Today",
             "target_path": "/",
+            "modes": ["everyday", "structured", "system"],
             "summary": "Start here each day. Today brings active work, due promises, neglected relationships, suggested activities, and useful guidance into one calm home.",
             "why_it_matters": "If Rasbhari feels fragmented, Today is where the system recomposes itself.",
             "checklist": [
@@ -87,10 +88,24 @@ def build_rasbhari_tutorial() -> dict:
             ],
         },
         {
+            "id": "capture",
+            "title": "Capture keeps the system honest",
+            "target_label": "Capture",
+            "target_path": "/capture",
+            "modes": ["everyday", "structured", "system"],
+            "summary": "Use Capture when something meaningful happens and you want it recorded quickly before the moment is gone.",
+            "why_it_matters": "Rasbhari becomes useful only when real life is turned into a visible record with very little friction.",
+            "checklist": [
+                "Use Quick Log for one-off moments that matter now.",
+                "Use reusable shortcuts when you repeat the same action often.",
+            ],
+        },
+        {
             "id": "events",
             "title": "Events are the shared record",
             "target_label": "Events",
             "target_path": "/events/home",
+            "modes": ["system"],
             "summary": "Most of Rasbhari works because meaningful things become events. Other apps use them as the shared record of what actually happened.",
             "why_it_matters": "Promises, skills, reports, notifications, and imports all depend on stable event evidence.",
             "checklist": [
@@ -103,6 +118,7 @@ def build_rasbhari_tutorial() -> dict:
             "title": "Activities make capture fast",
             "target_label": "Activities",
             "target_path": "/activities/home",
+            "modes": ["structured", "system"],
             "summary": "Activities are reusable buttons for actions you repeat. Triggering one creates an event without making you fill the same form every time.",
             "why_it_matters": "Good activities reduce friction and improve event consistency.",
             "checklist": [
@@ -115,6 +131,7 @@ def build_rasbhari_tutorial() -> dict:
             "title": "Projects give work a home",
             "target_label": "Projects",
             "target_path": "/projects/home",
+            "modes": ["structured", "system"],
             "summary": "Projects organize larger bodies of work. Their timelines tell the story, and their focus tags link work back to promises and skills.",
             "why_it_matters": "Projects turn isolated events into ongoing intent and visible progress.",
             "checklist": [
@@ -127,6 +144,7 @@ def build_rasbhari_tutorial() -> dict:
             "title": "Kanban turns projects into execution",
             "target_label": "Kanban",
             "target_path": "/kanbantickets/home",
+            "modes": ["structured", "system"],
             "summary": "Kanban tickets are the concrete units of project work. They move from backlog to shipped and emit project-work signals as they change.",
             "why_it_matters": "Tickets make Today, reports, and project history reflect actual execution instead of abstract plans.",
             "checklist": [
@@ -139,6 +157,7 @@ def build_rasbhari_tutorial() -> dict:
             "title": "Promises make commitments visible",
             "target_label": "Promises",
             "target_path": "/promises/home",
+            "modes": ["everyday", "structured", "system"],
             "summary": "Promises watch for the event types and tags that should exist over time. They are how Rasbhari compares intent to evidence.",
             "why_it_matters": "A promise only works if your events and tags actually describe the behavior you care about.",
             "checklist": [
@@ -151,6 +170,7 @@ def build_rasbhari_tutorial() -> dict:
             "title": "Skills reward repeated effort",
             "target_label": "Skills",
             "target_path": "/skills/home",
+            "modes": ["structured", "system"],
             "summary": "Skills turn tagged work into XP and levels. They show whether repeated effort is accumulating into growth.",
             "why_it_matters": "Stable tags make growth visible across activities, tickets, and imports.",
             "checklist": [
@@ -163,6 +183,7 @@ def build_rasbhari_tutorial() -> dict:
             "title": "Reports reflect the whole system",
             "target_label": "Reports",
             "target_path": "/reports/home",
+            "modes": ["everyday", "structured", "system"],
             "summary": "Reports are the behavioral mirror. They compare projects, promises, skills, thoughts, and events to reveal both progress and drift.",
             "why_it_matters": "This is where Rasbhari stops being a tracker and starts helping you see where life is lining up well and where it is drifting.",
             "checklist": [

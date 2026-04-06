@@ -354,6 +354,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        const tutorialExperienceMode = {{ experience_mode | tojson }};
         applyThemeMeta(localStorage.getItem('theme') || 'slate');
         syncPreferenceButtons();
 
@@ -478,6 +479,18 @@
         function getSelectedGoal() {
             const goals = onboardingState.tutorial?.goals || [];
             return goals.find((goal) => goal.id === onboardingState.selectedGoalId) || null;
+        }
+
+        function filterTutorialStepsByMode(tutorial, mode) {
+            const allowedMode = mode || 'everyday';
+            const filteredSteps = (tutorial?.steps || []).filter((step) => {
+                const modes = Array.isArray(step?.modes) && step.modes.length ? step.modes : ['everyday', 'structured', 'system'];
+                return modes.includes(allowedMode);
+            });
+            return {
+                ...tutorial,
+                steps: filteredSteps,
+            };
         }
 
         function setTutorialOverlayVisible(visible) {
@@ -615,7 +628,7 @@
             if (!onboardingOverlay) return;
             const alreadyCompleted = onboardingOverlay.dataset.onboardingCompleted === 'true';
             const userId = onboardingOverlay.dataset.userId;
-            const tutorial = parseTutorialData();
+            const tutorial = filterTutorialStepsByMode(parseTutorialData(), tutorialExperienceMode);
             if (!tutorial || !Array.isArray(tutorial.steps) || !tutorial.steps.length || !userId) return;
 
             onboardingState.tutorial = tutorial;
