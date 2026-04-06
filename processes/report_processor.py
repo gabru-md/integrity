@@ -3,12 +3,14 @@ from typing import Optional
 from gabru.qprocessor.qprocessor import QueueProcessor
 from model.event import Event
 from services.events import EventService
+from services.notifications import NotificationService
 from services.report_aggregator import ReportAggregator
 
 
 class ReportProcessor(QueueProcessor[Event]):
     def __init__(self, **kwargs):
         self.event_service = EventService()
+        self.notification_service = NotificationService()
         self.report_aggregator = ReportAggregator()
         super().__init__(service=self.event_service, **kwargs)
 
@@ -40,4 +42,12 @@ class ReportProcessor(QueueProcessor[Event]):
             ],
         )
         self.event_service.create(created_event)
+        if report.id is not None:
+            self.notification_service.create_in_app_notification(
+                user_id=user_id,
+                title="Report ready",
+                body=f"{report.title} is ready to review.",
+                href=f"/reports/{report.id}/view",
+                notification_class="review",
+            )
         return True

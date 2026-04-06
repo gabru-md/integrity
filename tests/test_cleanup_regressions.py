@@ -117,6 +117,31 @@ class FakeDashboardProvider:
     def get_today_data(self):
         return {"guidance": [{"title": "Start with one meaningful move", "body": "Today route is working.", "href": "/projects/home"}]}
 
+    def get_notification_center_data(self):
+        return {
+            "items": [
+                {
+                    "id": "in-app:1",
+                    "notification_id": 1,
+                    "title": "Report ready",
+                    "body": "Your report is ready to review.",
+                    "href": "/reports/1/view",
+                    "class": "review",
+                    "created_at": "2026-04-02T12:00:00+00:00",
+                    "created_at_display": "Apr 02, 12:00",
+                    "is_system": False,
+                }
+            ],
+            "unread_count": 1,
+            "has_items": True,
+        }
+
+    def mark_notification_read(self, notification_id: int):
+        return notification_id == 1
+
+    def mark_all_notifications_read(self):
+        return True
+
     def get_capture_data(self):
         return {
             "recent_activities": [
@@ -761,6 +786,57 @@ class ProcessAdminRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         process_manager.pause_process.assert_called_once_with("PromiseProcessor")
         process_manager.run_process.assert_called_once_with("PromiseProcessor")
+
+
+class NotificationShellTests(unittest.TestCase):
+    def test_home_renders_notification_trigger_and_notice(self):
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=False, experience_mode="everyday"))
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+            session["experience_mode"] = "everyday"
+
+        response = client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Notifications", response.data)
+        self.assertIn(b"Report ready", response.data)
+
+    def test_mark_notification_read_route_uses_dashboard_provider(self):
+        fake_auth_provider = FakeAuthProvider(FakeUser(is_admin=False, experience_mode="everyday"))
+        server = Server(
+            "TestServer",
+            template_folder=os.path.join(BASE_DIR, "templates"),
+            static_folder=os.path.join(BASE_DIR, "static"),
+            auth_provider=fake_auth_provider,
+            app_status_store=FakeAppStatusStore(),
+            dashboard_provider=FakeDashboardProvider(),
+        )
+        client = server.app.test_client()
+
+        with client.session_transaction() as session:
+            session["user_id"] = 1
+            session["username"] = "tester"
+            session["display_name"] = "Tester"
+            session["is_admin"] = False
+            session["experience_mode"] = "everyday"
+
+        response = client.post("/notifications/1/read")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["unread_count"], 1)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ from model.event import Event
 from model.report import Report
 from processes.report_processor import ReportProcessor
 from services.events import EventService
+from services.notifications import NotificationService
 from services.report_aggregator import ReportAggregator
 from services.reports import ReportService
 
@@ -18,6 +19,7 @@ class ReportsApp(App[Report]):
     def __init__(self):
         self.report_service = ReportService()
         self.event_service = EventService()
+        self.notification_service = NotificationService()
         self.report_aggregator = ReportAggregator()
         super().__init__(
             name="Reports",
@@ -68,6 +70,14 @@ class ReportsApp(App[Report]):
                     ],
                 )
                 event_id = self.event_service.create(request_event)
+                if user_id:
+                    self.notification_service.create_in_app_notification(
+                        user_id=user_id,
+                        title="Report generation started",
+                        body=f"{report_type.title()} report is queued now. Rasbhari will let you know when it is ready.",
+                        href="/reports/home",
+                        notification_class="review",
+                    )
                 return jsonify({
                     "message": "Report generation queued",
                     "event_id": event_id,

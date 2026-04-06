@@ -193,12 +193,64 @@
         <div class="text-lg font-extrabold text-[var(--text)]">Rasbhari</div>
         <div class="flex items-center gap-2">
             {% if current_user %}
+            <button id="mobile-notification-button" type="button" class="btn-ghost notification-trigger relative h-11 w-11 rounded-2xl p-0" aria-label="Open notifications">
+                <span aria-hidden="true">◔</span>
+                <span id="mobile-notification-count" class="notification-count {% if not notification_center or not notification_center['unread_count'] %}hidden{% endif %}">{{ notification_center['unread_count'] if notification_center and notification_center['unread_count'] and notification_center['unread_count'] < 10 else ('9+' if notification_center and notification_center['unread_count'] else '') }}</span>
+            </button>
             <a href="/capture" class="btn-primary h-11 rounded-2xl px-4 text-sm {% if request.path == '/capture' %}pointer-events-none opacity-80{% endif %}">Capture</a>
             {% endif %}
             <button type="button" onclick="document.getElementById('user-menu')?.setAttribute('open','open'); toggleSidebar(true);" class="btn-secondary h-11 rounded-2xl px-4 text-sm">Menu</button>
         </div>
     </div>
 </header>
+
+{% if current_user %}
+<div class="notification-shell hidden md:block">
+    <button id="notification-button" type="button" class="btn-secondary notification-trigger relative px-4 py-3 text-sm" aria-label="Open notifications">
+        <span>Notices</span>
+        <span id="desktop-notification-count" class="notification-count {% if not notification_center or not notification_center['unread_count'] %}hidden{% endif %}">{{ notification_center['unread_count'] if notification_center and notification_center['unread_count'] and notification_center['unread_count'] < 10 else ('9+' if notification_center and notification_center['unread_count'] else '') }}</span>
+    </button>
+</div>
+
+<div id="notification-panel" class="notification-panel shell-card hidden">
+    <div class="flex items-start justify-between gap-4 border-b border-[var(--border)] px-4 py-4">
+        <div>
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Notifications</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Important things Rasbhari thinks you should see.</div>
+        </div>
+        <button id="notifications-read-all" type="button" class="btn-ghost px-3 py-2 text-xs {% if not notification_center or not notification_center['unread_count'] %}hidden{% endif %}">Mark all read</button>
+    </div>
+    <div id="notification-items" class="max-h-[26rem] overflow-y-auto px-3 py-3">
+        {% if notification_center and notification_center['items'] %}
+            {% for notice in notification_center['items'] %}
+            <article class="notification-item" data-notification-id="{{ notice.notification_id if notice.notification_id is not none else '' }}">
+                <div class="notification-item-body">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="text-sm font-bold text-[var(--text)]">{{ notice.title }}</div>
+                        {% if notice.created_at_display %}
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ notice.created_at_display }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mt-1 text-sm leading-6 text-[var(--text-soft)]">{{ notice.body }}</div>
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                        {% if notice.href %}
+                        <a href="{{ notice.href }}" class="btn-secondary px-3 py-2 text-xs">Open</a>
+                        {% endif %}
+                        {% if notice.notification_id is not none %}
+                        <button type="button" class="btn-ghost notification-mark-read px-3 py-2 text-xs">Mark Read</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+        <div id="notification-empty-state" class="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-soft)] px-4 py-5 text-sm leading-6 text-[var(--text-soft)]">
+            Nothing urgent is calling for attention right now.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 
 <main id="content-wrapper" class="min-h-screen px-3 pb-6 pt-3 md:px-4 md:pb-8">
     <div class="app-shell">
@@ -369,8 +421,106 @@
         const assistantStorageKey = 'rasbhari_assistant_thread_v1';
         const assistantPendingKey = 'rasbhari_assistant_pending_v1';
         const assistantPendingCardKey = 'rasbhari_assistant_pending_card_v1';
+        const notificationButton = document.getElementById('notification-button');
+        const mobileNotificationButton = document.getElementById('mobile-notification-button');
+        const notificationPanel = document.getElementById('notification-panel');
+        const notificationItems = document.getElementById('notification-items');
+        const notificationReadAllButton = document.getElementById('notifications-read-all');
         let pendingConfirmation = null;
         let pendingCardId = null;
+
+        function setNotificationCount(unreadCount) {
+            ['desktop-notification-count', 'mobile-notification-count'].forEach((id) => {
+                const badge = document.getElementById(id);
+                if (!badge) return;
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount < 10 ? String(unreadCount) : '9+';
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            });
+            if (notificationReadAllButton) {
+                notificationReadAllButton.classList.toggle('hidden', unreadCount <= 0);
+            }
+        }
+
+        function ensureNotificationEmptyState() {
+            if (!notificationItems) return;
+            const hasItems = notificationItems.querySelector('.notification-item');
+            let emptyState = document.getElementById('notification-empty-state');
+            if (!hasItems && !emptyState) {
+                emptyState = document.createElement('div');
+                emptyState.id = 'notification-empty-state';
+                emptyState.className = 'rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-soft)] px-4 py-5 text-sm leading-6 text-[var(--text-soft)]';
+                emptyState.textContent = 'Nothing urgent is calling for attention right now.';
+                notificationItems.appendChild(emptyState);
+            } else if (hasItems && emptyState) {
+                emptyState.remove();
+            }
+        }
+
+        function toggleNotificationPanel(forceOpen) {
+            if (!notificationPanel) return;
+            const willOpen = forceOpen === undefined ? notificationPanel.classList.contains('hidden') : forceOpen;
+            notificationPanel.classList.toggle('hidden', !willOpen);
+        }
+
+        async function markNotificationRead(notificationId, itemEl) {
+            const response = await fetch(`/notifications/${notificationId}/read`, {
+                method: 'POST',
+                credentials: 'same-origin',
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            itemEl?.remove();
+            setNotificationCount(payload.unread_count || 0);
+            ensureNotificationEmptyState();
+        }
+
+        async function markAllNotificationsRead() {
+            const response = await fetch('/notifications/read-all', {
+                method: 'POST',
+                credentials: 'same-origin',
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            notificationItems?.querySelectorAll('.notification-item').forEach((item) => {
+                const notificationId = item.getAttribute('data-notification-id');
+                if (notificationId) item.remove();
+            });
+            setNotificationCount(payload.unread_count || 0);
+            ensureNotificationEmptyState();
+        }
+
+        [notificationButton, mobileNotificationButton].forEach((button) => {
+            button?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                toggleNotificationPanel();
+            });
+        });
+
+        notificationReadAllButton?.addEventListener('click', () => {
+            markAllNotificationsRead().catch(() => {});
+        });
+
+        notificationItems?.addEventListener('click', (event) => {
+            const button = event.target.closest('.notification-mark-read');
+            if (!button) return;
+            const item = button.closest('.notification-item');
+            const notificationId = item?.getAttribute('data-notification-id');
+            if (!notificationId) return;
+            markNotificationRead(notificationId, item).catch(() => {});
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!notificationPanel || notificationPanel.classList.contains('hidden')) return;
+            if (notificationPanel.contains(event.target)) return;
+            if (notificationButton?.contains(event.target) || mobileNotificationButton?.contains(event.target)) return;
+            toggleNotificationPanel(false);
+        });
+
+        setNotificationCount({{ (notification_center['unread_count'] if notification_center else 0) | tojson }});
 
         function escapeHtml(value) {
             return String(value ?? '')

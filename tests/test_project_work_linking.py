@@ -210,6 +210,45 @@ class ProjectWorkLinkingTests(unittest.TestCase):
         self.assertEqual(len(today_data["recommended_follow_ups"]), 1)
         self.assertEqual(today_data["recommended_follow_ups"][0]["title"], "First")
 
+    def test_notification_center_data_is_scoped_to_current_user(self):
+        provider = RasbhariDashboardDataProvider(
+            project_service=mock.Mock(find_all=mock.Mock(return_value=[]), count=mock.Mock(return_value=0)),
+            kanban_ticket_service=mock.Mock(get_by_project_id=mock.Mock(return_value=[]), count=mock.Mock(return_value=0), find_all=mock.Mock(return_value=[])),
+            promise_service=mock.Mock(get_due_promises=mock.Mock(return_value=[]), find_all=mock.Mock(return_value=[]), count=mock.Mock(return_value=0)),
+            skill_service=mock.Mock(find_all=mock.Mock(return_value=[]), get_match_keys=mock.Mock(return_value=set()), count=mock.Mock(return_value=0)),
+            connection_service=mock.Mock(get_active=mock.Mock(return_value=[])),
+            activity_service=mock.Mock(get_recent_items=mock.Mock(return_value=[]), count=mock.Mock(return_value=0)),
+            report_service=mock.Mock(get_recent_items=mock.Mock(return_value=[])),
+            event_service=mock.Mock(find_all=mock.Mock(return_value=[])),
+            notification_service=mock.Mock(
+                get_in_app_notifications=mock.Mock(return_value=[
+                    mock.Mock(
+                        id=7,
+                        title="Report ready",
+                        notification_data="Your weekly report is ready.",
+                        href="/reports/7/view",
+                        notification_class="review",
+                        created_at=datetime(2026, 4, 2, 12, 0, 0),
+                    )
+                ]),
+                count_unread_in_app_notifications=mock.Mock(return_value=1),
+            ),
+            device_service=mock.Mock(),
+            queue_service=mock.Mock(),
+            skill_history_service=mock.Mock(),
+            timeline_service=mock.Mock(),
+        )
+
+        app = Flask(__name__)
+        with app.test_request_context("/"), mock.patch(
+            "runtime.providers.PermissionManager.get_current_user",
+            return_value=User(id=1, username="tester", display_name="Tester", experience_mode="everyday"),
+        ):
+            center = provider.get_notification_center_data()
+
+        self.assertEqual(center["unread_count"], 1)
+        self.assertEqual(center["items"][0]["title"], "Report ready")
+
     def test_project_board_template_renders_project_recommendations(self):
         app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
         app.secret_key = "test-secret"

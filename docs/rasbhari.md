@@ -494,4 +494,5 @@ This keeps replay windows bounded without turning every consumed event into a da
 
 - The `chat` route redirects to `OPEN_WEBUI_URL` when configured.
 - Notifications go to ntfy.sh by default; add the `email` tag to route through SendGrid instead.
+- Rasbhari also has a subtle in-product notification tray in the shared shell for high-signal notices such as report generation, important admin/operator interruptions, and other UX feedback that should stay visible without becoming noisy.
 - Some older docs used names like `Contracts` or `Shortcuts`; those are not part of the current registered application set.

@@ -63,12 +63,14 @@ class Server:
                 for app in self.registered_apps
                 if getattr(app, "is_active", False)
             }
+            notification_center = self.get_notification_center_data()
             return dict(
                 PermissionManager=PermissionManager,
                 current_role=PermissionManager.get_current_role(),
                 current_user=PermissionManager.get_current_user(),
                 Role=Role,
                 active_app_names=active_app_names,
+                notification_center=notification_center,
             )
 
     def register_app(self, app: App):
@@ -222,6 +224,23 @@ class Server:
             if request.is_json:
                 return jsonify({"message": "Logged out"}), 200
             return redirect('/login')
+
+        @self.app.route('/notifications/<int:notification_id>/read', methods=['POST'])
+        @login_required
+        def mark_notification_read(notification_id: int):
+            if not self.dashboard_provider:
+                return jsonify({"error": "Notification provider is not configured"}), 500
+            if not self.dashboard_provider.mark_notification_read(notification_id):
+                return jsonify({"error": "Notification not found"}), 404
+            return jsonify(self.get_notification_center_data()), 200
+
+        @self.app.route('/notifications/read-all', methods=['POST'])
+        @login_required
+        def mark_all_notifications_read():
+            if not self.dashboard_provider:
+                return jsonify({"error": "Notification provider is not configured"}), 500
+            self.dashboard_provider.mark_all_notifications_read()
+            return jsonify(self.get_notification_center_data()), 200
 
         @self.app.route('/apps')
         @system_admin_required
@@ -648,6 +667,45 @@ class Server:
         if not self.dashboard_provider:
             return {}
         return self.dashboard_provider.get_today_data()
+
+    def get_notification_center_data(self) -> dict:
+        if not self.dashboard_provider or not PermissionManager.is_authenticated():
+            return {"items": [], "unread_count": 0, "has_items": False}
+
+        notification_center = self.dashboard_provider.get_notification_center_data() or {}
+        items = list(notification_center.get("items") or [])
+        unread_count = int(notification_center.get("unread_count") or 0)
+
+        current_user = PermissionManager.get_current_user()
+        is_admin = current_user.get("is_admin", False) if isinstance(current_user, dict) else getattr(current_user, "is_admin", False)
+        experience_mode = (
+            current_user.get("experience_mode", "everyday")
+            if isinstance(current_user, dict)
+            else getattr(current_user, "experience_mode", "everyday")
+        )
+        if current_user and is_admin and experience_mode == "system":
+            admin_data = self.get_admin_control_plane_data()
+            operator_items = []
+            for index, item in enumerate((admin_data.get("attention_items") or [])[:3], start=1):
+                operator_items.append({
+                    "id": f"operator:{index}",
+                    "title": item.get("title") or "Operator notice",
+                    "body": item.get("body") or "",
+                    "href": item.get("href"),
+                    "class": "system",
+                    "created_at": None,
+                    "created_at_display": "Operator",
+                    "notification_id": None,
+                    "is_system": True,
+                })
+            if operator_items:
+                items = operator_items + items
+
+        return {
+            "items": items[:8],
+            "unread_count": unread_count,
+            "has_items": bool(items),
+        }
 
     def get_admin_control_plane_data(self) -> dict:
         apps_data = self.get_apps_data()

@@ -291,6 +291,58 @@ class RasbhariDashboardDataProvider(DashboardDataProvider):
             "events_today_count": len(recent_events_today),
         }
 
+    def get_notification_center_data(self) -> dict[str, object]:
+        current_user = PermissionManager.get_current_user() if has_request_context() else None
+        current_user_id = current_user.get("id") if isinstance(current_user, dict) else getattr(current_user, "id", None)
+        if not current_user_id:
+            return {"items": [], "unread_count": 0}
+
+        experience_mode = UserService.normalize_experience_mode(
+            current_user.get("experience_mode", "everyday")
+            if isinstance(current_user, dict)
+            else getattr(current_user, "experience_mode", "everyday")
+        )
+        if experience_mode == "everyday":
+            limit = 4
+        elif experience_mode == "structured":
+            limit = 6
+        else:
+            limit = 8
+
+        persisted_items = self.notification_service.get_in_app_notifications(current_user_id, limit=limit)
+        items = [
+            {
+                "id": f"in-app:{item.id}",
+                "notification_id": item.id,
+                "title": item.title or "Notice",
+                "body": item.notification_data,
+                "href": item.href,
+                "class": item.notification_class or "today",
+                "created_at": item.created_at.isoformat() if item.created_at else None,
+                "created_at_display": item.created_at.strftime("%b %d, %H:%M") if item.created_at else "",
+                "is_system": False,
+            }
+            for item in persisted_items
+        ]
+        unread_count = self.notification_service.count_unread_in_app_notifications(current_user_id)
+        return {
+            "items": items,
+            "unread_count": unread_count,
+            "has_items": bool(items),
+        }
+
+    def mark_notification_read(self, notification_id: int) -> bool:
+        current_user_id = PermissionManager.get_current_user_id() if has_request_context() else None
+        if not current_user_id:
+            return False
+        return self.notification_service.mark_as_read(notification_id, current_user_id)
+
+    def mark_all_notifications_read(self) -> bool:
+        current_user_id = PermissionManager.get_current_user_id() if has_request_context() else None
+        if not current_user_id:
+            return False
+        return self.notification_service.mark_all_as_read(current_user_id)
+
     def get_capture_data(self) -> dict[str, object]:
         recent_activities = []
         for activity in self.activity_service.get_recent_items(8):
