@@ -89,6 +89,70 @@ label span {
   border-radius: 20px;
   padding: 14px;
 }
+
+.connection-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: rgba(23, 23, 23, 0.08);
+  color: var(--text);
+}
+
+.badge.success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}
+
+.badge.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 17, 25, 0.6);
+  z-index: 50;
+}
+
+.confirm-overlay.active {
+  display: flex;
+}
+
+.confirm-panel {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 20px;
+  width: min(320px, 90vw);
+  border: 1px solid var(--border);
+  box-shadow: 0 35px 45px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirm-row {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.confirm-row .button {
+  padding: 8px 12px;
+  font-size: 12px;
+}
  
 .rules-grid {
   display: grid;
@@ -99,7 +163,7 @@ label span {
   border: 1px solid rgba(17, 17, 17, 0.08);
   border-radius: 14px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .rule-card > .rule-title {

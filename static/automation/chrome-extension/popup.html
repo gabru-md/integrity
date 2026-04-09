@@ -10,8 +10,6 @@
   <main class="panel">
     <div class="kicker">Rasbhari Capture</div>
     <h1>Chrome extension preview</h1>
-    <p class="copy">This downloadable bundle is the first hosted Rasbhari extension scaffold. It already gives you setup, current-page context, and the product shell for Capture Automation.</p>
-
     <section class="card">
       <div class="card-title">Current page</div>
       <div id="page-title" class="line strong">Loading...</div>
@@ -20,12 +18,15 @@
 
     <section class="card">
       <div class="card-title">Connection</div>
-      <div id="connection-state" class="line muted">Not configured yet</div>
+      <div class="connection-row">
+        <span id="connection-badge" class="badge muted">offline</span>
+        <span id="connection-state" class="line muted">Not configured yet</span>
+      </div>
       <a class="button secondary" href="options.html" target="_blank" rel="noreferrer">Open setup</a>
     </section>
 
     <section class="card">
-      <div class="card-title">Browser rules</div>
+      <div class="card-title">Browser Rules</div>
       <div id="rules-container" class="rules-grid"></div>
       <div id="rules-empty" class="line muted">Syncing rules from Rasbhari...</div>
     </section>
@@ -36,6 +37,16 @@
         <div class="line muted">No history yet.</div>
       </div>
     </section>
+
+    <div id="confirm-overlay" class="confirm-overlay hidden">
+      <div class="confirm-panel">
+        <div id="confirm-text" class="line strong">Trigger this action?</div>
+        <div class="confirm-row">
+          <button id="confirm-yes" class="button primary">Confirm</button>
+          <button id="confirm-cancel" class="button secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
   </main>
   <script src="popup.js"></script>
 </body>

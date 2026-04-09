@@ -21,11 +21,14 @@ function getStoredConfig() {
 
 function updateConnectionState(baseUrl, state, tone = "muted") {
   const stateEl = document.getElementById("connection-state");
-  if (!stateEl) return;
-  stateEl.textContent = state;
-  stateEl.className = `line ${tone}`;
-  if (baseUrl) {
-    stateEl.textContent += ` · ${baseUrl}`;
+  const badgeEl = document.getElementById("connection-badge");
+  if (stateEl) {
+    stateEl.textContent = state;
+    stateEl.className = `line ${tone}`;
+  }
+  if (badgeEl) {
+    badgeEl.textContent = tone === "success" ? "online" : tone === "error" ? "error" : "offline";
+    badgeEl.className = `badge ${tone === "success" ? "success" : tone === "error" ? "error" : ""}`;
   }
 }
 
@@ -78,20 +81,20 @@ function renderRules(rules, actionsLookup) {
       <div class="rule-actions"></div>
     `;
     const actionsEl = card.querySelector(".rule-actions");
-    if (actionsEl) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "button primary";
-      btn.textContent = rule.trigger_mode === "confirm" ? "Confirm trigger" : "Trigger now";
-      btn.addEventListener("click", async () => {
-        if (rule.trigger_mode === "confirm") {
-          const ok = confirm(`Trigger ${action ? action.name : "a browser action"} now?`);
-          if (!ok) return;
-        }
-        await executeRule(rule);
-      });
-      actionsEl.appendChild(btn);
-    }
+      if (actionsEl) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "button primary";
+        btn.textContent = rule.trigger_mode === "confirm" ? "Confirm trigger" : "Trigger now";
+        btn.addEventListener("click", () => {
+          if (rule.trigger_mode === "confirm") {
+            showConfirmation(rule, action);
+            return;
+          }
+          executeRule(rule);
+        });
+        actionsEl.appendChild(btn);
+      }
     container.appendChild(card);
   });
 }
@@ -142,6 +145,12 @@ function renderHistory(history) {
   });
 }
 
+function hideConfirmation() {
+  const overlay = document.getElementById("confirm-overlay");
+  if (overlay) overlay.classList.remove("active");
+  pendingRule = null;
+}
+
 async function executeRule(rule) {
   const tab = await getActiveTab();
   const context = {
@@ -180,6 +189,47 @@ async function executeRule(rule) {
       detail: `Failed: ${err.message}`,
     });
   }
+}
+
+let pendingRule = null;
+const confirmOverlay = document.getElementById("confirm-overlay");
+const confirmYes = document.getElementById("confirm-yes");
+const confirmCancel = document.getElementById("confirm-cancel");
+const confirmText = document.getElementById("confirm-text");
+
+function showConfirmation(rule, action) {
+  pendingRule = rule;
+  if (confirmText) {
+    confirmText.textContent = action && action.name
+      ? `Trigger ${action.name}?`
+      : "Trigger this browser action?";
+  }
+  if (confirmOverlay) {
+    confirmOverlay.classList.add("active");
+  }
+}
+
+if (confirmYes) {
+  confirmYes.addEventListener("click", async () => {
+    if (pendingRule) {
+      await executeRule(pendingRule);
+    }
+    hideConfirmation();
+  });
+}
+
+if (confirmCancel) {
+  confirmCancel.addEventListener("click", () => {
+    hideConfirmation();
+  });
+}
+
+if (confirmOverlay) {
+  confirmOverlay.addEventListener("click", (event) => {
+    if (event.target === confirmOverlay) {
+      hideConfirmation();
+    }
+  });
 }
 
 async function initPopup() {
