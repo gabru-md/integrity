@@ -27,7 +27,7 @@
             <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Observations</h2>
             <div class="mt-5 space-y-3">
                 {% for observation in report.observations %}
-                <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-4 text-sm text-slate-700 dark:border-gray-700 dark:bg-gray-700/30 dark:text-gray-200">
+                <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-4 text-sm text-slate-700 dark:border-gray-700 dark:bg-gray-700/10 dark:text-gray-200">
                     {{ observation }}
                 </div>
                 {% endfor %}
@@ -109,7 +109,7 @@
             <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Skill Growth</h2>
             <div class="mt-5 space-y-3">
                 {% for item in report.metrics.xp_earned.skills %}
-                <div class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm dark:border-gray-700 dark:bg-gray-700/30">
+                <div class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm dark:border-gray-700 dark:bg-gray-700/10">
                     <div>
                         <div class="font-semibold text-slate-800 dark:text-gray-100">{{ item.skill }}</div>
                         <div class="text-slate-500 dark:text-gray-400">Current level {{ item.level }}</div>
@@ -133,7 +133,7 @@
             <h2 class="text-2xl font-bold text-slate-800 dark:text-gray-100">Neglected Connections</h2>
             <div class="mt-5 space-y-3">
                 {% for item in report.sections.snapshot.neglected_connections %}
-                <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-4 text-sm dark:border-gray-700 dark:bg-gray-700/30">
+                <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-4 text-sm dark:border-gray-700 dark:bg-gray-700/10">
                     <div class="font-semibold text-slate-800 dark:text-gray-100">{{ item.name }}</div>
                     <div class="mt-1 text-slate-500 dark:text-gray-400">
                         {{ item.relationship_type }} · {{ item.status }}
