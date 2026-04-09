@@ -1,7 +1,9 @@
 import os
 from datetime import datetime
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
 
-from flask import redirect
+from flask import redirect, abort, send_file
 
 from apps.devices import devices_app
 from apps.events import events_app
@@ -165,6 +167,29 @@ class RasbhariServer(Server):
                 'automation.html',
                 automation_docs=automation_docs,
                 automation_status=automation_status,
+            )
+
+        @self.app.route('/automation/chrome-extension.zip')
+        @login_required
+        def download_chrome_extension_bundle():
+            extension_dir = os.path.join(basedir, "static", "automation", "chrome-extension")
+            if not os.path.isdir(extension_dir):
+                abort(404)
+
+            bundle = BytesIO()
+            with ZipFile(bundle, "w", ZIP_DEFLATED) as archive:
+                for root, _, files in os.walk(extension_dir):
+                    for filename in files:
+                        full_path = os.path.join(root, filename)
+                        archive_path = os.path.relpath(full_path, extension_dir)
+                        archive.write(full_path, archive_path)
+            bundle.seek(0)
+
+            return send_file(
+                bundle,
+                mimetype="application/zip",
+                as_attachment=True,
+                download_name="rasbhari-chrome-extension.zip",
             )
 
 

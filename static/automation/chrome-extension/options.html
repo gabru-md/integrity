@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rasbhari Capture Setup</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="surface">
+  <main class="panel panel-wide">
+    <div class="kicker">Setup</div>
+    <h1>Connect this extension to Rasbhari</h1>
+    <p class="copy">Enter the Rasbhari base URL and the API key from your profile. This preview bundle stores the values locally so the extension can be ready for sync APIs as they land.</p>
+
+    <form id="settings-form" class="form">
+      <label>
+        <span>Rasbhari Base URL</span>
+        <input id="base-url" type="url" placeholder="https://your-rasbhari.example">
+      </label>
+      <label>
+        <span>API Key</span>
+        <input id="api-key" type="text" placeholder="abc12">
+      </label>
+      <div class="row">
+        <button class="button primary" type="submit">Save settings</button>
+        <button id="clear-settings" class="button secondary" type="button">Clear</button>
+      </div>
+    </form>
+
+    <section class="card">
+      <div class="card-title">Install notes</div>
+      <ol class="list ordered">
+        <li>Open <span class="mono">chrome://extensions</span></li>
+        <li>Enable <span class="mono">Developer mode</span></li>
+        <li>Either load the unpacked folder or keep this zip as your downloaded bundle reference</li>
+        <li>Open the extension and finish setup here</li>
+      </ol>
+    </section>
+
+    <div id="status" class="status muted">Nothing saved yet.</div>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

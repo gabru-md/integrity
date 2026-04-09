@@ -1,0 +1,172 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f7f5ee;
+  --surface: rgba(255, 255, 255, 0.9);
+  --surface-strong: #ffffff;
+  --text: #1d2430;
+  --text-soft: #5d6675;
+  --border: rgba(29, 36, 48, 0.12);
+  --accent: #176a62;
+  --accent-strong: #0f544e;
+  --accent-soft: rgba(23, 106, 98, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121820;
+    --surface: rgba(27, 35, 48, 0.92);
+    --surface-strong: #1b2330;
+    --text: #f3f5f8;
+    --text-soft: #b9c0cd;
+    --border: rgba(243, 245, 248, 0.12);
+    --accent: #7dd3c6;
+    --accent-strong: #9fe5db;
+    --accent-soft: rgba(125, 211, 198, 0.14);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top left, var(--accent-soft), transparent 40%), var(--bg);
+  color: var(--text);
+}
+
+.surface {
+  min-width: 360px;
+}
+
+.panel {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-wide {
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100vh;
+  justify-content: center;
+}
+
+.kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.copy,
+.line,
+.list,
+.status,
+label span {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+
+.strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 14px;
+}
+
+.card-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 8px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button.primary {
+  background: var(--accent);
+  color: white;
+  border-color: transparent;
+}
+
+.button.secondary {
+  background: var(--surface-strong);
+  color: var(--text);
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+}
+
+input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.ordered {
+  list-style: decimal;
+}
+
+.mono {
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.status.success {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.status.muted {
+  color: var(--text-soft);
+}

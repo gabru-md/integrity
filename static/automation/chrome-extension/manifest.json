@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Rasbhari Capture",
+  "version": "0.1.0",
+  "description": "Chrome-side Capture Automation client for Rasbhari.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_title": "Rasbhari Capture",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  }
+}

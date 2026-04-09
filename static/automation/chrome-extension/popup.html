@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rasbhari Capture</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="surface">
+  <main class="panel">
+    <div class="kicker">Rasbhari Capture</div>
+    <h1>Chrome extension preview</h1>
+    <p class="copy">This downloadable bundle is the first hosted Rasbhari extension scaffold. It already gives you setup, current-page context, and the product shell for Capture Automation.</p>
+
+    <section class="card">
+      <div class="card-title">Current page</div>
+      <div id="page-title" class="line strong">Loading...</div>
+      <div id="page-domain" class="line muted">Checking tab context…</div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Connection</div>
+      <div id="connection-state" class="line muted">Not configured yet</div>
+      <a class="button secondary" href="options.html" target="_blank" rel="noreferrer">Open setup</a>
+    </section>
+
+    <section class="card">
+      <div class="card-title">What ships later</div>
+      <ul class="list">
+        <li>sync browser actions and rules from Rasbhari</li>
+        <li>manual, confirm, and narrow automatic triggers</li>
+        <li>local history of what matched and what was sent</li>
+      </ul>
+    </section>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
