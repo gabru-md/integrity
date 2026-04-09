@@ -15,6 +15,7 @@ Use it as the primary place to find:
 - [AI Command Layer](./AI.md)
 - [Automation](./automation.md)
 - [Backup And Restore](./backup-restore.md)
+- [Browser Action Model](./browser-actions.md)
 - [Browser Extension Spec](./browser-extension-spec.md)
 - [Experience Modes](./experience-modes.md)
 - [Import Foundation](./imports.md)

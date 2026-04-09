@@ -147,6 +147,8 @@ Browser actions are the generic actions the extension understands.
 
 Rasbhari should map these browser-side actions into Activities, events, project updates, or quick-log flows.
 
+The detailed shared action contract lives in [browser-actions.md](browser-actions.md).
+
 ### `trigger_activity`
 
 Meaning:

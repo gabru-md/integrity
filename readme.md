@@ -6,6 +6,7 @@ Useful entry points:
 
 - [Docs Hub](docs/README.md)
 - [Automation](docs/automation.md)
+- [Browser Action Model](docs/browser-actions.md)
 - [Browser Extension Spec](docs/browser-extension-spec.md)
 - [Experience Modes](docs/experience-modes.md)
 - [AI Command Layer](docs/AI.md)

@@ -89,6 +89,7 @@ It should:
 The browser extension should be configurable by Rasbhari itself. Rasbhari should remain the source of truth for action definitions, mappings, and rule behavior.
 
 The detailed product contract for this surface lives in [browser-extension-spec.md](browser-extension-spec.md).
+The detailed shared browser action vocabulary lives in [browser-actions.md](browser-actions.md).
 
 ### 2. Desktop Agents
 
