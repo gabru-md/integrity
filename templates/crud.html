@@ -94,6 +94,14 @@
                                     <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300 sr-only">{{ item.enabled ? 'Enabled' : 'Disabled' }}</span>
                                 </label>
                             </template>
+                            <template v-else-if="isStructuredValue(item[attr.name], attr)">
+                                <details class="inline-block max-w-md align-top">
+                                    <summary class="cursor-pointer text-xs font-semibold text-[var(--accent)]">
+                                        View {{ getStructuredLabel(item[attr.name]) }}
+                                    </summary>
+                                    <pre class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-2xl bg-[var(--surface-muted)] px-3 py-2 text-xs leading-5 text-[var(--text-soft)]">{{ prettyValue(item[attr.name]) }}</pre>
+                                </details>
+                            </template>
                             <template v-else>
                                 {{ formatValue(item[attr.name], attr.name) }}
                             </template>
@@ -193,7 +201,17 @@
                                     {{ attr.description }}
                                 </p>
 
-                                <input :type="getInputType(attr)"
+                                <textarea v-if="getInputType(attr) === 'json'"
+                                          :id="attr.name"
+                                          :name="attr.name"
+                                          v-model="formData[attr.name]"
+                                          :placeholder="`Enter ${formatKey(attr.name)} as JSON`"
+                                          :required="attr.required"
+                                          rows="6"
+                                          class="font-mono text-sm"></textarea>
+
+                                <input v-else
+                                       :type="getInputType(attr)"
                                        :id="attr.name"
                                        :name="attr.name"
                                        v-model="formData[attr.name]"
@@ -272,7 +290,7 @@
                     const lowerSearch = searchTerm.value.toLowerCase();
                     data = data.filter(item =>
                         Object.values(item).some(val =>
-                            String(val).toLowerCase().includes(lowerSearch)
+                            prettyValue(val).toLowerCase().includes(lowerSearch)
                         )
                     );
                 }
@@ -293,6 +311,33 @@
               // Extract filename if path includes directories
               const filename = value.split('/').pop();
               return `/download/${filename}`;
+            }
+
+            function isObjectLike(value) {
+                return value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date);
+            }
+
+            function isStructuredAttribute(attr) {
+                const type = (attr?.type || '').toLowerCase();
+                return type.includes('dict') || type.includes('mapping') || type.includes('json');
+            }
+
+            function isStructuredValue(value, attr = null) {
+                return isObjectLike(value) || isStructuredAttribute(attr);
+            }
+
+            function prettyValue(value) {
+                if (value === null || value === undefined) return 'N/A';
+                if (typeof value === 'string') return value;
+                try {
+                    return JSON.stringify(value, null, 2);
+                } catch (error) {
+                    return String(value);
+                }
+            }
+
+            function getStructuredLabel(value) {
+                return Array.isArray(value) ? 'list' : 'map';
             }
 
             function formatValue(value, key) {
@@ -323,6 +368,13 @@
                     return value.join(', ');
                 }
 
+                if (isStructuredValue(value, attrDef)) {
+                    const keys = Object.keys(value || {});
+                    if (!keys.length) return 'Empty map';
+                    const preview = keys.slice(0, 3).join(', ');
+                    return `${keys.length} field${keys.length === 1 ? '' : 's'}: ${preview}${keys.length > 3 ? ', ...' : ''}`;
+                }
+
                 if (strValue.length > 50) {
                     return strValue.substring(0, 47) + '...';
                 }
@@ -336,6 +388,7 @@
                 if (type && (type.includes('bool') || type.includes('boolean'))) return 'checkbox';
                 if (type && type.includes('datetime')) return 'datetime-local';
                 if (type && (type.includes('int') || type.includes('float'))) return 'number';
+                if (isStructuredAttribute(attr)) return 'json';
                 return 'text';
             }
 
@@ -396,18 +449,34 @@
             async function handleCrudFormSubmission() {
                 isSubmitting.value = true;
 
-                const data = { ...formData.value };
-                let method, url;
-
-                if (formMode.value === 'edit' && itemId.value) {
-                    method = 'PUT';
-                    url = `${fetchUrl.value}${itemId.value}`;
-                } else {
-                    method = 'POST';
-                    url = fetchUrl.value;
-                }
-
                 try {
+                    const data = { ...formData.value };
+                    let method, url;
+
+                    editableAttributes.value.forEach(attr => {
+                        if (getInputType(attr) !== 'json') return;
+                        const rawValue = data[attr.name];
+                        if (rawValue === '' || rawValue === null || rawValue === undefined) {
+                            data[attr.name] = {};
+                            return;
+                        }
+                        if (typeof rawValue === 'string') {
+                            try {
+                                data[attr.name] = JSON.parse(rawValue);
+                            } catch (error) {
+                                throw new Error(`${formatKey(attr.name)} must be valid JSON.`);
+                            }
+                        }
+                    });
+
+                    if (formMode.value === 'edit' && itemId.value) {
+                        method = 'PUT';
+                        url = `${fetchUrl.value}${itemId.value}`;
+                    } else {
+                        method = 'POST';
+                        url = fetchUrl.value;
+                    }
+
                     // Filter out any undefined or null values if needed, though Pydantic usually handles it.
                     // The v-model binding should ensure values exist.
                     await fetchWithRetry(url, {
@@ -419,7 +488,7 @@
                     await fetchAndRenderRecentData();
 
                 } catch (e) {
-                    alert(`Failed to ${formMode.value === 'edit' ? 'update' : 'create'} entry. Check console for details.`);
+                    alert(e?.message || `Failed to ${formMode.value === 'edit' ? 'update' : 'create'} entry. Check console for details.`);
                     console.error(`Error during ${method} request:`, e);
                 } finally {
                     isSubmitting.value = false;
@@ -452,6 +521,8 @@
                     // For booleans, initialize to false or a default you prefer (e.g., matching the Pydantic default)
                     if (getInputType(attr) === 'checkbox') {
                          newFormData[attr.name] = false;
+                    } else if (getInputType(attr) === 'json') {
+                         newFormData[attr.name] = '{}';
                     } else if (getInputType(attr) === 'select' && attr.widget_options.length > 0) {
                          newFormData[attr.name] = attr.widget_options[0];
                     } else {
@@ -510,6 +581,10 @@
                         value = !!value; // Convert to strict boolean: true/false
                     }
 
+                    if (getInputType(attr) === 'json') {
+                        value = prettyValue(value || {});
+                    }
+
                     newFormData[attr.name] = value !== undefined && value !== null ? value : '';
                 });
                 formData.value = newFormData;
@@ -543,6 +618,9 @@
                 // Methods
                 formatKey,
                 formatValue,
+                prettyValue,
+                isStructuredValue,
+                getStructuredLabel,
                 getInputType,
                 openCreateModal,
                 openEditModal,
