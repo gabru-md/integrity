@@ -122,6 +122,14 @@ For the first version, manual resync plus startup sync is enough.
 
 The extension should think in terms of a single synced automation package.
 
+Rasbhari now exposes the first concrete extension-facing API under `/automation/api/extension`:
+
+- `GET /status`
+- `GET /sync`
+- `POST /execute`
+
+These endpoints use the existing Rasbhari auth model, so the extension can authenticate with the same `base_url` and `api_key` pattern the rest of the product already supports.
+
 That package should conceptually contain:
 
 - `instance`

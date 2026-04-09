@@ -73,6 +73,12 @@ Automation is not meant to become a separate meaning system. It should prefer ex
 
 Rasbhari now also exposes `/automation` as the in-product home for this vertical. That page introduces the Automation mental model, explains the browser-extension workflow, and will later surface connection and setup status as the Capture Automation client and APIs land.
 
+The first extension-facing API surface now lives under `/automation/api/extension`. It supports:
+
+- `GET /automation/api/extension/status` for API-key or session-backed connection checks
+- `GET /automation/api/extension/sync` to fetch enabled Browser Actions and Browser Rules for the current user
+- `POST /automation/api/extension/execute` to execute a configured Browser Action back into Activities, Events, project updates, or quick-log prefills
+
 ## Current Apps
 
 Rasbhari currently registers these apps in [server.py](server.py):

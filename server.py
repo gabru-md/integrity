@@ -3,7 +3,7 @@ from datetime import datetime
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from flask import redirect, abort, send_file
+from flask import redirect, abort, send_file, jsonify, request
 
 from apps.devices import devices_app
 from apps.events import events_app
@@ -19,7 +19,7 @@ from apps.connections import connections_app
 from apps.reports import reports_app
 from apps.skills import skills_app
 from apps.users import users_app
-from gabru.auth import login_required
+from gabru.auth import login_required, PermissionManager
 from gabru.flask.server import Server
 from gabru.flask.util import render_flask_template
 from runtime.providers import (
@@ -29,6 +29,7 @@ from runtime.providers import (
     RasbhariAuthProvider,
     RasbhariDashboardDataProvider,
 )
+from services.browser_automation import BrowserAutomationService
 from services.docs import DocsService
 
 basedir = os.path.dirname(__file__)
@@ -103,6 +104,7 @@ class RasbhariServer(Server):
 
     def setup_additional_routes(self):
         docs_service = DocsService(os.path.join(basedir, "docs"))
+        browser_automation_service = BrowserAutomationService()
 
         @self.app.route('/chat')
         @login_required
@@ -164,14 +166,65 @@ class RasbhariServer(Server):
             automation_status = {
                 "extension_delivery_ready": False,
                 "chrome_extension_ready": False,
-                "sync_api_ready": False,
-                "notes": "This page is the home for Capture Automation. Connection and live setup status will land here as the browser extension and sync APIs ship."
+                "sync_api_ready": True,
+                "notes": "This page is the home for Capture Automation. The extension sync and execution API is now available; richer live setup status still lands here next."
             }
             return render_flask_template(
                 'automation.html',
                 automation_docs=automation_docs,
                 automation_status=automation_status,
             )
+
+        @self.app.route('/automation/api/extension/status', methods=['GET'])
+        @login_required
+        def automation_extension_status():
+            current_user = PermissionManager.get_current_user() or {}
+            return jsonify({
+                "ok": True,
+                "authenticated": True,
+                "user": current_user,
+                "server_time": datetime.utcnow().isoformat() + "Z",
+            }), 200
+
+        @self.app.route('/automation/api/extension/sync', methods=['GET'])
+        @login_required
+        def automation_extension_sync():
+            current_user = PermissionManager.get_current_user() or {}
+            sync_package = browser_automation_service.build_sync_package()
+            return jsonify({
+                "ok": True,
+                "user": current_user,
+                **sync_package,
+            }), 200
+
+        @self.app.route('/automation/api/extension/execute', methods=['POST'])
+        @login_required
+        def automation_extension_execute():
+            data = request.get_json(silent=True) or {}
+            browser_action_id = data.get("browser_action_id")
+            if browser_action_id in ("", None):
+                return jsonify({"error": "browser_action_id is required"}), 400
+            try:
+                browser_action_id = int(browser_action_id)
+            except (TypeError, ValueError):
+                return jsonify({"error": "browser_action_id must be an integer"}), 400
+
+            user_id = PermissionManager.get_current_user_id()
+            if not user_id:
+                return jsonify({"error": "Login required"}), 401
+
+            try:
+                result = browser_automation_service.execute_browser_action(
+                    user_id=user_id,
+                    browser_action_id=browser_action_id,
+                    browser_context=data.get("browser_context") or {},
+                    override_payload=data.get("payload") or {},
+                )
+                return jsonify({"ok": True, "result": result}), 200
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 400
+            except Exception as exc:
+                return jsonify({"error": str(exc)}), 500
 
         @self.app.route('/automation/chrome-extension.zip')
         @login_required
