@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from gabru.db.db import DB
@@ -51,7 +52,7 @@ class BrowserActionService(CRUDService[BrowserAction]):
             action.target_event_type,
             action.target_tags,
             action.target_description,
-            action.default_payload or {},
+            json.dumps(action.default_payload or {}),
             action.enabled,
         )
 
@@ -68,7 +69,7 @@ class BrowserActionService(CRUDService[BrowserAction]):
             target_event_type=row[8],
             target_tags=row[9] or [],
             target_description=row[10],
-            default_payload=row[11] or {},
+            default_payload=json.loads(row[11]) if isinstance(row[11], str) and row[11] else row[11] or {},
             enabled=row[12],
         )
 

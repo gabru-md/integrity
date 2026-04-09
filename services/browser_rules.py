@@ -1,5 +1,6 @@
 from typing import List
 
+import json
 from gabru.db.db import DB
 from gabru.db.service import CRUDService
 from model.browser_rule import BrowserRule
@@ -64,7 +65,7 @@ class BrowserRuleService(CRUDService[BrowserRule]):
             rule.url_prefix,
             rule.selection_required,
             rule.payload_behavior,
-            rule.payload_mapping or {},
+            json.dumps(rule.payload_mapping or {}),
             rule.priority,
             rule.enabled,
         )
@@ -85,7 +86,7 @@ class BrowserRuleService(CRUDService[BrowserRule]):
             url_prefix=row[11],
             selection_required=row[12],
             payload_behavior=row[13],
-            payload_mapping=row[14] or {},
+            payload_mapping=json.loads(row[14]) if isinstance(row[14], str) and row[14] else row[14] or {},
             priority=row[15],
             enabled=row[16],
         )
