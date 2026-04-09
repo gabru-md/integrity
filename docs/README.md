@@ -18,6 +18,7 @@ Use it as the primary place to find:
 - [Browser Action Model](./browser-actions.md)
 - [Browser Extension Spec](./browser-extension-spec.md)
 - [Browser Rule Model](./browser-rules.md)
+- [Browser Sync And Local History](./browser-sync-history.md)
 - [Experience Modes](./experience-modes.md)
 - [Import Foundation](./imports.md)
 - [macOS Local Signals](./mac-agent.md)

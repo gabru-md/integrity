@@ -383,6 +383,8 @@ The extension should not rely on hiding machine-readable context in the event de
 
 The extension should treat Rasbhari as the configuration authority.
 
+The detailed sync and local-history contract lives in [browser-sync-history.md](browser-sync-history.md).
+
 ### Rasbhari should own:
 
 - browser action definitions

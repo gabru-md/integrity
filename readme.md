@@ -9,6 +9,7 @@ Useful entry points:
 - [Browser Action Model](docs/browser-actions.md)
 - [Browser Extension Spec](docs/browser-extension-spec.md)
 - [Browser Rule Model](docs/browser-rules.md)
+- [Browser Sync And Local History](docs/browser-sync-history.md)
 - [Experience Modes](docs/experience-modes.md)
 - [AI Command Layer](docs/AI.md)
 - [Backup And Restore](docs/backup-restore.md)
