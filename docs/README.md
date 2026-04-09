@@ -13,6 +13,7 @@ Use it as the primary place to find:
 ## Core Docs
 
 - [AI Command Layer](./AI.md)
+- [Automation](./automation.md)
 - [Backup And Restore](./backup-restore.md)
 - [Experience Modes](./experience-modes.md)
 - [Import Foundation](./imports.md)

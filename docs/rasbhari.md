@@ -6,6 +6,8 @@ For temporary hosted demos, Rasbhari can also fall back to a single shared Postg
 
 Rasbhari now also has a formal pacing model documented in [experience-modes.md](experience-modes.md): the system should be deep by capability but shallow by default, with `Everyday`, `Structured`, and `System` tiers guiding which surfaces feel primary for different users.
 
+Rasbhari now also defines `Automation` as a formal product vertical, documented in [automation.md](automation.md). Automation is the broader area responsible for reducing capture friction and turning trustworthy signals into real Rasbhari events, while `Capture Automation` is the first sub-track covering browser extensions, desktop agents, mobile shortcuts, and later sensor-based capture.
+
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.1%2B-green)](https://flask.palletsprojects.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12%2B-blue)](https://www.postgresql.org/)
@@ -33,6 +35,7 @@ Rasbhari now also has a formal pacing model documented in [experience-modes.md](
 - Preserves a separate operational dashboard with reliability cards, pinned widgets, drag reordering, action-first controls, and a universal timeline.
 - Includes a low-friction macOS local signal collector that can autonomously emit normalized raw machine events into the event bus.
 - Includes a rule-based session inference layer that turns raw local signals into grounded session boundary events such as coding, writing, planning, and research.
+- Defines an `Automation` vertical so capture can become more ambient over time without breaking the event-first Rasbhari model.
 - Uses a typed notification model so outbound alerts are classed as `urgent`, `today`, `review`, `suggestion`, `digest`, or `system` instead of a single generic stream.
 - Includes a shared import foundation so future calendar, device, and external adapters normalize records once, dedupe them, and emit compatible events into the same event bus.
 - Includes a native `Rasbhari AI` command layer that can interpret natural-language commands, route them through app-specific resolvers, and execute safe actions through the existing apps and event bus.
@@ -52,6 +55,21 @@ The product now defines three formal experience modes:
 This is a pacing model, not a capability split. Lower tiers should still feel complete, while deeper tiers reveal more of the Rasbhari system when the user actually wants it.
 
 The full tier map and product rationale live in [experience-modes.md](experience-modes.md).
+
+## Automation
+
+Rasbhari should not depend forever on manual event entry for everything important.
+
+The product now formally treats `Automation` as its own vertical. The goal is to reduce capture friction while keeping the system explainable, privacy-safe, and aligned with the existing event bus.
+
+The first sub-track is `Capture Automation`, which covers:
+
+- browser extensions as the first direct capture client
+- desktop agents that can emit low-friction machine-side signals
+- mobile shortcuts for quick assisted capture
+- later environmental sensors and dedicated ambient devices
+
+Automation is not meant to become a separate meaning system. It should prefer existing Activities where possible, emit real events, and let the rest of Rasbhari react normally. The full direction lives in [automation.md](automation.md).
 
 ## Current Apps
 
