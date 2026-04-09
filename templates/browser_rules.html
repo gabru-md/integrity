@@ -1,0 +1,467 @@
+{% extends "index.html" %}
+{% block title %}Browser Rules{% endblock %}
+{% block shell_title %}Browser Rules{% endblock %}
+{% block shell_subtitle %}Define when browser context should offer or trigger one of your Browser Actions, using clear site matching and calm trigger modes.{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<div id="browser-rules-app" class="space-y-6 px-1 py-2">
+    <header class="shell-card hero-card px-6 py-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Capture Automation</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Browser Rules</h1>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Rules decide when a browser context should expose or run one of your Browser Actions. Start with what should happen, then narrow where and how it should match.</p>
+            </div>
+            <div class="flex items-start gap-3">
+                <button @click="openCreateModal" class="btn-primary px-4 py-3 text-sm">Create Browser Rule</button>
+                {% set instructions_inline = true %}
+                {% include "_app_instructions.html" %}
+            </div>
+        </div>
+    </header>
+
+    {% raw %}
+    <section class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Rules</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ allRules.length }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Configured browser rules</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Automatic</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ automaticCount }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Rules that can act directly</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Confirm</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ confirmCount }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Rules that ask first</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Enabled</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ enabledCount }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Available for future sync</div>
+        </article>
+    </section>
+
+    <section class="shell-card p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">If A On B Then C</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">When browser context should react</h2>
+            </div>
+            <input type="text" v-model="searchTerm" placeholder="Search browser rules..." class="max-w-xl">
+        </div>
+
+        <div v-if="loading" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
+            Loading browser rules...
+        </div>
+        <div v-else-if="error" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--danger)]">
+            Failed to load browser rules.
+        </div>
+        <div v-else-if="filteredRules.length === 0" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
+            No browser rules yet. Create one to decide when your Browser Actions should appear or fire.
+        </div>
+
+        <div v-else class="mt-6 grid gap-5 xl:grid-cols-2">
+            <article v-for="item in filteredRules" :key="item.id" class="rounded-3xl border border-[var(--border)] bg-[var(--surface-soft)] p-5 shadow-sm">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-xl font-extrabold text-[var(--text)]">{{ item.name }}</h3>
+                            <span class="ui-badge">{{ item.trigger_mode }}</span>
+                            <span class="ui-badge">{{ item.condition_type }}</span>
+                            <span v-if="!item.enabled" class="ui-badge">disabled</span>
+                        </div>
+                        <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ ruleSummary(item) }}</p>
+                    </div>
+                    <div class="flex shrink-0 flex-wrap gap-2">
+                        <button @click="openEditModal(item)" class="btn-secondary px-4 py-2 text-sm">Edit</button>
+                        <button @click="handleDelete(item.id)" class="btn-ghost px-4 py-2 text-sm">Delete</button>
+                    </div>
+                </div>
+
+                <div class="mt-5 grid gap-3 md:grid-cols-2">
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Target</div>
+                        <div class="mt-2 text-sm font-bold text-[var(--text)]">{{ browserActionLabel(item.browser_action_id) }}</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Priority {{ item.priority }} · {{ payloadBehaviorLabel(item.payload_behavior) }}</div>
+                    </div>
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Match Scope</div>
+                        <div class="mt-2 text-sm text-[var(--text)]">{{ scopeSummary(item) }}</div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/50 backdrop-blur-sm dark:bg-gray-900/80">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="modal-surface relative transform overflow-hidden text-left transition-all sm:my-8 sm:w-full sm:max-w-3xl">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-start justify-between border-b border-[var(--border)] pb-3">
+                        <h3 class="text-xl font-bold text-[var(--text)]">{{ formMode === 'create' ? 'Create New' : 'Edit' }} Browser Rule</h3>
+                        <button type="button" @click="isModalOpen = false" class="btn-ghost h-10 w-10 rounded-2xl p-0">✕</button>
+                    </div>
+
+                    <form @submit.prevent="handleCrudFormSubmission" class="mt-6 space-y-5">
+                        <section class="grid gap-4 md:grid-cols-2">
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-sm font-medium text-[var(--text)]">Rule Name</label>
+                                <input v-model="formData.name" type="text" placeholder="Confirm docs research save" required>
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-sm font-medium text-[var(--text)]">Browser Action Target</label>
+                                <select v-model="formData.browser_action_id" required>
+                                    <option v-for="option in browserActionOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                                </select>
+                            </div>
+                        </section>
+
+                        <section class="grid gap-4 md:grid-cols-3">
+                            <div class="rounded-2xl border p-4 transition"
+                                 :class="formData.trigger_mode === option.value ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-500/60 dark:bg-indigo-950/30' : 'border-[var(--border)] bg-[var(--surface-soft)]'"
+                                 v-for="option in triggerModeOptions" :key="option.value">
+                                <button type="button" class="w-full text-left" @click="formData.trigger_mode = option.value">
+                                    <div class="text-sm font-bold text-[var(--text)]">{{ option.label }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ option.description }}</div>
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="grid gap-4 md:grid-cols-2">
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-sm font-medium text-[var(--text)]">Condition</label>
+                                <select v-model="formData.condition_type">
+                                    <option v-for="option in conditionOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                                </select>
+                                <p class="text-xs leading-5 text-[var(--text-soft)]">{{ selectedConditionDescription }}</p>
+                            </div>
+                            <div v-if="formData.condition_type === 'active_duration'" class="flex flex-col space-y-1">
+                                <label class="text-sm font-medium text-[var(--text)]">Active Duration Seconds</label>
+                                <input v-model="formData.active_duration_seconds" type="number" min="1" placeholder="120">
+                            </div>
+                        </section>
+
+                        <section class="grid gap-4 md:grid-cols-2">
+                            <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 md:col-span-2">
+                                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Where It Applies</div>
+                                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                                    <div class="flex flex-col space-y-1">
+                                        <label class="text-sm font-medium text-[var(--text)]">Domain Equals</label>
+                                        <input v-model="formData.domain_equals" type="text" placeholder="docs.python.org">
+                                    </div>
+                                    <div class="flex flex-col space-y-1">
+                                        <label class="text-sm font-medium text-[var(--text)]">Domain Suffix</label>
+                                        <input v-model="formData.domain_suffix" type="text" placeholder="python.org">
+                                    </div>
+                                    <div class="flex flex-col space-y-1">
+                                        <label class="text-sm font-medium text-[var(--text)]">Domain List</label>
+                                        <input v-model="formData.domain_in_text" type="text" placeholder="github.com, gitlab.com">
+                                    </div>
+                                    <div class="flex flex-col space-y-1">
+                                        <label class="text-sm font-medium text-[var(--text)]">URL Contains</label>
+                                        <input v-model="formData.url_contains" type="text" placeholder="/pull/">
+                                    </div>
+                                    <div class="flex flex-col space-y-1 md:col-span-2">
+                                        <label class="text-sm font-medium text-[var(--text)]">URL Prefix</label>
+                                        <input v-model="formData.url_prefix" type="text" placeholder="https://docs.python.org/3/">
+                                    </div>
+                                    <label class="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-4 md:col-span-2">
+                                        <input v-model="formData.selection_required" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        <span class="text-sm leading-6 text-[var(--text-soft)]">Only match when selected text exists.</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-sm font-medium text-[var(--text)]">Payload Mapping</label>
+                                <textarea v-model="formData.payload_mapping" rows="5" class="font-mono text-sm" placeholder='{"source":"browser_rule"}'></textarea>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Payload Behavior</div>
+                                    <select class="mt-3" v-model="formData.payload_behavior">
+                                        <option v-for="option in payloadBehaviorOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                                    </select>
+                                </div>
+                                <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Priority</div>
+                                    <input class="mt-3" v-model="formData.priority" type="number" min="1" placeholder="100">
+                                    <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Lower numbers win when more than one rule matches.</p>
+                                </div>
+                                <label class="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
+                                    <input v-model="formData.enabled" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span>
+                                        <span class="block text-sm font-bold text-[var(--text)]">Enabled</span>
+                                        <span class="block text-sm leading-6 text-[var(--text-soft)]">Make this rule available to future extension sync.</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </section>
+
+                        <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Summary</div>
+                            <div class="mt-2 text-sm font-bold text-[var(--text)]">{{ liveSummary }}</div>
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">This is the rule summary the extension will later sync and evaluate.</div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 border-t border-[var(--border)] pt-4">
+                            <button type="button" @click="isModalOpen = false" class="btn-secondary px-4 py-3">Cancel</button>
+                            <button type="submit" :disabled="isSubmitting" class="btn-primary px-4 py-3">
+                                {{ isSubmitting ? 'Saving...' : (formMode === 'create' ? 'Save Browser Rule' : 'Update Browser Rule') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endraw %}
+</div>
+
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    const RUNTIME_FORM_OPTIONS = {{ runtime_form_options | default({}) | tojson | safe }};
+
+    createApp({
+        setup() {
+            const allRules = ref([]);
+            const loading = ref(true);
+            const error = ref(false);
+            const searchTerm = ref('');
+            const isModalOpen = ref(false);
+            const isSubmitting = ref(false);
+            const formMode = ref('create');
+            const itemId = ref(null);
+            const browserActionOptions = ref(RUNTIME_FORM_OPTIONS.browser_action_id || []);
+            const triggerModeOptions = [
+                { value: 'manual', label: 'Manual', description: 'Only surface this rule when the user explicitly invokes the matching browser action.' },
+                { value: 'confirm', label: 'Confirm', description: 'Ask before sending the matched browser action into Rasbhari.' },
+                { value: 'automatic', label: 'Automatic', description: 'Trigger directly when the rule matches. Use only for low-risk captures.' },
+            ];
+            const conditionOptions = [
+                { value: 'popup_action', label: 'Popup Action', description: 'User selects an action from the extension popup.' },
+                { value: 'context_menu', label: 'Context Menu', description: 'User invokes the action from the page, link, or selection context menu.' },
+                { value: 'toolbar_click', label: 'Toolbar Click', description: 'Rule is offered when the extension icon is used.' },
+                { value: 'selection_exists', label: 'Selection Exists', description: 'Only match when text selection is present on the page.' },
+                { value: 'page_loaded', label: 'Page Loaded', description: 'Evaluate when a page load finishes and scope matches.' },
+                { value: 'active_duration', label: 'Active Duration', description: 'Evaluate after the tab has stayed active for a chosen duration.' },
+            ];
+            const payloadBehaviorOptions = [
+                { value: 'merge_browser_context', label: 'Merge Browser Context' },
+                { value: 'merge_selected_fields', label: 'Merge Selected Fields' },
+                { value: 'minimal_context', label: 'Minimal Context' },
+            ];
+            const formData = ref({});
+
+            const enabledCount = computed(() => allRules.value.filter(item => item.enabled).length);
+            const automaticCount = computed(() => allRules.value.filter(item => item.trigger_mode === 'automatic').length);
+            const confirmCount = computed(() => allRules.value.filter(item => item.trigger_mode === 'confirm').length);
+            const selectedConditionDescription = computed(() => {
+                const match = conditionOptions.find(option => option.value === formData.value.condition_type);
+                return match ? match.description : '';
+            });
+            const filteredRules = computed(() => {
+                if (!searchTerm.value.trim()) return allRules.value;
+                const query = searchTerm.value.trim().toLowerCase();
+                return allRules.value.filter(item =>
+                    [item.name, item.trigger_mode, item.condition_type, item.domain_equals, item.domain_suffix, item.url_contains, item.url_prefix]
+                        .filter(Boolean)
+                        .some(value => String(value).toLowerCase().includes(query))
+                );
+            });
+
+            const liveSummary = computed(() => {
+                const actionLabel = browserActionLabel(formData.value.browser_action_id);
+                return `${labelFor(formData.value.trigger_mode, triggerModeOptions)} rule: if ${labelFor(formData.value.condition_type, conditionOptions).toLowerCase()} matches on ${scopeSummary(formData.value)}, then use ${actionLabel}.`;
+            });
+
+            function labelFor(value, options) {
+                const match = options.find(option => option.value === value);
+                return match ? match.label : value || 'Unknown';
+            }
+
+            function browserActionLabel(browserActionId) {
+                const match = browserActionOptions.value.find(option => String(option.value) === String(browserActionId || ''));
+                return match ? match.label : 'Choose Browser Action';
+            }
+
+            function payloadBehaviorLabel(value) {
+                return labelFor(value, payloadBehaviorOptions);
+            }
+
+            function scopeSummary(item) {
+                const parts = [];
+                if (item.domain_equals) parts.push(`domain = ${item.domain_equals}`);
+                if (item.domain_suffix) parts.push(`suffix = ${item.domain_suffix}`);
+                const domains = Array.isArray(item.domain_in) ? item.domain_in : String(item.domain_in || '').split(',').map(s => s.trim()).filter(Boolean);
+                if (domains.length) parts.push(`domain in ${domains.join(', ')}`);
+                if (item.url_contains) parts.push(`URL contains ${item.url_contains}`);
+                if (item.url_prefix) parts.push(`URL starts ${item.url_prefix}`);
+                if (item.selection_required) parts.push(`selection required`);
+                if (item.condition_type === 'active_duration' && item.active_duration_seconds) parts.push(`active ${item.active_duration_seconds}s`);
+                return parts.length ? parts.join(' · ') : 'all pages';
+            }
+
+            function ruleSummary(item) {
+                return `${labelFor(item.trigger_mode, triggerModeOptions)} when ${labelFor(item.condition_type, conditionOptions).toLowerCase()} matches on ${scopeSummary(item)}.`;
+            }
+
+            function blankForm() {
+                return {
+                    name: '',
+                    browser_action_id: '',
+                    trigger_mode: 'confirm',
+                    condition_type: 'popup_action',
+                    active_duration_seconds: '',
+                    domain_equals: '',
+                    domain_suffix: '',
+                    domain_in_text: '',
+                    url_contains: '',
+                    url_prefix: '',
+                    selection_required: false,
+                    payload_behavior: 'merge_browser_context',
+                    payload_mapping: '{}',
+                    priority: 100,
+                    enabled: true,
+                };
+            }
+
+            async function fetchJson(url, options = {}) {
+                const response = await fetch(url, {
+                    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                    ...options,
+                });
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => ({}));
+                    throw new Error(payload.error || `Request failed with status ${response.status}`);
+                }
+                if (response.status === 204) return null;
+                return response.json();
+            }
+
+            async function loadRules() {
+                loading.value = true;
+                error.value = false;
+                try {
+                    allRules.value = await fetchJson('/browserrules/');
+                } catch (err) {
+                    console.error(err);
+                    error.value = true;
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            function openCreateModal() {
+                formMode.value = 'create';
+                itemId.value = null;
+                formData.value = blankForm();
+                isModalOpen.value = true;
+            }
+
+            function openEditModal(item) {
+                formMode.value = 'edit';
+                itemId.value = item.id;
+                formData.value = {
+                    name: item.name || '',
+                    browser_action_id: item.browser_action_id ?? '',
+                    trigger_mode: item.trigger_mode || 'confirm',
+                    condition_type: item.condition_type || 'popup_action',
+                    active_duration_seconds: item.active_duration_seconds ?? '',
+                    domain_equals: item.domain_equals || '',
+                    domain_suffix: item.domain_suffix || '',
+                    domain_in_text: (item.domain_in || []).join(', '),
+                    url_contains: item.url_contains || '',
+                    url_prefix: item.url_prefix || '',
+                    selection_required: item.selection_required === true,
+                    payload_behavior: item.payload_behavior || 'merge_browser_context',
+                    payload_mapping: JSON.stringify(item.payload_mapping || {}, null, 2),
+                    priority: item.priority ?? 100,
+                    enabled: item.enabled !== false,
+                };
+                isModalOpen.value = true;
+            }
+
+            async function handleCrudFormSubmission() {
+                isSubmitting.value = true;
+                try {
+                    const payload = {
+                        name: formData.value.name.trim(),
+                        browser_action_id: formData.value.browser_action_id,
+                        trigger_mode: formData.value.trigger_mode,
+                        condition_type: formData.value.condition_type,
+                        active_duration_seconds: formData.value.condition_type === 'active_duration' ? formData.value.active_duration_seconds : '',
+                        domain_equals: formData.value.domain_equals.trim(),
+                        domain_suffix: formData.value.domain_suffix.trim(),
+                        domain_in: formData.value.domain_in_text,
+                        url_contains: formData.value.url_contains.trim(),
+                        url_prefix: formData.value.url_prefix.trim(),
+                        selection_required: !!formData.value.selection_required,
+                        payload_behavior: formData.value.payload_behavior,
+                        payload_mapping: formData.value.payload_mapping,
+                        priority: formData.value.priority,
+                        enabled: !!formData.value.enabled,
+                    };
+                    const method = formMode.value === 'edit' ? 'PUT' : 'POST';
+                    const url = formMode.value === 'edit' ? `/browserrules/${itemId.value}` : '/browserrules/';
+                    await fetchJson(url, { method, body: JSON.stringify(payload) });
+                    isModalOpen.value = false;
+                    await loadRules();
+                } catch (err) {
+                    alert(err.message || 'Failed to save browser rule.');
+                } finally {
+                    isSubmitting.value = false;
+                }
+            }
+
+            async function handleDelete(id) {
+                if (!confirm('Delete this browser rule?')) return;
+                try {
+                    await fetchJson(`/browserrules/${id}`, { method: 'DELETE' });
+                    await loadRules();
+                } catch (err) {
+                    alert(err.message || 'Failed to delete browser rule.');
+                }
+            }
+
+            onMounted(loadRules);
+
+            return {
+                allRules,
+                loading,
+                error,
+                searchTerm,
+                isModalOpen,
+                isSubmitting,
+                formMode,
+                formData,
+                browserActionOptions,
+                triggerModeOptions,
+                conditionOptions,
+                payloadBehaviorOptions,
+                enabledCount,
+                automaticCount,
+                confirmCount,
+                selectedConditionDescription,
+                filteredRules,
+                liveSummary,
+                openCreateModal,
+                openEditModal,
+                handleCrudFormSubmission,
+                handleDelete,
+                browserActionLabel,
+                payloadBehaviorLabel,
+                scopeSummary,
+                ruleSummary,
+            };
+        }
+    }).mount('#browser-rules-app');
+</script>
+{% endblock %}

@@ -79,6 +79,7 @@ Rasbhari currently registers these apps in [server.py](server.py):
 
 - `Blogs`
 - `BrowserActions`
+- `BrowserRules`
 - `Promises`
 - `Events`
 - `Thoughts`
@@ -93,6 +94,8 @@ Rasbhari currently registers these apps in [server.py](server.py):
 
 The `Projects` app now includes a per-project board view backed by the `KanbanTickets` app.
 The `BrowserActions` app is the first Rasbhari-side configuration layer for the future browser extension, letting each user define extension-visible actions that map generic browser verbs back into Activities, events, project updates, or quick-log flows.
+
+The `BrowserRules` app adds the matching layer on top of that. It lets each user define when and where browser context should expose or trigger a configured Browser Action, including trigger mode, site scope, priority, and payload behavior.
 Projects can also issue stable per-project ticket references through a configurable `ticket_prefix`, so tickets become identifiers like `RSB-14` or `QDS-123`.
 Kanban tickets can also link explicit same-project dependencies, so a board card can show which other ticket must move first without turning the board into a separate planning tool.
 The project timeline is now a narrative surface: lightweight updates stay inline, while blog-style writing creates real markdown `BlogPost` records that remain linked back into the project history.

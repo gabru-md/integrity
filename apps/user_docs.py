@@ -320,6 +320,30 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Example: name Save Docs Research, browser action save_current_page, target type activity, target activity id 12.",
             ],
         },
+        "BrowserRules": {
+            "overview": "Browser Rules decide when browser context should surface or trigger one of your configured Browser Actions.",
+            "app_purpose": "Use Browser Rules to describe if user does A on website B then trigger C, while keeping the actual Rasbhari action target inside Browser Actions.",
+            "how_to_use": [
+                "Choose the Browser Action the rule should trigger first, then define when and where it should apply.",
+                "Use trigger mode confirm for most rules until the capture pattern proves trustworthy.",
+                "Keep scope narrow with domains or URL matching so browser automation stays explainable.",
+                "Only use automatic mode for low-risk, high-confidence captures.",
+            ],
+            "setup_leverage": [
+                "Start with one or two calm rules instead of trying to automate every site immediately.",
+                "Prefer lower priority numbers only when a rule truly should win over broader matches.",
+            ],
+            "pairs_with": ["BrowserActions", "Automation", "Activities", "Projects"],
+            "glossary": [
+                {"term": "Browser Rule", "meaning": "A rule that says when a browser condition on a site should trigger a configured Browser Action."},
+                {"term": "Trigger Mode", "meaning": "Whether the extension should wait for manual use, ask for confirmation, or trigger automatically."},
+                {"term": "Match Scope", "meaning": "The site and URL boundaries where the rule is allowed to match."},
+                {"term": "Payload Behavior", "meaning": "How much browser context should be forwarded into Rasbhari when the rule runs."},
+            ],
+            "examples": [
+                "Example: on docs.python.org, when selection exists, ask for confirmation before triggering Save Docs Research.",
+            ],
+        },
         "Activities": {
             "overview": "Activities are reusable actions you want to trigger from the dashboard. When you trigger one, Rasbhari turns it into an event so promises, skills, Today, and reports can react.",
             "app_purpose": "Use Activities when you want repeated real-world actions to become consistent event-producing shortcuts instead of manual form work, and when you want those triggers to stay visibly connected to the rest of the ecosystem.",
@@ -631,6 +655,7 @@ def build_app_user_guidance(app_name: str) -> dict:
         "headline": "How this app fits Rasbhari",
         "summary": {
             "BrowserActions": "BrowserActions are the Rasbhari-side configuration layer the browser extension will later sync and expose as Capture Automation choices.",
+            "BrowserRules": "BrowserRules decide when those BrowserActions should appear, ask first, or trigger automatically on matching browser context.",
             "Activities": "Activities are the easiest way to capture repeated real-world actions so the rest of Rasbhari can react to them.",
             "Blogs": "Blogs add longer narrative context to project work and reflection.",
             "Connections": "Connections turn relationship maintenance into something visible enough for Today and Reports to reason about.",

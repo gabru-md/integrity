@@ -12,6 +12,7 @@ from apps.projects import project_app
 from apps.promises import promises_app
 from apps.blogs import blog_app
 from apps.browser_actions import browser_actions_app
+from apps.browser_rules import browser_rules_app
 from apps.activities import activities_app
 from apps.kanban_tickets import kanban_tickets_app
 from apps.connections import connections_app
@@ -81,6 +82,7 @@ class RasbhariServer(Server):
     def setup_apps(self):
         self.register_app(blog_app)
         self.register_app(browser_actions_app)
+        self.register_app(browser_rules_app)
         self.register_app(promises_app)
         self.register_app(events_app)
         self.register_app(thoughts_app)
