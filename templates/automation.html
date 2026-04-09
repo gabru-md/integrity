@@ -7,8 +7,8 @@
         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Automation</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Make capture lighter, not louder</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Automation is Rasbhari’s product area for reducing capture friction without turning the system into surveillance or a second hidden workflow. Capture Automation is the first track inside it, starting with a Chrome browser extension that can help Activities and events fire from real browser context.</p>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Capture automation, simplified</h1>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">The Chrome extension is Shipping. It syncs Browser Actions and Rules, surfacing them through a calm UI so Rasbhari can capture browser context without extra noise.</p>
             </div>
             <div class="flex flex-wrap gap-3">
                 <a href="/docs/automation.md" class="btn-secondary px-4 py-3 text-sm">Read Overview</a>
@@ -112,18 +112,6 @@
                 <p class="mt-4 text-sm leading-6 text-[var(--text-soft)]">The first release should stay narrow on purpose. The goal is not to automate everything at once. The goal is to make one trustworthy browser-to-Rasbhari loop real enough that the rest of the automation vertical has a solid foundation.</p>
             </article>
 
-            <article class="shell-card p-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Reference</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Automation docs</h2>
-                <div class="mt-4 grid gap-3">
-                    {% for item in automation_docs %}
-                    <a href="{{ item.href }}" class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4 transition hover:border-[var(--accent-soft)] hover:bg-[var(--surface-muted)]">
-                        <div class="text-sm font-bold text-[var(--text)]">{{ item.title }}</div>
-                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.summary }}</div>
-                    </a>
-                    {% endfor %}
-                </div>
-            </article>
         </div>
 
         <div class="space-y-6">
@@ -165,16 +153,6 @@
                 </ol>
             </article>
 
-            <article class="shell-card p-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Product Frame</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Automation should stay human</h2>
-                <ul class="mt-4 space-y-3 text-sm leading-6 text-[var(--text-soft)]">
-                    <li>Automation should lower capture friction, not create a second hidden system.</li>
-                    <li>Browser actions should prefer Activities where possible, so the rest of Rasbhari still reacts normally.</li>
-                    <li>Structured browser context belongs in event payload, not hidden in descriptions.</li>
-                    <li>Local history and confirmation matter because automation has to stay inspectable to be trusted.</li>
-                </ul>
-            </article>
         </div>
     </section>
 </div>

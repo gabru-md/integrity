@@ -404,6 +404,7 @@ a {
 
 #sidebar {
     width: var(--sidebar-width);
+    scrollbar-gutter: stable both-edges;
 }
 
 #sidebar > div {
