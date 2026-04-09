@@ -25,12 +25,16 @@
     </section>
 
     <section class="card">
-      <div class="card-title">What ships later</div>
-      <ul class="list">
-        <li>sync browser actions and rules from Rasbhari</li>
-        <li>manual, confirm, and narrow automatic triggers</li>
-        <li>local history of what matched and what was sent</li>
-      </ul>
+      <div class="card-title">Browser rules</div>
+      <div id="rules-container" class="rules-grid"></div>
+      <div id="rules-empty" class="line muted">Syncing rules from Rasbhari...</div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Action history</div>
+      <div id="history-list" class="history-list">
+        <div class="line muted">No history yet.</div>
+      </div>
     </section>
   </main>
   <script src="popup.js"></script>
