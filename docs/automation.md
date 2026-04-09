@@ -92,6 +92,7 @@ The detailed product contract for this surface lives in [browser-extension-spec.
 The detailed shared browser action vocabulary lives in [browser-actions.md](browser-actions.md).
 The detailed shared rule contract lives in [browser-rules.md](browser-rules.md).
 The detailed sync and extension-history contract lives in [browser-sync-history.md](browser-sync-history.md).
+The Chrome-first build order lives in [browser-extension-implementation-plan.md](browser-extension-implementation-plan.md).
 
 ### 2. Desktop Agents
 

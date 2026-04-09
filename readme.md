@@ -8,6 +8,7 @@ Useful entry points:
 - [Automation](docs/automation.md)
 - [Browser Action Model](docs/browser-actions.md)
 - [Browser Extension Spec](docs/browser-extension-spec.md)
+- [Browser Extension Implementation Plan](docs/browser-extension-implementation-plan.md)
 - [Browser Rule Model](docs/browser-rules.md)
 - [Browser Sync And Local History](docs/browser-sync-history.md)
 - [Experience Modes](docs/experience-modes.md)
