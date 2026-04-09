@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
@@ -34,9 +33,8 @@ class ActivityService(CRUDService[Activity]):
                 self.db.conn.commit()
 
     def _to_tuple(self, activity: Activity) -> tuple:
-        # Ensure tags are JSON serialized if they are to be stored as TEXT[] in PostgreSQL
         return (
-            activity.user_id, activity.name, activity.event_type, activity.description, json.dumps(activity.default_payload), activity.tags)
+            activity.user_id, activity.name, activity.event_type, activity.description, activity.default_payload or {}, activity.tags)
 
     def _to_object(self, row: tuple) -> Activity:
         activity_dict = {
@@ -79,9 +77,6 @@ class ActivityService(CRUDService[Activity]):
 
         # Use activity description if not provided in payload, otherwise use payload's description
         event_description = event_description_from_payload or activity.description or ""
-        # Add any remaining combined_payload to event_description as JSON string
-        if combined_payload:
-            event_description = f"{event_description} (Payload: {json.dumps(combined_payload)})"
 
         # Add a specific tag for tracking the trigger source
         all_tags.append(f"triggered_by:activity:{activity.name}")
@@ -91,7 +86,8 @@ class ActivityService(CRUDService[Activity]):
             event_type=activity.event_type,
             timestamp=datetime.now(),
             description=event_description,
-            tags=all_tags
+            tags=all_tags,
+            payload=combined_payload,
         )
 
         self.log.info(f"Triggering activity: {activity.name} (Event Type: {activity.event_type})")

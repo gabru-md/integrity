@@ -75,6 +75,7 @@ Projects can also issue stable per-project ticket references through a configura
 Kanban tickets can also link explicit same-project dependencies, so a board card can show which other ticket must move first without turning the board into a separate planning tool.
 The project timeline is now a narrative surface: lightweight updates stay inline, while blog-style writing creates real markdown `BlogPost` records that remain linked back into the project history.
 The `Activities` app now exposes each activity as a visible orchestrator, showing the event type it emits plus the promises and skills that can react to that trigger.
+Events now support a real structured `payload` field in addition to `event_type`, `description`, and `tags`, so activities, automations, imports, and future extensions can attach machine-readable context without stuffing JSON into the description text.
 The `Reports` page now uses progressive disclosure so explanatory context and observation blocks stay available without overwhelming the summary view.
 The `Thoughts` app now behaves more like a private personal posting stream than a generic notes CRUD page, with a lightweight composer and timestamped feed.
 The `Skills` app now has a dedicated progress-focused page that mirrors the stronger dashboard widget language with XP rings, level momentum, and a level-up timeline while preserving the existing skill data model and CRUD flow.

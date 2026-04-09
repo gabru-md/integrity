@@ -61,13 +61,18 @@ class ReportsApp(App[Report]):
                     user_id=user_id,
                     event_type="report:generate_requested",
                     timestamp=datetime.now(),
-                    description=self.report_aggregator.build_request_payload(report_type, anchor_date, user_id=user_id),
+                    description=f"Queued {report_type} report generation",
                     tags=[
                         "report",
                         f"report_type:{report_type}",
                         f"anchor_date:{anchor_date or datetime.now().date().isoformat()}",
                         f"user_id:{user_id}",
                     ],
+                    payload={
+                        "user_id": user_id,
+                        "report_type": report_type,
+                        "anchor_date": anchor_date or datetime.now().date().isoformat(),
+                    },
                 )
                 event_id = self.event_service.create(request_event)
                 if user_id:

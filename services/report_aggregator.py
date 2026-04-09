@@ -186,7 +186,10 @@ class ReportAggregator:
             "anchor_date": anchor_date or date.today().isoformat(),
         })
 
-    def parse_request_payload(self, description: Optional[str], tags: Optional[List[str]] = None) -> Tuple[Optional[int], str, Optional[str]]:
+    def parse_request_payload(self, payload: Optional[dict], description: Optional[str], tags: Optional[List[str]] = None) -> Tuple[Optional[int], str, Optional[str]]:
+        if payload:
+            return payload.get("user_id"), payload.get("report_type", "daily"), payload.get("anchor_date")
+
         if description:
             try:
                 payload = json.loads(description)

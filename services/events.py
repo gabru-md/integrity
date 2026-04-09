@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 from model.event import Event
 from gabru.db.service import CRUDService
@@ -22,9 +23,11 @@ class EventService(CRUDService[Event]):
                                 event_type VARCHAR(255) NOT NULL,
                                 timestamp TIMESTAMP NOT NULL,
                                 description TEXT,
-                                tags TEXT[]
+                                tags TEXT[],
+                                payload JSONB NOT NULL DEFAULT '{}'::jsonb
                             ) PARTITION BY RANGE (timestamp)
                         """)
+                cursor.execute("ALTER TABLE events ADD COLUMN IF NOT EXISTS payload JSONB NOT NULL DEFAULT '{}'::jsonb")
                 cursor.execute("""
                             CREATE TABLE IF NOT EXISTS events_default
                                 PARTITION OF events DEFAULT
@@ -73,7 +76,7 @@ class EventService(CRUDService[Event]):
 
     def _to_tuple(self, event: Event) -> tuple:
         return (
-            event.user_id, event.event_type, event.timestamp, event.description, event.tags)
+            event.user_id, event.event_type, event.timestamp, event.description, event.tags, json.dumps(event.payload or {}, ensure_ascii=True))
 
     def _to_object(self, row: tuple) -> Event:
         event_dict = {
@@ -82,15 +85,16 @@ class EventService(CRUDService[Event]):
             "event_type": row[2],
             "timestamp": row[3],
             "description": row[4],
-            "tags": row[5] if row[5] else []
+            "tags": row[5] if row[5] else [],
+            "payload": row[6] or {},
         }
         return Event(**event_dict)
 
     def _get_columns_for_insert(self) -> List[str]:
-        return ["user_id", "event_type", "timestamp", "description", "tags"]
+        return ["user_id", "event_type", "timestamp", "description", "tags", "payload"]
 
     def _get_columns_for_update(self) -> List[str]:
-        return ["user_id", "event_type", "timestamp", "description", "tags"]
+        return ["user_id", "event_type", "timestamp", "description", "tags", "payload"]
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "user_id", "event_type", "timestamp", "description", "tags"]
+        return ["id", "user_id", "event_type", "timestamp", "description", "tags", "payload"]

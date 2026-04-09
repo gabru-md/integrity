@@ -1,5 +1,5 @@
 from pydantic import Field
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from gabru.flask.model import WidgetUIModel
 
@@ -11,3 +11,4 @@ class Event(WidgetUIModel):
     timestamp: Optional[datetime] = Field(default=None, edit_enabled=False, widget_enabled=True, description="When the event happened")
     description: Optional[str] = Field(default="", edit_enabled=True, widget_enabled=True, description="Human-readable summary of what happened")
     tags: Optional[List[str]] = Field(default_factory=list, edit_enabled=True, widget_enabled=True, description="Extra labels used for grouping, filtering, and skill or promise matching")
+    payload: Dict[str, Any] = Field(default_factory=dict, widget_enabled=False, description="Optional structured context that travels with the event without replacing event_type or tags.")
