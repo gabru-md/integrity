@@ -137,31 +137,31 @@ class RasbhariServer(Server):
                     "href": "/docs/automation.md",
                     "summary": "Product framing for Automation and Capture Automation."
                 },
-                {
-                    "title": "Browser Extension Spec",
-                    "href": "/docs/browser-extension-spec.md",
-                    "summary": "Formal product contract for the first browser capture client."
-                },
-                {
-                    "title": "Browser Action Model",
-                    "href": "/docs/browser-actions.md",
-                    "summary": "Shared browser verbs Rasbhari can map back into activities and events."
-                },
-                {
-                    "title": "Browser Rule Model",
-                    "href": "/docs/browser-rules.md",
-                    "summary": "If A on B then trigger C, with scoped targets and trigger modes."
-                },
-                {
-                    "title": "Sync And Local History",
-                    "href": "/docs/browser-sync-history.md",
-                    "summary": "How the extension connects, syncs config, and records what it did."
-                },
-                {
-                    "title": "Implementation Plan",
-                    "href": "/docs/browser-extension-implementation-plan.md",
-                    "summary": "Chrome-first build order, v1 scope, and defer list."
-                },
+            {
+                "title": "Browser Extension Spec",
+                "href": "/docs/wip/browser-extension-spec.md",
+                "summary": "Formal product contract for the first browser capture client."
+            },
+            {
+                "title": "Browser Action Model",
+                "href": "/docs/wip/browser-actions.md",
+                "summary": "Shared browser verbs Rasbhari can map back into activities and events."
+            },
+            {
+                "title": "Browser Rule Model",
+                "href": "/docs/wip/browser-rules.md",
+                "summary": "If A on B then trigger C, with scoped targets and trigger modes."
+            },
+            {
+                "title": "Sync And Local History",
+                "href": "/docs/wip/browser-sync-history.md",
+                "summary": "How the extension connects, syncs config, and records what it did."
+            },
+            {
+                "title": "Implementation Plan",
+                "href": "/docs/wip/browser-extension-implementation-plan.md",
+                "summary": "Chrome-first build order, v1 scope, and defer list."
+            },
             ]
             automation_status = {
                 "extension_delivery_ready": False,

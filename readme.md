@@ -6,11 +6,6 @@ Useful entry points:
 
 - [Docs Hub](docs/README.md)
 - [Automation](docs/automation.md)
-- [Browser Action Model](docs/browser-actions.md)
-- [Browser Extension Spec](docs/browser-extension-spec.md)
-- [Browser Extension Implementation Plan](docs/browser-extension-implementation-plan.md)
-- [Browser Rule Model](docs/browser-rules.md)
-- [Browser Sync And Local History](docs/browser-sync-history.md)
 - [Experience Modes](docs/experience-modes.md)
 - [AI Command Layer](docs/AI.md)
 - [Backup And Restore](docs/backup-restore.md)
@@ -20,3 +15,11 @@ Useful entry points:
 - [Setup Guide](docs/setup.md)
 - [Testing Sandbox](docs/testing-sandbox.md)
 - [Test Suite](docs/testing.md)
+
+## Work-in-progress notes
+
+- [Browser Action Model](docs/wip/browser-actions.md)
+- [Browser Extension Spec](docs/wip/browser-extension-spec.md)
+- [Browser Extension Implementation Plan](docs/wip/browser-extension-implementation-plan.md)
+- [Browser Rule Model](docs/wip/browser-rules.md)
+- [Browser Sync And Local History](docs/wip/browser-sync-history.md)

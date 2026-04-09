@@ -88,11 +88,11 @@ It should:
 
 The browser extension should be configurable by Rasbhari itself. Rasbhari should remain the source of truth for action definitions, mappings, and rule behavior.
 
-The detailed product contract for this surface lives in [browser-extension-spec.md](browser-extension-spec.md).
-The detailed shared browser action vocabulary lives in [browser-actions.md](browser-actions.md).
-The detailed shared rule contract lives in [browser-rules.md](browser-rules.md).
-The detailed sync and extension-history contract lives in [browser-sync-history.md](browser-sync-history.md).
-The Chrome-first build order lives in [browser-extension-implementation-plan.md](browser-extension-implementation-plan.md).
+The detailed product contract for this surface lives in [browser-extension-spec](wip/browser-extension-spec.md).
+The detailed shared browser action vocabulary lives in [browser-actions](wip/browser-actions.md).
+The detailed shared rule contract lives in [browser-rules](wip/browser-rules.md).
+The detailed sync and extension-history contract lives in [browser-sync-history](wip/browser-sync-history.md).
+The Chrome-first build order lives in [browser-extension-implementation-plan](wip/browser-extension-implementation-plan.md).
 
 ### 2. Desktop Agents
 

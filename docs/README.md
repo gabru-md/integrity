@@ -15,11 +15,6 @@ Use it as the primary place to find:
 - [AI Command Layer](./AI.md)
 - [Automation](./automation.md)
 - [Backup And Restore](./backup-restore.md)
-- [Browser Action Model](./browser-actions.md)
-- [Browser Extension Spec](./browser-extension-spec.md)
-- [Browser Extension Implementation Plan](./browser-extension-implementation-plan.md)
-- [Browser Rule Model](./browser-rules.md)
-- [Browser Sync And Local History](./browser-sync-history.md)
 - [Experience Modes](./experience-modes.md)
 - [Import Foundation](./imports.md)
 - [macOS Local Signals](./mac-agent.md)
@@ -29,6 +24,14 @@ Use it as the primary place to find:
 - [Rasbhari Overview](./rasbhari.md)
 - [Testing Sandbox](./testing-sandbox.md)
 - [Test Suite](./testing.md)
+
+## Work In Progress
+
+- [Browser Action Model](./wip/browser-actions.md)
+- [Browser Extension Spec](./wip/browser-extension-spec.md)
+- [Browser Extension Implementation Plan](./wip/browser-extension-implementation-plan.md)
+- [Browser Rule Model](./wip/browser-rules.md)
+- [Browser Sync And Local History](./wip/browser-sync-history.md)
 
 ## Notes
 
