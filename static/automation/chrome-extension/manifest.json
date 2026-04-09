@@ -14,9 +14,19 @@
   "action": {
     "default_title": "Rasbhari Capture",
     "default_popup": "popup.html"
+    ,
+    "default_icon": {
+      "48": "logo-48.png",
+      "128": "logo-128.png"
+    }
   },
   "options_page": "options.html",
   "background": {
     "service_worker": "background.js"
+  }
+  ,
+  "icons": {
+    "48": "logo-48.png",
+    "128": "logo-128.png"
   }
 }
