@@ -120,6 +120,53 @@ class RasbhariServer(Server):
                 return render_flask_template('docs.html', docs=docs, selected_doc=None, selected_path=doc_path), 404
             return render_flask_template('docs.html', docs=docs, selected_doc=selected_doc, selected_path=doc_path)
 
+        @self.app.route('/automation')
+        @login_required
+        def show_automation():
+            automation_docs = [
+                {
+                    "title": "Automation Overview",
+                    "href": "/docs/automation.md",
+                    "summary": "Product framing for Automation and Capture Automation."
+                },
+                {
+                    "title": "Browser Extension Spec",
+                    "href": "/docs/browser-extension-spec.md",
+                    "summary": "Formal product contract for the first browser capture client."
+                },
+                {
+                    "title": "Browser Action Model",
+                    "href": "/docs/browser-actions.md",
+                    "summary": "Shared browser verbs Rasbhari can map back into activities and events."
+                },
+                {
+                    "title": "Browser Rule Model",
+                    "href": "/docs/browser-rules.md",
+                    "summary": "If A on B then trigger C, with scoped targets and trigger modes."
+                },
+                {
+                    "title": "Sync And Local History",
+                    "href": "/docs/browser-sync-history.md",
+                    "summary": "How the extension connects, syncs config, and records what it did."
+                },
+                {
+                    "title": "Implementation Plan",
+                    "href": "/docs/browser-extension-implementation-plan.md",
+                    "summary": "Chrome-first build order, v1 scope, and defer list."
+                },
+            ]
+            automation_status = {
+                "extension_delivery_ready": False,
+                "chrome_extension_ready": False,
+                "sync_api_ready": False,
+                "notes": "This page is the home for Capture Automation. Connection and live setup status will land here as the browser extension and sync APIs ship."
+            }
+            return render_flask_template(
+                'automation.html',
+                automation_docs=automation_docs,
+                automation_status=automation_status,
+            )
+
 
 if __name__ == '__main__':
     server = RasbhariServer()

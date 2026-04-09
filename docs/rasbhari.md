@@ -71,6 +71,8 @@ The first sub-track is `Capture Automation`, which covers:
 
 Automation is not meant to become a separate meaning system. It should prefer existing Activities where possible, emit real events, and let the rest of Rasbhari react normally. The full direction lives in [automation.md](automation.md).
 
+Rasbhari now also exposes `/automation` as the in-product home for this vertical. That page introduces the Automation mental model, explains the browser-extension workflow, and will later surface connection and setup status as the Capture Automation client and APIs land.
+
 ## Current Apps
 
 Rasbhari currently registers these apps in [server.py](server.py):
