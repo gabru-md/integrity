@@ -232,11 +232,16 @@ class App(Generic[T]):
         @self.blueprint.route('/home')
         def home():
             """ Renders the home page """
+            extra_context = {}
+            get_home_context = getattr(self, "get_home_context", None)
+            if callable(get_home_context):
+                extra_context = get_home_context() or {}
             return render_flask_template(self.home_template,
                                    model_class_attributes=self.model_class_attributes,
                                    model_class_name=self.model_class.__name__,
                                    app_name=self.name,
-                                   user_guidance=self.user_guidance)
+                                   user_guidance=self.user_guidance,
+                                   **extra_context)
 
     def process_model_data(self, data):
         if self._process_model_data_func:

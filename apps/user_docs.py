@@ -297,6 +297,29 @@ def build_rasbhari_admin_guide() -> dict:
 
 def build_app_user_guidance(app_name: str) -> dict:
     docs = {
+        "BrowserActions": {
+            "overview": "Browser Actions define the concrete Rasbhari actions the future browser extension can expose and trigger for you.",
+            "app_purpose": "Use Browser Actions to map generic browser-side verbs like save_current_page or capture_selection back into your Rasbhari ecosystem as Activities, events, project updates, or quick-log flows.",
+            "how_to_use": [
+                "Create one action per meaningful browser capture you want the extension to offer later.",
+                "Pick the generic browser action first, then choose what Rasbhari target it should map to.",
+                "Prefer target type activity when an existing Activity already models the behavior.",
+                "Use default payload only for stable extra context that should always be merged with browser context.",
+            ],
+            "setup_leverage": [
+                "Start with only a few high-value browser actions so the later extension UI stays calm.",
+                "Prefer stable names and targets so rules and extension sync stay understandable.",
+            ],
+            "pairs_with": ["Activities", "Projects", "Events", "Automation"],
+            "glossary": [
+                {"term": "Browser Action", "meaning": "A concrete action definition Rasbhari can later sync to the browser extension."},
+                {"term": "Target Type", "meaning": "What Rasbhari should trigger when this browser action is used, such as an Activity, event, project update, or quick log."},
+                {"term": "Default Payload", "meaning": "Extra structured data Rasbhari should merge with browser-provided context when the action runs."},
+            ],
+            "examples": [
+                "Example: name Save Docs Research, browser action save_current_page, target type activity, target activity id 12.",
+            ],
+        },
         "Activities": {
             "overview": "Activities are reusable actions you want to trigger from the dashboard. When you trigger one, Rasbhari turns it into an event so promises, skills, Today, and reports can react.",
             "app_purpose": "Use Activities when you want repeated real-world actions to become consistent event-producing shortcuts instead of manual form work, and when you want those triggers to stay visibly connected to the rest of the ecosystem.",
@@ -607,6 +630,7 @@ def build_app_user_guidance(app_name: str) -> dict:
     guidance["ecosystem_fit"] = {
         "headline": "How this app fits Rasbhari",
         "summary": {
+            "BrowserActions": "BrowserActions are the Rasbhari-side configuration layer the browser extension will later sync and expose as Capture Automation choices.",
             "Activities": "Activities are the easiest way to capture repeated real-world actions so the rest of Rasbhari can react to them.",
             "Blogs": "Blogs add longer narrative context to project work and reflection.",
             "Connections": "Connections turn relationship maintenance into something visible enough for Today and Reports to reason about.",

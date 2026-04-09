@@ -1,0 +1,436 @@
+{% extends "index.html" %}
+{% block title %}Browser Actions{% endblock %}
+{% block shell_title %}Browser Actions{% endblock %}
+{% block shell_subtitle %}Define the concrete Rasbhari actions your browser extension will later expose, without making you configure irrelevant fields by hand.{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<div id="browser-actions-app" class="space-y-6 px-1 py-2">
+    <header class="shell-card hero-card px-6 py-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Capture Automation</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Browser Actions</h1>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Define the Rasbhari-side actions the browser extension can later sync and expose. Start with what the action should do, then only the relevant configuration appears.</p>
+            </div>
+            <div class="flex items-start gap-3">
+                <button @click="openCreateModal" class="btn-primary px-4 py-3 text-sm">Create Browser Action</button>
+                {% set instructions_inline = true %}
+                {% include "_app_instructions.html" %}
+            </div>
+        </div>
+    </header>
+
+    {% raw %}
+    <section class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Actions</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ allActions.length }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Configured browser-visible actions</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Enabled</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ enabledCount }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Available to future sync</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Activities</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ activityBackedCount }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Prefer activity-first when possible</div>
+        </article>
+        <article class="shell-card p-5">
+            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Projects</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ projectBackedCount }}</div>
+            <div class="mt-1 text-sm text-[var(--text-soft)]">Project-context browser captures</div>
+        </article>
+    </section>
+
+    <section class="shell-card p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Configured Actions</div>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">What the extension can offer</h2>
+            </div>
+            <input type="text" v-model="searchTerm" placeholder="Search browser actions..." class="max-w-xl">
+        </div>
+
+        <div v-if="loading" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
+            Loading browser actions...
+        </div>
+        <div v-else-if="error" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--danger)]">
+            Failed to load browser actions.
+        </div>
+        <div v-else-if="filteredActions.length === 0" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
+            No browser actions yet. Create one to start shaping Capture Automation.
+        </div>
+
+        <div v-else class="mt-6 grid gap-5 xl:grid-cols-2">
+            <article v-for="item in filteredActions" :key="item.id" class="rounded-3xl border border-[var(--border)] bg-[var(--surface-soft)] p-5 shadow-sm">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-xl font-extrabold text-[var(--text)]">{{ item.name }}</h3>
+                            <span class="ui-badge">{{ item.browser_action }}</span>
+                            <span class="ui-badge">{{ item.target_type }}</span>
+                            <span v-if="!item.enabled" class="ui-badge">disabled</span>
+                        </div>
+                        <p v-if="item.description" class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ item.description }}</p>
+                    </div>
+                    <div class="flex shrink-0 flex-wrap gap-2">
+                        <button @click="openEditModal(item)" class="btn-secondary px-4 py-2 text-sm">Edit</button>
+                        <button @click="handleDelete(item.id)" class="btn-ghost px-4 py-2 text-sm">Delete</button>
+                    </div>
+                </div>
+
+                <div class="mt-5 grid gap-3 md:grid-cols-2">
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Target</div>
+                        <div class="mt-2 text-sm font-bold text-[var(--text)]">{{ targetSummary(item) }}</div>
+                        <div v-if="item.target_description" class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.target_description }}</div>
+                    </div>
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Payload And Tags</div>
+                        <div class="mt-2 text-sm text-[var(--text)]">{{ (item.target_tags || []).length ? item.target_tags.join(', ') : 'No tags' }}</div>
+                        <div class="mt-2 text-sm text-[var(--text-soft)]">{{ payloadSummary(item.default_payload) }}</div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/50 backdrop-blur-sm dark:bg-gray-900/80">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="modal-surface relative transform overflow-hidden text-left transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-start justify-between border-b border-[var(--border)] pb-3">
+                        <h3 class="text-xl font-bold text-[var(--text)]">{{ formMode === 'create' ? 'Create New' : 'Edit' }} Browser Action</h3>
+                        <button type="button" @click="isModalOpen = false" class="btn-ghost h-10 w-10 rounded-2xl p-0">✕</button>
+                    </div>
+
+                    <form @submit.prevent="handleCrudFormSubmission" class="mt-6 space-y-5">
+                        <section class="grid gap-4 md:grid-cols-2">
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-sm font-medium text-[var(--text)]">Name</label>
+                                <input v-model="formData.name" type="text" placeholder="Save Docs Research" required>
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-sm font-medium text-[var(--text)]">Browser Action</label>
+                                <select v-model="formData.browser_action">
+                                    <option v-for="option in browserActionOptions" :key="option" :value="option">{{ option }}</option>
+                                </select>
+                            </div>
+                        </section>
+
+                        <div class="flex flex-col space-y-1">
+                            <label class="text-sm font-medium text-[var(--text)]">Description</label>
+                            <textarea v-model="formData.description" rows="3" placeholder="What should this browser action help you capture?"></textarea>
+                        </div>
+
+                        <section class="rounded-3xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
+                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">What Should This Action Do?</div>
+                            <div class="mt-4 grid gap-3 md:grid-cols-2">
+                                <button v-for="option in targetTypeOptions"
+                                        :key="option.value"
+                                        type="button"
+                                        @click="formData.target_type = option.value"
+                                        class="rounded-2xl border px-4 py-4 text-left transition"
+                                        :class="formData.target_type === option.value ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] bg-[var(--surface)]'">
+                                    <div class="text-sm font-bold text-[var(--text)]">{{ option.label }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ option.description }}</div>
+                                </button>
+                            </div>
+
+                            <div class="mt-5 grid gap-4 md:grid-cols-2">
+                                <div v-if="formData.target_type === 'activity'" class="flex flex-col space-y-1 md:col-span-2">
+                                    <label class="text-sm font-medium text-[var(--text)]">Choose Activity</label>
+                                    <select v-model="formData.target_activity_id">
+                                        <option v-for="option in activityOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                                    </select>
+                                </div>
+
+                                <div v-if="formData.target_type === 'project_update'" class="flex flex-col space-y-1 md:col-span-2">
+                                    <label class="text-sm font-medium text-[var(--text)]">Choose Project</label>
+                                    <select v-model="formData.target_project_id">
+                                        <option v-for="option in projectOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                                    </select>
+                                </div>
+
+                                <template v-if="formData.target_type === 'event'">
+                                    <div class="flex flex-col space-y-1">
+                                        <label class="text-sm font-medium text-[var(--text)]">Event Type</label>
+                                        <input v-model="formData.target_event_type" type="text" placeholder="browser:page_saved">
+                                    </div>
+                                    <div class="flex flex-col space-y-1">
+                                        <label class="text-sm font-medium text-[var(--text)]">Tags</label>
+                                        <input v-model="formData.target_tags_text" type="text" placeholder="research, docs">
+                                    </div>
+                                    <div class="flex flex-col space-y-1 md:col-span-2">
+                                        <label class="text-sm font-medium text-[var(--text)]">Default Description</label>
+                                        <textarea v-model="formData.target_description" rows="3" placeholder="Saved documentation page from browser extension"></textarea>
+                                    </div>
+                                </template>
+
+                                <div v-if="formData.target_type === 'quick_log'" class="md:col-span-2 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-4 text-sm leading-6 text-[var(--text-soft)]">
+                                    Quick Log stays intentionally light. The extension will later open a lightweight Rasbhari logging flow with browser context already attached.
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="grid gap-4 md:grid-cols-2">
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-sm font-medium text-[var(--text)]">Default Payload</label>
+                                <textarea v-model="formData.default_payload" rows="5" class="font-mono text-sm" placeholder='{"source":"browser_extension"}'></textarea>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Summary</div>
+                                    <div class="mt-2 text-sm font-bold text-[var(--text)]">{{ liveSummary }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">This is the action summary the extension will later sync and expose.</div>
+                                </div>
+                                <label class="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
+                                    <input v-model="formData.enabled" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span>
+                                        <span class="block text-sm font-bold text-[var(--text)]">Enabled</span>
+                                        <span class="block text-sm leading-6 text-[var(--text-soft)]">Make this action available to future extension sync.</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </section>
+
+                        <div class="flex justify-end space-x-3 border-t border-[var(--border)] pt-4">
+                            <button type="button" @click="isModalOpen = false" class="btn-secondary px-4 py-3">Cancel</button>
+                            <button type="submit" :disabled="isSubmitting" class="btn-primary px-4 py-3">
+                                {{ isSubmitting ? 'Saving...' : (formMode === 'create' ? 'Save Browser Action' : 'Update Browser Action') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endraw %}
+</div>
+
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    const RUNTIME_FORM_OPTIONS = {{ runtime_form_options | default({}) | tojson | safe }};
+
+    createApp({
+        setup() {
+            const allActions = ref([]);
+            const loading = ref(true);
+            const error = ref(false);
+            const searchTerm = ref('');
+            const isModalOpen = ref(false);
+            const isSubmitting = ref(false);
+            const formMode = ref('create');
+            const itemId = ref(null);
+            const browserActionOptions = [
+                'trigger_activity',
+                'save_current_page',
+                'capture_selection',
+                'open_quick_log',
+                'start_focus_session',
+                'end_focus_session',
+                'save_to_project',
+            ];
+            const targetTypeOptions = [
+                { value: 'activity', label: 'Trigger Activity', description: 'Use an existing Rasbhari Activity when one already models the action.' },
+                { value: 'event', label: 'Create Event', description: 'Create a normal event directly when no reusable Activity exists yet.' },
+                { value: 'project_update', label: 'Save To Project', description: 'Attach browser context to a project timeline or project-linked note.' },
+                { value: 'quick_log', label: 'Open Quick Log', description: 'Keep the browser context, but let the user decide the meaning later.' },
+            ];
+            const activityOptions = ref(RUNTIME_FORM_OPTIONS.target_activity_id || []);
+            const projectOptions = ref(RUNTIME_FORM_OPTIONS.target_project_id || []);
+            const formData = ref({});
+
+            const enabledCount = computed(() => allActions.value.filter(item => item.enabled).length);
+            const activityBackedCount = computed(() => allActions.value.filter(item => item.target_type === 'activity').length);
+            const projectBackedCount = computed(() => allActions.value.filter(item => item.target_type === 'project_update').length);
+
+            const filteredActions = computed(() => {
+                if (!searchTerm.value.trim()) return allActions.value;
+                const query = searchTerm.value.trim().toLowerCase();
+                return allActions.value.filter(item =>
+                    [item.name, item.browser_action, item.target_type, item.description, item.target_event_type]
+                        .filter(Boolean)
+                        .some(value => String(value).toLowerCase().includes(query))
+                );
+            });
+
+            const liveSummary = computed(() => {
+                const targetType = formData.value.target_type || 'activity';
+                if (targetType === 'activity') {
+                    const match = activityOptions.value.find(option => String(option.value) === String(formData.value.target_activity_id || ''));
+                    return `Trigger ${match ? match.label : 'a chosen Activity'} when the extension uses ${formData.value.browser_action || 'this action'}.`;
+                }
+                if (targetType === 'project_update') {
+                    const match = projectOptions.value.find(option => String(option.value) === String(formData.value.target_project_id || ''));
+                    return `Save browser context into ${match ? match.label : 'a chosen Project'} when ${formData.value.browser_action || 'this action'} is used.`;
+                }
+                if (targetType === 'event') {
+                    return `Create ${formData.value.target_event_type || 'an event'} from browser context with tags ${(formData.value.target_tags_text || 'none yet')}.`;
+                }
+                return `Open a Quick Log flow with browser context attached when ${formData.value.browser_action || 'this action'} is used.`;
+            });
+
+            function blankForm() {
+                return {
+                    name: '',
+                    browser_action: 'trigger_activity',
+                    target_type: 'activity',
+                    description: '',
+                    target_activity_id: '',
+                    target_project_id: '',
+                    target_event_type: '',
+                    target_tags_text: '',
+                    target_description: '',
+                    default_payload: '{}',
+                    enabled: true,
+                };
+            }
+
+            function payloadSummary(payload) {
+                const keys = Object.keys(payload || {});
+                if (!keys.length) return 'No default payload fields';
+                return `${keys.length} payload field${keys.length === 1 ? '' : 's'}: ${keys.join(', ')}`;
+            }
+
+            function targetSummary(item) {
+                if (item.target_type === 'activity') {
+                    const match = activityOptions.value.find(option => String(option.value) === String(item.target_activity_id || ''));
+                    return match ? match.label : 'Activity target not chosen';
+                }
+                if (item.target_type === 'project_update') {
+                    const match = projectOptions.value.find(option => String(option.value) === String(item.target_project_id || ''));
+                    return match ? match.label : 'Project target not chosen';
+                }
+                if (item.target_type === 'event') {
+                    return item.target_event_type || 'Event target not configured';
+                }
+                return 'Open Quick Log';
+            }
+
+            async function fetchJson(url, options = {}) {
+                const response = await fetch(url, {
+                    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                    ...options,
+                });
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => ({}));
+                    throw new Error(payload.error || `Request failed with status ${response.status}`);
+                }
+                if (response.status === 204) return null;
+                return response.json();
+            }
+
+            async function loadActions() {
+                loading.value = true;
+                error.value = false;
+                try {
+                    allActions.value = await fetchJson('/browseractions/');
+                } catch (err) {
+                    console.error(err);
+                    error.value = true;
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            function openCreateModal() {
+                formMode.value = 'create';
+                itemId.value = null;
+                formData.value = blankForm();
+                isModalOpen.value = true;
+            }
+
+            function openEditModal(item) {
+                formMode.value = 'edit';
+                itemId.value = item.id;
+                formData.value = {
+                    name: item.name || '',
+                    browser_action: item.browser_action || 'trigger_activity',
+                    target_type: item.target_type || 'activity',
+                    description: item.description || '',
+                    target_activity_id: item.target_activity_id ?? '',
+                    target_project_id: item.target_project_id ?? '',
+                    target_event_type: item.target_event_type || '',
+                    target_tags_text: (item.target_tags || []).join(', '),
+                    target_description: item.target_description || '',
+                    default_payload: JSON.stringify(item.default_payload || {}, null, 2),
+                    enabled: item.enabled !== false,
+                };
+                isModalOpen.value = true;
+            }
+
+            async function handleCrudFormSubmission() {
+                isSubmitting.value = true;
+                try {
+                    const payload = {
+                        name: formData.value.name.trim(),
+                        browser_action: formData.value.browser_action,
+                        target_type: formData.value.target_type,
+                        description: formData.value.description.trim(),
+                        target_activity_id: formData.value.target_type === 'activity' ? formData.value.target_activity_id : '',
+                        target_project_id: formData.value.target_type === 'project_update' ? formData.value.target_project_id : '',
+                        target_event_type: formData.value.target_type === 'event' ? formData.value.target_event_type.trim() : '',
+                        target_tags: formData.value.target_type === 'event' ? formData.value.target_tags_text : '',
+                        target_description: ['event', 'project_update'].includes(formData.value.target_type) ? formData.value.target_description.trim() : '',
+                        default_payload: formData.value.default_payload,
+                        enabled: !!formData.value.enabled,
+                    };
+
+                    const method = formMode.value === 'edit' ? 'PUT' : 'POST';
+                    const url = formMode.value === 'edit' ? `/browseractions/${itemId.value}` : '/browseractions/';
+                    await fetchJson(url, { method, body: JSON.stringify(payload) });
+                    isModalOpen.value = false;
+                    await loadActions();
+                } catch (err) {
+                    alert(err.message || 'Failed to save browser action.');
+                } finally {
+                    isSubmitting.value = false;
+                }
+            }
+
+            async function handleDelete(id) {
+                if (!confirm('Delete this browser action?')) return;
+                try {
+                    await fetchJson(`/browseractions/${id}`, { method: 'DELETE' });
+                    await loadActions();
+                } catch (err) {
+                    alert(err.message || 'Failed to delete browser action.');
+                }
+            }
+
+            onMounted(loadActions);
+
+            return {
+                allActions,
+                loading,
+                error,
+                searchTerm,
+                isModalOpen,
+                isSubmitting,
+                formMode,
+                formData,
+                browserActionOptions,
+                targetTypeOptions,
+                activityOptions,
+                projectOptions,
+                enabledCount,
+                activityBackedCount,
+                projectBackedCount,
+                filteredActions,
+                liveSummary,
+                openCreateModal,
+                openEditModal,
+                handleCrudFormSubmission,
+                handleDelete,
+                payloadSummary,
+                targetSummary,
+            };
+        }
+    }).mount('#browser-actions-app');
+</script>
+{% endblock %}

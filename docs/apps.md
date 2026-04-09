@@ -38,7 +38,17 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - uses a custom blog home page
   - creates a `blog:posted` event on successful post creation
 
-### 2. Promises
+### 2. BrowserActions
+
+- File: `apps/browser_actions.py`
+- Model: `BrowserAction`
+- Widget: disabled
+- Notes:
+  - user-scoped configuration surface for future browser extension action sync
+  - stores mappings from generic browser verbs into Activities, events, project updates, or quick-log flows
+  - normalizes `target_tags`, `default_payload`, and optional target ids for later extension use
+
+### 3. Promises
 
 - File: `apps/promises.py`
 - Model: `Promise`
@@ -50,7 +60,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - includes refresh and history routes per promise
   - **Negative Promises**: Supports "I will not..." commitments. Set `is_negative=True` and `max_allowed=0` (or a small threshold) to track avoiding certain behaviors.
 
-### 3. Events
+### 4. Events
 
 - File: `apps/events.py`
 - Model: `Event`
@@ -61,7 +71,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - incoming form tags are normalized to a tag list
   - timestamps are set on create
 
-### 4. Thoughts
+### 5. Thoughts
 
 - File: `apps/thoughts.py`
 - Model: `Thought`
@@ -69,7 +79,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
 - Notes:
   - creates a `thought:posted` event when a thought is saved
 
-### 5. Devices
+### 6. Devices
 
 - File: `apps/devices.py`
 - Model: `Device`
@@ -80,7 +90,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
 - Notes:
   - adds Heimdall video and device-list routes
 
-### 6. Projects
+### 7. Projects
 
 - File: `apps/projects.py`
 - Model: `Project`
@@ -91,7 +101,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - includes project detail and timeline routes
   - creates project progress events when timeline items are added
 
-### 7. Activities
+### 8. Activities
 
 - File: `apps/activities.py`
 - Model: `Activity`
@@ -100,7 +110,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - supports `/activities/trigger/<id>` to emit activity-backed events
   - normalizes `tags` and `default_payload`
 
-### 8. Skills
+### 9. Skills
 
 - File: `apps/skills.py`
 - Model: `Skill`
@@ -112,7 +122,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - supports explicit `tag_key` and `aliases` for matching
   - exposes `/skills/history`
 
-### 9. Reports
+### 10. Reports
 
 - File: `apps/reports.py`
 - Model: `Report`
@@ -124,7 +134,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - includes detail and print routes for local review and PDF export through the browser
   - aggregates current signals from projects, events, thoughts, skills, connections, and the interaction ledger inside Connections into a behavioral mirror
 
-### 10. Connections
+### 11. Connections
 
 - File: `apps/connections.py`
 - Model: `Connection`
@@ -136,7 +146,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - updates `last_contact_at` and emits social events when interactions are logged
   - feeds overdue-contact checks in behavioral reports
 
-### 11. Users
+### 12. Users
 
 - File: `apps/users.py`
 - Model: `User`

@@ -13,6 +13,7 @@
             <div class="flex flex-wrap gap-3">
                 <a href="/docs/automation.md" class="btn-secondary px-4 py-3 text-sm">Read Overview</a>
                 <a href="/automation/chrome-extension.zip" class="btn-secondary px-4 py-3 text-sm">Download Chrome Bundle</a>
+                <a href="/browseractions/home" class="btn-secondary px-4 py-3 text-sm">Manage Browser Actions</a>
                 <a href="/docs/browser-extension-spec.md" class="btn-primary px-4 py-3 text-sm">Open Extension Spec</a>
             </div>
         </div>
@@ -35,6 +36,7 @@
                             <li>A valid Chrome extension manifest</li>
                             <li>A setup screen for `base_url` and `api_key`</li>
                             <li>A popup that shows current-page context</li>
+                            <li>A Rasbhari-side Browser Actions config app</li>
                             <li>A light preview shell for the first Capture Automation client</li>
                         </ul>
                     </div>
@@ -69,6 +71,13 @@
                         <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">3</div>
                         <div class="mt-2 text-sm font-bold text-[var(--text)]">Trigger</div>
                         <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use browser context to trigger Activities, project updates, or quick-log flows while keeping the event bus central.</div>
+                    </div>
+                </div>
+                <div class="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
+                    <div class="text-sm font-bold text-[var(--text)]">Start by defining your extension-visible actions</div>
+                    <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use Browser Actions to create the concrete Rasbhari actions the extension can later sync and expose. This is where generic browser verbs like <span class="font-semibold text-[var(--text)]">save_current_page</span> or <span class="font-semibold text-[var(--text)]">capture_selection</span> become your own Activity, event, or project-update flow.</p>
+                    <div class="mt-4">
+                        <a href="/browseractions/home" class="btn-primary px-4 py-3 text-sm">Open Browser Actions</a>
                     </div>
                 </div>
             </article>

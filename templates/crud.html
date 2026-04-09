@@ -185,8 +185,8 @@
                                         :name="attr.name"
                                         v-model="formData[attr.name]"
                                         :required="attr.required">
-                                    <option v-for="option in attr.widget_options" :key="option" :value="option">
-                                        {{ formatKey(option) }}
+                                    <option v-for="option in getWidgetOptions(attr)" :key="getOptionValue(option)" :value="getOptionValue(option)">
+                                        {{ getOptionLabel(option) }}
                                     </option>
                                 </select>
                             </template>
@@ -246,6 +246,7 @@
     const JINJA_ATTRIBUTES = {{ model_class_attributes | tojson | safe }};
     const JINJA_MODEL_NAME = '{{ model_class_name }}';
     const JINJA_APP_NAME = '{{ app_name.lower() }}';
+    const JINJA_RUNTIME_FORM_OPTIONS = {{ runtime_form_options | default({}) | tojson | safe }};
 
     const App = {
         setup() {
@@ -253,6 +254,7 @@
             const modelAttributes = ref(JINJA_ATTRIBUTES);
             const appName = ref(JINJA_APP_NAME);
             const fetchUrl = ref(`/${JINJA_APP_NAME}/`);
+            const runtimeFormOptions = ref(JINJA_RUNTIME_FORM_OPTIONS);
 
             // --- State ---
             const allData = ref([]);
@@ -304,6 +306,21 @@
                 if (typeof key !== 'string') return '';
                 // Converts 'start_time' to 'Start Time'
                 return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            }
+
+            function getWidgetOptions(attr) {
+                return runtimeFormOptions.value[attr.name] || attr.widget_options || [];
+            }
+
+            function getOptionValue(option) {
+                return option && typeof option === 'object' ? option.value : option;
+            }
+
+            function getOptionLabel(option) {
+                if (option && typeof option === 'object') {
+                    return option.label || option.value || '';
+                }
+                return formatKey(option);
             }
 
             function getDownloadUrl(item, attr) {
@@ -523,8 +540,8 @@
                          newFormData[attr.name] = false;
                     } else if (getInputType(attr) === 'json') {
                          newFormData[attr.name] = '{}';
-                    } else if (getInputType(attr) === 'select' && attr.widget_options.length > 0) {
-                         newFormData[attr.name] = attr.widget_options[0];
+                    } else if (getInputType(attr) === 'select' && getWidgetOptions(attr).length > 0) {
+                         newFormData[attr.name] = getOptionValue(getWidgetOptions(attr)[0]);
                     } else {
                          newFormData[attr.name] = '';
                     }
@@ -621,6 +638,9 @@
                 prettyValue,
                 isStructuredValue,
                 getStructuredLabel,
+                getWidgetOptions,
+                getOptionValue,
+                getOptionLabel,
                 getInputType,
                 openCreateModal,
                 openEditModal,
