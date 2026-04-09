@@ -303,6 +303,35 @@ body {
     min-width: 0;
 }
 
+.app-instructions-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+}
+
+.app-instructions-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.28);
+}
+
+.app-instructions-sidebar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    height: 100%;
+    width: min(100%, 28rem);
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+    box-shadow: var(--shadow-pop);
+}
+
+body.instructions-open {
+    overflow: hidden;
+}
+
 @media (max-width: 767px) {
     .notification-panel {
         right: 0.75rem;
@@ -310,6 +339,10 @@ body {
         top: 4.75rem;
         width: auto;
         max-width: none;
+    }
+
+    .app-instructions-sidebar {
+        width: min(100%, 100vw);
     }
 }
 

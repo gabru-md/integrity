@@ -53,7 +53,7 @@ def build_rasbhari_tutorial() -> dict:
         {
             "id": "daily_clarity",
             "title": "Stay on top of daily life",
-            "summary": "Start with the calmest version of Rasbhari: quick capture, Today, commitments, and reflection.",
+            "summary": "Start with quick capture, Today, commitments, and reflection before adding deeper structure.",
             "why_it_matters": "This is the best starting point if you mainly want clarity, continuity, and less life drift.",
             "recommended_mode": "everyday",
         },

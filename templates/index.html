@@ -305,7 +305,7 @@
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Interactive Tutorial</div>
                 <h2 id="onboarding-title" class="mt-2 text-3xl font-extrabold text-[var(--text)]">Meet Rasbhari</h2>
                 <p id="onboarding-headline" class="mt-3 text-sm leading-6 text-[var(--text-soft)]"></p>
-                <div class="onboarding-peek-note">You can still see the page behind this guide. Use it as a live map while you step through Rasbhari.</div>
+                <div class="onboarding-peek-note">Use this as a quick guided walk through the parts of Rasbhari that matter for how you want to use it.</div>
             </div>
             <button type="button" id="onboarding-dismiss" class="btn-ghost px-4 py-2 text-sm">Skip</button>
         </div>
@@ -342,8 +342,8 @@
         </div>
 
         <div class="onboarding-page-peek">
-            <div class="metric-label">Page context</div>
-            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Keep the current screen in view while you read. This tutorial is meant to guide the product, not cover it up.</div>
+            <div class="metric-label">Look around</div>
+            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Keep this page in view while you step through the guide so the product stays easy to connect to what you are reading.</div>
         </div>
 
         <div class="onboarding-footer">
@@ -396,11 +396,11 @@
         syncPreferenceButtons();
     }
 
-    function toggleSidebar(forceOpen) {
-        const sidebar = document.getElementById('sidebar');
-        const backdrop = document.getElementById('sidebar-backdrop');
-        const willOpen = forceOpen === undefined ? !sidebar.classList.contains('open') : forceOpen;
-        sidebar.classList.toggle('open', willOpen);
+        function toggleSidebar(forceOpen) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const willOpen = forceOpen === undefined ? !sidebar.classList.contains('open') : forceOpen;
+            sidebar.classList.toggle('open', willOpen);
         backdrop.classList.toggle('opacity-100', willOpen);
         backdrop.classList.toggle('pointer-events-auto', willOpen);
     }
@@ -521,6 +521,47 @@
         });
 
         setNotificationCount({{ (notification_center['unread_count'] if notification_center else 0) | tojson }});
+
+        function closeAllInstructionPanels() {
+            document.querySelectorAll('[data-instructions-panel]').forEach((panel) => {
+                panel.classList.add('hidden');
+                panel.setAttribute('aria-hidden', 'true');
+            });
+            document.body.classList.remove('instructions-open');
+        }
+
+        document.querySelectorAll('[data-instructions-panel]').forEach((panel) => {
+            if (panel.parentElement !== document.body) {
+                document.body.appendChild(panel);
+            }
+        });
+
+        function openInstructionPanel(panelId) {
+            closeAllInstructionPanels();
+            const panel = document.querySelector(`[data-instructions-panel="${panelId}"]`);
+            if (!panel) return;
+            panel.classList.remove('hidden');
+            panel.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('instructions-open');
+        }
+
+        document.querySelectorAll('[data-instructions-open]').forEach((button) => {
+            button.addEventListener('click', () => {
+                openInstructionPanel(button.getAttribute('data-instructions-open'));
+            });
+        });
+
+        document.querySelectorAll('[data-instructions-close]').forEach((button) => {
+            button.addEventListener('click', () => {
+                closeAllInstructionPanels();
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeAllInstructionPanels();
+            }
+        });
 
         function escapeHtml(value) {
             return String(value ?? '')
