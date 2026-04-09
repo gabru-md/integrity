@@ -17,6 +17,7 @@ Use it as the primary place to find:
 - [Backup And Restore](./backup-restore.md)
 - [Browser Action Model](./browser-actions.md)
 - [Browser Extension Spec](./browser-extension-spec.md)
+- [Browser Rule Model](./browser-rules.md)
 - [Experience Modes](./experience-modes.md)
 - [Import Foundation](./imports.md)
 - [macOS Local Signals](./mac-agent.md)

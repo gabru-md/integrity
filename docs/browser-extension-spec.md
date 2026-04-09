@@ -283,6 +283,8 @@ Where:
 - `B` is a domain or URL scope
 - `C` is a Rasbhari-side target
 
+The detailed shared rule contract lives in [browser-rules.md](browser-rules.md).
+
 ### Rule Fields
 
 A browser rule should conceptually define:

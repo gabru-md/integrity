@@ -8,6 +8,7 @@ Useful entry points:
 - [Automation](docs/automation.md)
 - [Browser Action Model](docs/browser-actions.md)
 - [Browser Extension Spec](docs/browser-extension-spec.md)
+- [Browser Rule Model](docs/browser-rules.md)
 - [Experience Modes](docs/experience-modes.md)
 - [AI Command Layer](docs/AI.md)
 - [Backup And Restore](docs/backup-restore.md)
