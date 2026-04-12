@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from io import BytesIO
+from urllib.parse import quote
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from flask import redirect, abort, send_file, jsonify, request
@@ -31,7 +32,9 @@ from runtime.providers import (
     RasbhariDashboardDataProvider,
 )
 from services.browser_automation import BrowserAutomationService
+from services.device_pairing import DevicePairingService
 from services.docs import DocsService
+from services.users import UserService
 
 basedir = os.path.dirname(__file__)
 
@@ -107,6 +110,8 @@ class RasbhariServer(Server):
     def setup_additional_routes(self):
         docs_service = DocsService(os.path.join(basedir, "docs"))
         browser_automation_service = BrowserAutomationService()
+        device_pairing_service = DevicePairingService()
+        user_service = UserService()
 
         @self.app.route('/chat')
         @login_required
@@ -114,8 +119,9 @@ class RasbhariServer(Server):
             return redirect(self.open_webui_url), 302
 
         @self.app.route('/tv')
-        @login_required
         def tv_alias():
+            if not PermissionManager.is_authenticated():
+                return redirect("/login?next=/tv")
             return redirect('/rtv/tv')
 
         @self.app.route('/docs')
@@ -255,6 +261,72 @@ class RasbhariServer(Server):
                 as_attachment=True,
                 download_name="rasbhari-chrome-extension.zip",
             )
+
+        @self.app.route('/api/auth/device/init', methods=['POST'])
+        def device_init():
+            data = request.get_json(silent=True) or {}
+            requested_path = data.get("next") or "/"
+            if not isinstance(requested_path, str) or not requested_path.startswith("/"):
+                requested_path = "/"
+            pairing = device_pairing_service.create_pairing(
+                requested_path=requested_path,
+                requester_ip=request.remote_addr,
+                requester_user_agent=request.headers.get("User-Agent"),
+            )
+            authorize_url = f"{request.url_root.rstrip('/')}/auth/device/authorize?token={quote(pairing.token)}"
+            return jsonify({
+                "token": pairing.token,
+                "expires_at": pairing.expires_at.isoformat(),
+                "authorize_url": authorize_url,
+                "next": pairing.requested_path,
+            }), 200
+
+        @self.app.route('/api/auth/device/poll/<token>', methods=['GET'])
+        def device_poll(token):
+            pairing = device_pairing_service.get_valid_pairing(token)
+            if not pairing:
+                return jsonify({"status": "expired"}), 200
+            if pairing.status == "authorized":
+                return jsonify({"status": "authorized", "next": pairing.requested_path}), 200
+            if pairing.status == "consumed":
+                return jsonify({"status": "consumed", "next": pairing.requested_path}), 200
+            return jsonify({"status": pairing.status, "next": pairing.requested_path}), 200
+
+        @self.app.route('/api/auth/device/consume/<token>', methods=['POST'])
+        def device_consume(token):
+            pairing = device_pairing_service.consume_pairing(token)
+            if not pairing:
+                return jsonify({"error": "Invalid or expired pairing token."}), 400
+            if not pairing.user_id:
+                return jsonify({"error": "Pairing has no authorized user."}), 400
+            user = user_service.get_by_id(pairing.user_id)
+            if not user or not user.is_active or not user.is_approved:
+                return jsonify({"error": "Authorized user account is unavailable."}), 400
+            PermissionManager.login(user)
+            return jsonify({"message": "Device login successful", "redirect": pairing.requested_path or "/"}), 200
+
+        @self.app.route('/auth/device/authorize', methods=['GET', 'POST'])
+        def device_authorize():
+            token = request.args.get('token')
+            if not token:
+                return "Token required", 400
+            if not PermissionManager.is_authenticated():
+                next_path = f"/auth/device/authorize?token={quote(token)}"
+                return redirect(f"/login?next={next_path}")
+            pairing = device_pairing_service.get_valid_pairing(token)
+            if not pairing:
+                return "Invalid or expired pairing request.", 400
+
+            if request.method == 'POST':
+                if pairing.status != "pending":
+                    return "Pairing is no longer pending.", 400
+                user_id = PermissionManager.get_current_user_id()
+                if device_pairing_service.authorize_pairing(token, user_id):
+                    return "Device authorized successfully. You can close this tab.", 200
+                return "Failed to authorize.", 500
+
+            return render_flask_template('device_authorize.html', token=token, pairing=pairing)
+
 
 
 if __name__ == '__main__':

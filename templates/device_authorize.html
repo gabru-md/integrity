@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Authorize Device | Rasbhari</title>
+</head>
+<body class="flex h-screen items-center justify-center bg-gray-900 text-white">
+    <div class="w-full max-w-sm rounded-2xl bg-gray-800 p-8 text-center shadow-xl">
+        <h1 class="text-2xl font-bold">Authorize Device</h1>
+        <p class="mt-4 text-gray-400">Approve this sign-in request for your TV or secondary device.</p>
+        <div class="mt-4 rounded-xl bg-gray-900/70 px-4 py-3 text-left text-xs text-gray-300">
+            <div>Requested path: <span class="font-bold text-white">{{ pairing.requested_path }}</span></div>
+            {% if pairing.requester_ip %}<div class="mt-1">IP: <span class="font-semibold text-white">{{ pairing.requester_ip }}</span></div>{% endif %}
+            {% if pairing.requester_user_agent %}<div class="mt-1 truncate">Agent: <span class="font-semibold text-white">{{ pairing.requester_user_agent }}</span></div>{% endif %}
+        </div>
+        <form method="POST" action="/auth/device/authorize?token={{ token }}">
+            <button type="submit" class="mt-6 w-full rounded-full bg-amber-500 py-3 font-bold text-gray-900 transition hover:bg-amber-400">Authorize</button>
+        </form>
+    </div>
+</body>
+</html>
