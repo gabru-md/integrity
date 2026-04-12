@@ -113,6 +113,11 @@ class RasbhariServer(Server):
         def show_open_webui():
             return redirect(self.open_webui_url), 302
 
+        @self.app.route('/tv')
+        @login_required
+        def tv_alias():
+            return redirect('/rtv/tv')
+
         @self.app.route('/docs')
         @login_required
         def show_docs():

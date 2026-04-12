@@ -29,7 +29,7 @@ Use this loop when you already have a compatible movie file.
 2. Open `/rtv/home`.
 3. Click `Scan Folder`.
 4. Confirm the movie appears as ready and cached.
-5. Open `/rtv/tv`.
+5. Open `/tv`.
 6. Search or focus the movie card with remote arrow controls.
 7. Start playback and use the rTV player controls for play/pause, seek, fullscreen, and back.
 8. Stop and reopen the movie to confirm resume support.
@@ -51,7 +51,7 @@ Use this loop when validating the full candidate-to-ready path.
 7. Confirm the item moves to queued or downloading.
 8. Keep `MediaDownloadProcessor` running.
 9. Watch progress update on `/rtv/home`.
-10. When the item becomes ready and cached, open `/rtv/tv`.
+10. When the item becomes ready and cached, open `/tv`.
 11. Play the movie and verify resume/progress events as in the local-file test.
 
 ## Expected State Flow
@@ -63,7 +63,7 @@ candidate
   -> queued
   -> downloading
   -> ready + cached
-  -> playable from /rtv/tv
+  -> playable from /tv
 ```
 
 If the file is later evicted by the cache manager, the media record remains but `local_file_path` and cached state are cleared. The movie can be downloaded again later.
@@ -73,7 +73,7 @@ If the file is later evicted by the cache manager, the media record remains but 
 - `Timed out waiting for torrent metadata`: the magnet may have weak peers, blocked trackers, or no available DHT response. Use `testing.py` with the same magnet to compare resolver behavior.
 - `Queued` but not downloading: start or inspect `MediaDownloadProcessor` in the `Processes` surface.
 - Progress does not move: the torrent has metadata but not enough peers for the selected file.
-- Movie is not visible on `/rtv/tv`: only ready cached movies appear on the TV surface.
+- Movie is not visible on `/tv`: only ready cached movies appear on the TV surface.
 - Playback starts but fails or has no audio: the browser likely cannot decode the file. Prefer MP4 H264 AAC for V1.
 - A ready movie disappeared from the TV shelf: the cache manager may have evicted the local file to stay under the 3GB cap. The record should still exist on `/rtv/home`.
 

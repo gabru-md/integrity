@@ -165,7 +165,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - `MediaDownloadProcessor`
 - Notes:
   - movie-only owned-media MVP for a small personal TV shelf
-  - exposes `/rtv/home` for desktop/admin management and `/rtv/tv` for the TV-first surface
+  - exposes `/rtv/home` for desktop/admin management and `/tv` for the TV-first surface
   - TV surface renders as an immersive standalone app without the normal Rasbhari sidebar
   - TV surface shows only ready cached movies with search, Continue Watching, Recently Added, resume, restart, and large focusable cards
   - player route uses remote-friendly focusable controls for play/pause, seek, fullscreen, and back instead of relying on native browser controls
