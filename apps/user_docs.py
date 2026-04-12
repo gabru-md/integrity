@@ -9,8 +9,8 @@ def build_rasbhari_mental_model() -> dict:
         "stages": [
             {
                 "name": "Capture",
-                "description": "Events, activities, local signals, thoughts, and future imports turn real life into a shared record.",
-                "apps": ["Events", "Activities", "Thoughts", "Devices"],
+                "description": "Events, activities, local signals, thoughts, media, and future imports turn real life into a shared record.",
+                "apps": ["Events", "Activities", "Thoughts", "Devices", "rTV"],
             },
             {
                 "name": "Structure",
@@ -344,6 +344,26 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Example: on docs.python.org, when selection exists, ask for confirmation before triggering Save Docs Research.",
             ],
         },
+        "rTV": {
+            "overview": "rTV is a small owned-movie shelf for Rasbhari and your TV.",
+            "app_purpose": "Use rTV to scan ready local movie files, open a TV-first movie surface, and turn watching into Rasbhari media events.",
+            "how_to_use": [
+                "Put supported movie files in the configured rTV media folder.",
+                "Use Scan Folder from the rTV admin page to add ready local movies.",
+                "Open the TV surface from a browser on your TV, use search or the rails, then play, resume, or restart ready movies.",
+                "For magnet candidates, resolve metadata first so rTV can choose the largest movie file, then queue the download for the later processor.",
+                "Use the inline title field for cleanup, Retry for failed candidates or downloads, Delete File to free local cache, and Delete to remove the rTV record.",
+            ],
+            "setup_leverage": [
+                "Start with MP4 H264 AAC files for the best TV-browser playback chance.",
+                "Keep the library small and curated so the Raspberry Pi stays responsive.",
+            ],
+            "pairs_with": ["Events", "Reports", "Today"],
+            "glossary": [
+                {"term": "Ready Movie", "meaning": "A local movie file that rTV can serve to the TV player."},
+                {"term": "Candidate", "meaning": "A movie record saved for later download or preparation."},
+            ],
+        },
         "Activities": {
             "overview": "Activities are reusable actions you want to trigger from the dashboard. When you trigger one, Rasbhari turns it into an event so promises, skills, Today, and reports can react.",
             "app_purpose": "Use Activities when you want repeated real-world actions to become consistent event-producing shortcuts instead of manual form work, and when you want those triggers to stay visibly connected to the rest of the ecosystem.",
@@ -656,6 +676,7 @@ def build_app_user_guidance(app_name: str) -> dict:
         "summary": {
             "BrowserActions": "BrowserActions are the Rasbhari-side configuration layer the browser extension will later sync and expose as Capture Automation choices.",
             "BrowserRules": "BrowserRules decide when those BrowserActions should appear, ask first, or trigger automatically on matching browser context.",
+            "rTV": "rTV turns ready owned movies into a TV-first watch surface and records watching as media events.",
             "Activities": "Activities are the easiest way to capture repeated real-world actions so the rest of Rasbhari can react to them.",
             "Blogs": "Blogs add longer narrative context to project work and reflection.",
             "Connections": "Connections turn relationship maintenance into something visible enough for Today and Reports to reason about.",

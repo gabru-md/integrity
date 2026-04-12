@@ -79,7 +79,7 @@
                         </div>
                     </div>
 
-                    <details class="sidebar-group" {% if request.path == '/' or request.path == '/capture' or request.path == '/dashboard' or '/promises' in request.path or '/reports' in request.path or '/thoughts' in request.path %}open{% endif %}>
+                    <details class="sidebar-group" {% if request.path == '/' or request.path == '/capture' or request.path == '/dashboard' or '/promises' in request.path or '/reports' in request.path or '/thoughts' in request.path or '/rtv' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">
                             <span>Daily Loop</span>
                             <span class="sidebar-group-chevron">⌄</span>
@@ -90,6 +90,7 @@
                             {% if PermissionManager.can_view_app('promises') and 'promises' in active_app_names %}<li><a href="/promises/home" class="nav-link {% if '/promises' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◌</span><span>Promises</span></a></li>{% endif %}
                             {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}<li><a href="/thoughts/home" class="nav-link {% if '/thoughts' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✎</span><span>Thoughts</span></a></li>{% endif %}
                             {% if PermissionManager.can_view_app('reports') and 'reports' in active_app_names %}<li><a href="/reports/home" class="nav-link {% if '/reports' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▤</span><span>Reports</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('rtv') and 'rtv' in active_app_names %}<li><a href="/rtv/home" class="nav-link {% if '/rtv' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▶</span><span>rTV</span></a></li>{% endif %}
                             {% if not is_everyday_mode %}<li><a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a></li>{% endif %}
                         </ul>
                     </details>

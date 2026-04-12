@@ -17,6 +17,7 @@ from apps.activities import activities_app
 from apps.kanban_tickets import kanban_tickets_app
 from apps.connections import connections_app
 from apps.reports import reports_app
+from apps.rtv import rtv_app
 from apps.skills import skills_app
 from apps.users import users_app
 from gabru.auth import login_required, PermissionManager
@@ -94,6 +95,7 @@ class RasbhariServer(Server):
         self.register_app(skills_app)
         self.register_app(connections_app)
         self.register_app(reports_app)
+        self.register_app(rtv_app)
         self.register_app(users_app)
 
 

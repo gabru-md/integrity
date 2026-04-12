@@ -156,7 +156,33 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - updates `last_contact_at` and emits social events when interactions are logged
   - feeds overdue-contact checks in behavioral reports
 
-### 13. Users
+### 13. rTV
+
+- File: `apps/rtv.py`
+- Model: `MediaItem`
+- Widget: `kanban`
+- Processes:
+  - `MediaDownloadProcessor`
+- Notes:
+  - movie-only owned-media MVP for a small personal TV shelf
+  - exposes `/rtv/home` for desktop/admin management and `/rtv/tv` for the TV-first surface
+  - TV surface renders as an immersive standalone app without the normal Rasbhari sidebar
+  - TV surface shows only ready cached movies with search, Continue Watching, Recently Added, resume, restart, and large focusable cards
+  - player route uses remote-friendly focusable controls for play/pause, seek, fullscreen, and back instead of relying on native browser controls
+  - admin page supports adding magnet candidates, resolving metadata, queueing downloads, inspecting progress, retrying failures, editing titles, and deleting local files while preserving records
+  - scans the configured `RTV_MEDIA_DIR` folder for ready local video files
+  - stores selected-file metadata and cache state so later download and eviction processors can promote or remove local files without losing the movie record
+  - accepts magnet candidates, resolves torrent metadata, selects the largest video file, and queues downloads for the later processor
+  - downloads one queued selected movie at a time and updates progress on the media item
+  - enforces an rTV cache cap with `RTV_MEDIA_CACHE_LIMIT_BYTES`, defaulting to 3GB, and evicts least-recently-watched cached movies before new downloads
+  - preserves evicted movie records while clearing local file paths and cache state
+  - avoids evicting queued, downloading, or currently playing movies
+  - serves ready files through `/rtv/stream/<id>` with browser range support via Flask and blocks paths outside `RTV_MEDIA_DIR`
+  - records watch start through `/rtv/watch-started/<id>` and watch progress through `/rtv/progress/<id>`
+  - emits `media:watch_started`, `media:watch_progressed`, and `media:watch_finished`, with finish detected when progress crosses 90%
+  - documents the end-to-end V1 validation path in [docs/rtv-test-loop.md](rtv-test-loop.md)
+
+### 14. Users
 
 - File: `apps/users.py`
 - Model: `User`

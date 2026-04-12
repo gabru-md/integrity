@@ -1,0 +1,31 @@
+<article
+    data-rtv-card
+    data-title="{{ item.title | lower }}"
+    class="group min-w-[15.5rem] max-w-[15.5rem] rounded-[1.75rem] border border-white/10 bg-white/[0.07] p-3 shadow-2xl outline-none transition duration-200 hover:-translate-y-1 hover:border-amber-300/70 focus-within:-translate-y-1 focus-within:border-amber-300 focus-within:ring-4 focus-within:ring-amber-300/20"
+>
+    <a href="/rtv/play/{{ item.id }}" class="block rounded-[1.35rem] outline-none" data-rtv-focus>
+        <div class="aspect-[2/3] overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-amber-300/30 via-slate-800 to-slate-950">
+            {% if item.poster_path %}
+            <img src="{{ item.poster_path }}" alt="" class="h-full w-full object-cover">
+            {% else %}
+            <div class="flex h-full items-end p-5">
+                <div class="text-2xl font-black leading-tight text-white">{{ item.title }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </a>
+    <div class="mt-4">
+        <div class="truncate text-lg font-black text-white">{{ item.title }}</div>
+        <div class="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+            {% if item.progress_seconds > 0 %}{{ (item.progress_seconds // 60) }} min watched{% else %}Ready{% endif %}
+        </div>
+        <div class="mt-4 flex gap-2">
+            <a href="/rtv/play/{{ item.id }}" data-rtv-focus class="flex-1 rounded-full bg-white px-4 py-2 text-center text-xs font-black text-slate-950 outline-none transition hover:bg-amber-200 focus:bg-amber-200">
+                {% if item.progress_seconds > 0 %}Resume{% else %}Play{% endif %}
+            </a>
+            {% if item.progress_seconds > 0 %}
+            <a href="/rtv/play/{{ item.id }}?restart=1" data-rtv-focus class="rounded-full bg-white/10 px-4 py-2 text-xs font-black text-white outline-none transition hover:bg-white/15 focus:bg-white/15">Restart</a>
+            {% endif %}
+        </div>
+    </div>
+</article>

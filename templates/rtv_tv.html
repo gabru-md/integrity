@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-light.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>rTV</title>
+</head>
+<body class="min-h-screen overflow-hidden bg-black text-white">
+<main class="h-screen overflow-y-auto bg-[radial-gradient(circle_at_16%_0%,rgba(251,191,36,0.22),transparent_28rem),linear-gradient(135deg,#111827,#020617_58%,#000)] px-8 py-8 lg:px-12">
+    <header class="flex flex-col gap-6 pb-8 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='favicon-light.png') }}" alt="" class="h-10 w-10 rounded-2xl bg-white/10 p-2">
+                <div class="text-xs font-black uppercase tracking-[0.34em] text-amber-300">rTV</div>
+            </div>
+            <h1 class="mt-4 text-5xl font-black tracking-tight sm:text-7xl">Your movie shelf</h1>
+            <p class="mt-3 max-w-2xl text-base leading-7 text-slate-300">Ready movies only. Use the remote arrows, press enter to play, and press back to return.</p>
+        </div>
+        <div class="w-full lg:w-[28rem]">
+            <label for="rtv-search" class="sr-only">Search movies</label>
+            <input
+                id="rtv-search"
+                data-rtv-focus
+                class="w-full rounded-full border border-white/10 bg-white/10 px-6 py-4 text-xl font-bold text-white placeholder:text-slate-400 outline-none transition focus:border-amber-300 focus:ring-4 focus:ring-amber-300/30"
+                placeholder="Search movies"
+                autocomplete="off"
+            >
+        </div>
+    </header>
+
+    {% set hero_item = continue_items[0] if continue_items else (recent_items[0] if recent_items else none) %}
+    {% if hero_item %}
+    <section class="mb-10 rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl lg:p-8">
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
+            <div>
+                <div class="text-xs font-black uppercase tracking-[0.24em] text-slate-400">{% if hero_item.progress_seconds > 0 %}Continue Watching{% else %}Recently Added{% endif %}</div>
+                <h2 class="mt-3 text-4xl font-black tracking-tight lg:text-6xl">{{ hero_item.title }}</h2>
+                <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-300">
+                    {% if hero_item.progress_seconds > 0 %}
+                    Resume from {{ hero_item.progress_seconds // 60 }} minutes, or restart from the beginning.
+                    {% else %}
+                    Ready to play from your local rTV cache.
+                    {% endif %}
+                </p>
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <a href="/rtv/play/{{ hero_item.id }}" data-rtv-focus class="rounded-full bg-white px-8 py-4 text-base font-black text-slate-950 outline-none transition hover:bg-amber-200 focus:bg-amber-200 focus:ring-4 focus:ring-amber-300/35">Play</a>
+                    {% if hero_item.progress_seconds > 0 %}
+                    <a href="/rtv/play/{{ hero_item.id }}?restart=1" data-rtv-focus class="rounded-full bg-white/10 px-8 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white/15 focus:ring-4 focus:ring-white/20">Restart</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="hidden aspect-[2/3] rounded-[1.75rem] bg-gradient-to-br from-amber-300/30 via-slate-800 to-slate-950 lg:block"></div>
+        </div>
+    </section>
+    {% endif %}
+
+    <div id="rtv-empty-search" class="mb-8 hidden rounded-3xl border border-dashed border-white/15 p-8 text-center text-slate-400">
+        No ready movies match that search.
+    </div>
+
+    {% if continue_items %}
+    <section class="rtv-rail mb-10" data-rtv-rail>
+        <h2 class="mb-4 text-sm font-black uppercase tracking-[0.22em] text-slate-400">Continue Watching</h2>
+        <div class="flex gap-4 overflow-x-auto pb-4">
+            {% for item in continue_items %}
+            {% include "rtv_tv_card.html" %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if recent_items %}
+    <section class="rtv-rail mb-10" data-rtv-rail>
+        <h2 class="mb-4 text-sm font-black uppercase tracking-[0.22em] text-slate-400">Recently Added</h2>
+        <div class="flex gap-4 overflow-x-auto pb-4">
+            {% for item in recent_items[:8] %}
+            {% include "rtv_tv_card.html" %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="rtv-rail" data-rtv-rail>
+        <h2 class="mb-4 text-sm font-black uppercase tracking-[0.22em] text-slate-400">All Ready Movies</h2>
+        <div id="rtv-grid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {% for item in ready_items %}
+            {% include "rtv_tv_card.html" %}
+            {% else %}
+            <div class="rounded-3xl border border-dashed border-white/15 p-10 text-center text-slate-400 sm:col-span-2 xl:col-span-4">
+                No ready movies yet. Add files in rTV, scan the folder, then come back here.
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+
+<script>
+    const searchInput = document.getElementById('rtv-search');
+    const cards = Array.from(document.querySelectorAll('[data-rtv-card]'));
+    const focusables = () => Array.from(document.querySelectorAll('[data-rtv-focus]')).filter((node) => {
+        const card = node.closest('[data-rtv-card]');
+        return !card || !card.classList.contains('hidden');
+    });
+
+    searchInput?.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+        cards.forEach((card) => {
+            const hidden = query && !card.dataset.title.includes(query);
+            card.classList.toggle('hidden', Boolean(hidden));
+            if (!hidden) visibleCount += 1;
+        });
+        document.querySelectorAll('[data-rtv-rail]').forEach((rail) => {
+            const hasVisibleCard = Array.from(rail.querySelectorAll('[data-rtv-card]')).some((card) => !card.classList.contains('hidden'));
+            rail.classList.toggle('hidden', query && !hasVisibleCard);
+        });
+        document.getElementById('rtv-empty-search')?.classList.toggle('hidden', !query || visibleCount > 0);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        const activeElements = focusables();
+        if (!activeElements.length) return;
+        const key = event.key;
+        if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Backspace'].includes(key)) return;
+        if (key === 'Escape' || key === 'Backspace') {
+            if (document.activeElement === searchInput && searchInput.value) return;
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            activeElements[0].focus();
+            event.preventDefault();
+            return;
+        }
+        if (key === 'Enter' && document.activeElement?.tagName === 'A') return;
+        event.preventDefault();
+        const activeIndex = activeElements.indexOf(document.activeElement);
+        const current = activeIndex >= 0 ? activeIndex : 0;
+        const columns = window.innerWidth >= 1280 ? 4 : window.innerWidth >= 640 ? 2 : 1;
+        const delta = key === 'ArrowRight' ? 1 : key === 'ArrowLeft' ? -1 : key === 'ArrowDown' ? columns : -columns;
+        const next = Math.max(0, Math.min(activeElements.length - 1, current + delta));
+        activeElements[next].focus();
+    });
+
+    const initialFocus = focusables()[0];
+    if (initialFocus) initialFocus.focus();
+</script>
+</body>
+</html>

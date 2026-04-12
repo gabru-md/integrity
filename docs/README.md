@@ -22,6 +22,7 @@ Use it as the primary place to find:
 - [Mental Model](./mental-model.md) also documents the first-run guided tutorial flow
 - [Remote Pi Operations](./remote-pi-ops.md)
 - [Rasbhari Overview](./rasbhari.md)
+- [rTV Test Loop](./rtv-test-loop.md)
 - [Testing Sandbox](./testing-sandbox.md)
 - [Test Suite](./testing.md)
 

@@ -1,0 +1,238 @@
+{% extends "index.html" %}
+{% block title %}rTV{% endblock %}
+{% block shell_title %}rTV{% endblock %}
+{% block shell_subtitle %}A small owned-movie shelf for Rasbhari and your TV.{% endblock %}
+
+{% block content %}
+<div class="space-y-8 px-1 py-2">
+    <header class="shell-card hero-card px-6 py-6">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Personal Cinema</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">rTV</h1>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
+                    Manage a tiny local movie shelf, scan owned files from disk, and open a TV-first watch surface when the movies are ready.
+                </p>
+                <p class="mt-3 text-xs font-semibold text-[var(--text-soft)]">Media folder: {{ stats.media_root }}</p>
+            </div>
+            <div class="flex flex-wrap items-start gap-3">
+                <a href="/rtv/tv" class="btn-primary px-5 py-3 text-sm">Open TV</a>
+                <button type="button" onclick="scanMedia()" class="btn-secondary px-5 py-3 text-sm">Scan Folder</button>
+                {% set instructions_inline = true %}
+                {% include "_app_instructions.html" %}
+            </div>
+        </div>
+    </header>
+
+    <section class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <article class="shell-card metric-card p-5">
+            <div class="metric-label">Movies</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ stats.total }}</div>
+        </article>
+        <article class="shell-card metric-card p-5">
+            <div class="metric-label">Ready</div>
+            <div class="mt-2 text-3xl font-black text-[var(--success)]">{{ stats.ready }}</div>
+        </article>
+        <article class="shell-card metric-card p-5">
+            <div class="metric-label">Candidates</div>
+            <div class="mt-2 text-3xl font-black text-[var(--accent)]">{{ stats.candidates }}</div>
+        </article>
+        <article class="shell-card metric-card p-5">
+            <div class="metric-label">Cache</div>
+            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ stats.downloaded_gb }}GB</div>
+            <div class="mt-1 text-xs font-semibold text-[var(--text-soft)]">of {{ stats.cache_limit_gb }}GB</div>
+        </article>
+    </section>
+
+    <section class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <article class="shell-card p-6">
+            <h2 class="text-2xl font-bold text-[var(--text)]">Add Candidate</h2>
+            <p class="mt-2 text-sm text-[var(--text-soft)]">Store a movie candidate now. Download handling lands in the next rTV processor slice.</p>
+            <form id="candidate-form" class="mt-5 space-y-4">
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-[var(--text)]">Title</label>
+                    <input id="candidate-title" class="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)]" placeholder="Movie title">
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-[var(--text)]">Magnet URI</label>
+                    <textarea id="candidate-magnet" class="min-h-28 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)]" placeholder="magnet:?xt=urn:btih:..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary px-5 py-3 text-sm">Add Candidate</button>
+            </form>
+        </article>
+
+        <article class="shell-card p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-[var(--text)]">Library</h2>
+                    <p class="mt-2 text-sm text-[var(--text-soft)]">Ready files appear on the TV surface. Candidates stay here until a downloader promotes them.</p>
+                </div>
+            </div>
+            <div class="mt-5 space-y-3">
+                {% for item in items %}
+                <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <input
+                                    id="title-{{ item.id }}"
+                                    value="{{ item.title }}"
+                                    class="w-full rounded-xl border border-transparent bg-transparent px-0 py-1 text-base font-bold text-[var(--text)] outline-none transition focus:border-[var(--border)] focus:bg-[var(--surface-muted)] focus:px-3"
+                                >
+                                <button type="button" onclick="saveTitle({{ item.id }})" class="self-start rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Save</button>
+                            </div>
+                            <div class="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-soft)]">{{ item.status }} · {{ item.cache_state }} · {{ item.source_type }}</div>
+                            {% if item.selected_file_name %}
+                            <div class="mt-2 text-xs text-[var(--text-soft)]">{{ item.selected_file_name }} · {{ (item.selected_file_size_bytes / 1024 / 1024) | round(1) }}MB</div>
+                            {% endif %}
+                            {% if item.status in ['queued', 'downloading', 'failed'] %}
+                            <div class="mt-3">
+                                <div class="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-gray-800">
+                                    <div class="h-full rounded-full bg-amber-400" style="width: {{ item.download_progress | round(1) }}%"></div>
+                                </div>
+                                <div class="mt-2 text-xs text-[var(--text-soft)]">{{ item.download_progress | round(1) }}% · {{ item.download_rate_kbps | round(1) }} KB/s · {{ item.download_peers }} peers</div>
+                                {% if item.last_error %}
+                                <div class="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-300">{{ item.last_error }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if item.local_path %}
+                            <div class="mt-2 break-all text-xs text-[var(--text-soft)]">{{ item.local_path }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="flex shrink-0 flex-wrap justify-end gap-2">
+                            {% if item.status == 'ready' %}
+                            <a href="/rtv/play/{{ item.id }}" class="rounded-full bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Play</a>
+                            <button type="button" onclick="deleteLocalFile({{ item.id }})" class="rounded-full bg-rose-100 px-4 py-2 text-xs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">Delete File</button>
+                            {% elif item.source_type == 'magnet' and item.selected_file_index is none and item.status != 'failed' %}
+                            <button type="button" onclick="resolveMetadata({{ item.id }})" class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Resolve</button>
+                            {% elif item.source_type == 'magnet' and item.status == 'candidate' %}
+                            <button type="button" onclick="queueDownload({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queue Download</button>
+                            {% elif item.status == 'queued' %}
+                            <span class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queued</span>
+                            {% elif item.status == 'downloading' %}
+                            <span class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Downloading</span>
+                            {% elif item.status == 'failed' %}
+                            <button type="button" onclick="retryItem({{ item.id }})" class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Retry</button>
+                            {% else %}
+                            <span class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600 dark:bg-gray-800 dark:text-gray-300">Not ready</span>
+                            {% endif %}
+                            {% if item.status not in ['queued', 'downloading'] %}
+                            <button type="button" onclick="deleteRecord({{ item.id }})" class="rounded-full bg-rose-100 px-4 py-2 text-xs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">Delete</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="rounded-2xl border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--text-soft)]">
+                    No rTV movies yet. Put MP4 files in the media folder and scan.
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+</div>
+
+<script>
+    async function scanMedia() {
+        const response = await fetch('/rtv/scan', { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Scan failed');
+            return;
+        }
+        alert(`Scan complete. Added ${data.created}, skipped ${data.skipped}.`);
+        window.location.reload();
+    }
+
+    document.getElementById('candidate-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const response = await fetch('/rtv/candidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: document.getElementById('candidate-title').value,
+                magnet_uri: document.getElementById('candidate-magnet').value,
+            }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Failed to add candidate');
+            return;
+        }
+        window.location.reload();
+    });
+
+    async function resolveMetadata(itemId) {
+        const response = await fetch(`/rtv/${itemId}/resolve-metadata`, { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Failed to resolve metadata');
+            return;
+        }
+        window.location.reload();
+    }
+
+    async function queueDownload(itemId) {
+        const response = await fetch(`/rtv/${itemId}/queue-download`, { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Failed to queue download');
+            return;
+        }
+        window.location.reload();
+    }
+
+    async function saveTitle(itemId) {
+        const input = document.getElementById(`title-${itemId}`);
+        const title = input?.value?.trim();
+        if (!title) {
+            alert('Title is required');
+            return;
+        }
+        const response = await fetch(`/rtv/${itemId}/title`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Failed to update title');
+            return;
+        }
+        window.location.reload();
+    }
+
+    async function retryItem(itemId) {
+        const response = await fetch(`/rtv/${itemId}/retry`, { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Retry failed');
+            return;
+        }
+        window.location.reload();
+    }
+
+    async function deleteLocalFile(itemId) {
+        if (!confirm('Delete the local movie file? The rTV record will stay available for later re-download.')) return;
+        const response = await fetch(`/rtv/${itemId}/delete-local`, { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Failed to delete local file');
+            return;
+        }
+        window.location.reload();
+    }
+
+    async function deleteRecord(itemId) {
+        if (!confirm('Delete this rTV record and any local file?')) return;
+        const response = await fetch(`/rtv/${itemId}/delete-record`, { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Failed to delete movie');
+            return;
+        }
+        window.location.reload();
+    }
+</script>
+{% endblock %}

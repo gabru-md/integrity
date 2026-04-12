@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-light.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>{{ item.title }} - rTV</title>
+</head>
+<body class="min-h-screen overflow-hidden bg-black text-white">
+<main class="relative h-screen w-screen bg-black">
+    <video
+        id="rtv-player"
+        class="h-full w-full bg-black object-contain"
+        autoplay
+        playsinline
+        src="/rtv/stream/{{ item.id }}"
+    ></video>
+
+    <div id="rtv-player-chrome" class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent px-6 pb-6 pt-24 transition-opacity duration-300 lg:px-10">
+        <div class="mb-5 flex items-end justify-between gap-6">
+            <div class="min-w-0">
+                <div class="text-xs font-black uppercase tracking-[0.24em] text-amber-300">Now Playing</div>
+                <h1 class="mt-2 truncate text-3xl font-black tracking-tight lg:text-5xl">{{ item.title }}</h1>
+                <div id="rtv-time-label" class="mt-2 text-sm font-bold text-slate-300">Loading...</div>
+            </div>
+            <a href="/rtv/tv" data-player-focus class="shrink-0 rounded-full bg-white/10 px-6 py-4 text-sm font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Back</a>
+        </div>
+
+        <div class="mb-5 h-2 overflow-hidden rounded-full bg-white/15">
+            <div id="rtv-progress-bar" class="h-full w-0 rounded-full bg-amber-300"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-3">
+            <button type="button" data-player-focus data-action="rewind" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">-30s</button>
+            <button type="button" data-player-focus data-action="toggle" class="rounded-full bg-white px-10 py-4 text-base font-black text-slate-950 outline-none transition hover:bg-amber-200 focus:bg-amber-200 focus:ring-4 focus:ring-amber-300/35">Pause</button>
+            <button type="button" data-player-focus data-action="forward" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">+30s</button>
+            <button type="button" data-player-focus data-action="fullscreen" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Fullscreen</button>
+        </div>
+
+        <div class="mt-4 text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+            Remote: arrows move focus, enter selects, play/pause toggles, left/right seek, back returns.
+        </div>
+    </div>
+</main>
+
+<script>
+    const player = document.getElementById('rtv-player');
+    const chromeEl = document.getElementById('rtv-player-chrome');
+    const progressBar = document.getElementById('rtv-progress-bar');
+    const timeLabel = document.getElementById('rtv-time-label');
+    const toggleButton = document.querySelector('[data-action="toggle"]');
+    const resumeAt = {% if restart %}0{% else %}{{ item.progress_seconds or 0 }}{% endif %};
+    const restartPlayback = {{ restart | tojson }};
+    let lastSent = 0;
+    let watchStartedSent = false;
+    let chromeTimer = null;
+
+    function formatTime(seconds) {
+        if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+        const total = Math.floor(seconds);
+        const hours = Math.floor(total / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const secs = String(total % 60).padStart(2, '0');
+        return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${secs}` : `${minutes}:${secs}`;
+    }
+
+    function updatePlaybackUi() {
+        if (toggleButton) toggleButton.textContent = player.paused ? 'Play' : 'Pause';
+        const duration = player.duration || 0;
+        const current = player.currentTime || 0;
+        const percent = duration ? Math.min(100, Math.max(0, (current / duration) * 100)) : 0;
+        progressBar.style.width = `${percent}%`;
+        timeLabel.textContent = duration ? `${formatTime(current)} / ${formatTime(duration)}` : 'Loading...';
+    }
+
+    function showChrome() {
+        chromeEl.classList.remove('opacity-0', 'pointer-events-none');
+        clearTimeout(chromeTimer);
+        chromeTimer = setTimeout(() => {
+            if (!player.paused && !chromeEl.contains(document.activeElement)) {
+                chromeEl.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }, 4500);
+    }
+
+    function seekBy(seconds) {
+        if (!Number.isFinite(player.duration)) return;
+        player.currentTime = Math.max(0, Math.min(player.duration, player.currentTime + seconds));
+        sendProgress(true, !player.paused && !player.ended);
+        updatePlaybackUi();
+    }
+
+    async function togglePlayback() {
+        if (player.paused) {
+            await player.play().catch(() => {});
+        } else {
+            player.pause();
+        }
+        updatePlaybackUi();
+        showChrome();
+    }
+
+    async function sendProgress(force = false, isPlaying = !player.paused && !player.ended) {
+        if (!force && Math.abs(player.currentTime - lastSent) < 15) return;
+        lastSent = player.currentTime;
+        await fetch('/rtv/progress/{{ item.id }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                progress_seconds: player.currentTime || 0,
+                duration_seconds: player.duration || 0,
+                is_playing: isPlaying,
+            }),
+        }).catch(() => {});
+    }
+
+    async function sendWatchStarted() {
+        if (watchStartedSent) return;
+        watchStartedSent = true;
+        await fetch('/rtv/watch-started/{{ item.id }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ restart: restartPlayback }),
+        }).catch(() => {});
+    }
+
+    document.querySelectorAll('[data-action]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const action = button.dataset.action;
+            if (action === 'toggle') await togglePlayback();
+            if (action === 'rewind') seekBy(-30);
+            if (action === 'forward') seekBy(30);
+            if (action === 'fullscreen') {
+                const target = document.documentElement;
+                if (!document.fullscreenElement && target.requestFullscreen) {
+                    await target.requestFullscreen().catch(() => {});
+                } else if (document.exitFullscreen) {
+                    await document.exitFullscreen().catch(() => {});
+                }
+            }
+        });
+    });
+
+    document.addEventListener('keydown', async (event) => {
+        const focusables = Array.from(document.querySelectorAll('[data-player-focus]'));
+        const activeIndex = focusables.indexOf(document.activeElement);
+        const key = event.key;
+        showChrome();
+        if (key === 'ArrowLeft') {
+            if (chromeEl.contains(document.activeElement)) {
+                event.preventDefault();
+                focusables[Math.max(0, activeIndex - 1)]?.focus();
+            } else {
+                event.preventDefault();
+                seekBy(-30);
+            }
+            return;
+        }
+        if (key === 'ArrowRight') {
+            if (chromeEl.contains(document.activeElement)) {
+                event.preventDefault();
+                focusables[Math.min(focusables.length - 1, activeIndex + 1)]?.focus();
+            } else {
+                event.preventDefault();
+                seekBy(30);
+            }
+            return;
+        }
+        if (key === 'ArrowUp' || key === 'ArrowDown') {
+            event.preventDefault();
+            focusables[Math.max(0, activeIndex)]?.focus();
+            return;
+        }
+        if (key === 'Enter' && document.activeElement?.tagName !== 'A' && document.activeElement?.tagName !== 'BUTTON') {
+            event.preventDefault();
+            await togglePlayback();
+            return;
+        }
+        if (key === ' ' || key === 'MediaPlayPause' || key === 'k') {
+            event.preventDefault();
+            await togglePlayback();
+            return;
+        }
+        if (key === 'Escape' || key === 'Backspace' || key === 'BrowserBack') {
+            event.preventDefault();
+            window.location.href = '/rtv/tv';
+        }
+    });
+
+    player.addEventListener('loadedmetadata', () => {
+        if (resumeAt > 5 && resumeAt < player.duration - 10) {
+            player.currentTime = resumeAt;
+        }
+        updatePlaybackUi();
+    });
+    player.addEventListener('play', () => {
+        sendWatchStarted();
+        updatePlaybackUi();
+        showChrome();
+    });
+    player.addEventListener('timeupdate', () => {
+        updatePlaybackUi();
+        sendProgress(false, true);
+    });
+    player.addEventListener('pause', () => {
+        updatePlaybackUi();
+        showChrome();
+        sendProgress(true, false);
+    });
+    player.addEventListener('ended', () => {
+        updatePlaybackUi();
+        showChrome();
+        sendProgress(true, false);
+    });
+    window.addEventListener('beforeunload', () => {
+        fetch('/rtv/progress/{{ item.id }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                progress_seconds: player.currentTime || 0,
+                duration_seconds: player.duration || 0,
+                is_playing: false,
+            }),
+            keepalive: true,
+        }).catch(() => {});
+    });
+
+    document.querySelector('[data-action="toggle"]')?.focus();
+    showChrome();
+</script>
+</body>
+</html>

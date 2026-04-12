@@ -48,6 +48,7 @@ If you want more control, add the ecosystem pieces gradually:
 - `Projects` and `Kanban` for work structure
 - `Connections` for people and relationship cadence
 - `Thoughts` and `Blogs` for narrative context
+- `rTV` for a small owned-movie shelf that can be opened from a TV browser
 
 ### As an operator
 
@@ -57,6 +58,8 @@ Use the deeper surfaces only if you need them:
 - `Processes` for background workers
 - `Apps` for enabling and disabling components
 - `Automation` for browser capture and future automation surfaces
+- `rTV` for managing and watching ready local movies
+- `MediaDownloadProcessor` for one-at-a-time rTV movie downloads once a candidate is queued
 
 ## Product Model
 
@@ -110,6 +113,7 @@ Some browser-extension and automation design notes are still moving and live in 
 - [Environment Reference](docs/environment.md)
 - [Backup And Restore](docs/backup-restore.md)
 - [Remote Pi Operations](docs/remote-pi-ops.md)
+- [rTV Test Loop](docs/rtv-test-loop.md)
 - [Test Suite](docs/testing.md)
 - [Testing Sandbox](docs/testing-sandbox.md)
 
