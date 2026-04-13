@@ -936,6 +936,17 @@ input[readonly] {
     font-size: 0.875rem;
 }
 
+.vue-island {
+    display: block;
+}
+
+.vue-island-shell {
+    border-radius: calc(var(--card-radius) - 2px);
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    box-shadow: var(--card-shadow);
+}
+
 .ui-alert {
     border-radius: calc(var(--card-radius) - 2px);
     border: 1px solid var(--border);
