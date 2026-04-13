@@ -62,8 +62,8 @@
         <details class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200">
             <summary class="list-none cursor-pointer">
                 <div class="p-6 flex flex-col gap-4">
-                    <div class="flex justify-between items-start gap-4">
-                        <div class="min-w-0">
+                    <div class="flex flex-wrap justify-between items-start gap-4">
+                        <div class="min-w-[14rem] flex-1">
                             <div class="flex items-center gap-2 flex-wrap mb-2">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     {% if promise.status == 'active' %}bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400
@@ -79,7 +79,20 @@
                             <p class="text-slate-500 dark:text-gray-400 text-sm mt-2 line-clamp-2">{{ promise.description }}</p>
                             {% endif %}
                         </div>
-                        <span class="disclosure-summary-chevron text-slate-400 shrink-0">⌄</span>
+                        <div class="flex shrink-0 flex-wrap justify-end gap-2">
+                            <button onclick="event.preventDefault(); event.stopPropagation(); editPromise({{ promise.id }})" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                                Edit
+                            </button>
+                            <button onclick="event.preventDefault(); event.stopPropagation(); refreshPromise({{ promise.id }})" class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                Refresh
+                            </button>
+                            {% if not is_everyday_mode %}
+                            <button onclick="event.preventDefault(); event.stopPropagation(); visualizePromise({{ promise.id }})" class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300">
+                                Inspect
+                            </button>
+                            {% endif %}
+                            <span class="disclosure-summary-chevron text-slate-400 px-1">⌄</span>
+                        </div>
                     </div>
 
                     <div>
@@ -186,33 +199,11 @@
                         {{ promise.total_completions }} completions across {{ promise.total_periods }} periods
                     </div>
                 </div>
-                <details class="disclosure mt-4">
-                    <summary class="disclosure-summary">
-                        <div class="disclosure-summary-copy">
-                            <div class="disclosure-summary-title">Tools</div>
-                            <div class="disclosure-summary-meta">Edit, refresh, or inspect this promise without crowding the card.</div>
-                        </div>
-                        <span class="disclosure-summary-chevron">⌄</span>
-                    </summary>
-                    <div class="disclosure-body">
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="event.preventDefault(); editPromise({{ promise.id }})" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200">
-                                Edit
-                            </button>
-                            <button onclick="event.preventDefault(); refreshPromise({{ promise.id }})" class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
-                                Refresh
-                            </button>
-                            {% if not is_everyday_mode %}
-                            <button onclick="event.preventDefault(); visualizePromise({{ promise.id }})" class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300">
-                                Chart
-                            </button>
-                            {% endif %}
-                            <button onclick="event.preventDefault(); deletePromise({{ promise.id }})" class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-300">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </details>
+                <div class="pt-2">
+                    <button onclick="event.preventDefault(); deletePromise({{ promise.id }})" class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-300">
+                        Delete
+                    </button>
+                </div>
             </div>
         </details>
         {% else %}
