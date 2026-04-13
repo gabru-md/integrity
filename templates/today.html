@@ -5,13 +5,13 @@
 {% set setup_checklist = today_data.setup_checklist if today_data.setup_checklist is defined else {'title': 'Minimal Useful Setup', 'summary': '', 'items': [], 'completed_count': 0, 'total_count': 0, 'is_complete': False} %}
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
 {% set is_everyday_mode = experience_mode == 'everyday' %}
-<div class="space-y-6 px-1 py-2">
+<div class="page-shell px-1 py-2">
     <header class="shell-card hero-card px-6 py-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+        <div class="page-hero">
+            <div class="page-hero-header">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Today</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">What Matters Today</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
+                <h1 class="page-hero-title">What Matters Today</h1>
+                <p class="page-hero-copy">
                     {% if is_everyday_mode %}
                     Capture one meaningful thing, see what needs attention, and move one next item without carrying the whole system in your head.
                     {% else %}
@@ -19,7 +19,7 @@
                     {% endif %}
                 </p>
             </div>
-            <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+            <div class="page-actions">
                 <a href="/capture" class="btn-primary px-4 py-3 text-sm">Quick Capture</a>
                 <a href="/promises/home" class="btn-secondary px-4 py-3 text-sm">Promises</a>
                 {% if is_everyday_mode %}
@@ -204,13 +204,13 @@
     </section>
     {% endif %}
 
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+    <section class="page-rail-grid">
         <div class="space-y-6 today-primary-column">
             <article class="shell-card p-6">
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Next Moves</div>
-                        <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Other Helpful Moves</h2>
+                        <h2 class="page-section-title">Other Helpful Moves</h2>
                     </div>
                     <a href="/reports/home" class="text-sm font-semibold text-[var(--accent)]">Reports</a>
                 </div>

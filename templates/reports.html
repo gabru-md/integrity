@@ -6,21 +6,21 @@
 {% block content %}
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
 {% set is_system_mode = experience_mode == 'system' %}
-<div class="space-y-6 px-1 py-2">
-    <section class="split-card">
+<div class="page-shell px-1 py-2">
+    <section class="page-rail-grid">
         <div class="shell-card hero-card px-6 py-6">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+            <div class="page-hero">
+                <div class="page-hero-header">
                     <div class="section-kicker text-[10px] font-extrabold uppercase">Reports</div>
-                    <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Behavioral Mirror</h1>
-                    <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Reports compare intent, action, and drift.</p>
+                    <h1 class="page-hero-title">Behavioral Mirror</h1>
+                    <p class="page-hero-copy">Reports compare intent, action, and drift.</p>
                 </div>
                 <div class="shrink-0">
                     {% set instructions_inline = true %}
                     {% include "_app_instructions.html" %}
                 </div>
             </div>
-            <div class="mt-5 flex flex-wrap gap-3">
+            <div class="page-actions mt-5">
                 <a href="#report-generate-form" class="btn-primary px-5 py-3 text-sm">Create Report</a>
                 {% if reports %}
                 <a href="/reports/{{ reports[0].id }}/view" class="btn-secondary px-5 py-3 text-sm">Open Latest</a>
@@ -47,7 +47,7 @@
         </div>
     </section>
 
-    <section class="split-card">
+    <section class="page-rail-grid">
         <div class="shell-card px-6 py-6">
             <div class="mb-5">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Generate</div>

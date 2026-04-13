@@ -2,15 +2,15 @@
 {% block title %}Automation{% endblock %}
 
 {% block content %}
-<div class="space-y-6 px-1 py-2">
+<div class="page-shell px-1 py-2">
     <header class="shell-card hero-card px-6 py-6">
-        <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div>
+        <div class="page-hero">
+            <div class="page-hero-header">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Automation</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Capture automation, simplified</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">The browser extension is the first shipped Capture Automation client. It connects Rasbhari to browser context without turning the page into a wall of setup detail.</p>
+                <h1 class="page-hero-title">Capture automation, simplified</h1>
+                <p class="page-hero-copy">The browser extension is the first shipped Capture Automation client. It connects Rasbhari to browser context without turning the page into a wall of setup detail.</p>
             </div>
-            <div class="flex flex-wrap gap-3">
+            <div class="page-actions">
                 <a href="/docs/automation.md" class="btn-secondary px-4 py-3 text-sm">Read Overview</a>
                 <a href="/automation/chrome-extension.zip" class="btn-secondary px-4 py-3 text-sm">Download Chrome Bundle</a>
                 <a href="/browseractions/home" class="btn-secondary px-4 py-3 text-sm">Manage Browser Actions</a>
@@ -20,7 +20,7 @@
         </div>
     </header>
 
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.85fr)]">
+    <section class="page-rail-grid">
         <div class="space-y-6">
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Download</div>
