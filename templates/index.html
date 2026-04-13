@@ -30,7 +30,7 @@
         })();
     </script>
 </head>
-<body class="shell-fade-in">
+<body class="shell-fade-in" data-experience-mode="{{ experience_mode }}">
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
 {% set is_everyday_mode = experience_mode == 'everyday' %}
 {% set is_structured_mode = experience_mode == 'structured' %}
@@ -120,7 +120,9 @@
                         <div class="space-y-2 pt-2">
                             <a href="/users/profile" class="nav-link {% if '/users/profile' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⚙</span><span>Profile</span></a>
                             <a href="/appearance" class="nav-link {% if request.path == '/appearance' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◫</span><span>Appearance</span></a>
+                            {% if not is_everyday_mode %}
                             <a href="/automation" class="nav-link {% if request.path == '/automation' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">↻</span><span>Automation</span></a>
+                            {% endif %}
                             <a href="/docs" class="nav-link {% if request.path == '/docs' or '/docs/' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Help</span></a>
                         </div>
                     </details>
