@@ -341,12 +341,15 @@ body {
 }
 
 .notification-panel {
-    position: fixed;
+    position: fixed !important;
     right: 1.25rem;
     top: 4.9rem;
-    z-index: 36;
+    z-index: 70;
     width: min(25rem, calc(100vw - 1.5rem));
     max-width: calc(100vw - 1.5rem);
+    max-height: calc(100vh - 6rem);
+    overflow: hidden;
+    box-shadow: var(--shadow-pop);
 }
 
 .notification-item {
