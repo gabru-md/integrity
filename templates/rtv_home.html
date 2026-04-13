@@ -96,6 +96,17 @@
                                 {% endif %}
                             </div>
                             {% endif %}
+                            {% if item.source_type == 'magnet' %}
+                            <div class="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Metadata Probe</div>
+                                    <button type="button" onclick="debugMetadata({{ item.id }})" class="rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Probe</button>
+                                </div>
+                                <div id="debug-result-{{ item.id }}" class="mt-3 text-xs leading-5 text-[var(--text-soft)]">
+                                    Click `Probe` to see torrent discovery details for this magnet.
+                                </div>
+                            </div>
+                            {% endif %}
                             {% if item.local_path %}
                             <div class="mt-2 break-all text-xs text-[var(--text-soft)]">{{ item.local_path }}</div>
                             {% endif %}
@@ -167,10 +178,33 @@
         const response = await fetch(`/rtv/${itemId}/resolve-metadata`, { method: 'POST' });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            alert(data.error || 'Failed to resolve metadata');
+            alert(`${data.error_type ? data.error_type + ': ' : ''}${data.error || 'Failed to resolve metadata'}`);
             return;
         }
         window.location.reload();
+    }
+
+    async function debugMetadata(itemId) {
+        const panel = document.getElementById(`debug-result-${itemId}`);
+        if (panel) panel.textContent = 'Probing magnet and waiting for metadata...';
+        const response = await fetch(`/rtv/${itemId}/debug-metadata`, { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const message = `${data.error_type ? data.error_type + ': ' : ''}${data.error || 'Probe failed'}`;
+            if (panel) panel.textContent = message;
+            alert(message);
+            return;
+        }
+        const probe = data.probe || {};
+        if (panel) {
+            panel.innerHTML = `
+                <div><span class="font-semibold text-[var(--text)]">Timeout:</span> ${data.timeout_seconds}s</div>
+                <div><span class="font-semibold text-[var(--text)]">Torrent:</span> ${probe.torrent_name || 'unknown'}</div>
+                <div><span class="font-semibold text-[var(--text)]">Files:</span> ${probe.file_count ?? 'unknown'}</div>
+                <div><span class="font-semibold text-[var(--text)]">Peers:</span> ${probe.peers ?? 0} · <span class="font-semibold text-[var(--text)]">Seeds:</span> ${probe.seeds ?? 0}</div>
+                <div><span class="font-semibold text-[var(--text)]">Selected:</span> ${probe.selected_file_name || 'none'}</div>
+            `;
+        }
     }
 
     async function queueDownload(itemId) {

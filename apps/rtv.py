@@ -236,6 +236,36 @@ def resolve_metadata(item_id):
     }), 200
 
 
+@rtv_app.blueprint.route('/<int:item_id>/debug-metadata', methods=['POST'])
+@write_access_required
+def debug_metadata(item_id):
+    item = rtv_app.media_service.get_by_id(item_id)
+    if not item:
+        return jsonify({"error": "Movie candidate not found."}), 404
+    if item.source_type != "magnet" or not item.magnet_uri:
+        return jsonify({"error": "Only magnet candidates can be probed."}), 400
+
+    try:
+        rtv_app.log.info("Probing rTV magnet id=%s title=%s", item.id, item.title)
+        probe = rtv_app.torrent_resolver.probe_magnet(item.magnet_uri)
+    except Exception as exc:
+        rtv_app.log.exception("rTV magnet probe failed id=%s title=%s", item.id, item.title)
+        return jsonify({
+            "ok": False,
+            "error": str(exc),
+            "error_type": exc.__class__.__name__,
+            "timeout_seconds": rtv_app.torrent_resolver.timeout_seconds,
+        }), 400
+
+    return jsonify({
+        "ok": True,
+        "item_id": item.id,
+        "title": item.title,
+        "timeout_seconds": rtv_app.torrent_resolver.timeout_seconds,
+        "probe": probe,
+    }), 200
+
+
 @rtv_app.blueprint.route('/<int:item_id>/queue-download', methods=['POST'])
 @write_access_required
 def queue_download(item_id):
