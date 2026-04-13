@@ -48,13 +48,13 @@
             </div>
 
             <div id="recent-data-container" class="table-wrap relative">
-                <p v-if="loading" class="text-center py-10 text-[var(--text-soft)]">Loading data...</p>
-                <p v-if="error" class="text-center py-10 text-[var(--danger)]">
+                <p v-if="loading" class="ui-loading-state">Loading data...</p>
+                <p v-if="error" class="ui-alert ui-alert-danger">
                     Failed to load data. Please check the API route: <code class="rounded-lg bg-[var(--surface-muted)] px-2 py-1">{{ fetchUrl
                     }}</code>
                 </p>
                 <p v-else-if="!loading && filteredData.length === 0"
-                   class="empty-state">
+                   class="ui-empty-state">
                     No recent entries found. Start by creating one!
                 </p>
 

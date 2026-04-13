@@ -55,13 +55,13 @@
             <input type="text" v-model="searchTerm" placeholder="Search browser rules..." class="max-w-xl">
         </div>
 
-        <div v-if="loading" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
+        <div v-if="loading" class="ui-loading-state mt-6">
             Loading browser rules...
         </div>
-        <div v-else-if="error" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--danger)]">
+        <div v-else-if="error" class="ui-alert ui-alert-danger mt-6">
             Failed to load browser rules.
         </div>
-        <div v-else-if="filteredRules.length === 0" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
+        <div v-else-if="filteredRules.length === 0" class="ui-empty-state mt-6">
             No browser rules yet. Create one to decide when actions should appear or fire.
         </div>
 

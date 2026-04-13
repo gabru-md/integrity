@@ -55,13 +55,13 @@
             <input type="text" v-model="searchTerm" placeholder="Search browser actions..." class="max-w-xl">
         </div>
 
-        <div v-if="loading" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
+        <div v-if="loading" class="ui-loading-state mt-6">
             Loading browser actions...
         </div>
-        <div v-else-if="error" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--danger)]">
+        <div v-else-if="error" class="ui-alert ui-alert-danger mt-6">
             Failed to load browser actions.
         </div>
-        <div v-else-if="filteredActions.length === 0" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
+        <div v-else-if="filteredActions.length === 0" class="ui-empty-state mt-6">
             No browser actions yet. Create one to start shaping Capture Automation.
         </div>
 

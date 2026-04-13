@@ -505,7 +505,8 @@ html[data-chrome='solid'] .widget-card {
 .sheet-card,
 .widget-card,
 .shell-panel,
-.auth-panel {
+.auth-panel,
+.ui-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--card-radius);
@@ -730,7 +731,8 @@ html[data-chrome='solid'] .widget-card {
     color: var(--text-soft);
 }
 
-.ui-badge {
+.ui-badge,
+.ui-pill-soft {
     display: inline-flex;
     align-items: center;
     border-radius: var(--pill-radius);
@@ -742,22 +744,42 @@ html[data-chrome='solid'] .widget-card {
     color: var(--text-soft);
 }
 
-.ui-badge-success {
+.ui-badge-success,
+.ui-pill-success {
     background: color-mix(in srgb, var(--success) 14%, transparent);
     border-color: color-mix(in srgb, var(--success) 22%, transparent);
     color: var(--success);
 }
 
-.ui-badge-warning {
+.ui-badge-warning,
+.ui-pill-warning {
     background: color-mix(in srgb, var(--warning) 14%, transparent);
     border-color: color-mix(in srgb, var(--warning) 22%, transparent);
     color: var(--warning);
 }
 
-.ui-badge-danger {
+.ui-badge-danger,
+.ui-pill-danger {
     background: color-mix(in srgb, var(--danger) 14%, transparent);
     border-color: color-mix(in srgb, var(--danger) 22%, transparent);
     color: var(--danger);
+}
+
+.ui-button,
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border-radius: var(--control-radius);
+    padding: 0.9rem 1.15rem;
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1;
+    border: 1px solid transparent;
+    cursor: pointer;
 }
 
 .recommendation-card {
@@ -865,22 +887,6 @@ input[readonly] {
     background: color-mix(in srgb, var(--surface-muted) 92%, transparent);
 }
 
-.btn-primary,
-.btn-secondary,
-.btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    border-radius: var(--control-radius);
-    padding: 0.9rem 1.15rem;
-    font-size: 0.94rem;
-    font-weight: 700;
-    line-height: 1;
-    border: 1px solid transparent;
-    cursor: pointer;
-}
-
 .btn-primary:hover,
 .btn-secondary:hover,
 .btn-ghost:hover {
@@ -914,6 +920,42 @@ input[readonly] {
 .btn-ghost:hover {
     color: var(--text);
     background: color-mix(in srgb, var(--surface-muted) 88%, transparent);
+}
+
+.ui-loading-state,
+.ui-empty-state {
+    border-radius: calc(var(--card-radius) - 2px);
+    border: 1px dashed var(--border);
+    background: color-mix(in srgb, var(--surface-muted) 72%, transparent);
+    color: var(--text-soft);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.ui-loading-state {
+    font-size: 0.875rem;
+}
+
+.ui-alert {
+    border-radius: calc(var(--card-radius) - 2px);
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface-muted) 84%, transparent);
+    color: var(--text);
+    padding: 1rem 1.1rem;
+    font-size: 0.875rem;
+    line-height: 1.65;
+}
+
+.ui-alert-success {
+    border-color: color-mix(in srgb, var(--success) 22%, transparent);
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+    color: var(--success);
+}
+
+.ui-alert-danger {
+    border-color: color-mix(in srgb, var(--danger) 22%, transparent);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    color: var(--danger);
 }
 
 [data-pref][aria-pressed='true'] {
