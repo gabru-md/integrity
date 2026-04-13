@@ -1,6 +1,6 @@
 {% extends "index.html" %}
 
-{% block title %}Promises - Integrity Dashboard{% endblock %}
+{% block title %}Promises{% endblock %}
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -8,31 +8,26 @@
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
 {% set is_everyday_mode = experience_mode == 'everyday' %}
 
-<div class="p-6">
-    <div class="mb-8 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <section class="shell-card hero-card px-6 py-6">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <div class="section-kicker text-[10px] font-extrabold uppercase">Promises</div>
-                    <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Keep commitments visible</h1>
-                    <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
-                        Promises keep one commitment visible against real evidence.
-                    </p>
-                </div>
-                <div class="shrink-0">
-                    {% set instructions_inline = true %}
-                    {% include "_app_instructions.html" %}
-                </div>
+<div class="page-shell px-1 py-2">
+    <section class="shell-card hero-card px-6 py-6">
+        <div class="page-hero">
+            <div class="page-hero-header">
+                <div class="section-kicker text-[10px] font-extrabold uppercase">Promises</div>
+                <h1 class="page-hero-title">Keep commitments visible</h1>
+                <p class="page-hero-copy">One page for what you promised, what is due, and what needs the next check-in.</p>
             </div>
-            <div class="mt-5 flex flex-wrap gap-3">
-                <button onclick="openModal()" class="btn-primary px-5 py-3 text-sm">Make a Promise</button>
-                <a href="/reports/home" class="btn-secondary px-5 py-3 text-sm">See Reports</a>
+            <div class="shrink-0">
+                {% set instructions_inline = true %}
+                {% include "_app_instructions.html" %}
             </div>
-        </section>
+        </div>
+        <div class="page-actions mt-5">
+            <button onclick="openModal()" class="btn-primary px-5 py-3 text-sm">Make a Promise</button>
+            <a href="/reports/home" class="btn-secondary px-5 py-3 text-sm">See Reports</a>
+        </div>
+    </section>
 
-    </div>
-
-    <details class="disclosure mb-8" open>
+    <details class="disclosure mt-6" open>
         <summary class="disclosure-summary">
             <div class="disclosure-summary-copy">
                 <div class="disclosure-summary-title">Overview</div>
@@ -42,21 +37,21 @@
         </summary>
         <div class="disclosure-body">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700">
-                    <p class="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total</p>
-                    <p class="text-3xl font-bold text-slate-800 dark:text-gray-100">{{ stats.total }}</p>
+                <div class="shell-card p-6">
+                    <p class="text-sm font-semibold text-[var(--text-soft)] uppercase tracking-wider mb-1">Total</p>
+                    <p class="text-3xl font-bold text-[var(--text)]">{{ stats.total }}</p>
                 </div>
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700">
-                    <p class="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1">Active</p>
-                    <p class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ stats.active }}</p>
+                <div class="shell-card p-6">
+                    <p class="text-sm font-semibold text-[var(--text-soft)] uppercase tracking-wider mb-1">Active</p>
+                    <p class="text-3xl font-bold text-[var(--accent)]">{{ stats.active }}</p>
                 </div>
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700">
-                    <p class="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1">Fulfilled</p>
-                    <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ stats.fulfilled }}</p>
+                <div class="shell-card p-6">
+                    <p class="text-sm font-semibold text-[var(--text-soft)] uppercase tracking-wider mb-1">Fulfilled</p>
+                    <p class="text-3xl font-bold text-emerald-600">{{ stats.fulfilled }}</p>
                 </div>
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700">
-                    <p class="text-sm font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1">Broken</p>
-                    <p class="text-3xl font-bold text-rose-600 dark:text-rose-400">{{ stats.broken }}</p>
+                <div class="shell-card p-6">
+                    <p class="text-sm font-semibold text-[var(--text-soft)] uppercase tracking-wider mb-1">Broken</p>
+                    <p class="text-3xl font-bold text-rose-600">{{ stats.broken }}</p>
                 </div>
             </div>
         </div>

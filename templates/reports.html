@@ -1,7 +1,7 @@
 {% extends "index.html" %}
 {% block title %}Behavioral Reports{% endblock %}
 {% block shell_title %}Behavioral Mirror{% endblock %}
-{% block shell_subtitle %}Generate, review, and print reports that compare intention, execution, and observed behavior across Rasbhari.{% endblock %}
+{% block shell_subtitle %}Generate and review reports that compare intention, execution, and observed behavior.{% endblock %}
 
 {% block content %}
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
@@ -13,7 +13,7 @@
                 <div class="page-hero-header">
                     <div class="section-kicker text-[10px] font-extrabold uppercase">Reports</div>
                     <h1 class="page-hero-title">Behavioral Mirror</h1>
-                    <p class="page-hero-copy">Reports compare intent, action, and drift.</p>
+                    <p class="page-hero-copy">Generate a report when you want a clean read on intent, action, and drift.</p>
                 </div>
                 <div class="shrink-0">
                     {% set instructions_inline = true %}
@@ -32,15 +32,17 @@
             <details class="disclosure">
                 <summary class="disclosure-summary">
                     <div class="disclosure-summary-copy">
-                        <div class="disclosure-summary-title">Current Lens</div>
-                        <div class="disclosure-summary-meta">How the current mirror reads your recorded behavior.</div>
+                        <div class="disclosure-summary-title">Signal Inputs</div>
+                        <div class="disclosure-summary-meta">Events, projects, skills, thoughts, and connection activity.</div>
                     </div>
                     <span class="disclosure-summary-chevron">⌄</span>
                 </summary>
                 <div class="disclosure-body">
-                    <div class="space-y-4 text-sm leading-6 text-[var(--text-soft)]">
-                        <p>The current engine scores integrity from existing Rasbhari signals: events, projects, skills, thoughts, and connection activity.</p>
-                        <p>Use async mode when you want background generation.</p>
+                    <div class="stack-list">
+                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Event cadence and action completion</div>
+                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Project momentum and unfinished loops</div>
+                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Thought-to-work mismatch patterns</div>
+                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Connection and relationship maintenance</div>
                     </div>
                 </div>
             </details>
@@ -71,7 +73,7 @@
 
                 <label class="md:col-span-2 flex items-center gap-3 rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-4">
                     <input name="async_mode" type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                    <span class="text-sm text-[var(--text-soft)]">Use event-driven background generation</span>
+                    <span class="text-sm text-[var(--text-soft)]">Generate in the background</span>
                 </label>
 
                 <div class="md:col-span-2 toolbar-actions">
