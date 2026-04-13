@@ -325,9 +325,9 @@
             </div>
         </div>
 
-        <div class="onboarding-page-peek">
+            <div class="onboarding-page-peek">
             <div class="metric-label">Look around</div>
-            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Keep this page in view while you step through the guide so the product stays easy to connect to what you are reading.</div>
+            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Keep the current page open while you follow the steps.</div>
         </div>
 
         <div class="onboarding-footer">
@@ -771,8 +771,8 @@
             const onTargetPage = window.location.pathname === step.target_path;
             if (hint) {
                 hint.textContent = onTargetPage
-                    ? 'You are on the right page. Read the short guidance, then move to the next stop.'
-                    : `Open ${step.target_label} to continue the walkthrough.`;
+                    ? 'You are on the right page.'
+                    : `Open ${step.target_label} to continue.`;
             }
             if (primaryButton) {
                 const isLastStep = onboardingState.stepIndex === onboardingState.steps.length - 1;
