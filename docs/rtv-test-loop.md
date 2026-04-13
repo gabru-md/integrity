@@ -26,16 +26,15 @@ rTV is the movie-only owned-media surface inside Rasbhari. V1 is intentionally s
 
 Use this loop when you already have a compatible movie file.
 
-1. Put an owned `.mp4` file in `RTV_MEDIA_DIR`.
+1. Put an owned `.mp4` file in the dedicated rTV media folder, or add a magnet candidate.
 2. Open `/rtv/home`.
-3. Click `Scan Folder`.
-4. Confirm the movie appears as ready and cached.
-5. Open `/tv`.
-6. Search or focus the movie card with remote arrow controls.
-7. Start playback and use the rTV player controls for play/pause, seek, fullscreen, and back.
-8. Stop and reopen the movie to confirm resume support.
-9. Watch near the end to confirm watched detection.
-10. Check Events for `media:watch_started`, `media:watch_progressed`, and `media:watch_finished`.
+3. Confirm the movie appears as ready and cached once it has been imported or downloaded.
+4. Open `/tv`.
+5. Search or focus the movie card with remote arrow controls.
+6. Start playback and use the rTV player controls for play/pause, seek, fullscreen, and back.
+7. Stop and reopen the movie to confirm resume support.
+8. Watch near the end to confirm watched detection.
+9. Check Events for `media:watch_started`, `media:watch_progressed`, and `media:watch_finished`.
 
 This is the preferred smoke test because it validates the TV interface, local playback, range support, progress tracking, and event emission without depending on torrent swarm health.
 

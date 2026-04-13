@@ -346,12 +346,12 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "rTV": {
             "overview": "rTV is a small owned-movie shelf for Rasbhari and your TV.",
-            "app_purpose": "Use rTV to scan ready local movie files, open a TV-first movie surface, and turn watching into Rasbhari media events.",
+            "app_purpose": "Use rTV to add movie candidates explicitly, open a TV-first movie surface, and turn watching into Rasbhari media events.",
             "how_to_use": [
-                "Put supported movie files in the configured rTV media folder.",
-                "Use Scan Folder from the rTV admin page to add ready local movies.",
+                "Add movie candidates by magnet when you want Rasbhari to manage a download.",
+                "Use the dedicated rTV media folder only for files you intentionally want in the shelf.",
                 "Open the TV surface from a browser on your TV, use search or the rails, then play, resume, or restart ready movies.",
-                "For magnet candidates, resolve metadata first so rTV can choose the largest movie file, then queue the download for the later processor.",
+                "Resolve magnet metadata first so rTV can choose the largest movie file, then queue the download.",
                 "Use the inline title field for cleanup, Retry for failed candidates or downloads, Delete File to free local cache, and Delete to remove the rTV record.",
             ],
             "setup_leverage": [

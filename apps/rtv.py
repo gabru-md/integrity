@@ -185,31 +185,6 @@ def stream(item_id):
     return send_file(path, conditional=True)
 
 
-@rtv_app.blueprint.route('/scan', methods=['POST'])
-@write_access_required
-def scan_media_root():
-    media_root = _media_root()
-    media_root.mkdir(parents=True, exist_ok=True)
-    created = 0
-    skipped = 0
-    for path in rtv_app.media_service.discover_video_files(media_root):
-        existing = rtv_app.media_service.find_by_local_path(str(path))
-        if existing:
-            skipped += 1
-            continue
-        item = MediaItem(
-            title=rtv_app.media_service.title_from_path(path),
-            source_type="local_file",
-        )
-        item = rtv_app.media_service.mark_ready_from_local_file(item, path)
-        item_id = rtv_app.media_service.create(item)
-        if item_id:
-            item.id = item_id
-            rtv_app.emit_media_event("media:item_indexed", item, f"Indexed rTV movie {item.title}")
-            created += 1
-    return jsonify({"created": created, "skipped": skipped, "media_root": str(media_root)}), 200
-
-
 @rtv_app.blueprint.route('/candidate', methods=['POST'])
 @write_access_required
 def add_candidate():
