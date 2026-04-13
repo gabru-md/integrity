@@ -115,55 +115,18 @@
                                 {% endif %}
                             </div>
                             {% endif %}
-                            <details id="edit-panel-{{ item.id }}" class="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
-                                <summary class="cursor-pointer text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Edit</summary>
-                                <div class="mt-4 space-y-4">
-                                    <label class="block space-y-2">
-                                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Title</span>
-                                        <input
-                                            id="title-{{ item.id }}"
-                                            value="{{ item.title }}"
-                                            class="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)]"
-                                        >
-                                    </label>
-                                    {% if item.source_type == 'magnet' %}
-                                    <label class="block space-y-2">
-                                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Magnet URI</span>
-                                        <textarea
-                                            id="magnet-{{ item.id }}"
-                                            class="min-h-24 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text)]"
-                                        >{{ item.magnet_uri }}</textarea>
-                                    </label>
-                                    <details class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-                                        <summary class="cursor-pointer text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Metadata Probe</summary>
-                                        <div class="mt-3">
-                                            <button type="button" onclick="debugMetadata({{ item.id }})" class="rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Probe</button>
-                                            <div id="debug-result-{{ item.id }}" class="mt-3 text-xs leading-5 text-[var(--text-soft)]">
-                                                Click `Probe` to see torrent discovery details for this magnet.
-                                            </div>
-                                        </div>
-                                    </details>
-                                    {% endif %}
-                                    <div class="flex flex-wrap gap-2">
-                                        <button type="button" onclick="saveTitle({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Save Title</button>
-                                        {% if item.source_type == 'magnet' %}
-                                        <button type="button" onclick="saveMagnet({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Save Magnet</button>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </details>
                         </div>
                         <div class="flex shrink-0 flex-wrap justify-end gap-2">
                             {% if item.status == 'ready' %}
                             <a href="/rtv/play/{{ item.id }}" class="rounded-full bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Play</a>
-                            <button type="button" onclick="toggleEditPanel({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
+                            <button type="button" onclick="openEditModal({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             <button type="button" onclick="deleteLocalFile({{ item.id }})" class="rounded-full bg-rose-100 px-4 py-2 text-xs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">Delete File</button>
                             {% elif item.source_type == 'magnet' and item.selected_file_index is none and item.status != 'failed' %}
                             <button type="button" onclick="resolveMetadata({{ item.id }})" class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Resolve</button>
-                            <button type="button" onclick="toggleEditPanel({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
+                            <button type="button" onclick="openEditModal({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             {% elif item.source_type == 'magnet' and item.status == 'candidate' %}
                             <button type="button" onclick="queueDownload({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queue Download</button>
-                            <button type="button" onclick="toggleEditPanel({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
+                            <button type="button" onclick="openEditModal({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             {% elif item.status == 'queued' %}
                             <span class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queued</span>
                             <button type="button" onclick="cancelDownload({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Cancel</button>
@@ -193,7 +156,53 @@
     </section>
 </div>
 
+<div id="edit-modal" class="hidden fixed inset-0 z-50 bg-black/50 p-4">
+    <div class="mx-auto flex min-h-full max-w-2xl items-center">
+        <div class="modal-surface w-full overflow-hidden rounded-3xl">
+            <div class="flex items-center justify-between border-b border-[var(--border)] px-6 py-5">
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Edit rTV Item</div>
+                    <h2 id="edit-modal-title" class="mt-2 text-2xl font-extrabold text-[var(--text)]">Edit Movie</h2>
+                </div>
+                <button type="button" onclick="closeEditModal()" class="btn-ghost h-10 w-10 rounded-2xl p-0">✕</button>
+            </div>
+            <form id="edit-form" class="space-y-5 p-6">
+                <input type="hidden" id="edit-item-id">
+                <label class="block space-y-2">
+                    <span class="text-xs font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Title</span>
+                    <input id="edit-title" type="text" class="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)]">
+                </label>
+                <label id="edit-magnet-group" class="hidden block space-y-2">
+                    <span class="text-xs font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Magnet URI</span>
+                    <textarea id="edit-magnet" class="min-h-28 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)]"></textarea>
+                </label>
+                <div class="flex flex-wrap gap-2">
+                    <button type="submit" class="btn-primary px-5 py-3 text-sm">Save</button>
+                    <button type="button" onclick="closeEditModal()" class="btn-secondary px-5 py-3 text-sm">Cancel</button>
+                    <button type="button" id="edit-probe-button" class="hidden btn-secondary px-5 py-3 text-sm">Probe Magnet</button>
+                </div>
+                <div id="edit-probe-result" class="hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm leading-6 text-[var(--text-soft)]"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+    const rtvItems = {{ items | tojson }};
+    const editModal = document.getElementById('edit-modal');
+    const editForm = document.getElementById('edit-form');
+    const editItemId = document.getElementById('edit-item-id');
+    const editTitle = document.getElementById('edit-title');
+    const editMagnetGroup = document.getElementById('edit-magnet-group');
+    const editMagnet = document.getElementById('edit-magnet');
+    const editModalTitle = document.getElementById('edit-modal-title');
+    const editProbeButton = document.getElementById('edit-probe-button');
+    const editProbeResult = document.getElementById('edit-probe-result');
+    const searchInput = document.getElementById('library-search-input');
+    const searchForm = document.getElementById('library-search-form');
+    let editState = null;
+    let searchDebounceHandle = null;
+
     async function scanMedia() {
         const response = await fetch('/rtv/scan', { method: 'POST' });
         const data = await response.json().catch(() => ({}));
@@ -223,41 +232,92 @@
         window.location.reload();
     });
 
-    async function resolveMetadata(itemId) {
-        const response = await fetch(`/rtv/${itemId}/resolve-metadata`, { method: 'POST' });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            alert(`${data.error_type ? data.error_type + ': ' : ''}${data.error || 'Failed to resolve metadata'}`);
-            return;
-        }
-        window.location.reload();
+    function openEditModal(itemId) {
+        const selected = rtvItems.find((entry) => Number(entry.id) === Number(itemId));
+        if (!selected) return;
+        editState = selected;
+        editItemId.value = selected.id;
+        editTitle.value = selected.title || '';
+        editMagnet.value = selected.magnet_uri || '';
+        editModalTitle.textContent = 'Edit Movie';
+        const canEditMagnet = selected.source_type === 'magnet';
+        editMagnetGroup.classList.toggle('hidden', !canEditMagnet);
+        editProbeButton.classList.toggle('hidden', !canEditMagnet);
+        editProbeResult.classList.add('hidden');
+        editProbeResult.textContent = '';
+        editModal.classList.remove('hidden');
     }
 
-    async function debugMetadata(itemId) {
-        const panel = document.getElementById(`debug-result-${itemId}`);
-        if (panel) panel.textContent = 'Probing magnet and waiting briefly for swarm discovery...';
-        const response = await fetch(`/rtv/${itemId}/debug-metadata`, { method: 'POST' });
+    function closeEditModal() {
+        editModal.classList.add('hidden');
+        editState = null;
+    }
+
+    editModal?.addEventListener('click', (event) => {
+        if (event.target === editModal) {
+            closeEditModal();
+        }
+    });
+
+    editForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!editState) return;
+        const itemId = editState.id;
+        const title = editTitle.value.trim();
+        if (!title) {
+            alert('Title is required');
+            return;
+        }
+        const titleResponse = await fetch(`/rtv/${itemId}/title`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title }),
+        });
+        const titleData = await titleResponse.json().catch(() => ({}));
+        if (!titleResponse.ok) {
+            alert(titleData.error || 'Failed to update title');
+            return;
+        }
+        if (editState.source_type === 'magnet') {
+            const magnetUri = editMagnet.value.trim();
+            if (!magnetUri || !magnetUri.startsWith('magnet:')) {
+                alert('A valid magnet URI is required');
+                return;
+            }
+            const magnetResponse = await fetch(`/rtv/${itemId}/magnet`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ magnet_uri: magnetUri }),
+            });
+            const magnetData = await magnetResponse.json().catch(() => ({}));
+            if (!magnetResponse.ok) {
+                alert(magnetData.error || 'Failed to update magnet');
+                return;
+            }
+        }
+        window.location.reload();
+    });
+
+    editProbeButton?.addEventListener('click', async () => {
+        if (!editState) return;
+        editProbeResult.classList.remove('hidden');
+        editProbeResult.textContent = 'Probing magnet and waiting briefly for swarm discovery...';
+        const response = await fetch(`/rtv/${editState.id}/debug-metadata`, { method: 'POST' });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            const message = `${data.error_type ? data.error_type + ': ' : ''}${data.error || 'Probe failed'}`;
-            if (panel) panel.textContent = message;
-            alert(message);
+            editProbeResult.textContent = `${data.error_type ? data.error_type + ': ' : ''}${data.error || 'Probe failed'}`;
             return;
         }
         const probe = data.probe || {};
-        if (panel) {
-            panel.innerHTML = `
-                <div><span class="font-semibold text-[var(--text)]">Metadata timeout:</span> ${data.timeout_seconds}s</div>
-                <div><span class="font-semibold text-[var(--text)]">Probe timeout:</span> ${probe.probe_timeout_seconds ?? 'n/a'}s</div>
-                <div><span class="font-semibold text-[var(--text)]">Listen:</span> ${probe.listen_interfaces || 'default'}</div>
-                <div><span class="font-semibold text-[var(--text)]">Outgoing:</span> ${probe.outgoing_interface || 'default'}</div>
-                <div><span class="font-semibold text-[var(--text)]">Torrent:</span> ${probe.torrent_name || 'unknown'}</div>
-                <div><span class="font-semibold text-[var(--text)]">Files:</span> ${probe.file_count ?? 'unknown'}</div>
-                <div><span class="font-semibold text-[var(--text)]">Peers:</span> ${probe.peers ?? 0} · <span class="font-semibold text-[var(--text)]">Seeds:</span> ${probe.seeds ?? 0}</div>
-                <div><span class="font-semibold text-[var(--text)]">Selected:</span> ${probe.selected_file_name || 'none'}</div>
-            `;
-        }
-    }
+        editProbeResult.innerHTML = `
+            <div><span class="font-semibold text-[var(--text)]">Metadata timeout:</span> ${data.timeout_seconds}s</div>
+            <div><span class="font-semibold text-[var(--text)]">Probe timeout:</span> ${probe.probe_timeout_seconds ?? 'n/a'}s</div>
+            <div><span class="font-semibold text-[var(--text)]">Torrent:</span> ${probe.torrent_name || 'unknown'}</div>
+            <div><span class="font-semibold text-[var(--text)]">Files:</span> ${probe.file_count ?? 'unknown'}</div>
+            <div><span class="font-semibold text-[var(--text)]">Peers:</span> ${probe.peers ?? 0} · <span class="font-semibold text-[var(--text)]">Seeds:</span> ${probe.seeds ?? 0}</div>
+            <div><span class="font-semibold text-[var(--text)]">Selected:</span> ${probe.selected_file_name || 'none'}</div>
+        `;
+    });
 
     async function queueDownload(itemId) {
         const response = await fetch(`/rtv/${itemId}/queue-download`, { method: 'POST' });
@@ -277,32 +337,6 @@
             return;
         }
         window.location.reload();
-    }
-
-    async function saveMagnet(itemId) {
-        const input = document.getElementById(`magnet-${itemId}`);
-        const magnetUri = input?.value?.trim();
-        if (!magnetUri || !magnetUri.startsWith('magnet:')) {
-            alert('A valid magnet URI is required');
-            return;
-        }
-        const response = await fetch(`/rtv/${itemId}/magnet`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ magnet_uri: magnetUri }),
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            alert(data.error || 'Failed to update magnet');
-            return;
-        }
-        window.location.reload();
-    }
-
-    function toggleEditPanel(itemId) {
-        const panel = document.getElementById(`edit-panel-${itemId}`);
-        if (!panel) return;
-        panel.open = !panel.open;
     }
 
     async function cancelDownload(itemId) {
@@ -336,10 +370,6 @@
         }
         window.location.reload();
     }
-
-    const searchInput = document.getElementById('library-search-input');
-    const searchForm = document.getElementById('library-search-form');
-    let searchDebounceHandle = null;
 
     searchInput?.addEventListener('input', () => {
         if (searchDebounceHandle) {
