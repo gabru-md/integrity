@@ -84,14 +84,35 @@ class RTVApp(App[MediaItem]):
     def setup_home_route(self):
         @self.blueprint.route('/home')
         def home():
+            query = (request.args.get("q") or "").strip().lower()
             items = self.media_service.find_all(sort_by={"created_at": "DESC"})
+            if query:
+                items = [
+                    item for item in items
+                    if query in (item.title or "").lower()
+                    or query in (item.magnet_uri or "").lower()
+                    or query in (item.local_path or "").lower()
+                    or query in (item.status or "").lower()
+                    or query in (item.source_type or "").lower()
+                ]
+            media_root = _media_root()
+            for item in items:
+                display_local_path = ""
+                if item.local_path:
+                    try:
+                        relative_path = Path(item.local_path).expanduser().resolve().relative_to(media_root)
+                        display_local_path = f"[Media Folder]/{relative_path.as_posix()}"
+                    except Exception:
+                        display_local_path = f"[Media Folder]/{Path(item.local_path).name}"
+                setattr(item, "display_local_path", display_local_path)
             stats = {
                 "total": len(items),
                 "ready": len([item for item in items if item.status == "ready"]),
                 "candidates": len([item for item in items if item.status == "candidate"]),
                 "downloaded_gb": round(sum(item.file_size_bytes for item in items if item.status == "ready") / 1024 / 1024 / 1024, 2),
                 "cache_limit_gb": round(int(os.getenv("RTV_MEDIA_CACHE_LIMIT_BYTES", str(DEFAULT_CACHE_LIMIT_BYTES))) / 1024 / 1024 / 1024, 2),
-                "media_root": str(_media_root()),
+                "media_root": str(media_root),
+                "query": query,
             }
             return render_flask_template(
                 self.home_template,
@@ -323,6 +344,26 @@ def update_title(item_id):
     if not rtv_app.media_service.update(item):
         return jsonify({"error": "Failed to update title."}), 500
     return jsonify({"id": item_id, "title": title, "message": "Title updated"}), 200
+
+
+@rtv_app.blueprint.route('/<int:item_id>/magnet', methods=['POST'])
+@write_access_required
+def update_magnet(item_id):
+    item = rtv_app.media_service.get_by_id(item_id)
+    if not item:
+        return jsonify({"error": "Movie not found."}), 404
+    if item.source_type != "magnet":
+        return jsonify({"error": "Only magnet candidates can update their magnet URI."}), 400
+    data = request.get_json(silent=True) or {}
+    magnet_uri = (data.get("magnet_uri") or "").strip()
+    if not magnet_uri.startswith("magnet:"):
+        return jsonify({"error": "A valid magnet URI is required."}), 400
+    item.magnet_uri = magnet_uri
+    if item.status in {"queued", "downloading", "failed"} and item.selected_file_index is None:
+        item.status = "candidate"
+    if not rtv_app.media_service.update(item):
+        return jsonify({"error": "Failed to update magnet URI."}), 500
+    return jsonify({"id": item_id, "magnet_uri": magnet_uri, "message": "Magnet updated"}), 200
 
 
 @rtv_app.blueprint.route('/<int:item_id>/retry', methods=['POST'])
