@@ -12,6 +12,12 @@ from services.projects import ProjectService
 
 class KanbanTicketService(CRUDService[KanbanTicket]):
     STATE_ORDER = ["backlog", "prioritized", "in_progress", "completed", "shipped"]
+    TICKET_SIGNAL_EVENT_TYPES = (
+        "kanban:ticket_created",
+        "kanban:ticket_moved",
+        "kanban:ticket_updated",
+        "kanban:ticket_archived",
+    )
 
     def __init__(self):
         super().__init__("kanban_tickets", DB("rasbhari"), user_scoped=True)
@@ -305,6 +311,13 @@ class KanbanTicketService(CRUDService[KanbanTicket]):
         if ticket_id is not None:
             tags.append(f"ticket:{ticket_id}")
         return tags
+
+    @classmethod
+    def build_ticket_signal(cls, project, ticket: KanbanTicket) -> dict:
+        return {
+            "event_types": list(cls.TICKET_SIGNAL_EVENT_TYPES),
+            "tags": cls._build_event_tags(project, ticket.state, ticket.id),
+        }
 
     @staticmethod
     def _parse_dependency_ids(raw_value) -> list[int]:

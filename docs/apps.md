@@ -68,6 +68,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
 - Notes:
   - custom home page with summary stats
   - includes refresh and history routes per promise
+  - matches events through a shared signal matcher that combines event type, event tags, and the promise tag match mode
   - **Negative Promises**: Supports "I will not..." commitments. Set `is_negative=True` and `max_allowed=0` (or a small threshold) to track avoiding certain behaviors.
 
 ### 5. Events

@@ -64,7 +64,7 @@ Primary commit surface:
 
 - `Promises`
 
-Promises watch for event types or tags. They are how Rasbhari checks whether reality matched what you said mattered.
+Promises watch event signals: the event type, event tags, and whether a promise needs any or all target tags. They are how Rasbhari checks whether reality matched what you said mattered.
 
 Rule:
 

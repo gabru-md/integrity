@@ -7,6 +7,7 @@ from model.promise import Promise
 from services.promises import PromiseService
 from services.events import EventService
 from services.recommendation_followups import RecommendationFollowUpService
+from services.signal_matching import match_signal, promise_target_signature
 from services.users import UserService
 from processes.promise_processor import PromiseProcessor
 from gabru.flask.util import render_flask_template
@@ -18,43 +19,19 @@ recommendation_followup_service = RecommendationFollowUpService(promise_service=
 
 
 def _should_filter_by_exact_event_type(promise: Promise) -> bool:
-    return bool(promise.target_event_type and not promise.target_event_type.startswith("project:"))
-
-
-def _promise_target_tags(promise: Promise) -> list[str]:
-    tags = []
-    if promise.target_event_tag:
-        tags.append(str(promise.target_event_tag).strip())
-    for tag in promise.target_event_tags or []:
-        value = str(tag).strip()
-        if value and value not in tags:
-            tags.append(value)
-    return [tag for tag in tags if tag]
-
-
-def _event_matches_promise_tags(event, promise: Promise) -> bool:
-    target_tags = _promise_target_tags(promise)
-    if not target_tags:
-        return True
-    event_tags = {str(tag).strip() for tag in (event.tags or []) if str(tag).strip()}
-    match_mode = (promise.target_event_tags_match_mode or "any").strip().lower()
-    if match_mode == "all":
-        return all(tag in event_tags for tag in target_tags)
-    return any(tag in event_tags for tag in target_tags)
+    signature = promise_target_signature(promise)
+    return bool(signature["target_event_type"])
 
 
 def _event_matches_promise_filters(event, promise: Promise) -> bool:
-    if promise.target_event_type:
-        if promise.target_event_type.startswith("project:"):
-            if not PromiseProcessor._event_matches_project_target(event, promise.target_event_type):
-                return False
-        elif event.event_type != promise.target_event_type:
-            return False
-
-    if not _event_matches_promise_tags(event, promise):
-        return False
-
-    return True
+    signature = promise_target_signature(promise)
+    return match_signal(
+        signal_event_types=[event.event_type],
+        signal_tags=event.tags or [],
+        target_event_type=signature["target_event_type"],
+        target_tags=signature["target_tags"],
+        tag_match_mode=signature["tag_match_mode"],
+    ).matched
 
 def process_promise_data(data):
     # Initialize next_check_at if not provided

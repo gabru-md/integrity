@@ -7,6 +7,7 @@ from model.event import Event
 from model.promise import Promise
 from services.promises import PromiseService
 from services.events import EventService
+from services.signal_matching import match_signal, promise_target_signature
 
 class PromiseProcessor(QueueProcessor[Event]):
     def __init__(self, **kwargs):
@@ -59,48 +60,14 @@ class PromiseProcessor(QueueProcessor[Event]):
         return True
 
     def _event_matches_promise(self, event: Event, promise: Promise) -> bool:
-        if promise.target_event_type and event.event_type == promise.target_event_type:
-            type_match = True
-        elif promise.target_event_type and self._event_matches_project_target(event, promise.target_event_type):
-            type_match = True
-        elif promise.target_event_type:
-            return False
-        else:
-            type_match = True
-
-        target_tags = self._promise_target_tags(promise)
-        if not target_tags:
-            return type_match
-
-        event_tags = {str(tag).strip() for tag in (event.tags or []) if str(tag).strip()}
-        match_mode = (promise.target_event_tags_match_mode or "any").strip().lower()
-        if match_mode == "all":
-            tag_match = all(tag in event_tags for tag in target_tags)
-        else:
-            tag_match = any(tag in event_tags for tag in target_tags)
-        return type_match and tag_match
-
-    @staticmethod
-    def _promise_target_tags(promise: Promise) -> list[str]:
-        tags = []
-        if promise.target_event_tag:
-            tags.append(str(promise.target_event_tag).strip())
-        for tag in promise.target_event_tags or []:
-            value = str(tag).strip()
-            if value and value not in tags:
-                tags.append(value)
-        return [tag for tag in tags if tag]
-
-    @staticmethod
-    def _event_matches_project_target(event: Event, target_event_type: str) -> bool:
-        normalized_target = (target_event_type or "").strip().lower()
-        if not normalized_target.startswith("project:"):
-            return False
-        project_slug = normalized_target.split(":", 1)[1].strip()
-        if not project_slug:
-            return False
-        event_tags = {str(tag).strip().lower() for tag in (event.tags or []) if str(tag).strip()}
-        return f"project:{project_slug}" in event_tags or f"project_work:{project_slug}" in event_tags
+        signature = promise_target_signature(promise)
+        return match_signal(
+            signal_event_types=[event.event_type],
+            signal_tags=event.tags or [],
+            target_event_type=signature["target_event_type"],
+            target_tags=signature["target_tags"],
+            tag_match_mode=signature["tag_match_mode"],
+        ).matched
 
     def process(self):
         """Override process to include periodic checks for due promises."""

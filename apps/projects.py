@@ -14,6 +14,7 @@ from services.promises import PromiseService
 from services.skills import SkillService
 from services.blogs import BlogService
 from services.recommendation_followups import RecommendationFollowUpService
+from services.signal_matching import match_signal, normalize_skill_key, promise_target_signature
 from services.users import UserService
 from model.event import Event
 from processes.project_updater import ProjectUpdater
@@ -67,21 +68,13 @@ def _build_promise_index() -> list[dict]:
     promises = promise_service.find_all(sort_by={"name": "ASC"})
     indexed = []
     for promise in promises:
-        match_values = []
-        if promise.target_event_tag:
-            match_values.append(str(promise.target_event_tag).strip().lower())
-        for tag in promise.target_event_tags or []:
-            cleaned = str(tag).strip().lower()
-            if cleaned and cleaned not in match_values:
-                match_values.append(cleaned)
-        if promise.target_event_type and promise.target_event_type.startswith("project:"):
-            match_values.append(promise.target_event_type.split(":", 1)[1].strip().lower())
-        if match_values:
+        signature = promise_target_signature(promise)
+        if signature["target_event_type"] or signature["target_tags"]:
             indexed.append({
                 "id": promise.id,
                 "name": promise.name,
                 "href": "/promises/home",
-                "match_values": set(match_values),
+                **signature,
             })
     return indexed
 
@@ -99,17 +92,28 @@ def _build_skill_index() -> list[dict]:
     ]
 
 
-def _match_promises_for_tags(tags: list[str], promise_index: list[dict]) -> list[dict]:
-    tag_set = set(tags)
-    return [
-        {"id": item["id"], "name": item["name"], "href": item["href"]}
-        for item in promise_index
-        if item["match_values"].intersection(tag_set)
-    ][:3]
+def _match_promises_for_signal(signal: dict, promise_index: list[dict]) -> list[dict]:
+    linked = []
+    for item in promise_index:
+        result = match_signal(
+            signal_event_types=signal.get("event_types"),
+            signal_tags=signal.get("tags"),
+            target_event_type=item.get("target_event_type"),
+            target_tags=item.get("target_tags"),
+            tag_match_mode=item.get("tag_match_mode"),
+        )
+        if result.matched:
+            linked.append({
+                "id": item["id"],
+                "name": item["name"],
+                "href": item["href"],
+                "reason": result.reason,
+            })
+    return linked[:3]
 
 
 def _match_skills_for_tags(tags: list[str], skill_index: list[dict]) -> list[dict]:
-    normalized_tags = {"".join(char for char in tag if char.isalnum()) for tag in tags if tag}
+    normalized_tags = {normalize_skill_key(tag) for tag in tags if tag}
     return [
         {"id": item["id"], "name": item["name"], "href": item["href"]}
         for item in skill_index
@@ -129,14 +133,15 @@ def _build_contribution_summary(linked_promises: list[dict], linked_skills: list
 
 
 def _serialize_board_tickets(project, tickets) -> list[dict]:
-    shared_tags = _build_project_shared_tags(project)
     promise_index = _build_promise_index()
     skill_index = _build_skill_index()
     ticket_lookup = {ticket.id: ticket for ticket in tickets}
     serialized = []
     for ticket in tickets:
-        linked_promises = _match_promises_for_tags(shared_tags, promise_index)
-        linked_skills = _match_skills_for_tags(shared_tags, skill_index)
+        ticket_signal = kanban_ticket_service.build_ticket_signal(project, ticket)
+        ticket_signal_tags = ticket_signal["tags"]
+        linked_promises = _match_promises_for_signal(ticket_signal, promise_index)
+        linked_skills = _match_skills_for_tags(ticket_signal_tags, skill_index)
         dependencies = []
         available_dependencies = []
         for candidate in tickets:
@@ -161,7 +166,7 @@ def _serialize_board_tickets(project, tickets) -> list[dict]:
             })
         ticket_data = ticket.dict()
         ticket_data["ticket_code"] = ticket.ticket_code
-        ticket_data["focus_tags"] = shared_tags
+        ticket_data["focus_tags"] = ticket_signal_tags
         ticket_data["linked_promises"] = linked_promises
         ticket_data["linked_skills"] = linked_skills
         ticket_data["dependencies"] = dependencies
