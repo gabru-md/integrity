@@ -2,13 +2,14 @@
 {% block title %}Appearance{% endblock %}
 
 {% block content %}
-<div class="space-y-6 px-1 py-2">
+{% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
+<div class="page-shell px-1 py-2">
     <header class="shell-card hero-card px-6 py-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Appearance</div>
                 <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Tune how Rasbhari feels</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Themes, density, surface style, and motion live here now so appearance settings feel like a real part of the product instead of a nested sidebar control.</p>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Themes change mood and tone. The underlying shell, spacing, and behaviors stay consistent.</p>
             </div>
             <div class="flex flex-wrap gap-3">
                 <a href="/users/profile" class="btn-secondary px-4 py-3 text-sm">Profile</a>
