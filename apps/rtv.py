@@ -110,9 +110,9 @@ class RTVApp(App[MediaItem]):
                 items.append(item_data)
             stats = {
                 "total": len(items),
-                "ready": len([item for item in items if item.status == "ready"]),
-                "candidates": len([item for item in items if item.status == "candidate"]),
-                "downloaded_gb": round(sum(item.file_size_bytes for item in items if item.status == "ready") / 1024 / 1024 / 1024, 2),
+                "ready": len([item for item in items if item.get("status") == "ready"]),
+                "candidates": len([item for item in items if item.get("status") == "candidate"]),
+                "downloaded_gb": round(sum(item.get("file_size_bytes", 0) for item in items if item.get("status") == "ready") / 1024 / 1024 / 1024, 2),
                 "cache_limit_gb": round(int(os.getenv("RTV_MEDIA_CACHE_LIMIT_BYTES", str(DEFAULT_CACHE_LIMIT_BYTES))) / 1024 / 1024 / 1024, 2),
                 "media_root": str(media_root),
                 "query": query,
