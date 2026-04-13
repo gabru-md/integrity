@@ -27,6 +27,8 @@ class MediaDownloadProcessor(Process):
         self.current_handle = None
         self.cancel_requested_item_id = None
         self.cancel_reason = "Cancelled by user"
+        self.progress_flush_seconds = int(os.getenv("RTV_DOWNLOAD_PROGRESS_FLUSH_SECONDS", "15"))
+        self.progress_flush_delta = float(os.getenv("RTV_DOWNLOAD_PROGRESS_FLUSH_DELTA", "5"))
 
     def process(self):
         while self.running:
@@ -132,6 +134,7 @@ class MediaDownloadProcessor(Process):
 
             selected_path = download_root / started_item.selected_file_name
             last_progress_update = 0
+            last_saved_progress = -1.0
             while self.running and not handle.status().is_seeding:
                 if self.cancel_requested_item_id == started_item.id:
                     self.log.info("rTV download cancelled id=%s title=%s", started_item.id, started_item.title)
@@ -140,7 +143,13 @@ class MediaDownloadProcessor(Process):
                 progress = self._selected_file_progress(handle, started_item.selected_file_index, started_item.selected_file_size_bytes)
                 status = handle.status()
                 now = time.time()
-                if now - last_progress_update >= 5:
+                should_flush = (
+                    now - last_progress_update >= self.progress_flush_seconds
+                    or last_saved_progress < 0
+                    or abs(progress - last_saved_progress) >= self.progress_flush_delta
+                    or progress >= 100
+                )
+                if should_flush:
                     self.media_service.update_download_progress(
                         started_item.id,
                         progress=progress,
@@ -156,6 +165,7 @@ class MediaDownloadProcessor(Process):
                         status.download_rate / 1000,
                     )
                     last_progress_update = now
+                    last_saved_progress = progress
                 if progress >= 100:
                     break
                 time.sleep(1)
