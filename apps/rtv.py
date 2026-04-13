@@ -36,6 +36,7 @@ def _safe_media_file(local_path: str) -> Path:
 
 SUBTITLE_EXTENSIONS = {".vtt", ".srt"}
 TEXT_SUBTITLE_CODECS = {"subrip", "srt", "ass", "ssa", "webvtt", "mov_text"}
+POSTER_SUFFIX = ".poster.jpg"
 
 
 def _subtitle_label(path: Path) -> str:
@@ -172,6 +173,64 @@ def _srt_to_vtt(content: str) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def _poster_path(video_path: Path) -> Path:
+    return video_path.with_name(f"{video_path.stem}{POSTER_SUFFIX}")
+
+
+def _ensure_poster(item: MediaItem) -> str:
+    if not item.local_path:
+        return item.poster_path or ""
+    if item.poster_path:
+        if item.poster_path.startswith("/rtv/poster/"):
+            return item.poster_path
+        if item.poster_path.startswith(("http://", "https://", "/static/")):
+            return item.poster_path
+    try:
+        video_path = _safe_media_file(item.local_path)
+    except (ValueError, FileNotFoundError):
+        return item.poster_path or ""
+
+    poster_path = _poster_path(video_path)
+    if not poster_path.exists():
+        try:
+            result = subprocess.run(
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-ss",
+                    "00:05:00",
+                    "-i",
+                    str(video_path),
+                    "-frames:v",
+                    "1",
+                    "-vf",
+                    "scale=480:-1",
+                    "-q:v",
+                    "4",
+                    str(poster_path),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=45,
+                check=False,
+            )
+        except (FileNotFoundError, subprocess.SubprocessError):
+            return item.poster_path or ""
+        if result.returncode != 0 or not poster_path.exists():
+            poster_path.unlink(missing_ok=True)
+            return item.poster_path or ""
+
+    item.poster_path = f"/rtv/poster/{item.id}"
+    rtv_app.media_service.update(item)
+    return item.poster_path
+
+
+def _prepare_ready_items(items: list[MediaItem]) -> list[MediaItem]:
+    for item in items:
+        _ensure_poster(item)
+    return items
+
+
 def _process_media_item_data(data):
     if not data.get("title") and data.get("local_path"):
         data["title"] = MediaItemService.title_from_path(Path(data["local_path"]))
@@ -290,7 +349,7 @@ rtv_app.register_process(MediaDownloadProcessor, enabled=True)
 
 @rtv_app.blueprint.route('/tv')
 def tv_home():
-    ready_items = rtv_app.media_service.get_ready_movies()
+    ready_items = _prepare_ready_items(rtv_app.media_service.get_ready_movies())
     continue_items = [item for item in ready_items if item.progress_seconds > 0]
     recent_items = sorted(ready_items, key=lambda item: item.downloaded_at or item.created_at, reverse=True)
     return render_flask_template(
@@ -329,6 +388,24 @@ def stream(item_id):
     except FileNotFoundError as exc:
         return str(exc), 404
     return send_file(path, conditional=True)
+
+
+@rtv_app.blueprint.route('/poster/<int:item_id>')
+def poster(item_id):
+    item = rtv_app.media_service.get_by_id(item_id)
+    if not item or item.status != "ready" or item.cache_state != "cached" or not item.local_path:
+        return "Poster not found.", 404
+    try:
+        video_path = _safe_media_file(item.local_path)
+        poster_file = _poster_path(video_path)
+        poster_file.relative_to(_media_root())
+    except (ValueError, FileNotFoundError):
+        return "Poster not found.", 404
+    if not poster_file.exists():
+        _ensure_poster(item)
+    if not poster_file.exists():
+        return "Poster not found.", 404
+    return send_file(poster_file, mimetype="image/jpeg", conditional=True)
 
 
 @rtv_app.blueprint.route('/subtitles/<int:item_id>/<int:subtitle_index>')
