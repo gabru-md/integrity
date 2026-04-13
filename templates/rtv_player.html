@@ -15,6 +15,7 @@
         class="h-full w-full bg-black object-contain"
         autoplay
         playsinline
+        tabindex="0"
         src="/rtv/stream/{{ item.id }}"
     >
         {% for subtitle in subtitles %}
@@ -51,6 +52,7 @@
             <button type="button" data-player-focus data-action="rewind" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">-30s</button>
             <button type="button" data-player-focus data-action="toggle" class="rounded-full bg-white px-10 py-4 text-base font-black text-slate-950 outline-none transition hover:bg-amber-200 focus:bg-amber-200 focus:ring-4 focus:ring-amber-300/35">Pause</button>
             <button type="button" data-player-focus data-action="forward" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">+30s</button>
+            <button type="button" data-player-focus data-action="hide-controls" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Hide Controls</button>
             <button type="button" data-player-focus data-action="fullscreen" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Fullscreen</button>
         </div>
 
@@ -100,6 +102,12 @@
         }, 4500);
     }
 
+    function hideChrome() {
+        clearTimeout(chromeTimer);
+        chromeEl.classList.add('opacity-0', 'pointer-events-none');
+        player.focus?.();
+    }
+
     function seekBy(seconds) {
         if (!Number.isFinite(player.duration)) return;
         player.currentTime = Math.max(0, Math.min(player.duration, player.currentTime + seconds));
@@ -147,6 +155,7 @@
             if (action === 'toggle') await togglePlayback();
             if (action === 'rewind') seekBy(-30);
             if (action === 'forward') seekBy(30);
+            if (action === 'hide-controls') hideChrome();
             if (action === 'fullscreen') {
                 const target = document.documentElement;
                 if (!document.fullscreenElement && target.requestFullscreen) {
