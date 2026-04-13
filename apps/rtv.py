@@ -102,9 +102,9 @@ class RTVApp(App[MediaItem]):
                 if item.local_path:
                     try:
                         relative_path = Path(item.local_path).expanduser().resolve().relative_to(media_root)
-                        display_local_path = f"[Media Folder]/{relative_path.as_posix()}"
+                        display_local_path = relative_path.as_posix()
                     except Exception:
-                        display_local_path = f"[Media Folder]/{Path(item.local_path).name}"
+                        display_local_path = Path(item.local_path).name
                 item_data = item.model_dump() if hasattr(item, "model_dump") else dict(item)
                 item_data["display_local_path"] = display_local_path
                 items.append(item_data)

@@ -45,10 +45,11 @@
     </section>
 
     <section class="shell-card p-4">
-        <form method="get" action="/rtv/home" class="flex flex-col gap-3 md:flex-row md:items-end">
+        <form id="library-search-form" method="get" action="/rtv/home" class="flex flex-col gap-3 md:flex-row md:items-end">
             <label class="flex-1 space-y-2">
                 <span class="text-xs font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Search library</span>
                 <input
+                    id="library-search-input"
                     name="q"
                     value="{{ stats.query }}"
                     class="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)]"
@@ -94,11 +95,7 @@
                     <div class="flex items-start justify-between gap-4">
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                <input
-                                    id="title-{{ item.id }}"
-                                    value="{{ item.title }}"
-                                    class="w-full rounded-xl border border-transparent bg-transparent px-0 py-1 text-base font-bold text-[var(--text)] outline-none transition focus:border-[var(--border)] focus:bg-[var(--surface-muted)] focus:px-3"
-                                >
+                                <div class="min-w-0 flex-1 text-base font-bold text-[var(--text)]">{{ item.title }}</div>
                             </div>
                             <div class="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-soft)]">{{ item.status }} · {{ item.cache_state }} · {{ item.source_type }}</div>
                             {% if item.selected_file_name %}
@@ -118,38 +115,55 @@
                                 {% endif %}
                             </div>
                             {% endif %}
-                            {% if item.source_type == 'magnet' %}
-                            <div class="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
-                                <label class="block space-y-2">
-                                    <span class="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Magnet URI</span>
-                                    <textarea
-                                        id="magnet-{{ item.id }}"
-                                        class="min-h-24 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text)]"
-                                    >{{ item.magnet_uri }}</textarea>
-                                </label>
-                                <div class="mt-3 flex flex-wrap items-center gap-2">
-                                    <button type="button" onclick="saveMagnet({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Update Magnet</button>
-                                </div>
-                                <details class="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-                                    <summary class="cursor-pointer text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Metadata Probe</summary>
-                                    <div class="mt-3">
-                                        <button type="button" onclick="debugMetadata({{ item.id }})" class="rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Probe</button>
-                                        <div id="debug-result-{{ item.id }}" class="mt-3 text-xs leading-5 text-[var(--text-soft)]">
-                                            Click `Probe` to see torrent discovery details for this magnet.
+                            <details id="edit-panel-{{ item.id }}" class="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+                                <summary class="cursor-pointer text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Edit</summary>
+                                <div class="mt-4 space-y-4">
+                                    <label class="block space-y-2">
+                                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Title</span>
+                                        <input
+                                            id="title-{{ item.id }}"
+                                            value="{{ item.title }}"
+                                            class="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)]"
+                                        >
+                                    </label>
+                                    {% if item.source_type == 'magnet' %}
+                                    <label class="block space-y-2">
+                                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Magnet URI</span>
+                                        <textarea
+                                            id="magnet-{{ item.id }}"
+                                            class="min-h-24 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text)]"
+                                        >{{ item.magnet_uri }}</textarea>
+                                    </label>
+                                    <details class="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
+                                        <summary class="cursor-pointer text-[11px] font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Metadata Probe</summary>
+                                        <div class="mt-3">
+                                            <button type="button" onclick="debugMetadata({{ item.id }})" class="rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Probe</button>
+                                            <div id="debug-result-{{ item.id }}" class="mt-3 text-xs leading-5 text-[var(--text-soft)]">
+                                                Click `Probe` to see torrent discovery details for this magnet.
+                                            </div>
                                         </div>
+                                    </details>
+                                    {% endif %}
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="button" onclick="saveTitle({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Save Title</button>
+                                        {% if item.source_type == 'magnet' %}
+                                        <button type="button" onclick="saveMagnet({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Save Magnet</button>
+                                        {% endif %}
                                     </div>
-                                </details>
-                            </div>
-                            {% endif %}
+                                </div>
+                            </details>
                         </div>
                         <div class="flex shrink-0 flex-wrap justify-end gap-2">
                             {% if item.status == 'ready' %}
                             <a href="/rtv/play/{{ item.id }}" class="rounded-full bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Play</a>
+                            <button type="button" onclick="toggleEditPanel({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             <button type="button" onclick="deleteLocalFile({{ item.id }})" class="rounded-full bg-rose-100 px-4 py-2 text-xs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">Delete File</button>
                             {% elif item.source_type == 'magnet' and item.selected_file_index is none and item.status != 'failed' %}
                             <button type="button" onclick="resolveMetadata({{ item.id }})" class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Resolve</button>
+                            <button type="button" onclick="toggleEditPanel({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             {% elif item.source_type == 'magnet' and item.status == 'candidate' %}
                             <button type="button" onclick="queueDownload({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queue Download</button>
+                            <button type="button" onclick="toggleEditPanel({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             {% elif item.status == 'queued' %}
                             <span class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queued</span>
                             <button type="button" onclick="cancelDownload({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Cancel</button>
@@ -285,6 +299,12 @@
         window.location.reload();
     }
 
+    function toggleEditPanel(itemId) {
+        const panel = document.getElementById(`edit-panel-${itemId}`);
+        if (!panel) return;
+        panel.open = !panel.open;
+    }
+
     async function cancelDownload(itemId) {
         const response = await fetch(`/rtv/${itemId}/cancel-download`, { method: 'POST' });
         const data = await response.json().catch(() => ({}));
@@ -316,5 +336,18 @@
         }
         window.location.reload();
     }
+
+    const searchInput = document.getElementById('library-search-input');
+    const searchForm = document.getElementById('library-search-form');
+    let searchDebounceHandle = null;
+
+    searchInput?.addEventListener('input', () => {
+        if (searchDebounceHandle) {
+            window.clearTimeout(searchDebounceHandle);
+        }
+        searchDebounceHandle = window.setTimeout(() => {
+            searchForm?.requestSubmit();
+        }, 250);
+    });
 </script>
 {% endblock %}
