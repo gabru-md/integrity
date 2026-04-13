@@ -8,7 +8,7 @@ from gabru.flask.model import WidgetUIModel
 
 MediaKind = Literal["movie"]
 MediaSourceType = Literal["local_file", "magnet"]
-MediaStatus = Literal["candidate", "queued", "downloading", "ready", "failed", "deleted"]
+MediaStatus = Literal["candidate", "queued", "downloading", "ready", "failed", "deleted", "cancelled"]
 MediaCacheState = Literal["not_cached", "cached", "evicted"]
 
 

@@ -41,6 +41,30 @@ def _process_media_item_data(data):
     return data
 
 
+def _cancel_active_download(item_id: int, reason: str = "Cancelled by user"):
+    processor = rtv_app.get_running_process(MediaDownloadProcessor)
+    if processor and hasattr(processor, "request_cancel"):
+        processor.request_cancel(item_id, reason=reason)
+
+
+def _cleanup_download_artifacts(item: MediaItem):
+    if not item or not item.local_path:
+        return
+    path = Path(item.local_path).expanduser().resolve()
+    if path.exists() and path.is_file():
+        path.unlink()
+
+    download_root = path.parent if path.parent.name == f"item-{item.id}" else None
+    if download_root and download_root.exists() and download_root.is_dir():
+        try:
+            for child in download_root.iterdir():
+                if child.is_file():
+                    child.unlink()
+            download_root.rmdir()
+        except Exception:
+            pass
+
+
 class RTVApp(App[MediaItem]):
     def __init__(self):
         self.media_service = MediaItemService()
@@ -327,11 +351,14 @@ def delete_local_file(item_id):
     item = rtv_app.media_service.get_by_id(item_id)
     if not item:
         return jsonify({"error": "Movie not found."}), 404
-    if item.status in {"queued", "downloading"} or item.is_playing:
-        return jsonify({"error": "Cannot delete a queued, downloading, or currently playing movie."}), 400
-    path = Path(item.local_path).expanduser().resolve() if item.local_path else None
-    if path and path.exists() and path.is_file():
-        path.unlink()
+    if item.status in {"queued", "downloading"}:
+        _cancel_active_download(item.id, reason="Cancelled before local file deletion")
+        item = rtv_app.media_service.get_by_id(item_id) or item
+        if item.status == "downloading":
+            return jsonify({"error": "Download cancellation requested. Try delete again in a moment."}), 409
+    if item.is_playing:
+        return jsonify({"error": "Cannot delete a currently playing movie."}), 400
+    _cleanup_download_artifacts(item)
     if not rtv_app.media_service.mark_evicted(item_id):
         return jsonify({"error": "Failed to update movie cache state."}), 500
     evicted_item = rtv_app.media_service.get_by_id(item_id) or item
@@ -348,11 +375,14 @@ def delete_record(item_id):
     item = rtv_app.media_service.get_by_id(item_id)
     if not item:
         return jsonify({"error": "Movie not found."}), 404
-    if item.status in {"queued", "downloading"} or item.is_playing:
-        return jsonify({"error": "Cannot delete a queued, downloading, or currently playing movie."}), 400
-    path = Path(item.local_path).expanduser().resolve() if item.local_path else None
-    if path and path.exists() and path.is_file():
-        path.unlink()
+    if item.status in {"queued", "downloading"}:
+        _cancel_active_download(item.id, reason="Cancelled before record deletion")
+        item = rtv_app.media_service.get_by_id(item_id) or item
+        if item.status == "downloading":
+            return jsonify({"error": "Download cancellation requested. Try delete again in a moment."}), 409
+    if item.is_playing:
+        return jsonify({"error": "Cannot delete a currently playing movie."}), 400
+    _cleanup_download_artifacts(item)
     if not rtv_app.media_service.delete(item_id):
         return jsonify({"error": "Failed to delete movie record."}), 500
     rtv_app.emit_media_event("media:record_deleted", item, f"Deleted rTV record for {item.title}", {
@@ -360,6 +390,25 @@ def delete_record(item_id):
         "previous_file_size_bytes": item.file_size_bytes,
     })
     return jsonify({"id": item_id, "message": "Movie record deleted"}), 200
+
+
+@rtv_app.blueprint.route('/<int:item_id>/cancel-download', methods=['POST'])
+@write_access_required
+def cancel_download(item_id):
+    item = rtv_app.media_service.get_by_id(item_id)
+    if not item:
+        return jsonify({"error": "Movie not found."}), 404
+    if item.status not in {"queued", "downloading"}:
+        return jsonify({"error": "Only queued or downloading movies can be cancelled."}), 400
+
+    _cancel_active_download(item.id, reason="Cancelled by user")
+    cancelled_item = rtv_app.media_service.mark_download_cancelled(item.id, "Cancelled by user")
+    if not cancelled_item:
+        return jsonify({"error": "Failed to cancel movie download."}), 500
+    rtv_app.emit_media_event("media:download_cancelled", cancelled_item, f"Cancelled rTV download for {cancelled_item.title}", {
+        "status": cancelled_item.status,
+    })
+    return jsonify({"id": item_id, "status": cancelled_item.status, "message": "Download cancelled"}), 200
 
 
 @rtv_app.blueprint.route('/progress/<int:item_id>', methods=['POST'])

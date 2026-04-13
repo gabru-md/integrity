@@ -21,6 +21,10 @@ class MediaDownloadProcessor(Process):
         self.event_service = EventService()
         self.sleep_time_sec = int(os.getenv("RTV_DOWNLOAD_PROCESSOR_SLEEP_SEC", "10"))
         self.media_root = Path(os.getenv("RTV_MEDIA_DIR", "./media/rtv")).expanduser().resolve()
+        self.current_item_id = None
+        self.current_handle = None
+        self.cancel_requested_item_id = None
+        self.cancel_reason = "Cancelled by user"
 
     def process(self):
         while self.running:
@@ -31,11 +35,40 @@ class MediaDownloadProcessor(Process):
                 continue
             self._download_item(queued_item)
 
+    def request_cancel(self, item_id: int, reason: str = "Cancelled by user") -> bool:
+        if self.current_item_id == item_id:
+            self.cancel_requested_item_id = item_id
+            self.cancel_reason = reason
+            if self.current_handle is not None:
+                try:
+                    self.current_handle.pause()
+                except Exception:
+                    pass
+            self.log.info("Cancel requested for active rTV download id=%s", item_id)
+            return True
+        return False
+
+    def _cancel_current_download(self, item_id: int):
+        if self.cancel_requested_item_id == item_id:
+            cancelled_item = self.media_service.mark_download_cancelled(item_id, self.cancel_reason)
+            if cancelled_item:
+                self._emit_event("media:download_cancelled", cancelled_item, f"Cancelled rTV download for {cancelled_item.title}", {
+                    "reason": self.cancel_reason,
+                })
+        self.current_item_id = None
+        self.current_handle = None
+        self.cancel_requested_item_id = None
+        self.cancel_reason = "Cancelled by user"
+
     def _download_item(self, item: MediaItem):
         started_item = self.media_service.mark_download_started(item.id)
         if not started_item:
             self.log.warning("Could not mark rTV item %s as downloading", item.id)
             return
+        self.current_item_id = started_item.id
+        self.current_handle = None
+        self.cancel_requested_item_id = None
+        self.cancel_reason = "Cancelled by user"
 
         self.log.info(
             "Starting rTV download id=%s title=%s selected_file=%s size_mb=%.1f",
@@ -80,13 +113,14 @@ class MediaDownloadProcessor(Process):
             params.save_path = str(download_root)
             params.storage_mode = lt.storage_mode_t.storage_mode_sparse
             handle = session.add_torrent(params)
+            self.current_handle = handle
             handle.force_reannounce()
             try:
                 handle.force_dht_announce()
             except Exception:
                 pass
 
-            self._wait_for_metadata(handle)
+            self._wait_for_metadata(handle, item_id=started_item.id)
             self.log.info("rTV metadata ready for id=%s title=%s", started_item.id, started_item.title)
             info = self._get_torrent_info(handle)
             self._prioritize_selected_file(handle, info, started_item.selected_file_index)
@@ -94,6 +128,10 @@ class MediaDownloadProcessor(Process):
             selected_path = download_root / started_item.selected_file_name
             last_progress_update = 0
             while self.running and not handle.status().is_seeding:
+                if self.cancel_requested_item_id == started_item.id:
+                    self.log.info("rTV download cancelled id=%s title=%s", started_item.id, started_item.title)
+                    self._cancel_current_download(started_item.id)
+                    return
                 progress = self._selected_file_progress(handle, started_item.selected_file_index, started_item.selected_file_size_bytes)
                 status = handle.status()
                 now = time.time()
@@ -135,11 +173,19 @@ class MediaDownloadProcessor(Process):
             )
             self.log.exception(exc)
         finally:
+            self.current_item_id = None
+            self.current_handle = None
+            self.cancel_requested_item_id = None
+            self.cancel_reason = "Cancelled by user"
             session.pause()
 
-    def _wait_for_metadata(self, handle, timeout_seconds=120):
+    def _wait_for_metadata(self, handle, timeout_seconds=120, item_id=None):
         deadline = time.time() + timeout_seconds
         while self.running and not handle.has_metadata():
+            if item_id is not None and self.cancel_requested_item_id == item_id:
+                self.log.info("rTV download cancelled during metadata wait id=%s", item_id)
+                self._cancel_current_download(item_id)
+                return
             if time.time() > deadline:
                 raise TimeoutError("Timed out waiting for torrent metadata.")
             time.sleep(0.5)

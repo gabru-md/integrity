@@ -121,10 +121,14 @@
                             <button type="button" onclick="queueDownload({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queue Download</button>
                             {% elif item.status == 'queued' %}
                             <span class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queued</span>
+                            <button type="button" onclick="cancelDownload({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Cancel</button>
                             {% elif item.status == 'downloading' %}
                             <span class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Downloading</span>
+                            <button type="button" onclick="cancelDownload({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Cancel</button>
                             {% elif item.status == 'failed' %}
                             <button type="button" onclick="retryItem({{ item.id }})" class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Retry</button>
+                            {% elif item.status == 'cancelled' %}
+                            <span class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600 dark:bg-gray-800 dark:text-gray-300">Cancelled</span>
                             {% else %}
                             <span class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600 dark:bg-gray-800 dark:text-gray-300">Not ready</span>
                             {% endif %}
@@ -245,6 +249,16 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
             alert(data.error || 'Retry failed');
+            return;
+        }
+        window.location.reload();
+    }
+
+    async function cancelDownload(itemId) {
+        const response = await fetch(`/rtv/${itemId}/cancel-download`, { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || 'Cancel failed');
             return;
         }
         window.location.reload();

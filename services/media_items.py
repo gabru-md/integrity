@@ -293,6 +293,17 @@ class MediaItemService(CRUDService[MediaItem]):
         item.last_error = error
         return item if self.update(item) else None
 
+    def mark_download_cancelled(self, item_id: int, reason: str = "Cancelled by user") -> Optional[MediaItem]:
+        item = self.get_by_id(item_id)
+        if not item:
+            return None
+        item.status = "cancelled"
+        item.download_rate_kbps = 0
+        item.download_peers = 0
+        item.last_error = reason
+        item.is_playing = False
+        return item if self.update(item) else None
+
     def mark_evicted(self, item_id: int) -> bool:
         item = self.get_by_id(item_id)
         if not item:
