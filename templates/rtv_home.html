@@ -113,16 +113,20 @@
                             {% endif %}
                         </div>
                         <div class="flex shrink-0 flex-wrap justify-end gap-2">
+                            <button type="button" onclick="openEditModal({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             {% if item.status == 'ready' %}
                             <a href="/rtv/play/{{ item.id }}" class="rounded-full bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Play</a>
-                            <button type="button" onclick="openEditModal({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             <button type="button" onclick="deleteLocalFile({{ item.id }})" class="rounded-full bg-rose-100 px-4 py-2 text-xs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">Delete File</button>
+                            {% elif item.status == 'deleted' and item.source_type == 'magnet' and item.magnet_uri %}
+                            {% if item.selected_file_index is not none %}
+                            <button type="button" onclick="queueDownload({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Download</button>
+                            {% else %}
+                            <button type="button" onclick="resolveMetadata({{ item.id }})" class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Resolve</button>
+                            {% endif %}
                             {% elif item.source_type == 'magnet' and item.selected_file_index is none and item.status != 'failed' %}
                             <button type="button" onclick="resolveMetadata({{ item.id }})" class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Resolve</button>
-                            <button type="button" onclick="openEditModal({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             {% elif item.source_type == 'magnet' and item.status == 'candidate' %}
                             <button type="button" onclick="queueDownload({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queue Download</button>
-                            <button type="button" onclick="openEditModal({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             {% elif item.status == 'queued' %}
                             <span class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Queued</span>
                             <button type="button" onclick="cancelDownload({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Cancel</button>
@@ -134,7 +138,15 @@
                             {% elif item.status == 'cancelled' %}
                             <span class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600 dark:bg-gray-800 dark:text-gray-300">Cancelled</span>
                             {% else %}
+                            {% if item.source_type == 'magnet' and item.magnet_uri %}
+                            {% if item.selected_file_index is not none %}
+                            <button type="button" onclick="queueDownload({{ item.id }})" class="rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">Download</button>
+                            {% else %}
+                            <button type="button" onclick="resolveMetadata({{ item.id }})" class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">Resolve</button>
+                            {% endif %}
+                            {% else %}
                             <span class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600 dark:bg-gray-800 dark:text-gray-300">Not ready</span>
+                            {% endif %}
                             {% endif %}
                             {% if item.status not in ['queued', 'downloading'] %}
                             <button type="button" onclick="deleteRecord({{ item.id }})" class="rounded-full bg-rose-100 px-4 py-2 text-xs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">Delete</button>
