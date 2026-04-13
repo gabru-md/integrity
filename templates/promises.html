@@ -138,7 +138,9 @@
                     </div>
                 </div>
 
-                {% if promise.target_event_type or promise.target_event_tag %}
+                {% set promise_target_tags = promise.target_event_tags or [] %}
+                {% set promise_primary_tags = promise_target_tags if promise_target_tags else ([promise.target_event_tag] if promise.target_event_tag else []) %}
+                {% if promise.target_event_type or promise_primary_tags %}
                 <div class="rounded-2xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-4 py-4">
                     <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-3">Targets</div>
                     <div class="space-y-2 text-sm">
@@ -148,10 +150,19 @@
                             <span class="font-medium text-slate-700 dark:text-gray-200 text-right break-all">{{ promise.target_event_type }}</span>
                         </div>
                         {% endif %}
-                        {% if promise.target_event_tag %}
-                        <div class="flex justify-between gap-3">
-                            <span class="text-slate-500 dark:text-gray-400">Target Tag</span>
-                            <span class="font-medium text-slate-700 dark:text-gray-200 text-right break-all">{{ promise.target_event_tag }}</span>
+                        {% if promise_primary_tags %}
+                        <div class="flex flex-col gap-2">
+                            <div class="flex justify-between gap-3">
+                                <span class="text-slate-500 dark:text-gray-400">{% if promise_target_tags %}Tag Set{% else %}Target Tag{% endif %}</span>
+                                {% if promise_target_tags %}
+                                <span class="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{{ promise.target_event_tags_match_mode|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                {% for tag in promise_primary_tags %}
+                                <span class="ui-badge">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
                         </div>
                         {% endif %}
                     </div>
@@ -239,11 +250,11 @@
                 <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Optional context explaining what counts and why the promise matters.</p>
                 <textarea id="description" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Tell more about your promise..."></textarea>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Frequency</label>
-                    <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">How often this promise resets and gets evaluated.</p>
-                    <select id="frequency" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Frequency</label>
+                        <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">How often this promise resets and gets evaluated.</p>
+                        <select id="frequency" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
                         <option value="monthly">Monthly</option>
@@ -256,6 +267,28 @@
                     <input type="number" id="required_count" value="1" min="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                 </div>
             </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Target Event Tags</label>
+                        <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Comma-separated tags. Use the match mode to require any one or all of them.</p>
+                        <input type="text" id="target_event_tags" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="e.g., project-a, completed">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Tag Match Mode</label>
+                        <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Any means one matching tag is enough. All means every listed tag must be present.</p>
+                        <select id="target_event_tags_match_mode" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                            <option value="any">Any</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Target Event Type</label>
+                    <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Use this when promise should only count one exact event type.</p>
+                    <input type="text" id="target_event_type" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="e.g., fitness:activity">
+                </div>
+            </div>
             <div class="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-gray-700">
                 <div class="flex items-center space-x-3">
                     <input type="checkbox" id="is_negative" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" onchange="toggleNegativeFields()">
@@ -266,18 +299,8 @@
                     <input type="number" id="max_allowed" value="0" min="0" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white outline-none">
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Target Event Tag</label>
-                    <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Use this when promise should count any event carrying a specific tag.</p>
-                    <input type="text" id="target_event_tag" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="e.g., exercise">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Target Event Type</label>
-                    <p class="mb-2 text-xs leading-5 text-slate-500 dark:text-gray-400">Use this when promise should only count one exact event type.</p>
-                    <input type="text" id="target_event_type" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="e.g., fitness:activity">
-                </div>
-            </div>
+
+
             <div class="pt-4 flex space-x-3">
                 <button type="button" onclick="closeModal()" class="flex-1 px-6 py-3 border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition-all">Cancel</button>
                 <button type="submit" class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 dark:shadow-none transition-all">Save Promise</button>
@@ -318,7 +341,8 @@
             document.getElementById('description').value = promise.description;
             document.getElementById('frequency').value = promise.frequency;
             document.getElementById('required_count').value = promise.required_count;
-            document.getElementById('target_event_tag').value = promise.target_event_tag || '';
+            document.getElementById('target_event_tags').value = (promise.target_event_tags || []).join(', ');
+            document.getElementById('target_event_tags_match_mode').value = promise.target_event_tags_match_mode || 'any';
             document.getElementById('target_event_type').value = promise.target_event_type || '';
             document.getElementById('is_negative').checked = promise.is_negative;
             document.getElementById('max_allowed').value = promise.max_allowed || 0;
@@ -338,12 +362,17 @@
     form.onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('promise-id').value;
-        const data = {
-            name: document.getElementById('name').value,
-            description: document.getElementById('description').value,
-            frequency: document.getElementById('frequency').value,
-            required_count: parseInt(document.getElementById('required_count').value),
-            target_event_tag: document.getElementById('target_event_tag').value || null,
+            const data = {
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value,
+                frequency: document.getElementById('frequency').value,
+                required_count: parseInt(document.getElementById('required_count').value),
+                target_event_tag: null,
+                target_event_tags: document.getElementById('target_event_tags').value
+                    .split(',')
+                    .map((tag) => tag.trim())
+                    .filter(Boolean),
+            target_event_tags_match_mode: document.getElementById('target_event_tags_match_mode').value,
             target_event_type: document.getElementById('target_event_type').value || null,
             is_negative: document.getElementById('is_negative').checked,
             max_allowed: parseInt(document.getElementById('max_allowed').value) || 0,

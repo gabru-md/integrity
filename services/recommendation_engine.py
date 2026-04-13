@@ -77,7 +77,7 @@ class RecommendationEngineService:
 
         output: list[Recommendation] = []
         for promise in promises:
-            if promise.target_event_tag or not promise.target_event_type:
+            if promise.target_event_tag or (promise.target_event_tags or []) or not promise.target_event_type:
                 continue
             matching_activities = activities_by_event_type.get(str(promise.target_event_type).strip().lower(), [])
             candidate_tags: list[str] = []
@@ -268,7 +268,12 @@ class RecommendationEngineService:
     def _detect_missing_project_promises(self, user_id: int) -> Iterable[Recommendation]:
         projects = self.project_service.find_all(filters={"user_id": user_id, "state": "Active"}, sort_by={"last_updated": "ASC"})
         promises = self.promise_service.find_all(filters={"user_id": user_id}, sort_by={"name": "ASC"})
-        promise_tags = {str(p.target_event_tag).strip().lower() for p in promises if p.target_event_tag}
+        promise_tags = {
+            str(tag).strip().lower()
+            for p in promises
+            for tag in [p.target_event_tag, *(p.target_event_tags or [])]
+            if str(tag).strip()
+        }
         output: list[Recommendation] = []
         for project in projects:
             focus_tags = [str(tag).strip().lower() for tag in (project.focus_tags or []) if str(tag).strip()]

@@ -15,7 +15,9 @@ class Promise(WidgetUIModel):
     frequency: str = Field(default="daily", widget_enabled=True, description="How often the promise is checked and reset")
     
     # target_event_tag or target_event_type - use one or both
-    target_event_tag: Optional[str] = Field(default=None, widget_enabled=True, description="Tag that matching events must include")
+    target_event_tag: Optional[str] = Field(default=None, widget_enabled=True, description="Legacy single tag that matching events must include")
+    target_event_tags: List[str] = Field(default_factory=list, widget_enabled=True, description="Tags that matching events must include")
+    target_event_tags_match_mode: str = Field(default="any", widget_enabled=True, description="Whether any matching tag is enough or all tags are required")
     target_event_type: Optional[str] = Field(default=None, widget_enabled=True, description="Exact event type that matching events must use")
     
     required_count: int = Field(default=1, widget_enabled=True, description="How many matching events are required in each period (for positive promises)")

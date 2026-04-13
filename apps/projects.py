@@ -70,6 +70,10 @@ def _build_promise_index() -> list[dict]:
         match_values = []
         if promise.target_event_tag:
             match_values.append(str(promise.target_event_tag).strip().lower())
+        for tag in promise.target_event_tags or []:
+            cleaned = str(tag).strip().lower()
+            if cleaned and cleaned not in match_values:
+                match_values.append(cleaned)
         if promise.target_event_type and promise.target_event_type.startswith("project:"):
             match_values.append(promise.target_event_type.split(":", 1)[1].strip().lower())
         if match_values:

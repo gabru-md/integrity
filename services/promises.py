@@ -3,6 +3,7 @@ from model.promise import Promise
 from gabru.db.service import CRUDService
 from gabru.db.db import DB
 from typing import List, Optional
+import json
 
 
 class PromiseService(CRUDService[Promise]):
@@ -38,6 +39,8 @@ class PromiseService(CRUDService[Promise]):
                                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                             )
                         """)
+                cursor.execute("ALTER TABLE promises ADD COLUMN IF NOT EXISTS target_event_tags TEXT")
+                cursor.execute("ALTER TABLE promises ADD COLUMN IF NOT EXISTS target_event_tags_match_mode VARCHAR(10) DEFAULT 'any'")
                 self.db.conn.commit()
 
     def get_due_promises(self) -> List[Promise]:
@@ -55,9 +58,11 @@ class PromiseService(CRUDService[Promise]):
         return self.find_all(filters={"status": status})
 
     def _to_tuple(self, promise: Promise) -> tuple:
+        tags = self._normalize_tags(promise.target_event_tags, promise.target_event_tag)
         return (
             promise.user_id, promise.name, promise.description, promise.frequency,
-            promise.target_event_tag, promise.target_event_type, promise.required_count,
+            promise.target_event_tag, json.dumps(tags), promise.target_event_tags_match_mode,
+            promise.target_event_type, promise.required_count,
             promise.is_negative, promise.max_allowed,
             promise.status, promise.current_count, promise.streak, promise.best_streak,
             promise.total_completions, promise.total_periods,
@@ -73,34 +78,62 @@ class PromiseService(CRUDService[Promise]):
             "description": row[3],
             "frequency": row[4],
             "target_event_tag": row[5],
-            "target_event_type": row[6],
-            "required_count": row[7],
-            "is_negative": row[8],
-            "max_allowed": row[9],
-            "status": row[10],
-            "current_count": row[11],
-            "streak": row[12],
-            "best_streak": row[13],
-            "total_completions": row[14],
-            "total_periods": row[15],
-            "last_checked_at": row[16],
-            "next_check_at": row[17],
-            "created_at": row[18],
-            "updated_at": row[19]
+            "target_event_tags": self._decode_tags(row[6]),
+            "target_event_tags_match_mode": row[7] or "any",
+            "target_event_type": row[8],
+            "required_count": row[9],
+            "is_negative": row[10],
+            "max_allowed": row[11],
+            "status": row[12],
+            "current_count": row[13],
+            "streak": row[14],
+            "best_streak": row[15],
+            "total_completions": row[16],
+            "total_periods": row[17],
+            "last_checked_at": row[18],
+            "next_check_at": row[19],
+            "created_at": row[20],
+            "updated_at": row[21]
         }
         return Promise(**promise_dict)
 
+    @staticmethod
+    def _normalize_tags(tags: Optional[List[str]], legacy_tag: Optional[str] = None) -> List[str]:
+        normalized: List[str] = []
+        if legacy_tag and str(legacy_tag).strip():
+            normalized.append(str(legacy_tag).strip())
+        for tag in tags or []:
+            value = str(tag).strip()
+            if value and value not in normalized:
+                normalized.append(value)
+        return normalized
+
+    @staticmethod
+    def _decode_tags(value) -> List[str]:
+        if not value:
+            return []
+        if isinstance(value, list):
+            return [str(tag).strip() for tag in value if str(tag).strip()]
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+            except Exception:
+                parsed = [part.strip() for part in value.split(",")]
+            if isinstance(parsed, list):
+                return [str(tag).strip() for tag in parsed if str(tag).strip()]
+        return []
+
     def _get_columns_for_insert(self) -> List[str]:
-        return ["user_id", "name", "description", "frequency", "target_event_tag", "target_event_type", 
-                "required_count", "is_negative", "max_allowed", "status", "current_count", "streak", 
-                "best_streak", "total_completions", "total_periods", "last_checked_at", "next_check_at", 
-                "created_at", "updated_at"]
+        return ["user_id", "name", "description", "frequency", "target_event_tag", "target_event_tags",
+                "target_event_tags_match_mode", "target_event_type", "required_count", "is_negative", "max_allowed",
+                "status", "current_count", "streak", "best_streak", "total_completions", "total_periods",
+                "last_checked_at", "next_check_at", "created_at", "updated_at"]
 
     def _get_columns_for_update(self) -> List[str]:
         return self._get_columns_for_insert()
 
     def _get_columns_for_select(self) -> List[str]:
-        return ["id", "user_id", "name", "description", "frequency", "target_event_tag", "target_event_type", 
-                "required_count", "is_negative", "max_allowed", "status", "current_count", "streak", 
-                "best_streak", "total_completions", "total_periods", "last_checked_at", "next_check_at", 
-                "created_at", "updated_at"]
+        return ["id", "user_id", "name", "description", "frequency", "target_event_tag", "target_event_tags",
+                "target_event_tags_match_mode", "target_event_type", "required_count", "is_negative", "max_allowed",
+                "status", "current_count", "streak", "best_streak", "total_completions", "total_periods",
+                "last_checked_at", "next_check_at", "created_at", "updated_at"]

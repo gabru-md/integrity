@@ -60,12 +60,36 @@ class PromiseProcessor(QueueProcessor[Event]):
 
     def _event_matches_promise(self, event: Event, promise: Promise) -> bool:
         if promise.target_event_type and event.event_type == promise.target_event_type:
-            return True
-        if promise.target_event_type and self._event_matches_project_target(event, promise.target_event_type):
-            return True
-        if promise.target_event_tag and promise.target_event_tag in event.tags:
-            return True
-        return False
+            type_match = True
+        elif promise.target_event_type and self._event_matches_project_target(event, promise.target_event_type):
+            type_match = True
+        elif promise.target_event_type:
+            return False
+        else:
+            type_match = True
+
+        target_tags = self._promise_target_tags(promise)
+        if not target_tags:
+            return type_match
+
+        event_tags = {str(tag).strip() for tag in (event.tags or []) if str(tag).strip()}
+        match_mode = (promise.target_event_tags_match_mode or "any").strip().lower()
+        if match_mode == "all":
+            tag_match = all(tag in event_tags for tag in target_tags)
+        else:
+            tag_match = any(tag in event_tags for tag in target_tags)
+        return type_match and tag_match
+
+    @staticmethod
+    def _promise_target_tags(promise: Promise) -> list[str]:
+        tags = []
+        if promise.target_event_tag:
+            tags.append(str(promise.target_event_tag).strip())
+        for tag in promise.target_event_tags or []:
+            value = str(tag).strip()
+            if value and value not in tags:
+                tags.append(value)
+        return [tag for tag in tags if tag]
 
     @staticmethod
     def _event_matches_project_target(event: Event, target_event_type: str) -> bool:
@@ -200,13 +224,7 @@ class PromiseProcessor(QueueProcessor[Event]):
             
             # Compare UTC aware datetimes.
             if event_ts_aware and event_ts_aware > start_time and event_ts_aware < end_time:
-                if promise.target_event_type and promise.target_event_type.startswith("project:"):
-                    if self._event_matches_project_target(e, promise.target_event_type):
-                        count += 1
-                elif promise.target_event_tag:
-                    if promise.target_event_tag in e.tags:
-                        count += 1
-                else:
+                if self._event_matches_promise(e, promise):
                     count += 1
         return count
 
