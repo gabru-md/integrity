@@ -43,17 +43,17 @@
         }
     });
 </script>
-<nav id="sidebar" class="fixed left-0 top-0 z-30 h-screen -translate-x-full overflow-y-auto p-3 transition-transform duration-300 md:translate-x-0 md:p-4">
+<nav id="sidebar" class="fixed left-0 top-0 z-30 h-screen -translate-x-full overflow-y-auto p-2 transition-transform duration-300 md:translate-x-0 md:p-3">
     <div class="flex min-h-full flex-col justify-between">
         <div class="min-h-0">
-            <div class="border-b border-[var(--border)] px-4 pb-5 pt-4">
+            <div class="border-b border-[var(--border)] px-4 pb-4 pt-4">
                 <div class="flex items-center gap-4">
-                    <div class="sidebar-brand-mark flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-[var(--accent-soft)] text-[var(--accent)] shadow-sm">
+                    <div class="sidebar-brand-mark flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-[var(--accent-soft)] text-[var(--accent)] shadow-sm">
                         <img id="shell-logo" src="{{ url_for('static', filename='favicon.png') }}" alt="Rasbhari logo" class="h-8 w-8 object-contain">
                     </div>
                     <div class="min-w-0">
-                        <div class="truncate text-2xl font-extrabold text-[var(--text)]">Rasbhari</div>
-                        <div class="mt-1 text-sm text-[var(--text-soft)]" style="font-family: 'Manrope', sans-serif;">Daily loop, calm by default</div>
+                        <div class="truncate text-[1.35rem] font-extrabold text-[var(--text)]">Rasbhari</div>
+                        <div class="mt-1 text-xs font-medium text-[var(--text-soft)]" style="font-family: 'Manrope', sans-serif;">Daily loop, calm by default</div>
                     </div>
                 </div>
             </div>
@@ -129,17 +129,17 @@
             </div>
         </div>
 
-        <div class="border-t border-[var(--border)] px-3 py-4 space-y-3">
+        <div class="border-t border-[var(--border)] px-2 py-3 space-y-2">
             {% if build_info.commit %}
-            <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3">
+            <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2.5">
                 <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Deployment</div>
                 <div class="mt-1 text-xs font-bold text-[var(--text-soft)]">{{ build_info.label }}</div>
             </div>
             {% endif %}
             {% if current_user %}
             <details id="user-menu" class="shell-card overflow-hidden">
-                <summary class="flex cursor-pointer items-center gap-3 px-3 py-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-sm font-extrabold text-[var(--accent)]">
+                <summary class="flex cursor-pointer items-center gap-3 px-3 py-2.5">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-sm font-extrabold text-[var(--accent)]">
                         {{ (current_user.display_name or current_user.username or 'R')[:1] | upper }}
                     </div>
                     <div class="min-w-0 flex-1">
@@ -149,14 +149,14 @@
                     </div>
                 </summary>
 
-                <div class="border-t border-[var(--border)] px-3 py-3">
+                <div class="border-t border-[var(--border)] px-3 py-2.5">
                     <div class="grid gap-2">
-                        <a href="/users/profile" class="btn-secondary sidebar-footer-action w-full px-3 py-3 text-sm">
+                        <a href="/users/profile" class="btn-secondary sidebar-footer-action w-full px-3 py-2.5 text-sm">
                             <span class="nav-icon" aria-hidden="true">⚙</span>
                             <span class="sidebar-footer-label">Profile Settings</span>
                         </a>
                         <form action="/logout" method="POST">
-                            <button type="submit" class="btn-ghost sidebar-footer-action w-full px-3 py-3 text-sm">
+                            <button type="submit" class="btn-ghost sidebar-footer-action w-full px-3 py-2.5 text-sm">
                                 <span class="nav-icon" aria-hidden="true">⇢</span>
                                 <span class="sidebar-footer-label">Sign Out</span>
                             </button>
@@ -172,9 +172,9 @@
 <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="pointer-events-none fixed inset-0 z-20 bg-slate-950/45 opacity-0 transition-opacity duration-300 md:hidden"></div>
 
 <header class="sticky top-0 z-20 px-3 pt-3 md:hidden">
-    <div class="shell-card app-shell flex items-center justify-between px-4 py-3">
+    <div class="shell-card app-shell flex items-center justify-between px-4 py-2.5">
         <button id="sidebar-toggle-button" onclick="toggleSidebar()" class="btn-ghost h-11 w-11 rounded-2xl p-0" aria-label="Toggle navigation">☰</button>
-        <div class="text-lg font-extrabold text-[var(--text)]">Rasbhari</div>
+        <div class="text-base font-extrabold text-[var(--text)]">Rasbhari</div>
         <div class="flex items-center gap-2">
             {% if current_user %}
             <button id="mobile-notification-button" type="button" class="btn-ghost notification-trigger relative h-11 w-11 rounded-2xl p-0" aria-label="Open notifications">
@@ -183,7 +183,7 @@
             </button>
             <a href="/capture" class="btn-primary h-11 rounded-2xl px-4 text-sm {% if request.path == '/capture' %}pointer-events-none opacity-80{% endif %}">Capture</a>
             {% endif %}
-            <button type="button" onclick="document.getElementById('user-menu')?.setAttribute('open','open'); toggleSidebar(true);" class="btn-secondary h-11 rounded-2xl px-4 text-sm">Menu</button>
+            <button type="button" onclick="document.getElementById('user-menu')?.setAttribute('open','open'); toggleSidebar(true);" class="btn-secondary h-11 rounded-2xl px-4 text-sm">Profile</button>
         </div>
     </div>
 </header>
@@ -236,7 +236,7 @@
 </div>
 {% endif %}
 
-<main id="content-wrapper" class="min-h-screen px-3 pb-6 pt-3 md:px-4 md:pb-8">
+<main id="content-wrapper" class="min-h-screen px-2 pb-5 pt-2.5 md:px-4 md:pb-8">
     <div class="app-shell">
         {% block content %}{% endblock %}
     </div>
@@ -247,7 +247,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
             </svg>
         </button>
-        <div id="chat-window" class="hidden h-[60vh] max-h-[680px] w-[23.5rem] flex-col overflow-hidden rounded-[var(--card-radius)] border border-[var(--border)] bg-[var(--surface)] shadow-2xl floating-blur md:w-[28rem]">
+        <div id="chat-window" class="hidden h-[60vh] max-h-[680px] w-[23rem] flex-col overflow-hidden rounded-[var(--card-radius)] border border-[var(--border)] bg-[var(--surface)] shadow-2xl floating-blur md:w-[27rem]">
             <div class="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
                 <div>
                     <div class="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Assistant</div>
