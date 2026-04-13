@@ -30,6 +30,9 @@ events_db = DB("events")
 main_db = DB("rasbhari")
 ```
 
+Connections are shared per logical database config and opened in autocommit mode.
+That keeps long-lived Rasbhari instances from leaving read-only requests `idle in transaction`, which matters when a secondary UI-only instance points at the same PostgreSQL server.
+
 That resolves to variables such as:
 
 - `EVENTS_POSTGRES_DB`
@@ -122,6 +125,9 @@ These base models extend Pydantic with field-level UI metadata:
 - initializes process instances
 - starts enabled processes
 - supports enable/disable/pause/run at runtime
+
+Rasbhari can skip process startup for secondary UI-only instances with `RASBHARI_DISABLE_PROCESSES=true`.
+This lets a laptop instance point at the same database while the Raspberry Pi remains the only worker host.
 
 The dashboard uses this state to build process and reliability views.
 

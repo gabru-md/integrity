@@ -104,7 +104,10 @@ class RasbhariServer(Server):
 
     def run_server(self):
         # start process manager to run important processes for apps
-        self.start_process_manager()
+        if self._env_flag("RASBHARI_DISABLE_PROCESSES"):
+            self.log.info("Skipping Rasbhari process manager startup because RASBHARI_DISABLE_PROCESSES is enabled.")
+        else:
+            self.start_process_manager()
         self.run()
 
     def setup_additional_routes(self):

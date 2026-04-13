@@ -90,6 +90,10 @@ class DB:
                 host=self.host,
                 port=self.port,
             )
+            # Rasbhari keeps shared long-lived connections. Autocommit prevents
+            # read-only SELECTs from sitting idle in transaction and blocking
+            # schema sync when a secondary UI instance starts against the same DB.
+            conn.autocommit = True
             self.log.info("Connected to PostgreSQL database.")
             return conn
         except psycopg2.Error as e:

@@ -173,7 +173,17 @@ def _srt_to_vtt(content: str) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
-def _poster_path(video_path: Path) -> Path:
+def _poster_root() -> Path:
+    return _media_root() / "posters"
+
+
+def _poster_path(item: MediaItem) -> Path:
+    if not item.id:
+        raise ValueError("Cannot build poster path for unsaved media item.")
+    return _poster_root() / f"item-{item.id}.jpg"
+
+
+def _legacy_poster_path(video_path: Path) -> Path:
     return video_path.with_name(f"{video_path.stem}{POSTER_SUFFIX}")
 
 
@@ -182,7 +192,11 @@ def _ensure_poster(item: MediaItem) -> str:
         return item.poster_path or ""
     if item.poster_path:
         if item.poster_path.startswith("/rtv/poster/"):
-            return item.poster_path
+            try:
+                if _poster_path(item).exists():
+                    return item.poster_path
+            except ValueError:
+                return item.poster_path
         if item.poster_path.startswith(("http://", "https://", "/static/")):
             return item.poster_path
     try:
@@ -190,7 +204,16 @@ def _ensure_poster(item: MediaItem) -> str:
     except (ValueError, FileNotFoundError):
         return item.poster_path or ""
 
-    poster_path = _poster_path(video_path)
+    poster_path = _poster_path(item)
+    if not poster_path.exists():
+        legacy_poster_path = _legacy_poster_path(video_path)
+        if legacy_poster_path.exists():
+            poster_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                poster_path.write_bytes(legacy_poster_path.read_bytes())
+            except OSError:
+                poster_path.unlink(missing_ok=True)
+        poster_path.parent.mkdir(parents=True, exist_ok=True)
     if not poster_path.exists():
         try:
             result = subprocess.run(
@@ -225,6 +248,17 @@ def _ensure_poster(item: MediaItem) -> str:
     return item.poster_path
 
 
+def _visible_poster_path(item: MediaItem) -> str:
+    if item.poster_path:
+        return item.poster_path
+    try:
+        if _poster_path(item).exists():
+            return f"/rtv/poster/{item.id}"
+    except ValueError:
+        pass
+    return ""
+
+
 def _prepare_ready_items(items: list[MediaItem]) -> list[MediaItem]:
     for item in items:
         _ensure_poster(item)
@@ -257,6 +291,8 @@ def _cleanup_download_artifacts(item: MediaItem):
     if download_root and download_root.exists() and download_root.is_dir():
         try:
             for child in download_root.iterdir():
+                if child.name.endswith(POSTER_SUFFIX):
+                    continue
                 if child.is_file():
                     child.unlink()
             download_root.rmdir()
@@ -306,6 +342,7 @@ class RTVApp(App[MediaItem]):
                         display_local_path = Path(item.local_path).name
                 item_data = item.model_dump() if hasattr(item, "model_dump") else dict(item)
                 item_data["display_local_path"] = display_local_path
+                item_data["poster_path"] = _visible_poster_path(item)
                 items.append(item_data)
             stats = {
                 "total": len(items),
@@ -393,16 +430,18 @@ def stream(item_id):
 @rtv_app.blueprint.route('/poster/<int:item_id>')
 def poster(item_id):
     item = rtv_app.media_service.get_by_id(item_id)
-    if not item or item.status != "ready" or item.cache_state != "cached" or not item.local_path:
+    if not item:
+        return "Poster not found.", 404
+    poster_file = _poster_path(item)
+    if poster_file.exists():
+        return send_file(poster_file, mimetype="image/jpeg", conditional=True)
+    if not item.local_path:
         return "Poster not found.", 404
     try:
         video_path = _safe_media_file(item.local_path)
-        poster_file = _poster_path(video_path)
-        poster_file.relative_to(_media_root())
     except (ValueError, FileNotFoundError):
         return "Poster not found.", 404
-    if not poster_file.exists():
-        _ensure_poster(item)
+    _ensure_poster(item)
     if not poster_file.exists():
         return "Poster not found.", 404
     return send_file(poster_file, mimetype="image/jpeg", conditional=True)
@@ -589,6 +628,22 @@ def update_magnet(item_id):
     return jsonify({"id": item_id, "magnet_uri": magnet_uri, "message": "Magnet updated"}), 200
 
 
+@rtv_app.blueprint.route('/<int:item_id>/poster', methods=['POST'])
+@write_access_required
+def update_poster(item_id):
+    item = rtv_app.media_service.get_by_id(item_id)
+    if not item:
+        return jsonify({"error": "Movie not found."}), 404
+    data = request.get_json(silent=True) or {}
+    poster_path = (data.get("poster_path") or "").strip()
+    if poster_path and not poster_path.startswith(("http://", "https://", "/static/", "/rtv/poster/")):
+        return jsonify({"error": "Poster must be a URL, /static path, /rtv/poster path, or blank."}), 400
+    item.poster_path = poster_path
+    if not rtv_app.media_service.update(item):
+        return jsonify({"error": "Failed to update poster."}), 500
+    return jsonify({"id": item_id, "poster_path": poster_path, "message": "Poster updated"}), 200
+
+
 @rtv_app.blueprint.route('/<int:item_id>/retry', methods=['POST'])
 @write_access_required
 def retry_item(item_id):
@@ -622,6 +677,7 @@ def delete_local_file(item_id):
             return jsonify({"error": "Download cancellation requested. Try delete again in a moment."}), 409
     if item.is_playing:
         return jsonify({"error": "Cannot delete a currently playing movie."}), 400
+    _ensure_poster(item)
     _cleanup_download_artifacts(item)
     if not rtv_app.media_service.mark_evicted(item_id):
         return jsonify({"error": "Failed to update movie cache state."}), 500

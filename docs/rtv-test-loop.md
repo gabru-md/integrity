@@ -75,7 +75,8 @@ If the file is later evicted by the cache manager, the media record remains but 
 - Progress does not move: the torrent has metadata but not enough peers for the selected file.
 - Movie is not visible on `/tv`: only ready cached movies appear on the TV surface.
 - Playback starts but fails or has no audio: the browser likely cannot decode the file. Prefer MP4 H264 AAC for V1.
-- A ready movie disappeared from the TV shelf: the cache manager may have evicted the local file to stay under the 3GB cap. The record should still exist on `/rtv/home`.
+- A ready movie disappeared from the TV shelf: the cache manager may have evicted the local file to stay under the 3GB cap. The record should still exist on `/rtv/home`, and magnet-backed items can be queued again after metadata has been resolved.
+- A thumbnail disappeared after deleting the movie file: generated posters should live under `RTV_MEDIA_DIR/posters` and survive local file deletion. Open the rTV edit dialog to set a manual thumbnail URL if you want to override the generated poster.
 
 ## What This Test Proves
 
