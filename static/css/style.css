@@ -26,6 +26,57 @@
     --control-radius: 14px;
 }
 
+body[data-page-density='relaxed'] {
+    --page-gap: 1.75rem;
+    --section-gap: 1.35rem;
+}
+
+body[data-page-density='comfortable'] {
+    --page-gap: 1.5rem;
+    --section-gap: 1.2rem;
+}
+
+body[data-page-density='compact'] {
+    --page-gap: 1.1rem;
+    --section-gap: 0.95rem;
+}
+
+body[data-page-density='relaxed'] .app-shell {
+    max-width: 1820px;
+}
+
+body[data-page-density='comfortable'] .app-shell {
+    max-width: 1760px;
+}
+
+body[data-page-density='compact'] .app-shell {
+    max-width: 1680px;
+}
+
+body[data-page-density='compact'] .shell-card,
+body[data-page-density='compact'] .ui-card,
+body[data-page-density='compact'] .shell-panel,
+body[data-page-density='compact'] .widget-card,
+body[data-page-density='compact'] .auth-panel,
+body[data-page-density='compact'] .sheet-card {
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+body[data-page-density='compact'] .metric-card {
+    min-height: 7.75rem;
+}
+
+body[data-page-density='compact'] .page-hero-copy,
+body[data-page-density='compact'] .section-subtitle,
+body[data-page-density='compact'] .disclosure-summary-meta {
+    line-height: 1.55;
+}
+
+body[data-page-density='relaxed'] .page-hero-copy,
+body[data-page-density='relaxed'] .section-subtitle {
+    max-width: 52rem;
+}
+
 [data-motion='reduced'] *,
 [data-motion='reduced'] *::before,
 [data-motion='reduced'] *::after {
@@ -825,6 +876,14 @@ html[data-chrome='solid'] .widget-card {
     border: 1px solid transparent;
     cursor: pointer;
     min-height: 2.75rem;
+}
+
+body[data-page-density='compact'] .btn-primary,
+body[data-page-density='compact'] .btn-secondary,
+body[data-page-density='compact'] .btn-ghost {
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+    min-height: 2.5rem;
 }
 
 .recommendation-card {

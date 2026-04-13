@@ -30,7 +30,7 @@
         })();
     </script>
 </head>
-<body class="shell-fade-in" data-experience-mode="{{ experience_mode }}">
+<body class="shell-fade-in" data-experience-mode="{{ experience_mode }}" data-page-density="{{ 'compact' if is_system_mode else ('comfortable' if is_structured_mode else 'relaxed') }}">
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
 {% set is_everyday_mode = experience_mode == 'everyday' %}
 {% set is_structured_mode = experience_mode == 'structured' %}
