@@ -70,6 +70,65 @@ class TorrentMetadataResolver:
         finally:
             session.pause()
 
+    def probe_magnet(self, magnet_uri: str) -> dict:
+        if not magnet_uri.startswith("magnet:"):
+            raise ValueError("A valid magnet URI is required.")
+
+        session = lt.session()
+        session.apply_settings({
+            "listen_interfaces": "0.0.0.0:6881",
+            "enable_dht": True,
+            "enable_lsd": True,
+            "enable_upnp": True,
+            "enable_natpmp": True,
+            "download_rate_limit": 0,
+            "upload_rate_limit": 0,
+            "connection_speed": 50,
+        })
+        try:
+            session.start_dht()
+        except Exception:
+            pass
+
+        params = lt.parse_magnet_uri(magnet_uri)
+        params.save_path = "/tmp"
+        handle = session.add_torrent(params)
+        handle.force_reannounce()
+        try:
+            handle.force_dht_announce()
+        except Exception:
+            pass
+
+        deadline = time.time() + self.timeout_seconds
+        last_status = None
+        try:
+            while not handle.has_metadata():
+                last_status = handle.status()
+                if time.time() > deadline:
+                    raise TimeoutError(
+                        "Timed out waiting for torrent metadata "
+                        f"after {self.timeout_seconds}s "
+                        f"(peers={last_status.num_peers}, seeds={last_status.num_seeds}, "
+                        f"downloading={last_status.download_rate / 1000:.1f} KB/s)."
+                    )
+                time.sleep(0.5)
+
+            info = handle.get_torrent_info() if hasattr(handle, "get_torrent_info") else handle.torrent_info()
+            selected = self._select_largest_video(info)
+            return {
+                "torrent_name": info.name(),
+                "file_count": info.num_files(),
+                "selected_file_index": None if selected is None else selected.file_index,
+                "selected_file_name": None if selected is None else selected.file_name,
+                "selected_file_size_bytes": None if selected is None else selected.file_size_bytes,
+                "peers": handle.status().num_peers,
+                "seeds": handle.status().num_seeds,
+            }
+        except Exception as exc:
+            raise
+        finally:
+            session.pause()
+
     @staticmethod
     def _select_largest_video(info) -> Optional[TorrentVideoMetadata]:
         selected = None

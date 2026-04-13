@@ -189,12 +189,27 @@ def resolve_metadata(item_id):
         return jsonify({"error": "Only magnet candidates can resolve torrent metadata."}), 400
 
     try:
+        rtv_app.log.info(
+            "Resolving rTV metadata id=%s title=%s source=%s",
+            item.id,
+            item.title,
+            item.magnet_uri[:80],
+        )
         metadata = rtv_app.torrent_resolver.resolve_largest_video(item.magnet_uri)
     except Exception as exc:
+        rtv_app.log.exception("rTV metadata resolution failed id=%s title=%s", item.id, item.title)
         item.status = "failed"
+        item.last_error = str(exc)
         rtv_app.media_service.update(item)
         rtv_app.emit_media_event("media:metadata_failed", item, f"Failed to resolve rTV metadata for {item.title}", {"error": str(exc)})
-        return jsonify({"error": str(exc)}), 400
+        return jsonify({
+            "error": str(exc),
+            "error_type": exc.__class__.__name__,
+            "item_id": item.id,
+            "title": item.title,
+            "status": item.status,
+            "last_error": item.last_error,
+        }), 400
 
     item = rtv_app.media_service.apply_torrent_metadata(
         item,
@@ -216,6 +231,7 @@ def resolve_metadata(item_id):
         "selected_file_index": item.selected_file_index,
         "selected_file_name": item.selected_file_name,
         "selected_file_size_bytes": item.selected_file_size_bytes,
+        "torrent_name": metadata.torrent_name,
         "message": "Metadata resolved",
     }), 200
 
