@@ -85,10 +85,10 @@ class RTVApp(App[MediaItem]):
         @self.blueprint.route('/home')
         def home():
             query = (request.args.get("q") or "").strip().lower()
-            items = self.media_service.find_all(sort_by={"created_at": "DESC"})
+            raw_items = self.media_service.find_all(sort_by={"created_at": "DESC"})
             if query:
-                items = [
-                    item for item in items
+                raw_items = [
+                    item for item in raw_items
                     if query in (item.title or "").lower()
                     or query in (item.magnet_uri or "").lower()
                     or query in (item.local_path or "").lower()
@@ -96,7 +96,8 @@ class RTVApp(App[MediaItem]):
                     or query in (item.source_type or "").lower()
                 ]
             media_root = _media_root()
-            for item in items:
+            items = []
+            for item in raw_items:
                 display_local_path = ""
                 if item.local_path:
                     try:
@@ -104,7 +105,9 @@ class RTVApp(App[MediaItem]):
                         display_local_path = f"[Media Folder]/{relative_path.as_posix()}"
                     except Exception:
                         display_local_path = f"[Media Folder]/{Path(item.local_path).name}"
-                setattr(item, "display_local_path", display_local_path)
+                item_data = item.model_dump() if hasattr(item, "model_dump") else dict(item)
+                item_data["display_local_path"] = display_local_path
+                items.append(item_data)
             stats = {
                 "total": len(items),
                 "ready": len([item for item in items if item.status == "ready"]),

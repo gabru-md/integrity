@@ -338,6 +338,7 @@
 </div>
 <script>
     let updateStatusPollHandle = null;
+    let updateReloadHandle = null;
 
     function updateBadgeClasses(element, state, updateAvailable) {
         if (!element) return;
@@ -423,6 +424,13 @@
         }
     }
 
+    function stopUpdateReloadTimer() {
+        if (updateReloadHandle) {
+            window.clearTimeout(updateReloadHandle);
+            updateReloadHandle = null;
+        }
+    }
+
     function startUpdateStatusPolling() {
         stopUpdateStatusPolling();
         updateStatusPollHandle = window.setTimeout(async () => {
@@ -453,16 +461,24 @@
         if (message) {
             message.textContent = 'Starting update script...';
         }
+        stopUpdateReloadTimer();
         const response = await fetch('/admin/update', { method: 'POST' });
         const payload = await response.json().catch(() => ({}));
         if (response.ok) {
             renderUpdateStatus(payload.status || payload);
+            if (message) {
+                message.textContent = 'Update started. This page will reload in 5 seconds so you can check the result.';
+            }
+            updateReloadHandle = window.setTimeout(() => {
+                window.location.reload();
+            }, 5000);
             return;
         }
         if (triggerButton) {
             triggerButton.disabled = false;
             triggerButton.textContent = 'Update To Latest';
         }
+        stopUpdateReloadTimer();
         alert(payload.error || 'Failed to start update.');
     }
 
@@ -518,6 +534,8 @@
         const initialState = '{{ admin_data.update_status.state }}';
         if (initialState === 'running') {
             startUpdateStatusPolling();
+        } else {
+            stopUpdateReloadTimer();
         }
     });
 </script>
