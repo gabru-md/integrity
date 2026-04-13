@@ -316,6 +316,16 @@
         `;
     });
 
+    async function resolveMetadata(itemId) {
+        const response = await fetch(`/rtv/${itemId}/resolve-metadata`, { method: 'POST' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(`${data.error_type ? data.error_type + ': ' : ''}${data.error || 'Failed to resolve metadata'}`);
+            return;
+        }
+        window.location.reload();
+    }
+
     async function queueDownload(itemId) {
         const response = await fetch(`/rtv/${itemId}/queue-download`, { method: 'POST' });
         const data = await response.json().catch(() => ({}));

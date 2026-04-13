@@ -355,6 +355,19 @@
                 isSubmitting.value = true;
                 try {
                     const payload = { ...formData.value };
+                    if (typeof payload.default_payload === 'string') {
+                        try {
+                            payload.default_payload = payload.default_payload.trim() ? JSON.parse(payload.default_payload) : {};
+                        } catch (err) {
+                            throw new Error('Default Payload must be valid JSON.');
+                        }
+                    }
+                    if (typeof payload.tags === 'string') {
+                        payload.tags = payload.tags
+                            .split(',')
+                            .map((tag) => tag.trim())
+                            .filter(Boolean);
+                    }
                     const url = formMode.value === 'create' ? '/activities/' : `/activities/${itemId.value}`;
                     const method = formMode.value === 'create' ? 'POST' : 'PUT';
                     const response = await fetch(url, {
@@ -362,7 +375,8 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload),
                     });
-                    if (!response.ok) throw new Error('Failed to save activity');
+                    const result = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(result.error || 'Failed to save activity');
                     isModalOpen.value = false;
                     await fetchActivities();
                 } catch (err) {

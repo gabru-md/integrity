@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
+import json
 
 from model.activity import Activity
 from model.event import Event # Re-import Event model
@@ -34,16 +35,28 @@ class ActivityService(CRUDService[Activity]):
 
     def _to_tuple(self, activity: Activity) -> tuple:
         return (
-            activity.user_id, activity.name, activity.event_type, activity.description, activity.default_payload or {}, activity.tags)
+            activity.user_id,
+            activity.name,
+            activity.event_type,
+            activity.description,
+            json.dumps(activity.default_payload or {}, ensure_ascii=True),
+            activity.tags,
+        )
 
     def _to_object(self, row: tuple) -> Activity:
+        default_payload = row[5]
+        if isinstance(default_payload, str) and default_payload:
+            try:
+                default_payload = json.loads(default_payload)
+            except json.JSONDecodeError:
+                default_payload = {}
         activity_dict = {
             "id": row[0],
             "user_id": row[1],
             "name": row[2],
             "event_type": row[3],
             "description": row[4],
-            "default_payload": row[5],
+            "default_payload": default_payload or {},
             "tags": row[6] if row[6] else [] # Ensure tags are handled correctly, might need json.loads if stored as string representation of list
         }
         return Activity(**activity_dict)
