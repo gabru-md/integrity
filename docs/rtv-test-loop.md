@@ -34,7 +34,7 @@ Use this loop when you already have a compatible movie file.
 6. Start playback and use the rTV player controls for play/pause, seek, fullscreen, and back.
 7. Stop and reopen the movie to confirm resume support.
 8. Watch near the end to confirm watched detection.
-9. Check Events for `media:watch_started`, `media:watch_progressed`, and `media:watch_finished`.
+9. Check Events for `media:watch_started`, milestone `media:watch_progressed`, and `media:watch_finished`.
 
 This is the preferred smoke test because it validates the TV interface, local playback, range support, progress tracking, and event emission without depending on torrent swarm health.
 

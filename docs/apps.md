@@ -79,6 +79,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
 - Processes:
   - `Courier`
 - Notes:
+  - custom home page can filter the timeline by all, user, or Rasbhari-generated events
   - incoming form tags are normalized to a tag list
   - timestamps are set on create
 
@@ -180,7 +181,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - avoids evicting queued, downloading, or currently playing movies
   - serves ready files through `/rtv/stream/<id>` with browser range support via Flask and blocks paths outside `RTV_MEDIA_DIR`
   - records watch start through `/rtv/watch-started/<id>` and watch progress through `/rtv/progress/<id>`
-  - emits `media:watch_started`, `media:watch_progressed`, and `media:watch_finished`, with finish detected when progress crosses 90%
+  - emits `media:watch_started`, `media:watch_progressed`, and `media:watch_finished`, with progress events limited to 25%, 50%, 75%, and finish detected when progress crosses 90%
   - documents the end-to-end V1 validation path in [docs/rtv-test-loop.md](rtv-test-loop.md)
 
 ### 14. Users

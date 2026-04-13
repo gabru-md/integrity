@@ -691,12 +691,23 @@ def update_progress(item_id):
     item = rtv_app.media_service.get_by_id(item_id)
     if item:
         ratio = (progress / duration) if duration else 0
-        event_type = "media:watch_finished" if duration and ratio >= 0.9 and previous_ratio < 0.9 else "media:watch_progressed"
-        rtv_app.emit_media_event(event_type, item, f"Updated watch progress for {item.title}", {
-            "progress_seconds": progress,
-            "duration_seconds": duration,
-            "completion_ratio": round(ratio, 3) if duration else 0,
-        })
+        crossed_milestone = False
+        for milestone in (0.25, 0.5, 0.75):
+            if previous_ratio < milestone <= ratio:
+                crossed_milestone = True
+                break
+        if duration and ratio >= 0.9 and previous_ratio < 0.9:
+            rtv_app.emit_media_event("media:watch_finished", item, f"Finished watching {item.title}", {
+                "progress_seconds": progress,
+                "duration_seconds": duration,
+                "completion_ratio": round(ratio, 3),
+            })
+        elif crossed_milestone:
+            rtv_app.emit_media_event("media:watch_progressed", item, f"Reached {int(ratio * 100)}% of {item.title}", {
+                "progress_seconds": progress,
+                "duration_seconds": duration,
+                "completion_ratio": round(ratio, 3),
+            })
     return jsonify({"ok": True}), 200
 
 
