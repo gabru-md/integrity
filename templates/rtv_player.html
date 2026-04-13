@@ -16,14 +16,29 @@
         autoplay
         playsinline
         src="/rtv/stream/{{ item.id }}"
-    ></video>
+    >
+        {% for subtitle in subtitles %}
+        <track
+            kind="subtitles"
+            src="{{ subtitle.url }}"
+            srclang="{{ subtitle.srclang }}"
+            label="{{ subtitle.label }}"
+            {% if loop.first %}default{% endif %}
+        >
+        {% endfor %}
+    </video>
 
     <div id="rtv-player-chrome" class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent px-6 pb-6 pt-24 transition-opacity duration-300 lg:px-10">
         <div class="mb-5 flex items-end justify-between gap-6">
             <div class="min-w-0">
                 <div class="text-xs font-black uppercase tracking-[0.24em] text-amber-300">Now Playing</div>
                 <h1 class="mt-2 truncate text-3xl font-black tracking-tight lg:text-5xl">{{ item.title }}</h1>
-                <div id="rtv-time-label" class="mt-2 text-sm font-bold text-slate-300">Loading...</div>
+                <div class="mt-2 flex flex-wrap items-center gap-3 text-sm font-bold text-slate-300">
+                    <span id="rtv-time-label">Loading...</span>
+                    {% if subtitles %}
+                    <span class="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.14em] text-amber-200">Subtitles</span>
+                    {% endif %}
+                </div>
             </div>
             <a href="/tv" data-player-focus class="shrink-0 rounded-full bg-white/10 px-6 py-4 text-sm font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Back</a>
         </div>

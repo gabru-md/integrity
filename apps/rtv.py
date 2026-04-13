@@ -1,8 +1,10 @@
 import os
+import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from flask import jsonify, request, send_file
+from flask import Response, jsonify, request, send_file
 
 from apps.user_docs import build_app_user_guidance
 from gabru.auth import PermissionManager, write_access_required
@@ -30,6 +32,144 @@ def _safe_media_file(local_path: str) -> Path:
     if not path.exists() or not path.is_file():
         raise FileNotFoundError("Movie file not found.")
     return path
+
+
+SUBTITLE_EXTENSIONS = {".vtt", ".srt"}
+TEXT_SUBTITLE_CODECS = {"subrip", "srt", "ass", "ssa", "webvtt", "mov_text"}
+
+
+def _subtitle_label(path: Path) -> str:
+    suffix = path.suffix.lower()
+    stem = path.stem
+    parts = stem.replace(".", " ").replace("_", " ").split()
+    if parts and parts[-1].lower() in {"en", "eng", "english"}:
+        return "English"
+    if len(parts) >= 2 and parts[-2].lower() == "embedded" and parts[-1].isdigit():
+        return "Embedded"
+    if parts and len(parts[-1]) in {2, 3}:
+        return parts[-1].upper()
+    return "Subtitles"
+
+
+def _subtitle_candidates(video_path: Path) -> list[Path]:
+    candidates = []
+    for child in video_path.parent.iterdir():
+        if not child.is_file() or child.suffix.lower() not in SUBTITLE_EXTENSIONS:
+            continue
+        if child.stem == video_path.stem or child.stem.startswith(f"{video_path.stem}.") or child.stem.startswith(f"{video_path.stem}_"):
+            candidates.append(child)
+    return sorted(candidates, key=lambda path: (path.suffix.lower() != ".vtt", path.name.lower()))
+
+
+def _extracted_subtitle_path(video_path: Path, stream_index: int, language: str = "") -> Path:
+    suffix = f".embedded.{language}" if language else ".embedded"
+    return video_path.with_name(f"{video_path.stem}{suffix}.{stream_index}.vtt")
+
+
+def _probe_embedded_text_subtitles(video_path: Path) -> list[dict]:
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "s",
+                "-show_entries",
+                "stream=index,codec_name:stream_tags=language,title",
+                "-of",
+                "json",
+                str(video_path),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError):
+        return []
+    if result.returncode != 0:
+        return []
+    try:
+        payload = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError:
+        return []
+    streams = []
+    for stream in payload.get("streams", []):
+        codec = str(stream.get("codec_name") or "").lower()
+        if codec not in TEXT_SUBTITLE_CODECS:
+            continue
+        tags = stream.get("tags") or {}
+        streams.append({
+            "index": stream.get("index"),
+            "codec": codec,
+            "language": str(tags.get("language") or "").lower(),
+            "title": tags.get("title") or "",
+        })
+    return [stream for stream in streams if stream.get("index") is not None]
+
+
+def _ensure_embedded_subtitles(video_path: Path) -> list[Path]:
+    existing = _subtitle_candidates(video_path)
+    if existing:
+        return existing
+    extracted_paths = []
+    for stream in _probe_embedded_text_subtitles(video_path):
+        output_path = _extracted_subtitle_path(video_path, int(stream["index"]), stream.get("language") or "")
+        if not output_path.exists():
+            try:
+                result = subprocess.run(
+                    [
+                        "ffmpeg",
+                        "-y",
+                        "-i",
+                        str(video_path),
+                        "-map",
+                        f"0:{stream['index']}",
+                        "-c:s",
+                        "webvtt",
+                        str(output_path),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=90,
+                    check=False,
+                )
+            except (FileNotFoundError, subprocess.SubprocessError):
+                continue
+            if result.returncode != 0 or not output_path.exists():
+                output_path.unlink(missing_ok=True)
+                continue
+        extracted_paths.append(output_path)
+    return _subtitle_candidates(video_path) or extracted_paths
+
+
+def _discover_subtitles(item: MediaItem) -> list[dict]:
+    if not item.local_path:
+        return []
+    try:
+        video_path = _safe_media_file(item.local_path)
+    except (ValueError, FileNotFoundError):
+        return []
+    subtitles = []
+    for index, path in enumerate(_ensure_embedded_subtitles(video_path)):
+        subtitles.append({
+            "index": index,
+            "label": _subtitle_label(path),
+            "url": f"/rtv/subtitles/{item.id}/{index}",
+            "srclang": "en" if _subtitle_label(path) == "English" else "und",
+        })
+    return subtitles
+
+
+def _srt_to_vtt(content: str) -> str:
+    normalized = content.replace("\r\n", "\n").replace("\r", "\n")
+    lines = ["WEBVTT", ""]
+    for line in normalized.split("\n"):
+        if "-->" in line:
+            line = line.replace(",", ".")
+        lines.append(line)
+    return "\n".join(lines).strip() + "\n"
 
 
 def _process_media_item_data(data):
@@ -168,7 +308,13 @@ def play(item_id):
     if not item or item.status != "ready" or item.cache_state != "cached":
         return "Movie not found or not ready.", 404
     restart = request.args.get("restart") in {"1", "true", "yes"}
-    return render_flask_template("rtv_player.html", app_name=rtv_app.name, item=item, restart=restart)
+    return render_flask_template(
+        "rtv_player.html",
+        app_name=rtv_app.name,
+        item=item,
+        restart=restart,
+        subtitles=_discover_subtitles(item),
+    )
 
 
 @rtv_app.blueprint.route('/stream/<int:item_id>')
@@ -183,6 +329,28 @@ def stream(item_id):
     except FileNotFoundError as exc:
         return str(exc), 404
     return send_file(path, conditional=True)
+
+
+@rtv_app.blueprint.route('/subtitles/<int:item_id>/<int:subtitle_index>')
+def subtitles(item_id, subtitle_index):
+    item = rtv_app.media_service.get_by_id(item_id)
+    if not item or item.status != "ready" or item.cache_state != "cached":
+        return "Movie not found or not ready.", 404
+    if subtitle_index < 0:
+        return "Subtitle not found.", 404
+    try:
+        video_path = _safe_media_file(item.local_path)
+        candidates = _subtitle_candidates(video_path)
+        subtitle_path = candidates[subtitle_index]
+        subtitle_path.relative_to(_media_root())
+    except (IndexError, ValueError, FileNotFoundError):
+        return "Subtitle not found.", 404
+
+    if subtitle_path.suffix.lower() == ".vtt":
+        return send_file(subtitle_path, mimetype="text/vtt", conditional=True)
+
+    content = subtitle_path.read_text(encoding="utf-8", errors="replace")
+    return Response(_srt_to_vtt(content), mimetype="text/vtt")
 
 
 @rtv_app.blueprint.route('/candidate', methods=['POST'])
