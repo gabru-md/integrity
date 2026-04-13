@@ -21,6 +21,8 @@ class MediaDownloadProcessor(Process):
         self.event_service = EventService()
         self.sleep_time_sec = int(os.getenv("RTV_DOWNLOAD_PROCESSOR_SLEEP_SEC", "10"))
         self.media_root = Path(os.getenv("RTV_MEDIA_DIR", "./media/rtv")).expanduser().resolve()
+        self.listen_interfaces = os.getenv("RTV_LISTEN_INTERFACES", "0.0.0.0:6881")
+        self.outgoing_interface = os.getenv("RTV_OUTGOING_INTERFACE", "").strip()
         self.current_item_id = None
         self.current_handle = None
         self.cancel_requested_item_id = None
@@ -94,8 +96,8 @@ class MediaDownloadProcessor(Process):
                     "freed_bytes": evicted_item.file_size_bytes,
                 })
 
-            session.apply_settings({
-                "listen_interfaces": "0.0.0.0:6881",
+            settings = {
+                "listen_interfaces": self.listen_interfaces,
                 "enable_dht": True,
                 "enable_lsd": True,
                 "enable_upnp": True,
@@ -103,7 +105,10 @@ class MediaDownloadProcessor(Process):
                 "download_rate_limit": 0,
                 "upload_rate_limit": 0,
                 "connection_speed": 50,
-            })
+            }
+            if self.outgoing_interface:
+                settings["outgoing_interfaces"] = self.outgoing_interface
+            session.apply_settings(settings)
             try:
                 session.start_dht()
             except Exception:
