@@ -8,7 +8,7 @@
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Automation</div>
                 <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Capture automation, simplified</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">The Chrome extension is Shipping. It syncs Browser Actions and Rules, surfacing them through a calm UI so Rasbhari can capture browser context without extra noise.</p>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">The browser extension is the first shipped Capture Automation client. It connects Rasbhari to browser context without turning the page into a wall of setup detail.</p>
             </div>
             <div class="flex flex-wrap gap-3">
                 <a href="/docs/automation.md" class="btn-secondary px-4 py-3 text-sm">Read Overview</a>
@@ -25,7 +25,7 @@
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Download</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Install the current preview bundle</h2>
-                <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Rasbhari now serves the current Chrome extension bundle directly from this product surface. That lets you install and test the extension without depending on a browser store while Capture Automation is still being built out.</p>
+                <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Rasbhari serves the current Chrome extension bundle directly from this page so you can install and test it without a browser store.</p>
                 <div class="mt-5 flex flex-wrap gap-3">
                     <a href="/automation/chrome-extension.zip" class="btn-primary px-4 py-3 text-sm">Download zip bundle</a>
                     <a href="/docs/wip/browser-extension-implementation-plan.md" class="btn-secondary px-4 py-3 text-sm">Read Build Plan</a>
@@ -34,20 +34,17 @@
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
                         <div class="text-sm font-bold text-[var(--text)]">What is inside now</div>
                         <ul class="mt-3 space-y-2 text-sm leading-6 text-[var(--text-soft)]">
-                            <li>A valid Chrome extension manifest</li>
-                            <li>A setup screen for `base_url` and `api_key`</li>
-                            <li>A popup that shows current-page context</li>
-                            <li>A Rasbhari-side Browser Actions config app</li>
-                            <li>A light preview shell for the first Capture Automation client</li>
+                            <li>Manifest, setup, and popup shell</li>
+                            <li>Rasbhari-side Browser Actions config</li>
+                            <li>Current-page context capture</li>
                         </ul>
                     </div>
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
                         <div class="text-sm font-bold text-[var(--text)]">What lands next</div>
                         <ul class="mt-3 space-y-2 text-sm leading-6 text-[var(--text-soft)]">
-                            <li>Sync of browser actions and rules from Rasbhari</li>
-                            <li>Manual, confirm, and narrow automatic execution paths</li>
-                            <li>Local history of what matched and what was sent</li>
-                            <li>Live setup and connection status on this page</li>
+                            <li>Sync of browser actions and rules</li>
+                            <li>Manual, confirm, and automatic trigger modes</li>
+                            <li>Local history and live status on this page</li>
                         </ul>
                     </div>
                 </div>
@@ -56,27 +53,27 @@
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Capture Automation</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">First workflow: browser to Rasbhari</h2>
-                <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">The browser extension is the first direct capture client. It will connect to any Rasbhari instance using a base URL and API key, sync your browser actions and rules, and either ask first or trigger the mapped Rasbhari action directly depending on the configured trigger mode.</p>
+                <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">The extension connects to Rasbhari with a base URL and API key, syncs actions and rules, and then asks first or triggers directly depending on mode.</p>
                 <div class="mt-5 grid gap-3 md:grid-cols-3">
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
                         <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">1</div>
                         <div class="mt-2 text-sm font-bold text-[var(--text)]">Connect</div>
-                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Set the Rasbhari URL and API key inside the extension and test the connection.</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Set the Rasbhari URL and API key, then test the connection.</div>
                     </div>
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
                         <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">2</div>
                         <div class="mt-2 text-sm font-bold text-[var(--text)]">Sync</div>
-                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Fetch your browser actions and rules from Rasbhari so the extension stays generic and your instance stays the source of truth.</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Fetch actions and rules from Rasbhari so the extension stays generic.</div>
                     </div>
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
                         <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">3</div>
                         <div class="mt-2 text-sm font-bold text-[var(--text)]">Trigger</div>
-                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use browser context to trigger Activities, project updates, or quick-log flows while keeping the event bus central.</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use browser context to trigger Activities, events, or quick-log flows.</div>
                     </div>
                 </div>
                 <div class="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
-                    <div class="text-sm font-bold text-[var(--text)]">Start by defining your extension-visible actions</div>
-                    <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Use Browser Actions to create the concrete Rasbhari actions the extension can later sync and expose. This is where generic browser verbs like <span class="font-semibold text-[var(--text)]">save_current_page</span> or <span class="font-semibold text-[var(--text)]">capture_selection</span> become your own Activity, event, or project-update flow.</p>
+                    <div class="text-sm font-bold text-[var(--text)]">Start with a few extension-visible actions</div>
+                    <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Map browser verbs like <span class="font-semibold text-[var(--text)]">save_current_page</span> or <span class="font-semibold text-[var(--text)]">capture_selection</span> to the Rasbhari target you actually want.</p>
                     <div class="mt-4">
                         <div class="flex flex-wrap gap-3">
                             <a href="/browseractions/home" class="btn-primary px-4 py-3 text-sm">Open Browser Actions</a>
@@ -109,7 +106,7 @@
                         </div>
                     </div>
                 </div>
-                <p class="mt-4 text-sm leading-6 text-[var(--text-soft)]">The first release should stay narrow on purpose. The goal is not to automate everything at once. The goal is to make one trustworthy browser-to-Rasbhari loop real enough that the rest of the automation vertical has a solid foundation.</p>
+                <p class="mt-4 text-sm leading-6 text-[var(--text-soft)]">V1 should stay narrow and trustworthy. One browser-to-Rasbhari loop is enough for now.</p>
             </article>
 
         </div>
@@ -117,7 +114,7 @@
         <div class="space-y-6">
             <article class="shell-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Status</div>
-                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Setup visibility lands here</h2>
+                <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Setup visibility</h2>
                 <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ automation_status.notes }}</p>
                 <div class="mt-5 space-y-3">
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">

@@ -12,7 +12,7 @@
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Capture Automation</div>
                 <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Browser Actions</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Define the Rasbhari-side actions the browser extension can later sync and expose. Start with what the action should do, then only the relevant configuration appears.</p>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Define the browser-visible actions Rasbhari can sync later.</p>
             </div>
             <div class="flex items-start gap-3">
                 <button @click="openCreateModal" class="btn-primary px-4 py-3 text-sm">Create Browser Action</button>
@@ -42,7 +42,7 @@
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Projects</div>
             <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ projectBackedCount }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Project-context browser captures</div>
+                        <div class="mt-1 text-sm text-[var(--text-soft)]">Project-linked captures</div>
         </article>
     </section>
 
@@ -90,8 +90,7 @@
                         <div v-if="item.target_description" class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.target_description }}</div>
                     </div>
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Payload And Tags</div>
-                        <div class="mt-2 text-sm text-[var(--text)]">{{ (item.target_tags || []).length ? item.target_tags.join(', ') : 'No tags' }}</div>
+                        <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Payload</div>
                         <div class="mt-2 text-sm text-[var(--text-soft)]">{{ payloadSummary(item.default_payload) }}</div>
                     </div>
                 </div>
@@ -128,7 +127,7 @@
                         </div>
 
                         <section class="rounded-3xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
-                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">What Should This Action Do?</div>
+                            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Target Type</div>
                             <div class="mt-4 grid gap-3 md:grid-cols-2">
                                 <button v-for="option in targetTypeOptions"
                                         :key="option.value"
@@ -172,7 +171,7 @@
                                 </template>
 
                                 <div v-if="formData.target_type === 'quick_log'" class="md:col-span-2 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-4 text-sm leading-6 text-[var(--text-soft)]">
-                                    Quick Log stays intentionally light. The extension will later open a lightweight Rasbhari logging flow with browser context already attached.
+                                    Quick Log stays intentionally light.
                                 </div>
                             </div>
                         </section>
@@ -186,13 +185,13 @@
                                 <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
                                     <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Summary</div>
                                     <div class="mt-2 text-sm font-bold text-[var(--text)]">{{ liveSummary }}</div>
-                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">This is the action summary the extension will later sync and expose.</div>
+                                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Summary synced to the extension later.</div>
                                 </div>
                                 <label class="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-4">
                                     <input v-model="formData.enabled" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                     <span>
                                         <span class="block text-sm font-bold text-[var(--text)]">Enabled</span>
-                                        <span class="block text-sm leading-6 text-[var(--text-soft)]">Make this action available to future extension sync.</span>
+                                        <span class="block text-sm leading-6 text-[var(--text-soft)]">Make this action available for sync.</span>
                                     </span>
                                 </label>
                             </div>

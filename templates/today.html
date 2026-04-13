@@ -11,7 +11,6 @@
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Today</div>
                 <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">What Matters Today</h1>
-                <div class="mt-2 text-sm font-semibold text-[var(--text-soft)]">Your Daily Operating Loop</div>
                 <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
                     {% if is_everyday_mode %}
                     Capture one meaningful thing, see what needs attention, and move one next item without carrying the whole system in your head.
@@ -72,7 +71,7 @@
         {% set primary_guidance = (today_data.guidance or [None])[0] %}
         <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div class="max-w-3xl">
-                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">What Needs Attention</div>
+                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Next Step</div>
                 {% if primary_guidance %}
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">{{ primary_guidance.title }}</h2>
                 <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ primary_guidance.body }}</p>
@@ -224,7 +223,7 @@
                     </a>
                     {% else %}
                     <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">
-                        No extra guidance right now. The main focus card above already highlights the most useful next move.
+                        No extra guidance right now.
                     </div>
                     {% endfor %}
                     {% else %}
@@ -235,7 +234,7 @@
                     </a>
                     {% else %}
                     <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--text-soft)]">
-                        No guidance yet. Start by logging one meaningful action or moving one project ticket.
+                        No guidance yet.
                     </div>
                     {% endfor %}
                     {% endif %}
@@ -262,9 +261,7 @@
                         {% set recommendations = today_data.recommended_follow_ups %}
                         {% include "_recommendation_cards.html" with context %}
                         {% else %}
-                        <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">
-                            No recommendation follow-ups are ready right now.
-                        </div>
+                        <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No follow-up suggestions.</div>
                         {% endif %}
                     </div>
                 </details>
@@ -362,7 +359,7 @@
                     <summary class="disclosure-summary">
                         <div class="disclosure-summary-copy">
                             <div class="disclosure-summary-title">Due Checks</div>
-                            <div class="disclosure-summary-meta">{{ (today_data.due_promises or [])|length }} promise check(s) currently due.</div>
+                            <div class="disclosure-summary-meta">{{ (today_data.due_promises or [])|length }} due.</div>
                         </div>
                         <span class="disclosure-summary-chevron">⌄</span>
                     </summary>
@@ -397,9 +394,9 @@
                             <div class="disclosure-summary-title">Neglected Connections</div>
                             <div class="disclosure-summary-meta">
                                 {% if is_everyday_mode %}
-                                Relationship context is available when you want it, without leading the whole page.
+                                Available when needed.
                                 {% else %}
-                                {{ (today_data.neglected_connections or [])|length }} relationship(s) currently overdue.
+                                {{ (today_data.neglected_connections or [])|length }} overdue.
                                 {% endif %}
                             </div>
                         </div>

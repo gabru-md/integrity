@@ -12,7 +12,7 @@
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Capture Automation</div>
                 <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Browser Rules</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Rules decide when a browser context should expose or run one of your Browser Actions. Start with what should happen, then narrow where and how it should match.</p>
+                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Rules decide when browser context should trigger a Browser Action.</p>
             </div>
             <div class="flex items-start gap-3">
                 <button @click="openCreateModal" class="btn-primary px-4 py-3 text-sm">Create Browser Rule</button>
@@ -32,12 +32,12 @@
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Automatic</div>
             <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ automaticCount }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Rules that can act directly</div>
+                        <div class="mt-1 text-sm text-[var(--text-soft)]">Rules that can act directly</div>
         </article>
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Confirm</div>
             <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ confirmCount }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Rules that ask first</div>
+                        <div class="mt-1 text-sm text-[var(--text-soft)]">Rules that ask first</div>
         </article>
         <article class="shell-card p-5">
             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Enabled</div>
@@ -62,7 +62,7 @@
             Failed to load browser rules.
         </div>
         <div v-else-if="filteredRules.length === 0" class="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-soft)]">
-            No browser rules yet. Create one to decide when your Browser Actions should appear or fire.
+            No browser rules yet. Create one to decide when actions should appear or fire.
         </div>
 
         <div v-else class="mt-6 grid gap-5 xl:grid-cols-2">
@@ -208,7 +208,7 @@
                         <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
                             <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Summary</div>
                             <div class="mt-2 text-sm font-bold text-[var(--text)]">{{ liveSummary }}</div>
-                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">This is the rule summary the extension will later sync and evaluate.</div>
+                            <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">Summary synced to the extension later.</div>
                         </div>
 
                         <div class="flex justify-end space-x-3 border-t border-[var(--border)] pt-4">

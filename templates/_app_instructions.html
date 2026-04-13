@@ -65,52 +65,32 @@
             </div>
 
             <div class="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-                {% if user_guidance.app_purpose %}
-                <section class="shell-card px-4 py-4">
-                    <h3 class="text-sm font-bold text-[var(--text)]">What This App Is For</h3>
-                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ user_guidance.app_purpose }}</div>
-                </section>
-                {% endif %}
-
-                {% if user_guidance.how_to_use %}
+                {% if user_guidance.app_purpose or user_guidance.how_to_use or user_guidance.setup_leverage %}
                 <section class="shell-card px-4 py-4">
                     <h3 class="text-sm font-bold text-[var(--text)]">How to use it</h3>
+                    {% if user_guidance.app_purpose %}
+                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ user_guidance.app_purpose }}</div>
+                    {% endif %}
+                    {% if user_guidance.how_to_use %}
                     <div class="mt-3 flex flex-wrap gap-2">
                         {% for item in user_guidance.how_to_use %}
                         <span class="ui-badge">{{ item }}</span>
                         {% endfor %}
                     </div>
-                </section>
-                {% endif %}
-
-                {% if user_guidance.ecosystem_fit %}
-                <section class="shell-card px-4 py-4">
-                    <h3 class="text-sm font-bold text-[var(--text)]">{{ user_guidance.ecosystem_fit.headline }}</h3>
-                    <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ user_guidance.ecosystem_fit.summary }}</div>
-                    {% if user_guidance.ecosystem_fit.stages %}
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        {% for stage in user_guidance.ecosystem_fit.stages %}
-                        <span class="ui-badge">{{ stage }}</span>
+                    {% endif %}
+                    {% if user_guidance.setup_leverage %}
+                    <div class="mt-3 space-y-2">
+                        {% for item in user_guidance.setup_leverage %}
+                        <div class="stack-row text-xs leading-5 text-[var(--text-soft)]">{{ item }}</div>
                         {% endfor %}
                     </div>
                     {% endif %}
                 </section>
                 {% endif %}
 
-                {% if user_guidance.setup_leverage %}
-                <section class="shell-card px-4 py-4">
-                    <h3 class="text-sm font-bold text-[var(--text)]">How to get more from it</h3>
-                    <div class="mt-3 space-y-2">
-                        {% for item in user_guidance.setup_leverage %}
-                        <div class="stack-row text-xs leading-5 text-[var(--text-soft)]">{{ item }}</div>
-                        {% endfor %}
-                    </div>
-                </section>
-                {% endif %}
-
                 {% if user_guidance.pairs_with %}
                 <section class="shell-card px-4 py-4">
-                    <h3 class="text-sm font-bold text-[var(--text)]">Works especially well with</h3>
+                    <h3 class="text-sm font-bold text-[var(--text)]">Pairs with</h3>
                     <div class="mt-3 flex flex-wrap gap-2">
                         {% for item in user_guidance.pairs_with %}
                         <span class="ui-badge">{{ item }}</span>
@@ -122,7 +102,7 @@
                 {% if user_guidance.glossary %}
                 <section class="shell-card px-4 py-4">
                     <div class="mb-3 flex items-center justify-between">
-                        <h3 class="text-sm font-bold text-[var(--text)]">What things mean</h3>
+                        <h3 class="text-sm font-bold text-[var(--text)]">Terms</h3>
                         <span class="text-xs text-[var(--text-soft)]">{{ user_guidance.glossary|length }} terms</span>
                     </div>
                     <div class="space-y-3">

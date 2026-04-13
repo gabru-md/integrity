@@ -298,8 +298,8 @@ def build_rasbhari_admin_guide() -> dict:
 def build_app_user_guidance(app_name: str) -> dict:
     docs = {
         "BrowserActions": {
-            "overview": "Browser Actions define the concrete Rasbhari actions the future browser extension can expose and trigger for you.",
-            "app_purpose": "Use Browser Actions to map generic browser-side verbs like save_current_page or capture_selection back into your Rasbhari ecosystem as Activities, events, project updates, or quick-log flows.",
+            "overview": "Browser Actions define the extension-visible actions Rasbhari can sync and trigger.",
+            "app_purpose": "Use Browser Actions to map browser verbs back into Activities, events, project updates, or quick-log flows.",
             "how_to_use": [
                 "Create one action per meaningful browser capture you want the extension to offer later.",
                 "Pick the generic browser action first, then choose what Rasbhari target it should map to.",
@@ -307,22 +307,22 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Use default payload only for stable extra context that should always be merged with browser context.",
             ],
             "setup_leverage": [
-                "Start with only a few high-value browser actions so the later extension UI stays calm.",
-                "Prefer stable names and targets so rules and extension sync stay understandable.",
+                "Start with only a few browser actions.",
+                "Prefer stable names and targets.",
             ],
             "pairs_with": ["Activities", "Projects", "Events", "Automation"],
             "glossary": [
-                {"term": "Browser Action", "meaning": "A concrete action definition Rasbhari can later sync to the browser extension."},
-                {"term": "Target Type", "meaning": "What Rasbhari should trigger when this browser action is used, such as an Activity, event, project update, or quick log."},
-                {"term": "Default Payload", "meaning": "Extra structured data Rasbhari should merge with browser-provided context when the action runs."},
+                {"term": "Browser Action", "meaning": "A concrete action Rasbhari can sync to the browser extension."},
+                {"term": "Target Type", "meaning": "What Rasbhari should trigger when the action runs."},
+                {"term": "Default Payload", "meaning": "Extra structured data merged with browser context."},
             ],
             "examples": [
                 "Example: name Save Docs Research, browser action save_current_page, target type activity, target activity id 12.",
             ],
         },
         "BrowserRules": {
-            "overview": "Browser Rules decide when browser context should surface or trigger one of your configured Browser Actions.",
-            "app_purpose": "Use Browser Rules to describe if user does A on website B then trigger C, while keeping the actual Rasbhari action target inside Browser Actions.",
+            "overview": "Browser Rules decide when browser context should trigger a configured Browser Action.",
+            "app_purpose": "Use Browser Rules to describe if user does A on website B then trigger C.",
             "how_to_use": [
                 "Choose the Browser Action the rule should trigger first, then define when and where it should apply.",
                 "Use trigger mode confirm for most rules until the capture pattern proves trustworthy.",
@@ -330,15 +330,15 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Only use automatic mode for low-risk, high-confidence captures.",
             ],
             "setup_leverage": [
-                "Start with one or two calm rules instead of trying to automate every site immediately.",
-                "Prefer lower priority numbers only when a rule truly should win over broader matches.",
+                "Start with one or two calm rules.",
+                "Use lower priority only when a rule should win.",
             ],
             "pairs_with": ["BrowserActions", "Automation", "Activities", "Projects"],
             "glossary": [
-                {"term": "Browser Rule", "meaning": "A rule that says when a browser condition on a site should trigger a configured Browser Action."},
-                {"term": "Trigger Mode", "meaning": "Whether the extension should wait for manual use, ask for confirmation, or trigger automatically."},
-                {"term": "Match Scope", "meaning": "The site and URL boundaries where the rule is allowed to match."},
-                {"term": "Payload Behavior", "meaning": "How much browser context should be forwarded into Rasbhari when the rule runs."},
+                {"term": "Browser Rule", "meaning": "A rule that decides when to trigger a Browser Action."},
+                {"term": "Trigger Mode", "meaning": "Manual, confirm, or automatic."},
+                {"term": "Match Scope", "meaning": "The site and URL boundaries where the rule may match."},
+                {"term": "Payload Behavior", "meaning": "How browser context is forwarded into Rasbhari."},
             ],
             "examples": [
                 "Example: on docs.python.org, when selection exists, ask for confirmation before triggering Save Docs Research.",
@@ -543,16 +543,16 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
         },
         "Promises": {
-            "overview": "Promises track commitments over time. They watch events and decide whether a recurring promise is currently on track, fulfilled, or broken.",
-            "app_purpose": "Use Promises to convert intentions into commitments that Rasbhari can verify against real event evidence instead of self-story alone.",
+            "overview": "Promises track commitments over time.",
+            "app_purpose": "Use Promises to turn intentions into commitments Rasbhari can verify against event evidence.",
             "how_to_use": [
-                "Use either a target event type, a target tag, or both to describe what counts toward the promise.",
-                "Set required count to the number of matching events needed in each period.",
+                "Use a target event type, a target tag, or both.",
+                "Set required count for each period.",
                 "Use refresh when you want the UI to recount recent matching events immediately.",
             ],
             "setup_leverage": [
-                "Attach promises to event types or tags that already appear in your real workflow.",
-                "Prefer a few meaningful promises over many weak ones with noisy criteria.",
+                "Attach promises to event types or tags you already use.",
+                "Prefer a few meaningful promises over many weak ones.",
             ],
             "pairs_with": ["Events", "Today", "Reports", "Projects"],
             "glossary": [
@@ -596,18 +596,18 @@ def build_app_user_guidance(app_name: str) -> dict:
             ],
         },
         "Reports": {
-            "overview": "Reports turn raw activity into a behavioral mirror. They compare projects, events, skills, and thoughts to surface integrity gaps instead of only listing what happened.",
-            "app_purpose": "Use Reports to reflect the whole Rasbhari system back to yourself so missing action, drift, and integrity gaps become visible.",
+            "overview": "Reports turn raw activity into a behavioral mirror.",
+            "app_purpose": "Use Reports to surface drift, missing action, and integrity gaps.",
             "how_to_use": [
-                "Generate daily, weekly, or monthly mirrors from the Reports page.",
-                "Use the asynchronous option when you want generation to happen through the event pipeline and background processor.",
-                "Start with the headline and score, then open observations or the full report only when the summary suggests something worth investigating.",
-                "Use the print view when you want a clean local page that can be saved as PDF without uploading data anywhere.",
+                "Generate daily, weekly, or monthly mirrors.",
+                "Use async generation when you want the event pipeline to handle it.",
+                "Open observations only when the summary looks interesting.",
+                "Use print view for a local PDF-friendly page.",
                 "Add Connections and log interactions inside their ledger if you want the report to score social balance and neglected relationships.",
             ],
             "setup_leverage": [
-                "Reports become useful only after events, projects, promises, skills, or connections have real data.",
-                "Use reports to adjust system structure, not just to admire outputs.",
+                "Reports become useful after the system has real data.",
+                "Use reports to adjust structure, not just admire outputs.",
             ],
             "pairs_with": ["Today", "Projects", "Promises", "Skills", "Connections", "Events"],
             "glossary": [
