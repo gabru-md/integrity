@@ -186,7 +186,7 @@
 
     async function debugMetadata(itemId) {
         const panel = document.getElementById(`debug-result-${itemId}`);
-        if (panel) panel.textContent = 'Probing magnet and waiting for metadata...';
+        if (panel) panel.textContent = 'Probing magnet and waiting briefly for swarm discovery...';
         const response = await fetch(`/rtv/${itemId}/debug-metadata`, { method: 'POST' });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
@@ -198,7 +198,10 @@
         const probe = data.probe || {};
         if (panel) {
             panel.innerHTML = `
-                <div><span class="font-semibold text-[var(--text)]">Timeout:</span> ${data.timeout_seconds}s</div>
+                <div><span class="font-semibold text-[var(--text)]">Metadata timeout:</span> ${data.timeout_seconds}s</div>
+                <div><span class="font-semibold text-[var(--text)]">Probe timeout:</span> ${probe.probe_timeout_seconds ?? 'n/a'}s</div>
+                <div><span class="font-semibold text-[var(--text)]">Listen:</span> ${probe.listen_interfaces || 'default'}</div>
+                <div><span class="font-semibold text-[var(--text)]">Outgoing:</span> ${probe.outgoing_interface || 'default'}</div>
                 <div><span class="font-semibold text-[var(--text)]">Torrent:</span> ${probe.torrent_name || 'unknown'}</div>
                 <div><span class="font-semibold text-[var(--text)]">Files:</span> ${probe.file_count ?? 'unknown'}</div>
                 <div><span class="font-semibold text-[var(--text)]">Peers:</span> ${probe.peers ?? 0} · <span class="font-semibold text-[var(--text)]">Seeds:</span> ${probe.seeds ?? 0}</div>

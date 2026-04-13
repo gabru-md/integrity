@@ -20,14 +20,13 @@ class TorrentMetadataResolver:
     def __init__(self, timeout_seconds: Optional[int] = None):
         timeout_seconds = timeout_seconds or int(os.getenv("RTV_METADATA_TIMEOUT_SECONDS", "120"))
         self.timeout_seconds = timeout_seconds
+        self.listen_interfaces = os.getenv("RTV_LISTEN_INTERFACES", "0.0.0.0:6881")
+        self.outgoing_interface = os.getenv("RTV_OUTGOING_INTERFACE", "").strip()
 
-    def resolve_largest_video(self, magnet_uri: str) -> TorrentVideoMetadata:
-        if not magnet_uri.startswith("magnet:"):
-            raise ValueError("A valid magnet URI is required.")
-
+    def _build_session(self):
         session = lt.session()
-        session.apply_settings({
-            "listen_interfaces": "0.0.0.0:6881",
+        settings = {
+            "listen_interfaces": self.listen_interfaces,
             "enable_dht": True,
             "enable_lsd": True,
             "enable_upnp": True,
@@ -35,11 +34,17 @@ class TorrentMetadataResolver:
             "download_rate_limit": 0,
             "upload_rate_limit": 0,
             "connection_speed": 50,
-        })
+        }
+        if self.outgoing_interface:
+            settings["outgoing_interfaces"] = self.outgoing_interface
+        session.apply_settings(settings)
         try:
             session.start_dht()
         except Exception:
             pass
+        return session
+
+    def _add_magnet_handle(self, session, magnet_uri: str):
         params = lt.parse_magnet_uri(magnet_uri)
         params.save_path = "/tmp"
         handle = session.add_torrent(params)
@@ -48,7 +53,14 @@ class TorrentMetadataResolver:
             handle.force_dht_announce()
         except Exception:
             pass
+        return handle
 
+    def resolve_largest_video(self, magnet_uri: str) -> TorrentVideoMetadata:
+        if not magnet_uri.startswith("magnet:"):
+            raise ValueError("A valid magnet URI is required.")
+
+        session = self._build_session()
+        handle = self._add_magnet_handle(session, magnet_uri)
         deadline = time.time() + self.timeout_seconds
         try:
             while not handle.has_metadata():
@@ -74,32 +86,10 @@ class TorrentMetadataResolver:
         if not magnet_uri.startswith("magnet:"):
             raise ValueError("A valid magnet URI is required.")
 
-        session = lt.session()
-        session.apply_settings({
-            "listen_interfaces": "0.0.0.0:6881",
-            "enable_dht": True,
-            "enable_lsd": True,
-            "enable_upnp": True,
-            "enable_natpmp": True,
-            "download_rate_limit": 0,
-            "upload_rate_limit": 0,
-            "connection_speed": 50,
-        })
-        try:
-            session.start_dht()
-        except Exception:
-            pass
-
-        params = lt.parse_magnet_uri(magnet_uri)
-        params.save_path = "/tmp"
-        handle = session.add_torrent(params)
-        handle.force_reannounce()
-        try:
-            handle.force_dht_announce()
-        except Exception:
-            pass
-
-        deadline = time.time() + self.timeout_seconds
+        session = self._build_session()
+        handle = self._add_magnet_handle(session, magnet_uri)
+        probe_timeout = min(self.timeout_seconds, int(os.getenv("RTV_METADATA_PROBE_TIMEOUT_SECONDS", "12")))
+        deadline = time.time() + probe_timeout
         last_status = None
         try:
             while not handle.has_metadata():
@@ -107,7 +97,7 @@ class TorrentMetadataResolver:
                 if time.time() > deadline:
                     raise TimeoutError(
                         "Timed out waiting for torrent metadata "
-                        f"after {self.timeout_seconds}s "
+                        f"after {probe_timeout}s "
                         f"(peers={last_status.num_peers}, seeds={last_status.num_seeds}, "
                         f"downloading={last_status.download_rate / 1000:.1f} KB/s)."
                     )
@@ -123,9 +113,10 @@ class TorrentMetadataResolver:
                 "selected_file_size_bytes": None if selected is None else selected.file_size_bytes,
                 "peers": handle.status().num_peers,
                 "seeds": handle.status().num_seeds,
+                "probe_timeout_seconds": probe_timeout,
+                "listen_interfaces": self.listen_interfaces,
+                "outgoing_interface": self.outgoing_interface or None,
             }
-        except Exception as exc:
-            raise
         finally:
             session.pause()
 

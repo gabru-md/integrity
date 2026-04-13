@@ -20,6 +20,7 @@ rTV is the movie-only owned-media surface inside Rasbhari. V1 is intentionally s
 - `MediaDownloadProcessor` is running from the `Processes` surface if you want magnet downloads to progress.
 - `RTV_MEDIA_DIR` points to the local media folder. If unset, Rasbhari uses `./media/rtv`.
 - The browser or TV can reach the Rasbhari host over the local network.
+- If the probe shows `127.0.0.1:6881`, set `RTV_LISTEN_INTERFACES` or `RTV_OUTGOING_INTERFACE` to the Pi LAN address, such as `192.168.1.184:6881`.
 
 ## Fastest Local-File Test
 

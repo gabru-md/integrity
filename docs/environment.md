@@ -117,6 +117,20 @@ Notes:
 - `LOG_DIR`
   Optional. If unset, Rasbhari falls back to stdout/stderr logging, which is suitable for platforms like Render.
 
+## rTV Torrent Diagnostics
+
+- `RTV_METADATA_TIMEOUT_SECONDS`
+- `RTV_METADATA_PROBE_TIMEOUT_SECONDS`
+- `RTV_LISTEN_INTERFACES`
+- `RTV_OUTGOING_INTERFACE`
+
+Notes:
+
+- `RTV_METADATA_TIMEOUT_SECONDS` controls how long full metadata resolution waits.
+- `RTV_METADATA_PROBE_TIMEOUT_SECONDS` controls the short debug probe window.
+- `RTV_LISTEN_INTERFACES` controls the libtorrent listen bind string.
+- `RTV_OUTGOING_INTERFACE` can force libtorrent to use a specific LAN interface if it keeps announcing from loopback.
+
 Gabru writes:
 
 - `main.log`
