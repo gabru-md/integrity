@@ -382,11 +382,23 @@ body {
     top: 0;
     display: flex;
     height: 100%;
-    width: min(100%, 28rem);
+    width: min(100%, 25rem);
     flex-direction: column;
     border-left: 1px solid var(--border);
     background: var(--surface);
     box-shadow: var(--shadow-pop);
+}
+
+.instructions-hero {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 82%, transparent), transparent);
+}
+
+.instructions-body {
+    background: color-mix(in srgb, var(--surface-muted) 32%, transparent);
+}
+
+.instructions-card {
+    background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
 }
 
 body.instructions-open {

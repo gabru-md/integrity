@@ -1,20 +1,20 @@
 def build_rasbhari_mental_model() -> dict:
     return {
-        "headline": "Rasbhari is a personal operating system for daily life.",
-        "summary": "Rasbhari is one connected loop, not a folder of disconnected tools. Each app helps you capture life, add structure, keep commitments, grow, reflect, or decide what to do next.",
+        "headline": "Rasbhari is a personal operating system.",
+        "summary": "One connected loop for capture, structure, commitments, growth, and review.",
         "identity": {
             "title": "What Rasbhari Is",
-            "body": "Rasbhari is a personal operating system for daily life. It helps you record what matters, organize it into projects and relationships, compare it against commitments, and turn it back into useful guidance.",
+            "body": "Rasbhari records what matters, organizes it, compares it to commitments, and turns it back into guidance.",
         },
         "stages": [
             {
                 "name": "Capture",
-                "description": "Events, activities, local signals, thoughts, media, and future imports turn real life into a shared record.",
+                "description": "Events, activities, thoughts, and media turn real life into a shared record.",
                 "apps": ["Events", "Activities", "Thoughts", "Devices", "rTV"],
             },
             {
                 "name": "Structure",
-                "description": "Projects, kanban tickets, blogs, and connections organize raw activity into work, relationships, and narrative context.",
+                "description": "Projects, tickets, blogs, and connections organize work and relationships.",
                 "apps": ["Projects", "KanbanTickets", "Blogs", "Connections"],
             },
             {
@@ -34,16 +34,16 @@ def build_rasbhari_mental_model() -> dict:
             },
             {
                 "name": "Act",
-                "description": "Today, notifications, and staged recommendations focus attention on the next small moves that matter.",
+                "description": "Today and notifications focus attention on the next small move.",
                 "apps": ["Today", "Reports", "Projects", "Promises"],
             },
         ],
         "setup_path": [
-            "Create one activity so repeated actions become easy to log.",
-            "Create one project and one ticket so active work has structure.",
-            "Add one promise tied to a real event type or tag.",
-            "Add one skill tied to the tags you want to grow.",
-            "Open Today and check whether work, promises, and growth now connect visibly.",
+            "Create one activity.",
+            "Create one project and one ticket.",
+            "Add one promise.",
+            "Add one skill.",
+            "Open Today and check the loop.",
         ],
     }
 
@@ -53,22 +53,22 @@ def build_rasbhari_tutorial() -> dict:
         {
             "id": "daily_clarity",
             "title": "Stay on top of daily life",
-            "summary": "Start with capture, today, commitments, and reflection.",
-            "why_it_matters": "Best if you want clarity and continuity first.",
+            "summary": "Start with capture, Today, commitments, and review.",
+            "why_it_matters": "Best if you want clarity first.",
             "recommended_mode": "everyday",
         },
         {
             "id": "work_and_routines",
             "title": "Organize projects and routines",
-            "summary": "Add projects, activities, and skills after the daily loop is clear.",
-            "why_it_matters": "Best if you want execution and growth next.",
+            "summary": "Add projects, activities, and skills after the daily loop feels stable.",
+            "why_it_matters": "Best if you want execution next.",
             "recommended_mode": "structured",
         },
         {
             "id": "full_system",
             "title": "Operate the full Rasbhari system",
-            "summary": "Use the full ecosystem, including operator surfaces and system controls.",
-            "why_it_matters": "Best if you want the whole system visible.",
+            "summary": "Use the full ecosystem, including operator surfaces and controls.",
+            "why_it_matters": "Best if you want everything visible.",
             "recommended_mode": "system",
         },
     ]
@@ -80,11 +80,11 @@ def build_rasbhari_tutorial() -> dict:
             "target_label": "Today",
             "target_path": "/",
             "modes": ["everyday", "structured", "system"],
-            "summary": "Today shows the next useful things in one place.",
-            "why_it_matters": "Start here when the system feels fragmented.",
+            "summary": "Today shows the next useful thing.",
+            "why_it_matters": "Start here when the system feels scattered.",
             "checklist": [
-                "Scan the summary first.",
-                "Then open the one thing that needs action.",
+                "Read the summary first.",
+                "Open the one thing that needs action.",
             ],
         },
         {
@@ -96,7 +96,7 @@ def build_rasbhari_tutorial() -> dict:
             "summary": "Use Capture to record something before you forget it.",
             "why_it_matters": "Rasbhari only helps if real life is recorded.",
             "checklist": [
-                "Use Quick Log for one-off moments.",
+                "Use Quick Log for one-offs.",
                 "Use activities for repeats.",
             ],
         },
@@ -106,11 +106,11 @@ def build_rasbhari_tutorial() -> dict:
             "target_label": "Events",
             "target_path": "/events/home",
             "modes": ["system"],
-            "summary": "Events are the record other apps read.",
+            "summary": "Events are the shared record.",
             "why_it_matters": "Stable events keep the rest of Rasbhari honest.",
             "checklist": [
                 "Keep types and tags stable.",
-                "Use the same labels again when you can.",
+                "Reuse labels when you can.",
             ],
         },
         {
@@ -119,11 +119,11 @@ def build_rasbhari_tutorial() -> dict:
             "target_label": "Activities",
             "target_path": "/activities/home",
             "modes": ["structured", "system"],
-            "summary": "Activities are reusable buttons for repeated actions.",
+            "summary": "Activities are reusable actions.",
             "why_it_matters": "They save time and keep events consistent.",
             "checklist": [
-                "Make them for repeated actions.",
-                "Tag them if they should count elsewhere.",
+                "Make them for repeats.",
+                "Tag them when they should count elsewhere.",
             ],
         },
         {
@@ -132,7 +132,7 @@ def build_rasbhari_tutorial() -> dict:
             "target_label": "Projects",
             "target_path": "/projects/home",
             "modes": ["structured", "system"],
-            "summary": "Projects organize larger pieces of work.",
+            "summary": "Projects organize larger work.",
             "why_it_matters": "They turn isolated events into progress.",
             "checklist": [
                 "Use focus tags when work should count elsewhere.",
@@ -145,8 +145,8 @@ def build_rasbhari_tutorial() -> dict:
             "target_label": "Kanban",
             "target_path": "/kanbantickets/home",
             "modes": ["structured", "system"],
-            "summary": "Kanban tickets are the concrete units of project work.",
-            "why_it_matters": "They keep execution visible instead of abstract.",
+            "summary": "Kanban tickets are the unit of project work.",
+            "why_it_matters": "They keep execution visible.",
             "checklist": [
                 "Keep tickets short.",
                 "Move them when the state changes.",
@@ -158,8 +158,8 @@ def build_rasbhari_tutorial() -> dict:
             "target_label": "Promises",
             "target_path": "/promises/home",
             "modes": ["everyday", "structured", "system"],
-            "summary": "Promises watch for the events or tags that should show up over time.",
-            "why_it_matters": "They only work if your labels match real behavior.",
+            "summary": "Promises watch for the events or tags you expect.",
+            "why_it_matters": "They only work if labels match real behavior.",
             "checklist": [
                 "Use a real event type or tag.",
                 "Check drift from Today or Reports.",
@@ -171,7 +171,7 @@ def build_rasbhari_tutorial() -> dict:
             "target_label": "Skills",
             "target_path": "/skills/home",
             "modes": ["structured", "system"],
-            "summary": "Skills turn repeated tagged work into XP and levels.",
+            "summary": "Skills turn tagged work into XP and levels.",
             "why_it_matters": "Stable tags make growth visible.",
             "checklist": [
                 "Use one stable tag key per skill.",
@@ -195,11 +195,11 @@ def build_rasbhari_tutorial() -> dict:
 
     return {
         "headline": "Choose your starting path.",
-        "summary": "Pick the use-case that fits you, then learn the loop from there.",
+        "summary": "Pick the closest fit and learn the loop from there.",
         "goals": goals,
-        "goal_summary": "Pick the closest fit. Rasbhari will start you in the right mode.",
+        "goal_summary": "Pick the closest fit. Rasbhari starts you in the right mode.",
         "steps": steps,
-        "completion_copy": "You have seen the core loop. Create one real thing, then return to Today.",
+        "completion_copy": "Create one real thing, then return to Today.",
     }
 
 
