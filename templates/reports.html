@@ -15,10 +15,6 @@
                     <h1 class="page-hero-title">Behavioral Mirror</h1>
                     <p class="page-hero-copy">Generate a report when you want a clean read on intent, action, and drift.</p>
                 </div>
-                <div class="shrink-0">
-                    {% set instructions_inline = true %}
-                    {% include "_app_instructions.html" %}
-                </div>
             </div>
             <div class="page-actions mt-5">
                 <a href="#report-generate-form" class="btn-primary px-5 py-3 text-sm">Create Report</a>
@@ -26,26 +22,6 @@
                 <a href="/reports/{{ reports[0].id }}/view" class="btn-secondary px-5 py-3 text-sm">Open Latest</a>
                 {% endif %}
             </div>
-        </div>
-
-        <div class="shell-card px-6 py-6">
-            <details class="disclosure">
-                <summary class="disclosure-summary">
-                    <div class="disclosure-summary-copy">
-                        <div class="disclosure-summary-title">Signal Inputs</div>
-                        <div class="disclosure-summary-meta">Events, projects, skills, thoughts, and connection activity.</div>
-                    </div>
-                    <span class="disclosure-summary-chevron">⌄</span>
-                </summary>
-                <div class="disclosure-body">
-                    <div class="stack-list">
-                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Event cadence and action completion</div>
-                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Project momentum and unfinished loops</div>
-                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Thought-to-work mismatch patterns</div>
-                        <div class="stack-row text-sm leading-6 text-[var(--text-soft)]">Connection and relationship maintenance</div>
-                    </div>
-                </div>
-            </details>
         </div>
     </section>
 
@@ -128,9 +104,9 @@
                                 <h3 class="mt-2 text-xl font-extrabold text-[var(--text)]">{{ report.title }}</h3>
                                 <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ report.headline }}</p>
                             </div>
-                            <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-center">
+                            <div class="ui-badge">
                                 <div class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Score</div>
-                                <div class="mt-1 text-2xl font-extrabold text-[var(--accent)]">{{ report.integrity_score }}</div>
+                                <div class="ml-2 font-extrabold text-[var(--accent)]">{{ report.integrity_score }}</div>
                             </div>
                         </div>
                         <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-[var(--text-soft)]">
@@ -149,9 +125,7 @@
                             <div class="disclosure-body">
                                 <div class="space-y-3">
                                     {% for observation in report.observations %}
-                                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm leading-6 text-[var(--text-soft)]">
-                                        {{ observation }}
-                                    </div>
+                                    <p class="text-sm leading-6 text-[var(--text-soft)]">{{ observation }}</p>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -159,7 +133,6 @@
                         {% endif %}
                         <div class="mt-5 flex flex-wrap gap-3">
                             <a href="/reports/{{ report.id }}/view" class="btn-primary px-4 py-3 text-sm">Open Report</a>
-                            <a href="/reports/{{ report.id }}/print" class="btn-secondary px-4 py-3 text-sm">Print View</a>
                         </div>
                     </article>
                     {% endfor %}

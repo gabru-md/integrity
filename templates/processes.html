@@ -22,6 +22,7 @@
     {% set running_processes = processes_data | selectattr('is_alive', 'equalto', True) | list %}
     {% set enabled_processes = processes_data | selectattr('is_enabled', 'equalto', True) | list %}
     {% set stopped_enabled_processes = processes_data | rejectattr('is_alive', 'equalto', True) | selectattr('is_enabled', 'equalto', True) | list %}
+    {% if processes_data|length or stopped_enabled_processes or queue_processors %}
     <section class="operator-strip">
         <article class="operator-metric">
             <div class="operator-metric-label">Processes</div>
@@ -44,6 +45,7 @@
             <div class="resource-subtitle">Replayable processors</div>
         </article>
     </section>
+    {% endif %}
 
     <section class="operator-table-card p-6" id="dependency-health">
         <details class="disclosure" {% if dependency_health_data | selectattr('status', 'in', ['Delayed', 'Broken']) | list %}open{% endif %}>
@@ -166,6 +168,7 @@
             </details>
         </article>
     </section>
+    {% if processes_data|length > 0 %}
     <section class="shell-card table-shell overflow-hidden p-6">
         <details class="disclosure">
             <summary class="disclosure-summary">
@@ -334,6 +337,7 @@
             </div>
         </details>
     </section>
+    {% endif %}
 
 </div>
 

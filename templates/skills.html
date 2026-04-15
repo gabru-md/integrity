@@ -18,36 +18,11 @@
                 <button @click="openCreateModal" class="btn-primary px-4 py-3 text-sm">
                     Create Skill
                 </button>
-                {% set instructions_inline = true %}
-                {% include "_app_instructions.html" %}
             </div>
         </div>
     </header>
 
     {% raw %}
-    <section class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Skills</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ allSkills.length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Tracked growth areas</div>
-        </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Total XP</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ totalXp }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Accumulated across all skills</div>
-        </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Top Level</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ highestLevel }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Best current skill level</div>
-        </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Recent Wins</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ history.length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Recent level-up records</div>
-        </article>
-    </section>
-
     <section class="shell-card p-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>

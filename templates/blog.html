@@ -14,10 +14,6 @@
                 <h1 class="compact-page-header-title">Personal Blog</h1>
                 <p class="compact-page-header-copy">Draft and publish longer markdown notes with a cleaner editorial shelf.</p>
             </div>
-            <div class="pt-1 shrink-0">
-                {% set instructions_inline = true %}
-                {% include "_app_instructions.html" %}
-            </div>
         </div>
         <button onclick="openBlogModal()" class="btn-primary px-5 py-3 text-sm">
             Write Post
@@ -31,9 +27,11 @@
             <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <span class="ui-badge {% if post.status == 'published' %}ui-badge-success{% endif %}">
+                        {% if post.status != 'published' %}
+                        <span class="ui-badge">
                             {{ post.status|capitalize }}
                         </span>
+                        {% endif %}
                     </div>
                     <span class="operator-row-meta">{{ post.created_at|datetimeformat }}</span>
                 </div>

@@ -23,13 +23,6 @@
             <div class="page-actions">
                 <a href="/capture" class="btn-primary px-4 py-3 text-sm">Quick Capture</a>
                 <a href="/promises/home" class="btn-secondary px-4 py-3 text-sm">Promises</a>
-                {% if is_everyday_mode %}
-                <a href="/reports/home" class="btn-secondary px-4 py-3 text-sm">Reports</a>
-                {% else %}
-                <a href="/projects/home" class="btn-secondary px-4 py-3 text-sm">Projects</a>
-                <a href="/activities/home" class="btn-secondary px-4 py-3 text-sm">Activities</a>
-                <a href="/dashboard" class="btn-secondary px-4 py-3 text-sm">Dashboard</a>
-                {% endif %}
             </div>
         </div>
     </header>
@@ -43,29 +36,6 @@
         <a href="/projects/home" class="btn-secondary px-4 py-3 text-sm">Projects</a>
         <a href="/dashboard" class="btn-secondary px-4 py-3 text-sm">Dashboard</a>
         {% endif %}
-    </section>
-
-    <section class="today-stats-grid grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Projects</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ today_data.active_project_count or 0 }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Active projects in motion</div>
-        </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Events Today</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ today_data.events_today_count or 0 }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Things captured so far</div>
-        </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Due Promises</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ (today_data.due_promises or [])|length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Commitments needing attention</div>
-        </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Neglected</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ (today_data.neglected_connections or [])|length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Relationships overdue for contact</div>
-        </article>
     </section>
 
     <section class="shell-card p-6">

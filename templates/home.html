@@ -283,7 +283,6 @@
                             {{ widget.name }}
                         </h2>
                     </div>
-                    <div class="mt-1 text-xs text-slate-500 dark:text-gray-400">Action-first widget for {{ widget.name.toLowerCase() }}.</div>
                 </div>
                 <div class="flex items-center gap-2">
                     <button @click="toggleCollapse(widget.name)"
@@ -456,11 +455,15 @@
 
     {% if current_user and current_user.is_admin and not is_work_dashboard %}
     <section class="mt-10">
-        <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <details class="disclosure">
+        <summary class="disclosure-summary">
             <div>
-                <h2 class="text-2xl font-bold text-[var(--text)]">Universal Timeline</h2>
-                <p class="text-sm text-[var(--text-soft)]">A single cross-system feed for growth, projects, notifications, devices, and events.</p>
+                <div class="disclosure-summary-title">Universal Timeline</div>
+                <div class="disclosure-summary-meta">Cross-system activity when you need to inspect it.</div>
             </div>
+            <span class="disclosure-summary-chevron">⌄</span>
+        </summary>
+        <div class="disclosure-body">
             {% raw %}
             <div class="flex flex-wrap gap-2">
                 <button v-for="filter in timelineFilters" :key="filter"
@@ -473,9 +476,8 @@
                 </button>
             </div>
             {% endraw %}
-        </div>
         {% raw %}
-        <div class="shell-card p-6">
+        <div class="shell-card mt-4 p-6">
             <div v-if="filteredTimeline.length === 0" class="empty-state py-10 text-sm italic">
                 No timeline entries for this filter yet.
             </div>
@@ -496,6 +498,8 @@
             </div>
         </div>
         {% endraw %}
+        </div>
+        </details>
     </section>
     {% endif %}
 

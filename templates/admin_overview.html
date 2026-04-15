@@ -133,6 +133,7 @@
                 </div>
             </article>
 
+            {% if admin_data.stuck_processors %}
             <article class="shell-card shell-card-strong p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Recovery</div>
                 <details class="disclosure mt-4" {% if admin_data.degraded_capabilities %}open{% endif %}>
@@ -210,14 +211,13 @@
                             <a href="{{ process.href }}" class="btn-ghost px-4 py-2 text-sm">Open Runtime</a>
                         </div>
                     </div>
-                    {% else %}
-                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No enabled processors are currently stuck.</div>
                     {% endfor %}
                 </div>
             </article>
+            {% endif %}
 
+            {% if admin_data.inactive_apps %}
             <article class="shell-card p-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Secondary Diagnostics</div>
                 <details class="disclosure mt-4">
                     <summary class="disclosure-summary">
                         <div class="disclosure-summary-copy">
@@ -242,15 +242,14 @@
                             <a href="/apps" class="btn-ghost px-4 py-2 text-sm">Open Registry</a>
                         </div>
                     </div>
-                    {% else %}
-                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No disabled apps need operator attention right now.</div>
                     {% endfor %}
                     </div>
                 </details>
             </article>
+            {% endif %}
 
+            {% if admin_data.dependency_health %}
             <article class="shell-card p-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Secondary Diagnostics</div>
                 <details class="disclosure mt-4">
                     <summary class="disclosure-summary">
                         <div class="disclosure-summary-copy">
@@ -274,9 +273,10 @@
                     </div>
                 </details>
             </article>
+            {% endif %}
 
+            {% if admin_data.pending_approvals %}
             <article class="shell-card p-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Secondary Diagnostics</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Pending Approvals</h2>
                 <div class="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
                     <div class="flex items-center justify-between gap-4">
@@ -288,9 +288,10 @@
                     </div>
                 </div>
             </article>
+            {% endif %}
 
+            {% if admin_data.attention_items %}
             <article class="shell-card p-6">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Secondary Diagnostics</div>
                 <h2 class="mt-2 text-2xl font-extrabold text-[var(--text)]">Operator Issues</h2>
                 <div class="mt-5 grid gap-3">
                     {% for item in admin_data.attention_items %}
@@ -298,11 +299,10 @@
                         <div class="text-sm font-bold text-[var(--text)]">{{ item.title }}</div>
                         <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ item.body }}</div>
                     </a>
-                    {% else %}
-                    <div class="rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--text-soft)]">No immediate operator issues are surfaced right now.</div>
                     {% endfor %}
                 </div>
             </article>
+            {% endif %}
         </div>
     </section>
 </div>

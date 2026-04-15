@@ -16,46 +16,17 @@
                 <h1 class="page-hero-title">Keep commitments visible</h1>
                 <p class="page-hero-copy">One page for what you promised, what is due, and what needs the next check-in.</p>
             </div>
-            <div class="shrink-0">
-                {% set instructions_inline = true %}
-                {% include "_app_instructions.html" %}
-            </div>
         </div>
         <div class="page-actions mt-5">
             <button onclick="openModal()" class="btn-primary px-5 py-3 text-sm">Make a Promise</button>
-            <a href="/reports/home" class="btn-secondary px-5 py-3 text-sm">See Reports</a>
         </div>
     </section>
 
-    <details class="disclosure mt-6" open>
-        <summary class="disclosure-summary">
-            <div class="disclosure-summary-copy">
-                <div class="disclosure-summary-title">Overview</div>
-                <div class="disclosure-summary-meta">{{ stats.total }} promises, {{ stats.active }} active, {{ stats.fulfilled }} fulfilled, {{ stats.broken }} broken.</div>
-            </div>
-            <span class="disclosure-summary-chevron">⌄</span>
-        </summary>
-        <div class="disclosure-body">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="shell-card p-6">
-                    <p class="text-sm font-semibold text-[var(--text-soft)] uppercase tracking-wider mb-1">Total</p>
-                    <p class="text-3xl font-bold text-[var(--text)]">{{ stats.total }}</p>
-                </div>
-                <div class="shell-card p-6">
-                    <p class="text-sm font-semibold text-[var(--text-soft)] uppercase tracking-wider mb-1">Active</p>
-                    <p class="text-3xl font-bold text-[var(--accent)]">{{ stats.active }}</p>
-                </div>
-                <div class="shell-card p-6">
-                    <p class="text-sm font-semibold text-[var(--text-soft)] uppercase tracking-wider mb-1">Fulfilled</p>
-                    <p class="text-3xl font-bold text-emerald-600">{{ stats.fulfilled }}</p>
-                </div>
-                <div class="shell-card p-6">
-                    <p class="text-sm font-semibold text-[var(--text-soft)] uppercase tracking-wider mb-1">Broken</p>
-                    <p class="text-3xl font-bold text-rose-600">{{ stats.broken }}</p>
-                </div>
-            </div>
-        </div>
-    </details>
+    <div class="flex flex-wrap gap-2 text-sm text-[var(--text-soft)]">
+        <span class="ui-badge">{{ stats.active }} active</span>
+        {% if stats.broken %}<span class="ui-badge ui-badge-danger">{{ stats.broken }} broken</span>{% endif %}
+        {% if stats.fulfilled %}<span class="ui-badge ui-badge-success">{{ stats.fulfilled }} fulfilled</span>{% endif %}
+    </div>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {% for promise in promises %}
@@ -80,9 +51,6 @@
                             {% endif %}
                         </div>
                         <div class="flex shrink-0 flex-wrap justify-end gap-2">
-                            <button onclick="event.preventDefault(); event.stopPropagation(); editPromise({{ promise.id }})" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-                                Edit
-                            </button>
                             <button onclick="event.preventDefault(); event.stopPropagation(); refreshPromise({{ promise.id }})" class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
                                 Refresh
                             </button>
@@ -115,25 +83,17 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3 text-sm">
-                        <div class="rounded-xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-3 py-2">
-                            <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Next Check</div>
-                            <div class="font-semibold text-slate-700 dark:text-gray-200">{{ promise.next_check_at|datetimeformat }}</div>
-                        </div>
-                        <div class="rounded-xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-3 py-2">
-                            <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Current Streak</div>
-                            <div class="font-semibold text-slate-700 dark:text-gray-200 flex items-center">
-                                <svg class="w-4 h-4 mr-1 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.454A1 1 0 005.05 5.554 6.981 6.981 0 003 10a7 7 0 1014 0c0-1.18-.266-2.3-.74-3.31-.514-1.09-1.157-2.1-1.882-3.032a1 1 0 00-1.122-.352 6.53 6.53 0 01-1.861.247z" clip-rule="evenodd"></path>
-                                </svg>
-                                {{ promise.streak }}
-                            </div>
-                        </div>
+                    <div class="text-xs font-semibold text-[var(--text-soft)]">
+                        Next check {{ promise.next_check_at|datetimeformat }}
                     </div>
                 </div>
             </summary>
 
             <div class="px-6 pb-6 space-y-4">
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="event.preventDefault(); event.stopPropagation(); editPromise({{ promise.id }})" class="btn-secondary px-3 py-2 text-xs">Edit</button>
+                    <button onclick="event.preventDefault(); deletePromise({{ promise.id }})" class="btn-ghost px-3 py-2 text-xs text-[var(--danger)]">Delete</button>
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="rounded-xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-700 px-4 py-3">
                         <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Best Streak</div>
@@ -198,11 +158,6 @@
                     <div class="text-[10px] text-slate-400 uppercase tracking-widest">
                         {{ promise.total_completions }} completions across {{ promise.total_periods }} periods
                     </div>
-                </div>
-                <div class="pt-2">
-                    <button onclick="event.preventDefault(); deletePromise({{ promise.id }})" class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-300">
-                        Delete
-                    </button>
                 </div>
             </div>
         </details>

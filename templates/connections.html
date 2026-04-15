@@ -17,30 +17,9 @@
             <div class="flex flex-wrap items-start gap-3">
                 <button onclick="openConnectionModal()" class="btn-primary px-5 py-3 text-sm">New Connection</button>
                 <button onclick="openInteractionModal()" id="quick-log-button" class="btn-secondary px-5 py-3 text-sm">Log Interaction</button>
-                {% set instructions_inline = true %}
-                {% include "_app_instructions.html" %}
             </div>
         </div>
     </header>
-
-    <section class="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div class="shell-card metric-card p-5">
-            <div class="metric-label">Connections</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ stats.total }}</div>
-        </div>
-        <div class="shell-card metric-card p-5">
-            <div class="metric-label">Active</div>
-            <div class="mt-2 text-3xl font-black text-[var(--success)]">{{ stats.active }}</div>
-        </div>
-        <div class="shell-card metric-card p-5">
-            <div class="metric-label">Overdue</div>
-            <div class="mt-2 text-3xl font-black text-[var(--danger)]">{{ stats.overdue }}</div>
-        </div>
-        <div class="shell-card metric-card p-5">
-            <div class="metric-label">Recent Logs</div>
-            <div class="mt-2 text-3xl font-black text-[var(--accent)]">{{ stats.recent_interactions }}</div>
-        </div>
-    </section>
 
     <section class="grid grid-cols-1 gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
