@@ -21,7 +21,7 @@ from urllib.parse import urljoin, urlparse
 
 try:
     from selenium import webdriver
-    from selenium.common.exceptions import TimeoutException, WebDriverException
+    from selenium.common.exceptions import ElementClickInterceptedException, StaleElementReferenceException, TimeoutException, WebDriverException
     from selenium.webdriver.chrome.options import Options as ChromeOptions
     from selenium.webdriver.common.by import By
     from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -58,6 +58,50 @@ DEFAULT_PATHS = [
     "/users/profile",
 ]
 
+SAFE_INTERACTION_TEXT = (
+    "instructions",
+    "notices",
+    "create",
+    "new",
+    "write",
+    "edit",
+    "inspect",
+    "open",
+    "view",
+    "search",
+    "filter",
+    "advanced",
+    "details",
+    "guide",
+    "probe",
+)
+
+UNSAFE_INTERACTION_TEXT = (
+    "delete",
+    "remove",
+    "sign out",
+    "logout",
+    "trigger",
+    "restart",
+    "update",
+    "enable",
+    "disable",
+    "save",
+    "submit",
+    "cancel download",
+    "queue download",
+    "download",
+    "replay",
+    "jump",
+    "mark all read",
+    "regenerate",
+    "approve",
+    "reject",
+    "consume",
+    "run",
+    "confirm",
+)
+
 
 @dataclass(frozen=True)
 class PageTarget:
@@ -79,6 +123,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--height", type=int, default=1100)
     parser.add_argument("--wait", type=float, default=1.0, help="Extra seconds to wait after each page load.")
     parser.add_argument("--include-discovered", action="store_true", help="Also screenshot internal links discovered from the System-mode shell.")
+    parser.add_argument("--interactions", action="store_true", help="Capture safe opened/clicked UI states for each page.")
+    parser.add_argument("--max-interactions", type=int, default=8, help="Maximum safe interactions to capture per page.")
     return parser.parse_args()
 
 
@@ -163,6 +209,33 @@ def visible_text(element) -> str:
     return " ".join(aria.split())
 
 
+def element_label(element) -> str:
+    label = visible_text(element)
+    if label:
+        return label
+    for attribute in ("id", "name", "class"):
+        value = element.get_attribute(attribute) or ""
+        if value.strip():
+            return value.strip()
+    return element.tag_name
+
+
+def is_visible_element(element) -> bool:
+    try:
+        return element.is_displayed() and element.size.get("width", 0) > 0 and element.size.get("height", 0) > 0
+    except StaleElementReferenceException:
+        return False
+
+
+def is_safe_interaction_label(label: str) -> bool:
+    normalized = label.lower()
+    if not normalized:
+        return False
+    if any(term in normalized for term in UNSAFE_INTERACTION_TEXT):
+        return False
+    return any(term in normalized for term in SAFE_INTERACTION_TEXT)
+
+
 def discover_shell_targets(driver, base_url: str) -> list[PageTarget]:
     targets: list[PageTarget] = []
     seen: set[str] = set()
@@ -214,6 +287,95 @@ def prepare_page_for_screenshot(driver) -> None:
     )
 
 
+def prepare_interaction_state(driver) -> None:
+    driver.execute_script(
+        """
+        document.querySelectorAll('details.sidebar-group').forEach((node) => node.setAttribute('open', 'open'));
+        window.scrollTo(0, 0);
+        """
+    )
+
+
+def open_all_local_disclosures(driver) -> bool:
+    return bool(
+        driver.execute_script(
+            """
+            const disclosures = [...document.querySelectorAll('main details, #content-wrapper details')]
+                .filter((node) => !node.classList.contains('sidebar-group') && !node.open);
+            disclosures.forEach((node) => node.setAttribute('open', 'open'));
+            window.scrollTo(0, 0);
+            return disclosures.length;
+            """
+        )
+    )
+
+
+def close_open_overlays(driver) -> None:
+    driver.execute_script(
+        """
+        document.querySelectorAll('[id$="-modal"], .modal, .app-instructions-panel, #notification-panel').forEach((node) => {
+            node.classList.add('hidden');
+        });
+        document.body.classList.remove('instructions-open');
+        """
+    )
+
+
+def find_safe_click_targets(driver, limit: int) -> list[tuple[str, str]]:
+    script = """
+        const candidates = [...document.querySelectorAll('main button, main a, #content-wrapper button, #content-wrapper a, .notification-trigger')]
+            .filter((node) => {
+                const rect = node.getBoundingClientRect();
+                const text = (node.innerText || node.getAttribute('aria-label') || node.getAttribute('title') || '').trim();
+                const href = node.getAttribute('href') || '';
+                return rect.width > 0 && rect.height > 0 && text && !href.startsWith('http');
+            })
+            .map((node, index) => {
+                if (!node.dataset.screenshotId) node.dataset.screenshotId = `shot-${Date.now()}-${index}`;
+                return {
+                    id: node.dataset.screenshotId,
+                    text: (node.innerText || node.getAttribute('aria-label') || node.getAttribute('title') || '').trim()
+                };
+            });
+        return candidates;
+    """
+    candidates = driver.execute_script(script)
+    targets: list[tuple[str, str]] = []
+    seen_labels: set[str] = set()
+    for candidate in candidates:
+        label = " ".join(str(candidate["text"]).split())
+        if not is_safe_interaction_label(label):
+            continue
+        normalized = slugify(label)
+        if normalized in seen_labels:
+            continue
+        seen_labels.add(normalized)
+        targets.append((candidate["id"], label))
+        if len(targets) >= limit:
+            break
+    return targets
+
+
+def click_screenshot_target(driver, screenshot_id: str) -> bool:
+    elements = driver.find_elements(By.CSS_SELECTOR, f'[data-screenshot-id="{screenshot_id}"]')
+    if not elements:
+        return False
+    element = elements[0]
+    if not is_visible_element(element):
+        return False
+    try:
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center', inline: 'center'});", element)
+        time.sleep(0.15)
+        element.click()
+        return True
+    except (ElementClickInterceptedException, WebDriverException):
+        try:
+            driver.execute_script("arguments[0].click();", element)
+            return True
+        except WebDriverException:
+            return False
+
+
 def full_page_screenshot(driver, path: Path, width: int, min_height: int) -> None:
     total_height = driver.execute_script(
         "return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, arguments[0]);",
@@ -239,12 +401,53 @@ def capture_target(driver, target: PageTarget, out_dir: Path, index: int, width:
     print(f"captured {filename}")
 
 
-def write_index(out_dir: Path, base_url: str, targets: list[PageTarget]) -> None:
+def capture_interactions(driver, target: PageTarget, out_dir: Path, index: int, width: int, height: int, wait_seconds: float, max_interactions: int) -> list[str]:
+    captured: list[str] = []
+    parsed_target = urlparse(target.url)
+    page_label = slugify(target.label)
+    path_label = slugify(parsed_target.path.strip("/") or "home")
+
+    driver.set_window_size(width, height)
+    driver.get(target.url)
+    wait_for_document(driver)
+    time.sleep(wait_seconds)
+    prepare_interaction_state(driver)
+    if open_all_local_disclosures(driver):
+        filename = f"{index:02d}-{page_label}-{path_label}-state-disclosures-open.png"
+        full_page_screenshot(driver, out_dir / filename, width, height)
+        captured.append(filename)
+        print(f"captured {filename}")
+
+    driver.get(target.url)
+    wait_for_document(driver)
+    time.sleep(wait_seconds)
+    prepare_interaction_state(driver)
+    targets = find_safe_click_targets(driver, max_interactions)
+    for interaction_index, (screenshot_id, label) in enumerate(targets, start=1):
+        driver.get(target.url)
+        wait_for_document(driver)
+        time.sleep(wait_seconds)
+        prepare_interaction_state(driver)
+        find_safe_click_targets(driver, max_interactions)
+        if not click_screenshot_target(driver, screenshot_id):
+            continue
+        time.sleep(wait_seconds)
+        filename = f"{index:02d}-{page_label}-{path_label}-state-{interaction_index:02d}-{slugify(label)}.png"
+        full_page_screenshot(driver, out_dir / filename, width, height)
+        captured.append(filename)
+        print(f"captured {filename}")
+        close_open_overlays(driver)
+
+    return captured
+
+
+def write_index(out_dir: Path, base_url: str, targets: list[PageTarget], interaction_mode: bool) -> None:
     lines = [
         "# Rasbhari UI Screenshots",
         "",
         f"- Base URL: `{base_url}`",
         f"- Captured at: `{datetime.now().isoformat(timespec='seconds')}`",
+        f"- Interaction states: `{'enabled' if interaction_mode else 'disabled'}`",
         "",
         "## Pages",
         "",
@@ -278,10 +481,12 @@ def main() -> int:
         if args.include_discovered:
             targets = merge_targets(targets, discover_shell_targets(driver, base_url))
 
-        write_index(out_dir, base_url, targets)
+        write_index(out_dir, base_url, targets, args.interactions)
         for index, target in enumerate(targets, start=1):
             try:
                 capture_target(driver, target, out_dir, index, args.width, args.height, args.wait)
+                if args.interactions:
+                    capture_interactions(driver, target, out_dir, index, args.width, args.height, args.wait, args.max_interactions)
             except (TimeoutException, WebDriverException, RuntimeError) as exc:
                 print(f"skipped {target.url}: {exc}", file=sys.stderr)
     finally:
