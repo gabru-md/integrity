@@ -15,10 +15,11 @@ It keeps one daily loop coherent: capture, structure, commit, grow, reflect, and
 
 ## Pacing Model
 
-Rasbhari uses three experience modes:
+Rasbhari uses four experience modes:
 
 - `Everyday` for the daily loop
 - `Structured` for planning and ecosystem linkage
+- `Work` for screen-safe workplace capture, projects, and writing
 - `System` for operator and control-plane depth
 
 The product should stay deep by capability but shallow by default.

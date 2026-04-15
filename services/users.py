@@ -13,7 +13,7 @@ from model.user import User
 class UserService(CRUDService[User]):
     API_KEY_ALPHABET = string.ascii_letters + string.digits
     API_KEY_LENGTH = 5
-    EXPERIENCE_MODES = {"everyday", "structured", "system"}
+    EXPERIENCE_MODES = {"everyday", "structured", "work", "system"}
 
     def __init__(self):
         super().__init__("users", DB("rasbhari"))
@@ -68,7 +68,7 @@ class UserService(CRUDService[User]):
         experience_mode = cls.normalize_experience_mode(getattr(user, "experience_mode", "everyday") if user else "everyday")
         if experience_mode == "everyday":
             return min(base_limit, 1)
-        if experience_mode == "structured":
+        if experience_mode in {"structured", "work"}:
             return min(base_limit, 2)
         return base_limit
 

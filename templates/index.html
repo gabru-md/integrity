@@ -30,11 +30,12 @@
         })();
     </script>
 </head>
-<body class="shell-fade-in" data-experience-mode="{{ experience_mode }}" data-page-density="{{ 'compact' if is_system_mode else ('comfortable' if is_structured_mode else 'relaxed') }}">
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
 {% set is_everyday_mode = experience_mode == 'everyday' %}
 {% set is_structured_mode = experience_mode == 'structured' %}
+{% set is_work_mode = experience_mode == 'work' %}
 {% set is_system_mode = experience_mode == 'system' %}
+<body class="shell-fade-in" data-experience-mode="{{ experience_mode }}" data-page-density="{{ 'compact' if is_system_mode else ('comfortable' if is_structured_mode or is_work_mode else 'relaxed') }}">
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const shellLogo = document.getElementById('shell-logo');
@@ -53,30 +54,38 @@
                     </div>
                     <div class="min-w-0">
                         <div class="truncate text-[1.35rem] font-extrabold text-[var(--text)]">Rasbhari</div>
-                        <div class="mt-1 text-xs font-medium text-[var(--text-soft)]" style="font-family: 'Manrope', sans-serif;">Daily loop, calm by default</div>
+                        <div class="mt-1 text-xs font-medium text-[var(--text-soft)]" style="font-family: 'Manrope', sans-serif;">{{ 'Work-safe surface' if is_work_mode else 'Daily loop, calm by default' }}</div>
                     </div>
                 </div>
             </div>
 
             <div class="min-h-0 overflow-y-auto px-2 py-4">
                 <div class="space-y-3">
-                    <details class="sidebar-group" {% if request.path == '/' or request.path == '/capture' or request.path == '/dashboard' or '/promises' in request.path or '/reports' in request.path or '/thoughts' in request.path or '/rtv' in request.path %}open{% endif %}>
+                    <details class="sidebar-group" {% if request.path == '/' or request.path == '/capture' or request.path == '/dashboard' or '/promises' in request.path or '/reports' in request.path or '/thoughts' in request.path or '/rtv' in request.path or '/projects' in request.path or '/blogs' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">
-                            <span>Daily Loop</span>
+                            <span>{{ 'Work Desk' if is_work_mode else 'Daily Loop' }}</span>
                             <span class="sidebar-group-chevron">⌄</span>
                         </summary>
                         <ul class="space-y-1.5 pt-2">
+                            {% if is_work_mode %}
+                            <li><a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a></li>
+                            <li><a href="/capture" class="nav-link {% if request.path == '/capture' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✚</span><span>Capture</span></a></li>
+                            {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}<li><a href="/thoughts/home" class="nav-link {% if '/thoughts' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✎</span><span>Thoughts</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('projects') and 'projects' in active_app_names %}<li><a href="/projects/home" class="nav-link {% if '/projects' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▣</span><span>Projects</span></a></li>{% endif %}
+                            {% if PermissionManager.can_view_app('blogs') and 'blogs' in active_app_names %}<li><a href="/blogs/home" class="nav-link {% if '/blogs' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Blogs</span></a></li>{% endif %}
+                            {% else %}
                             <li><a href="/" class="nav-link {% if request.path == '/' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☼</span><span>Today</span></a></li>
                             <li><a href="/capture" class="nav-link {% if request.path == '/capture' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✚</span><span>Capture</span></a></li>
+                            {% if not is_everyday_mode %}<li><a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a></li>{% endif %}
                             {% if PermissionManager.can_view_app('promises') and 'promises' in active_app_names %}<li><a href="/promises/home" class="nav-link {% if '/promises' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◌</span><span>Promises</span></a></li>{% endif %}
                             {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}<li><a href="/thoughts/home" class="nav-link {% if '/thoughts' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✎</span><span>Thoughts</span></a></li>{% endif %}
                             {% if PermissionManager.can_view_app('reports') and 'reports' in active_app_names %}<li><a href="/reports/home" class="nav-link {% if '/reports' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▤</span><span>Reports</span></a></li>{% endif %}
                             {% if PermissionManager.can_view_app('rtv') and 'rtv' in active_app_names %}<li><a href="/rtv/home" class="nav-link {% if '/rtv' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▶</span><span>rTV</span></a></li>{% endif %}
-                            {% if not is_everyday_mode %}<li><a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a></li>{% endif %}
+                            {% endif %}
                         </ul>
                     </details>
 
-                    {% if not is_everyday_mode %}
+                    {% if not is_everyday_mode and not is_work_mode %}
                     <details class="sidebar-group" {% if '/projects' in request.path or '/activities' in request.path or '/skills' in request.path or '/connections' in request.path or '/events' in request.path or '/blogs' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">
                             <span>Structured</span>
@@ -101,7 +110,7 @@
                         <div class="space-y-2 pt-2">
                             <a href="/users/profile" class="nav-link {% if '/users/profile' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⚙</span><span>Profile</span></a>
                             <a href="/appearance" class="nav-link {% if request.path == '/appearance' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◫</span><span>Appearance</span></a>
-                            {% if not is_everyday_mode %}
+                            {% if not is_everyday_mode and not is_work_mode %}
                             <a href="/automation" class="nav-link {% if request.path == '/automation' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">↻</span><span>Automation</span></a>
                             {% endif %}
                             <a href="/docs" class="nav-link {% if request.path == '/docs' or '/docs/' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Help</span></a>
@@ -151,6 +160,12 @@
 
                 <div class="border-t border-[var(--border)] px-3 py-2.5">
                     <div class="grid gap-2">
+                        <form action="{{ url_for('Users.toggle_work_mode') }}" method="POST">
+                            <button type="submit" class="{{ 'btn-primary' if not is_work_mode else 'btn-secondary' }} sidebar-footer-action w-full px-3 py-2.5 text-sm">
+                                <span class="nav-icon" aria-hidden="true">{{ '◂' if is_work_mode else '◈' }}</span>
+                                <span class="sidebar-footer-label">{{ 'Leave Work Mode' if is_work_mode else 'Work Mode' }}</span>
+                            </button>
+                        </form>
                         <a href="/users/profile" class="btn-secondary sidebar-footer-action w-full px-3 py-2.5 text-sm">
                             <span class="nav-icon" aria-hidden="true">⚙</span>
                             <span class="sidebar-footer-label">Profile Settings</span>
@@ -181,6 +196,11 @@
                 <span aria-hidden="true">◔</span>
                 <span id="mobile-notification-count" class="notification-count {% if not notification_center or not notification_center['unread_count'] %}hidden{% endif %}">{{ notification_center['unread_count'] if notification_center and notification_center['unread_count'] and notification_center['unread_count'] < 10 else ('9+' if notification_center and notification_center['unread_count'] else '') }}</span>
             </button>
+            <form action="{{ url_for('Users.toggle_work_mode') }}" method="POST">
+                <button type="submit" class="{{ 'btn-primary' if is_work_mode else 'btn-secondary' }} h-11 rounded-2xl px-3 text-sm">
+                    {{ 'Work' if is_work_mode else 'Work Mode' }}
+                </button>
+            </form>
             <a href="/capture" class="btn-primary h-11 rounded-2xl px-4 text-sm {% if request.path == '/capture' %}pointer-events-none opacity-80{% endif %}">Capture</a>
             {% endif %}
             <button type="button" onclick="document.getElementById('user-menu')?.setAttribute('open','open'); toggleSidebar(true);" class="btn-secondary h-11 rounded-2xl px-4 text-sm">Profile</button>

@@ -6,6 +6,7 @@
 {% block content %}
 {% set experience_mode = (user.experience_mode or 'everyday') %}
 {% set is_system_mode = experience_mode == 'system' %}
+{% set is_work_mode = experience_mode == 'work' %}
 <div class="space-y-6 px-1 py-2">
     <section class="hero-grid">
         <div class="shell-card hero-card px-6 py-6">
@@ -30,6 +31,7 @@
                         <span class="ui-badge">Profile</span>
                         <span class="ui-badge">{{ 'Admin' if user.is_admin else 'Standard User' }}</span>
                         <span class="ui-badge">{{ (user.experience_mode or 'everyday') | title }} Mode</span>
+                        {% if is_work_mode %}<span class="ui-badge">Screen-Safe</span>{% endif %}
                         <span class="ui-badge">{{ 'Tutorial Complete' if user.onboarding_completed else 'Tutorial Pending' }}</span>
                     </div>
                 </div>
@@ -128,9 +130,10 @@
                             <select id="experience_mode" name="experience_mode" form="profile-form">
                                 <option value="everyday" {% if (user.experience_mode or 'everyday') == 'everyday' %}selected{% endif %}>Everyday</option>
                                 <option value="structured" {% if user.experience_mode == 'structured' %}selected{% endif %}>Structured</option>
+                                <option value="work" {% if user.experience_mode == 'work' %}selected{% endif %}>Work</option>
                                 <option value="system" {% if user.experience_mode == 'system' %}selected{% endif %}>System</option>
                             </select>
-                            <span class="text-xs text-[var(--text-soft)]">This is Rasbhari’s main pacing control. Later it will drive navigation, density, onboarding, and recommendation intensity.</span>
+                            <span class="text-xs text-[var(--text-soft)]">Work mode keeps capture, thoughts, projects, and blogs visible while hiding leisure, personal, and operator-heavy surfaces from the shell.</span>
                         </label>
                     </div>
                 </details>

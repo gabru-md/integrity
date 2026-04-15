@@ -1,4 +1,6 @@
 {% extends "index.html" %}
+{% set dashboard_experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
+{% set is_work_dashboard = dashboard_experience_mode == 'work' %}
 {% block title %}Dashboard Overview{% endblock %}
 {% block shell_title %}Dashboard Overview{% endblock %}
 {% block shell_subtitle %}A cleaner V2 control surface for health, action, and recent change across the Rasbhari system.{% endblock %}
@@ -11,15 +13,17 @@
     <header class="shell-card hero-card px-6 py-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Operations</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Rasbhari Apps Dashboard</h1>
-                <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">One control surface for health, action, and what changed across the system.</p>
+                <div class="section-kicker text-[10px] font-extrabold uppercase">{{ 'Work Desk' if is_work_dashboard else 'Operations' }}</div>
+                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">{{ 'Work Dashboard' if is_work_dashboard else 'Rasbhari Apps Dashboard' }}</h1>
+                <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">{{ 'Projects, writing, and capture without personal or operator-heavy surfaces.' if is_work_dashboard else 'One control surface for health, action, and what changed across the system.' }}</p>
             </div>
             <div class="flex flex-wrap gap-3">
+                {% if not is_work_dashboard %}
                 <button @click="quickLogEvent"
                         class="btn-primary px-4 py-3 text-sm">
                     Quick Event
                 </button>
+                {% endif %}
                 <button @click="captureThought"
                         class="btn-secondary px-4 py-3 text-sm">
                     Capture Thought
@@ -32,7 +36,7 @@
         </div>
     </header>
 
-    {% if current_user and current_user.is_admin %}
+    {% if current_user and current_user.is_admin and not is_work_dashboard %}
     <section class="mb-8">
         <div class="mb-3 flex items-center justify-between">
             <h2 class="text-sm font-bold uppercase tracking-[0.2em] text-[var(--text-soft)]">Reliability</h2>
@@ -450,7 +454,7 @@
         {% endraw %}
     </main>
 
-    {% if current_user and current_user.is_admin %}
+    {% if current_user and current_user.is_admin and not is_work_dashboard %}
     <section class="mt-10">
         <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
@@ -496,8 +500,8 @@
     {% endif %}
 
     <div v-if="Object.keys(widgetsData).length === 0" class="text-center py-20 text-[var(--text-soft)]">
-        <p class="text-2xl font-bold mb-2">No widgets configured.</p>
-        <p>Please check your backend configuration.</p>
+        <p class="text-2xl font-bold mb-2">{% if is_work_dashboard %}No work widgets configured.{% else %}No widgets configured.{% endif %}</p>
+        <p>{% if is_work_dashboard %}Enable Thoughts, Projects, or Blogs to populate the Work dashboard.{% else %}Please check your backend configuration.{% endif %}</p>
     </div>
 </div>
 
@@ -507,14 +511,21 @@
     const JINJA_WIDGETS_DATA = {{ widgets_data | tojson | safe }};
     const JINJA_RELIABILITY_DATA = {{ reliability_data | tojson | safe }};
     const JINJA_UNIVERSAL_TIMELINE = {{ universal_timeline | tojson | safe }};
+    const WORK_MODE_ENABLED = {{ is_work_dashboard | tojson }};
+    const WORK_MODE_WIDGETS = new Set(['thoughts', 'projects', 'blogs']);
+    const DASHBOARD_WIDGETS_DATA = WORK_MODE_ENABLED
+        ? Object.fromEntries(
+            Object.entries(JINJA_WIDGETS_DATA).filter(([name]) => WORK_MODE_WIDGETS.has(name.toLowerCase()))
+        )
+        : JINJA_WIDGETS_DATA;
 
     const App = {
         setup() {
-            const widgetsData = ref(JINJA_WIDGETS_DATA);
+            const widgetsData = ref(DASHBOARD_WIDGETS_DATA);
             const reliabilityData = ref(JINJA_RELIABILITY_DATA);
             const universalTimeline = ref(JINJA_UNIVERSAL_TIMELINE);
             const widgetEntries = ref(
-                Object.entries(JINJA_WIDGETS_DATA).map(([name, widget]) => ({
+                Object.entries(DASHBOARD_WIDGETS_DATA).map(([name, widget]) => ({
                     ...widget,
                     name,
                     slug: name.toLowerCase().replace(/\s+/g, '-')

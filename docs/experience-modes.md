@@ -22,7 +22,7 @@ That means:
 
 ## Experience Tiers
 
-Rasbhari currently formalizes three user-facing experience tiers.
+Rasbhari currently formalizes four user-facing experience tiers.
 
 ### 1. Everyday
 
@@ -49,7 +49,21 @@ Primary goals:
 
 This tier adds planning and ecosystem linkage, not system administration.
 
-### 3. System
+### 3. Work
+
+This tier is for users running Rasbhari in a workplace or other screen-visible environment.
+
+Primary goals:
+
+- capture work thoughts quickly
+- manage work projects and timelines
+- draft blog posts without exposing leisure, private-life, or operator-heavy surfaces
+- keep the shell safe when someone glances at the screen
+
+This tier is a UI privacy mode, not a data security boundary. Direct URLs and permissions still depend on normal Rasbhari auth and app permissions.
+The shell exposes a Work Mode toggle in the profile menu and mobile header so the user can quickly enter or leave this mode without visiting Profile Settings.
+
+### 4. System
 
 This tier is for users who want to operate Rasbhari as an instrumented personal system.
 
@@ -86,6 +100,18 @@ These are the surfaces that should define Rasbhari for a new or regular user.
 
 These are the surfaces that turn Rasbhari from a daily companion into a more intentional life-and-work system.
 
+### Work
+
+- `Dashboard`
+- `Capture`
+- `Thoughts`
+- `Projects`
+- `Blogs`
+- lightweight `Profile`
+- `Help`
+
+These are the surfaces that support workplace capture and writing while keeping personal/leisure apps out of the sidebar. In Work mode, `/` redirects to `/dashboard`, and the Work dashboard filters widgets down to work-safe app widgets rather than exposing the full system dashboard.
+
 ### System
 
 - `Admin`
@@ -110,6 +136,7 @@ The tier model should drive future product work in four places:
 
 - `Everyday` users should see the calm daily loop first
 - `Structured` users can see planning and ecosystem apps more prominently
+- `Work` users should see only work-safe capture, writing, and project surfaces in shared-screen contexts
 - `System` users can access the operator surfaces without hiding the rest of the product
 - operator surfaces should be both visually tucked away and route-gated so a plain admin in a lighter mode does not fall into the control plane accidentally
 
@@ -117,6 +144,7 @@ The tier model should drive future product work in four places:
 
 - `Everyday` should prefer the quietest defaults
 - `Structured` can expose more connected structure
+- `Work` should stay compact and screen-safe
 - `System` can tolerate more operational detail
 
 ### Onboarding
@@ -127,6 +155,7 @@ Onboarding should recommend a starting tier based on user goals, not app archite
 
 - `Everyday`: few, subtle, high-signal
 - `Structured`: richer contextual linkage
+- `Work`: limited to work-safe next steps
 - `System`: deeper ecosystem and operator suggestions
 
 ## Product Rule

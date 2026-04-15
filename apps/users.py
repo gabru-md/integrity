@@ -95,6 +95,35 @@ def update_profile():
     return redirect(url_for("Users.profile"))
 
 
+@users_app.blueprint.route("/profile/work-mode", methods=["POST"])
+def toggle_work_mode():
+    user_id = PermissionManager.get_current_user_id()
+    if not user_id:
+        return redirect(url_for("login"))
+
+    user = users_app.service.get_by_id(user_id)
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("home"))
+
+    current_mode = users_app.service.normalize_experience_mode(user.experience_mode)
+    if current_mode == "work":
+        fallback_mode = users_app.service.normalize_experience_mode(session.get("pre_work_experience_mode"))
+        user.experience_mode = fallback_mode if fallback_mode != "work" else "everyday"
+    else:
+        session["pre_work_experience_mode"] = current_mode
+        user.experience_mode = "work"
+
+    success = users_app.service.update(user)
+    if success:
+        session["experience_mode"] = user.experience_mode
+        flash(f"{user.experience_mode.title()} mode enabled.", "success")
+    else:
+        flash("Failed to change mode.", "error")
+
+    return redirect(request.referrer or url_for("home"))
+
+
 @users_app.blueprint.route("/profile/api-key/regenerate", methods=["POST"])
 def regenerate_api_key():
     user_id = PermissionManager.get_current_user_id()
