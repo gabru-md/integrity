@@ -4,32 +4,34 @@
 {% block shell_subtitle %}Health, degraded capabilities, approvals, and recovery actions in one operator surface.{% endblock %}
 
 {% block content %}
-<div class="space-y-5 px-1 py-2">
+<div class="operator-console px-1 py-2">
+    <section class="compact-page-header">
+        <div>
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Admin</div>
+            <h1 class="compact-page-header-title">{{ admin_data.headline }}</h1>
+            <p class="compact-page-header-copy">{{ admin_data.summary }}</p>
+        </div>
+        <div class="page-actions">
+            <a href="/apps" class="btn-secondary px-4 py-3 text-sm">App Registry</a>
+            <a href="/processes" class="btn-secondary px-4 py-3 text-sm">Processes</a>
+            <a href="/users/home" class="btn-secondary px-4 py-3 text-sm">Users</a>
+            <a href="/admin/guide" class="btn-primary px-4 py-3 text-sm">Admin Guide</a>
+        </div>
+    </section>
+
     <section class="page-rail-grid">
         <div class="space-y-5">
-            <div class="shell-card hero-card px-6 py-6">
-            <div class="section-kicker text-[10px] font-extrabold uppercase">Admin</div>
-            <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">{{ admin_data.headline }}</h1>
-            <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.summary }}</p>
-            <div class="mt-5 flex flex-wrap gap-3">
-                <a href="/apps" class="btn-secondary px-4 py-3 text-sm">App Registry</a>
-                <a href="/processes" class="btn-secondary px-4 py-3 text-sm">Processes</a>
-                <a href="/users/home" class="btn-secondary px-4 py-3 text-sm">Users</a>
-                <a href="/admin/guide" class="btn-primary px-4 py-3 text-sm">Admin Guide</a>
-            </div>
-            </div>
-
-            <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <section class="operator-strip">
                 {% for metric in admin_data.metrics %}
-                <article class="shell-card shell-card-strong p-5">
-                    <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ metric.label }}</div>
-                    <div class="mt-2 text-2xl font-black text-[var(--text)]">{{ metric.value }}</div>
-                    <div class="mt-1 text-sm text-[var(--text-soft)]">{{ metric.detail }}</div>
+                <article class="operator-metric">
+                    <div class="operator-metric-label">{{ metric.label }}</div>
+                    <div class="operator-metric-value">{{ metric.value }}</div>
+                    <div class="resource-subtitle">{{ metric.detail }}</div>
                 </article>
                 {% endfor %}
             </section>
 
-            <article class="shell-card shell-card-strong p-6">
+            <article class="card-tier-primary p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Primary Control</div>
                 <div class="mt-2 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
@@ -42,7 +44,7 @@
                         <a href="/processes" class="btn-primary px-4 py-2 text-sm">Open Runtime</a>
                     </div>
                 </div>
-                <div class="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
+                <div class="mt-5 card-tier-secondary p-5">
                     {% if admin_data.update_status.configured %}
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div class="space-y-2">
@@ -86,7 +88,7 @@
                 </div>
             </article>
 
-            <article class="shell-card shell-card-strong p-6">
+            <article class="operator-table-card p-6">
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Health</div>
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
@@ -96,7 +98,7 @@
                     <a href="/processes" class="btn-secondary px-4 py-2 text-sm">Open Runtime</a>
                 </div>
                 <div class="mt-5 grid gap-4 md:grid-cols-2">
-                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                    <div class="card-tier-quiet p-4">
                         <div class="flex items-center justify-between gap-3">
                             <div class="text-sm font-bold text-[var(--text)]">Server Availability</div>
                             <span class="ui-badge{% if admin_data.admin_health.server.status == 'Healthy' %} ui-badge-success{% endif %}">{{ admin_data.admin_health.server.status }}</span>
@@ -104,7 +106,7 @@
                         <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.admin_health.server.summary }}</div>
                         <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ admin_data.admin_health.server.detail }}</div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                    <div class="card-tier-quiet p-4">
                         <div class="flex items-center justify-between gap-3">
                             <div class="text-sm font-bold text-[var(--text)]">Event Flow</div>
                             <span class="ui-badge{% if admin_data.admin_health.event_flow.status == 'Healthy' %} ui-badge-success{% elif admin_data.admin_health.event_flow.status == 'Paused' %}{% else %} ui-badge-warning{% endif %}">{{ admin_data.admin_health.event_flow.status }}</span>
@@ -112,7 +114,7 @@
                         <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.admin_health.event_flow.summary }}</div>
                         <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ admin_data.admin_health.event_flow.detail }}</div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                    <div class="card-tier-quiet p-4">
                         <div class="flex items-center justify-between gap-3">
                             <div class="text-sm font-bold text-[var(--text)]">Queue Drift</div>
                             <span class="ui-badge{% if admin_data.admin_health.queue_drift.status == 'Healthy' %} ui-badge-success{% elif admin_data.admin_health.queue_drift.status == 'Broken' %} ui-badge-danger{% else %} ui-badge-warning{% endif %}">{{ admin_data.admin_health.queue_drift.status }}</span>
@@ -120,7 +122,7 @@
                         <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ admin_data.admin_health.queue_drift.summary }}</div>
                         <div class="mt-2 text-xs leading-5 text-[var(--text-soft)]">{{ admin_data.admin_health.queue_drift.detail }}</div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                    <div class="card-tier-quiet p-4">
                         <div class="flex items-center justify-between gap-3">
                             <div class="text-sm font-bold text-[var(--text)]">Dependency Issues</div>
                             <span class="ui-badge{% if admin_data.admin_health.dependencies.status == 'Healthy' %} ui-badge-success{% elif admin_data.admin_health.dependencies.status == 'Broken' %} ui-badge-danger{% else %} ui-badge-warning{% endif %}">{{ admin_data.admin_health.dependencies.status }}</span>

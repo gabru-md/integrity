@@ -4,19 +4,17 @@
 {% block shell_subtitle %}Inspect health, recover queues, and restart workers from one operator surface.{% endblock %}
 
 {% block content %}
-<div class="space-y-6 px-1 py-2">
+<div class="operator-console px-1 py-2">
 
-    <header class="shell-card hero-card px-6 py-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Runtime</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Background Processes</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Inspect health first, then recover queue processors or restart workers without leaving Rasbhari.</p>
-            </div>
-            <div class="flex flex-wrap gap-3">
-                <a href="/admin" class="btn-secondary px-4 py-3 text-sm">Admin Overview</a>
-                <a href="/admin/guide" class="btn-secondary px-4 py-3 text-sm">Open Admin Guide</a>
-            </div>
+    <header class="compact-page-header">
+        <div>
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Runtime</div>
+            <h1 class="compact-page-header-title">Background Processes</h1>
+            <p class="compact-page-header-copy">Inspect worker health, recover queues, and restart processes from one compact operator console.</p>
+        </div>
+        <div class="page-actions">
+            <a href="/admin" class="btn-secondary px-4 py-3 text-sm">Admin Overview</a>
+            <a href="/admin/guide" class="btn-secondary px-4 py-3 text-sm">Admin Guide</a>
         </div>
     </header>
 
@@ -24,30 +22,30 @@
     {% set running_processes = processes_data | selectattr('is_alive', 'equalto', True) | list %}
     {% set enabled_processes = processes_data | selectattr('is_enabled', 'equalto', True) | list %}
     {% set stopped_enabled_processes = processes_data | rejectattr('is_alive', 'equalto', True) | selectattr('is_enabled', 'equalto', True) | list %}
-    <section class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Processes</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ processes_data|length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Registered workers</div>
+    <section class="operator-strip">
+        <article class="operator-metric">
+            <div class="operator-metric-label">Processes</div>
+            <div class="operator-metric-value">{{ processes_data|length }}</div>
+            <div class="resource-subtitle">Registered workers</div>
         </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Running</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ running_processes|length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Currently alive</div>
+        <article class="operator-metric">
+            <div class="operator-metric-label">Running</div>
+            <div class="operator-metric-value">{{ running_processes|length }}</div>
+            <div class="resource-subtitle">Currently alive</div>
         </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Needs Attention</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ stopped_enabled_processes|length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Enabled but stopped</div>
+        <article class="operator-metric">
+            <div class="operator-metric-label">Needs Attention</div>
+            <div class="operator-metric-value">{{ stopped_enabled_processes|length }}</div>
+            <div class="resource-subtitle">Enabled but stopped</div>
         </article>
-        <article class="shell-card p-5">
-            <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Queue Recovery</div>
-            <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ queue_processors|length }}</div>
-            <div class="mt-1 text-sm text-[var(--text-soft)]">Replayable processors</div>
+        <article class="operator-metric">
+            <div class="operator-metric-label">Queue Recovery</div>
+            <div class="operator-metric-value">{{ queue_processors|length }}</div>
+            <div class="resource-subtitle">Replayable processors</div>
         </article>
     </section>
 
-    <section class="shell-card p-6" id="dependency-health">
+    <section class="operator-table-card p-6" id="dependency-health">
         <details class="disclosure" {% if dependency_health_data | selectattr('status', 'in', ['Delayed', 'Broken']) | list %}open{% endif %}>
             <summary class="disclosure-summary">
                 <div class="disclosure-summary-copy">
@@ -58,7 +56,7 @@
             </summary>
             <div class="disclosure-body grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {% for item in dependency_health_data %}
-                <div class="shell-card p-5">
+                <div class="card-tier-quiet p-5">
                     <div class="mb-3 flex items-center justify-between gap-3">
                         <div class="text-sm font-semibold text-[var(--text)]">{{ item.name }}</div>
                         {% if item.status == 'Healthy' %}
@@ -80,7 +78,7 @@
     </section>
 
     <section class="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <article class="shell-card p-6">
+        <article class="operator-table-card p-6">
             <div class="section-kicker text-[10px] font-extrabold uppercase">Recovery</div>
             <details class="disclosure mt-4">
                 <summary class="disclosure-summary">
@@ -92,7 +90,7 @@
                 </summary>
                 <div class="disclosure-body grid gap-4">
                     {% for process in queue_processors %}
-                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
+                    <div class="card-tier-quiet p-4">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                             <div>
                                 <div class="text-base font-bold text-[var(--text)]">{{ process.name }}</div>
@@ -138,7 +136,7 @@
             </details>
         </article>
 
-        <article class="shell-card p-6">
+        <article class="operator-table-card p-6">
             <div class="section-kicker text-[10px] font-extrabold uppercase">Attention</div>
             <details class="disclosure mt-4" {% if stopped_enabled_processes or (dependency_health_data | selectattr('status', 'in', ['Delayed', 'Broken']) | list) %}open{% endif %}>
                 <summary class="disclosure-summary">

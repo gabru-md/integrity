@@ -4,8 +4,8 @@
 {% block shell_subtitle %}A small owned-movie shelf for Rasbhari and your TV.{% endblock %}
 
 {% block content %}
-<div class="space-y-8 px-1 py-2">
-    <header class="shell-card hero-card px-6 py-6">
+<div class="surface-grid px-1 py-2">
+    <header class="card-tier-primary px-6 py-6">
         <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
                 <div class="section-kicker text-[10px] font-extrabold uppercase">Personal Cinema</div>
@@ -19,7 +19,7 @@
                     {% include "_app_instructions.html" %}
                 </div>
             </div>
-            <div class="shell-card shell-card-strong px-5 py-5 lg:w-[19rem]">
+            <div class="card-tier-secondary px-5 py-5 lg:w-[19rem]">
                 <div class="metric-label">Media Root</div>
                 <div class="mt-2 text-lg font-extrabold text-[var(--text)] break-all">{{ stats.media_root }}</div>
                 <div class="mt-3 text-sm leading-6 text-[var(--text-soft)]">Curated shelf only. Add candidates explicitly and keep the shared folder out of the import path.</div>
@@ -30,26 +30,26 @@
     <section class="page-rail-grid">
         <div class="space-y-4">
             <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <article class="shell-card metric-card p-5">
+                <article class="operator-metric">
                     <div class="metric-label">Movies</div>
                     <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ stats.total }}</div>
                 </article>
-                <article class="shell-card metric-card p-5">
+                <article class="operator-metric">
                     <div class="metric-label">Ready</div>
                     <div class="mt-2 text-3xl font-black text-[var(--success)]">{{ stats.ready }}</div>
                 </article>
-                <article class="shell-card metric-card p-5">
+                <article class="operator-metric">
                     <div class="metric-label">Candidates</div>
                     <div class="mt-2 text-3xl font-black text-[var(--accent)]">{{ stats.candidates }}</div>
                 </article>
-                <article class="shell-card metric-card p-5">
+                <article class="operator-metric">
                     <div class="metric-label">Cache</div>
                     <div class="mt-2 text-3xl font-black text-[var(--text)]">{{ stats.downloaded_gb }}GB</div>
                     <div class="mt-1 text-xs font-semibold text-[var(--text-soft)]">of {{ stats.cache_limit_gb }}GB</div>
                 </article>
             </section>
 
-            <article class="shell-card p-6">
+            <article class="operator-table-card p-6">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <h2 class="text-2xl font-bold text-[var(--text)]">Library</h2>
@@ -61,7 +61,7 @@
                 </div>
             <div class="mt-5 space-y-3">
                 {% for item in items %}
-                <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                <div class="card-tier-quiet p-4">
                     <div class="flex items-start justify-between gap-4">
                         <div class="hidden h-24 w-16 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-200/40 via-slate-200 to-slate-900 sm:block">
                             {% if item.poster_path %}
@@ -93,7 +93,7 @@
                         <div class="flex shrink-0 flex-wrap justify-end gap-2">
                             <button type="button" onclick="openEditModal({{ item.id }})" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 dark:bg-gray-800 dark:text-gray-300">Edit</button>
                             {% if item.status == 'ready' %}
-                            <a href="/rtv/play/{{ item.id }}" class="rounded-full bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Play</a>
+                            <a href="/rtv/play/{{ item.id }}" class="btn-primary px-4 py-2 text-xs">Play</a>
                             <button type="button" onclick="deleteLocalFile({{ item.id }})" class="rounded-full bg-rose-100 px-4 py-2 text-xs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">Delete File</button>
                             {% elif item.status == 'deleted' and item.source_type == 'magnet' and item.magnet_uri %}
                             {% if item.selected_file_index is not none %}
@@ -142,7 +142,7 @@
         </div>
 
         <div class="space-y-4">
-            <section class="shell-card p-4">
+            <section class="operator-table-card p-4">
                 <form id="library-search-form" method="get" action="/rtv/home" class="space-y-3">
                     <label class="space-y-2">
                         <span class="text-xs font-black uppercase tracking-[0.18em] text-[var(--text-soft)]">Search library</span>
@@ -158,7 +158,7 @@
                 </form>
             </section>
 
-            <section class="shell-card p-6">
+            <section class="operator-table-card p-6">
                 <h2 class="text-2xl font-bold text-[var(--text)]">Add Candidate</h2>
                 <p class="mt-2 text-sm text-[var(--text-soft)]">Store a movie candidate now. Download handling lands in the next rTV processor slice.</p>
                 <form id="candidate-form" class="mt-5 space-y-4">

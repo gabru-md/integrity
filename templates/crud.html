@@ -6,21 +6,17 @@
 {% block content %}
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-<div id="vue-crud-app" class="vue-island space-y-6 px-1 py-2">
-    <header class="shell-card hero-card px-6 py-6">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-                {% raw %}
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Resource Management</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)] capitalize">{{ modelClassName }}s
-                    Workspace</h1>
-                <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Manage and view all <span class="lowercase">{{ modelClassName }}</span>
-                    entries.</p>
-                {% endraw %}
-            </div>
-            <div class="shrink-0">
-                {% include "_app_instructions.html" %}
-            </div>
+<div id="vue-crud-app" class="vue-island surface-grid px-1 py-2">
+    <header class="compact-page-header">
+        <div>
+            {% raw %}
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Resource Management</div>
+            <h1 class="compact-page-header-title capitalize">{{ modelClassName }}s Workspace</h1>
+            <p class="compact-page-header-copy">Review, search, create, and edit <span class="lowercase">{{ modelClassName }}</span> records.</p>
+            {% endraw %}
+        </div>
+        <div class="shrink-0">
+            {% include "_app_instructions.html" %}
         </div>
     </header>
 
@@ -28,7 +24,7 @@
 
     <div id="data-view">
         <div id="view-data-card"
-             class="shell-card table-shell px-6 py-6">
+             class="operator-table-card table-shell px-6 py-6">
             <div class="toolbar mb-6 border-b border-[var(--border)] pb-4">
                 <h2 class="text-2xl font-extrabold text-[var(--text)] capitalize">All {{ modelClassName
                     }}s</h2>

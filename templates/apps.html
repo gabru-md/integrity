@@ -4,189 +4,127 @@
 {% block shell_subtitle %}Operate app surfaces as ecosystem building blocks, not just toggles.{% endblock %}
 
 {% block content %}
-<div class="space-y-6 px-1 py-2">
+<div class="operator-console px-1 py-2">
     {% set active_apps = apps_data | selectattr("is_active") | list %}
     {% set disabled_apps = apps_data | rejectattr("is_active") | list %}
     {% set process_backed_apps = apps_data | selectattr("process_count") | list %}
     {% set widget_apps = apps_data | selectattr("widget_enabled") | list %}
 
-    <section class="hero-grid">
-        <div class="shell-card hero-card px-6 py-6">
+    <section class="compact-page-header">
+        <div>
             <div class="section-kicker text-[10px] font-extrabold uppercase">App Registry</div>
-            <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Registered Applications</h1>
-            <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">See which apps are active, what each app owns, which workers it depends on, and how it contributes to Rasbhari's event-driven loop. This page is for operator clarity first, toggles second.</p>
-            <div class="mt-5 flex flex-wrap gap-3">
-                <a href="/admin" class="btn-secondary px-4 py-3 text-sm">Open Admin Overview</a>
-                <a href="/admin/guide" class="btn-secondary px-4 py-3 text-sm">Open Admin Guide</a>
-            </div>
+            <h1 class="compact-page-header-title">Registered Applications</h1>
+            <p class="compact-page-header-copy">Compact operator inventory for app state, widget participation, worker dependencies, and route ownership.</p>
         </div>
-        <div class="grid gap-4 md:grid-cols-2">
-            <div class="shell-card px-6 py-5">
-                <div class="metric-label">Active Apps</div>
-                <div class="metric-value mt-3">{{ active_apps|length }}</div>
-                <div class="metric-copy mt-2">{{ disabled_apps|length }} disabled</div>
-            </div>
-            <div class="shell-card px-6 py-5">
-                <div class="metric-label">Process-Backed</div>
-                <div class="metric-value mt-3">{{ process_backed_apps|length }}</div>
-                <div class="metric-copy mt-2">Apps relying on background workers</div>
-            </div>
-            <div class="shell-card px-6 py-5">
-                <div class="metric-label">Widgets Enabled</div>
-                <div class="metric-value mt-3">{{ widget_apps|length }}</div>
-                <div class="metric-copy mt-2">Dashboard participation currently on</div>
-            </div>
-            <div class="shell-card px-6 py-5">
-                <div class="metric-label">Registry Count</div>
-                <div class="metric-value mt-3">{{ apps_data|length }}</div>
-                <div class="metric-copy mt-2">Operator-visible product surfaces</div>
-            </div>
+        <div class="page-actions">
+            <a href="/admin" class="btn-secondary px-4 py-3 text-sm">Admin Overview</a>
+            <a href="/processes" class="btn-secondary px-4 py-3 text-sm">Processes</a>
         </div>
     </section>
 
-    <section class="grid gap-5 xl:grid-cols-2">
+    <section class="operator-strip">
+        <article class="operator-metric">
+            <div class="operator-metric-label">Active Apps</div>
+            <div class="operator-metric-value">{{ active_apps|length }}</div>
+            <div class="resource-subtitle">{{ disabled_apps|length }} disabled</div>
+        </article>
+        <article class="operator-metric">
+            <div class="operator-metric-label">Process-Backed</div>
+            <div class="operator-metric-value">{{ process_backed_apps|length }}</div>
+            <div class="resource-subtitle">Background worker dependency</div>
+        </article>
+        <article class="operator-metric">
+            <div class="operator-metric-label">Widgets</div>
+            <div class="operator-metric-value">{{ widget_apps|length }}</div>
+            <div class="resource-subtitle">Dashboard participants</div>
+        </article>
+        <article class="operator-metric">
+            <div class="operator-metric-label">Registry</div>
+            <div class="operator-metric-value">{{ apps_data|length }}</div>
+            <div class="resource-subtitle">Product surfaces</div>
+        </article>
+    </section>
+
+    <section class="operator-table-card">
+        <div class="resource-list-header">
+            <div>
+                <div class="resource-title">Application Inventory</div>
+                <div class="resource-subtitle">State, ownership, widget status, and worker health in one scan-first registry.</div>
+            </div>
+        </div>
+
         {% for app in apps_data %}
-        <article class="shell-card px-6 py-6{% if not app.is_active %} opacity-80{% endif %}">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <article class="operator-row">
+            <div class="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(20rem,0.9fr)]">
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-3">
                         {% if app.is_active %}
-                        <a href="{{ app.home_href }}" class="text-2xl font-extrabold tracking-tight text-[var(--accent)] hover:text-[var(--accent-strong)]">{{ app.name | capitalize }}</a>
+                        <a href="{{ app.home_href }}" class="operator-row-title text-[var(--accent)] hover:text-[var(--accent-strong)]">{{ app.name | capitalize }}</a>
                         {% else %}
-                        <span class="text-2xl font-extrabold tracking-tight text-[var(--text-muted)] line-through">{{ app.name | capitalize }}</span>
+                        <span class="operator-row-title text-[var(--text-muted)] line-through">{{ app.name | capitalize }}</span>
                         {% endif %}
                         <span class="ui-badge{% if app.health_state == 'healthy' %} ui-badge-success{% elif app.health_state == 'attention' %} ui-badge-danger{% elif app.health_state == 'inactive' %}{% else %} ui-badge-warning{% endif %}">
-                            {% if app.health_state == 'healthy' %}
-                            Healthy
-                            {% elif app.health_state == 'attention' %}
-                            Needs Attention
-                            {% elif app.health_state == 'inactive' %}
-                            Disabled
-                            {% elif app.health_state == 'steady' %}
-                            Stable
-                            {% else %}
-                            Mixed
-                            {% endif %}
+                            {% if app.health_state == 'healthy' %}Healthy{% elif app.health_state == 'attention' %}Needs Attention{% elif app.health_state == 'inactive' %}Disabled{% elif app.health_state == 'steady' %}Stable{% else %}Mixed{% endif %}
                         </span>
+                        <span class="ui-badge">{{ app.route_prefix }}</span>
                     </div>
-                    <p class="mt-3 text-sm leading-6 text-[var(--text-soft)]">{{ app.purpose }}</p>
-                    {% if app.ecosystem_summary %}
-                    <div class="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--panel-soft)]/70 px-4 py-3 text-sm text-[var(--text-soft)]">
-                        {{ app.ecosystem_summary }}
+                    <p class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ app.purpose }}</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <span class="ui-badge">Owns {{ app.owned_resource_label }}</span>
+                        <span class="ui-badge">{{ app.widget_type.replace('_', ' ').title() }}</span>
+                        <span class="ui-badge">{{ app.process_summary }}</span>
                     </div>
-                    {% endif %}
                 </div>
 
-                <div class="grid gap-3 lg:w-[280px]">
-                    <label class="rounded-2xl border border-[var(--border)] bg-[var(--panel-soft)]/70 px-4 py-3">
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">App</div>
+                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]">
+                    <label class="card-tier-quiet px-4 py-3">
+                        <div class="operator-metric-label">App</div>
                         <div class="mt-3 flex items-center gap-3">
                             <input type="checkbox" class="h-4 w-4" {% if app.is_active %}checked{% endif %} onchange="toggleApp('{{ app.name | lower }}', this.checked, this)">
                             <span class="text-sm font-semibold text-[var(--text-soft)]">{{ "Enabled" if app.is_active else "Disabled" }}</span>
                         </div>
                     </label>
-                    <label class="rounded-2xl border border-[var(--border)] bg-[var(--panel-soft)]/70 px-4 py-3">
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Widget</div>
+                    <label class="card-tier-quiet px-4 py-3">
+                        <div class="operator-metric-label">Widget</div>
                         <div class="mt-3 flex items-center gap-3">
                             <input type="checkbox" class="h-4 w-4" {% if app.widget_enabled %}checked{% endif %} {% if not app.is_active %}disabled{% endif %} onchange="toggleWidget('{{ app.name | lower }}', this.checked, this)">
                             <span class="text-sm font-semibold text-[var(--text-soft)]">{{ 'Enabled' if app.widget_enabled else 'Disabled' }}</span>
                         </div>
                     </label>
-                </div>
-            </div>
-
-            <div class="mt-5 grid gap-4 md:grid-cols-3">
-                <div class="rounded-2xl border border-[var(--border)] bg-[var(--panel-soft)]/70 px-4 py-4">
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Ownership</div>
-                    <div class="mt-2 text-base font-bold text-[var(--text)]">{{ app.owned_resource_label }}</div>
-                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ app.ownership_summary }}</div>
-                    <div class="mt-3 text-xs text-[var(--text-muted)]">Route prefix: <span class="font-semibold text-[var(--text-soft)]">{{ app.route_prefix }}</span></div>
-                </div>
-
-                <div class="rounded-2xl border border-[var(--border)] bg-[var(--panel-soft)]/70 px-4 py-4">
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Worker Dependency</div>
-                    <div class="mt-2 text-base font-bold text-[var(--text)]">{{ app.process_summary }}</div>
-                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">
-                        {{ app.running_process_count }} running
-                        {% if app.enabled_process_count %}
-                        · {{ app.enabled_process_count }} enabled
-                        {% endif %}
-                        {% if app.queue_process_count %}
-                        · {{ app.queue_process_count }} queue-backed
-                        {% endif %}
-                    </div>
-                    {% if app.stopped_enabled_process_count %}
-                    <div class="mt-3 text-xs font-semibold text-amber-600">{{ app.stopped_enabled_process_count }} enabled worker{{ 's' if app.stopped_enabled_process_count != 1 else '' }} need attention.</div>
-                    {% endif %}
-                </div>
-
-                <div class="rounded-2xl border border-[var(--border)] bg-[var(--panel-soft)]/70 px-4 py-4">
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Dashboard Impact</div>
-                    <div class="mt-2 text-base font-bold text-[var(--text)]">{{ app.widget_type.replace('_', ' ').title() }}</div>
-                    <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ app.widget_summary }}</div>
-                </div>
-            </div>
-
-            {% if app.ecosystem_stages %}
-            <div class="mt-5">
-                <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Ecosystem Role</div>
-                <div class="mt-3 flex flex-wrap gap-2">
-                    {% for stage in app.ecosystem_stages %}
-                    <span class="ui-badge">{{ stage }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="mt-5 grid gap-4 lg:grid-cols-2">
-                <div>
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Works With</div>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        {% for pair in app.pairs_with[:6] %}
-                        <span class="ui-badge">{{ pair }}</span>
-                        {% else %}
-                        <span class="text-sm text-[var(--text-muted)]">No linked apps documented.</span>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div>
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Setup Leverage</div>
-                    <div class="mt-3 space-y-2">
-                        {% for item in app.setup_leverage[:2] %}
-                        <div class="text-sm leading-6 text-[var(--text-soft)]">• {{ item }}</div>
-                        {% else %}
-                        <div class="text-sm text-[var(--text-muted)]">No setup guidance documented.</div>
-                        {% endfor %}
+                    <div class="operator-row-actions content-start">
+                        <a href="/processes" class="btn-secondary px-4 py-2 text-sm">Processes</a>
+                        {% if app.is_active %}<a href="{{ app.home_href }}" class="btn-primary px-4 py-2 text-sm">Open</a>{% endif %}
                     </div>
                 </div>
             </div>
 
-            <div class="mt-5">
-                <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Registered Workers</div>
-                <div class="mt-3 space-y-3">
-                    {% for process in app.processes %}
-                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--panel-soft)]/70 px-4 py-3">
-                        <div class="flex flex-wrap items-center gap-3">
-                            <div class="font-semibold text-[var(--text)]">{{ process.name }}</div>
-                            <span class="ui-badge{% if process.health_state == 'healthy' %} ui-badge-success{% elif process.health_state == 'attention' %} ui-badge-danger{% else %}{% endif %}">{{ process.status_label }}</span>
-                            <span class="ui-badge">{{ process.type }}</span>
+            <details class="disclosure mt-3">
+                <summary class="disclosure-summary">
+                    <div class="disclosure-summary-copy">
+                        <div class="disclosure-summary-title">Details</div>
+                        <div class="disclosure-summary-meta">Ownership, ecosystem role, setup notes, and registered workers.</div>
+                    </div>
+                    <span class="disclosure-summary-chevron">⌄</span>
+                </summary>
+                <div class="disclosure-body grid gap-4 lg:grid-cols-3">
+                    <div class="card-tier-quiet px-4 py-4">
+                        <div class="operator-metric-label">Ownership</div>
+                        <div class="mt-2 text-sm font-bold text-[var(--text)]">{{ app.owned_resource_label }}</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ app.ownership_summary }}</div>
+                    </div>
+                    <div class="card-tier-quiet px-4 py-4">
+                        <div class="operator-metric-label">Workers</div>
+                        <div class="mt-2 text-sm font-bold text-[var(--text)]">{{ app.process_summary }}</div>
+                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ app.running_process_count }} running{% if app.enabled_process_count %} · {{ app.enabled_process_count }} enabled{% endif %}{% if app.queue_process_count %} · {{ app.queue_process_count }} queue-backed{% endif %}</div>
+                    </div>
+                    <div class="card-tier-quiet px-4 py-4">
+                        <div class="operator-metric-label">Works With</div>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            {% for pair in app.pairs_with[:6] %}<span class="ui-badge">{{ pair }}</span>{% else %}<span class="text-sm text-[var(--text-muted)]">No linked apps documented.</span>{% endfor %}
                         </div>
-                        <div class="mt-2 text-sm leading-6 text-[var(--text-soft)]">{{ process.recovery_summary }}</div>
                     </div>
-                    {% else %}
-                    <div class="rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--text-muted)]">This app does not currently register background workers.</div>
-                    {% endfor %}
                 </div>
-            </div>
-
-            <div class="mt-5 flex flex-wrap gap-3">
-                <a href="/processes" class="btn-secondary px-4 py-2 text-sm">Open Processes</a>
-                {% if app.is_active %}
-                <a href="{{ app.home_href }}" class="btn-secondary px-4 py-2 text-sm">Manage App</a>
-                {% else %}
-                <span class="rounded-xl border border-[var(--border)] px-4 py-2 text-sm italic text-[var(--text-muted)]">Enable to manage</span>
-                {% endif %}
-            </div>
+            </details>
         </article>
         {% endfor %}
     </section>

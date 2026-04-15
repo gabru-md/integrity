@@ -6,25 +6,21 @@
 {% block content %}
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-<div id="thoughts-app" class="vue-island space-y-6 px-1 py-2">
-    <header class="shell-card hero-card px-6 py-6">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Private Posting</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Thought Stream</h1>
-                <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">
-                    Capture the fleeting sentence, idea, feeling, or note before it disappears. Thoughts stay lightweight, timestamped, and personal.
-                </p>
-            </div>
-            <div class="shrink-0">
-                {% set instructions_inline = true %}
-                {% include "_app_instructions.html" %}
-            </div>
+<div id="thoughts-app" class="vue-island surface-grid px-1 py-2">
+    <header class="compact-page-header">
+        <div>
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Private Posting</div>
+            <h1 class="compact-page-header-title">Thought Stream</h1>
+            <p class="compact-page-header-copy">Fast personal fragments before they become structured work.</p>
+        </div>
+        <div class="shrink-0">
+            {% set instructions_inline = true %}
+            {% include "_app_instructions.html" %}
         </div>
     </header>
 
     {% raw %}
-    <section class="shell-card px-6 py-6">
+    <section class="card-tier-primary px-6 py-6">
         <form @submit.prevent="postThought" class="space-y-4">
             <textarea v-model="composer.message"
                       rows="4"
@@ -44,7 +40,7 @@
         </form>
     </section>
 
-    <section class="shell-card px-6 py-5">
+    <section class="operator-table-card px-6 py-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Stream</div>
@@ -65,9 +61,9 @@
         Nothing in the stream yet.
     </div>
 
-    <section v-else class="space-y-4">
+    <section v-else class="operator-table-card">
         <article v-for="thought in filteredThoughts" :key="thought.id"
-                 class="shell-card overflow-hidden px-6 py-5">
+                 class="operator-row">
             <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-3">
@@ -76,7 +72,7 @@
                         </span>
                         <span class="text-xs font-semibold text-[var(--text-soft)]">{{ formatDate(thought.created_at) }}</span>
                     </div>
-                    <div class="mt-4 whitespace-pre-wrap text-base leading-7 text-[var(--text)]">{{ thought.message }}</div>
+                    <div class="mt-3 whitespace-pre-wrap text-base leading-7 text-[var(--text)]">{{ thought.message }}</div>
                 </div>
                 <div class="flex items-center gap-2">
                     <button @click="openEditModal(thought)"
