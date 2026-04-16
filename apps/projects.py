@@ -271,6 +271,32 @@ def get_timeline(project_id):
     items = timeline_service.get_by_project_id(project_id)
     return jsonify([item.dict() for item in items])
 
+
+@project_app.blueprint.route('/<int:project_id>/timeline/<int:item_id>', methods=['DELETE'])
+@write_access_required
+def delete_timeline_item(project_id, item_id):
+    project = project_app.service.get_by_id(project_id)
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+
+    item = timeline_service.get_by_id(item_id)
+    if not item or item.project_id != project_id or item.user_id != project.user_id:
+        return jsonify({"error": "Timeline item not found"}), 404
+
+    deleted = timeline_service.delete(item_id)
+    if not deleted:
+        return jsonify({"error": "Failed to delete timeline item"}), 500
+
+    if item.item_type == "Update" and project.progress_count > 0:
+        project.progress_count -= 1
+
+    remaining_items = timeline_service.get_by_project_id(project_id)
+    project.last_updated = remaining_items[0].timestamp if remaining_items else project.start_date
+    project_app.service.update(project)
+
+    return jsonify({"message": "Timeline item deleted"}), 200
+
+
 @project_app.blueprint.route('/<int:project_id>/timeline', methods=['POST'])
 @write_access_required
 def add_timeline_item(project_id):
