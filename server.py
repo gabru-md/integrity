@@ -15,6 +15,7 @@ from apps.blogs import blog_app
 from apps.browser_actions import browser_actions_app
 from apps.browser_rules import browser_rules_app
 from apps.activities import activities_app
+from apps.agent_runs import agent_runs_blueprint
 from apps.kanban_tickets import kanban_tickets_app
 from apps.connections import connections_app
 from apps.reports import reports_app
@@ -100,6 +101,7 @@ class RasbhariServer(Server):
         self.register_app(reports_app)
         self.register_app(rtv_app)
         self.register_app(users_app)
+        self.app.register_blueprint(agent_runs_blueprint)
 
 
     def run_server(self):

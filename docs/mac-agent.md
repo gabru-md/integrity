@@ -13,11 +13,40 @@ By default it can emit:
 - machine `started`
 - machine `woke`
 
+Rasbhari also includes a separate local code-agent worker for Kanban-driven development tasks. That worker is intentionally pull-based: the laptop polls Rasbhari for queued agent runs, executes work locally, then posts a concise result back into the project timeline.
+
 These are normalized into clean event bus entries instead of custom app-specific event names.
 
 ## File
 
 - [scripts/rasbhari_mac_agent.py](../scripts/rasbhari_mac_agent.py)
+- [scripts/rasbhari_agent_worker.py](../scripts/rasbhari_agent_worker.py)
+
+## Kanban Agent Worker
+
+Use this when Rasbhari runs on the Raspberry Pi but the code workspace and local agent live on a laptop.
+
+Start with dry-run mode to verify the queue loop without editing files:
+
+```bash
+python3 scripts/rasbhari_agent_worker.py \
+  --server http://rasbhari.local \
+  --api-key YOUR_API_KEY \
+  --worker macbook-work \
+  --workspace integrity=/Users/manish/PycharmProjects/integrity \
+  --workspace-key integrity \
+  --agent-kind dry-run \
+  --executor dry-run
+```
+
+Flow:
+
+1. Open a project board in Rasbhari.
+2. Click `Agent` on a Kanban ticket.
+3. The worker polls `/agent-runs/next`, claims the run, and reports the result.
+4. Rasbhari writes the result back into the project timeline.
+
+After the dry-run loop is verified, switch the worker executor to `codex` or `gemini`. The worker still pulls jobs from Rasbhari, so the laptop does not need an inbound network port.
 
 ## Why This Exists
 

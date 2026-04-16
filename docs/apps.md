@@ -112,6 +112,17 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
 - Notes:
   - includes project detail and timeline routes
   - creates project progress events when timeline items are added
+  - project boards can queue pull-based local agent runs for Kanban tickets; laptop workers poll `/agent-runs/*` and post results back into the project timeline
+
+### 8.5. AgentRuns
+
+- File: `apps/agent_runs.py`
+- Model: `AgentRun`
+- Widget: disabled
+- Notes:
+  - API-key protected worker API for local laptop agents
+  - supports queued, claimed, running, completed, failed, and cancelled run states
+  - keeps execution local to the worker machine while Rasbhari owns queue state and project timeline updates
 
 ### 9. Activities
 

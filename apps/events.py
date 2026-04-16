@@ -19,6 +19,7 @@ RASBHARI_EVENT_PREFIXES = (
     "blog:",
     "browser:",
     "local:",
+    "agent:",
     "device:",
     "tracking:",
 )

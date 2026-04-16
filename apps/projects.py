@@ -13,6 +13,7 @@ from services.events import EventService
 from services.promises import PromiseService
 from services.skills import SkillService
 from services.blogs import BlogService
+from services.agent_runs import AgentRunService
 from services.recommendation_followups import RecommendationFollowUpService
 from services.signal_matching import match_signal, normalize_skill_key, promise_target_signature
 from services.users import UserService
@@ -27,6 +28,7 @@ promise_service = PromiseService()
 skill_service = SkillService()
 blog_service = BlogService()
 user_service = UserService()
+agent_run_service = AgentRunService()
 
 project_app = App(
     'Projects',
@@ -172,6 +174,8 @@ def _serialize_board_tickets(project, tickets) -> list[dict]:
         ticket_data["dependencies"] = dependencies
         ticket_data["available_dependencies"] = available_dependencies
         ticket_data["contribution_summary"] = _build_contribution_summary(linked_promises, linked_skills)
+        latest_agent_run = agent_run_service.latest_for_ticket(ticket.id)
+        ticket_data["agent_run"] = agent_run_service.to_payload(latest_agent_run) if latest_agent_run else None
         serialized.append(ticket_data)
     return serialized
 

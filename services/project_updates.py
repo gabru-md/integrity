@@ -27,6 +27,7 @@ class ProjectUpdateService:
         user_id: int,
         project_id: int,
         content: str,
+        title: Optional[str] = None,
         item_type: str = "Update",
     ) -> Optional[int]:
         project = self.project_service.get_by_id(project_id)
@@ -37,6 +38,7 @@ class ProjectUpdateService:
         timeline_item = TimelineItem(
             user_id=user_id,
             project_id=project_id,
+            title=title,
             content=content,
             timestamp=timestamp,
             item_type=item_type,
