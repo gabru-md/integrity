@@ -35,9 +35,22 @@ python3 scripts/rasbhari_agent_worker.py \
   --worker macbook-work \
   --workspace integrity=/Users/manish/PycharmProjects/integrity \
   --workspace-key integrity \
-  --agent-kind dry-run \
   --executor dry-run
 ```
+
+For Codex, choose `Codex` in the project board's Agent Worker panel and run:
+
+```bash
+python3 scripts/rasbhari_agent_worker.py \
+  --server http://rasbhari.local \
+  --api-key YOUR_API_KEY \
+  --worker macbook-work \
+  --workspace integrity=/Users/manish/PycharmProjects/integrity \
+  --workspace-key integrity \
+  --executor codex
+```
+
+The worker defaults `--agent-kind` to the selected executor, so `--executor codex` polls `codex` jobs unless you override it.
 
 Flow:
 

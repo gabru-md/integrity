@@ -126,6 +126,26 @@
                     </div>
                 </div>
             </details>
+            <details class="disclosure mt-4">
+                <summary class="disclosure-summary">
+                    <div class="disclosure-summary-copy">
+                        <div class="disclosure-summary-title">Agent Worker</div>
+                        <div class="disclosure-summary-meta">{% raw %}Queue {{ selectedAgentLabel }} runs for this board.{% endraw %}</div>
+                    </div>
+                    <span class="disclosure-summary-chevron">⌄</span>
+                </summary>
+                <div class="disclosure-body space-y-3">
+                    <label class="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400" for="board-agent-kind">Agent kind</label>
+                    <select id="board-agent-kind" v-model="selectedAgentKind"
+                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                        <option v-for="option in agentOptions" :key="option.value" :value="option.value">{% raw %}{{ option.label }}{% endraw %}</option>
+                    </select>
+                    <p class="text-xs leading-5 text-slate-500 dark:text-gray-400">
+                        Start a matching worker on the laptop that owns the repo. Rasbhari queues the run; the laptop pulls and executes it locally.
+                    </p>
+                    <pre class="overflow-x-auto rounded-xl bg-slate-950 p-3 text-[11px] leading-5 text-slate-100"><code>{% raw %}{{ workerCommand }}{% endraw %}</code></pre>
+                </div>
+            </details>
         </aside>
     </section>
 
@@ -199,7 +219,7 @@
                                 <button @click="queueAgentRun(ticket)"
                                         class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-200 disabled:opacity-50 dark:bg-sky-950/40 dark:text-sky-300"
                                         :disabled="isAgentRunActive(ticket)">
-                                    Agent
+                                    {% raw %}{{ selectedAgentLabel }}{% endraw %}
                                 </button>
                             </div>
                         </div>
@@ -336,7 +356,7 @@
                             </div>
                             <div v-if="ticket.agent_run" class="mt-4 rounded-2xl border border-slate-200 bg-white p-3 text-xs dark:border-gray-700 dark:bg-gray-900/80">
                                 <div class="flex items-center justify-between gap-3">
-                                    <h4 class="font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">Agent Run</h4>
+                                    <h4 class="font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400">{% raw %}{{ agentRunLabel(ticket.agent_run) }}{% endraw %}</h4>
                                     <button
                                         v-if="isAgentRunActive(ticket)"
                                         type="button"
@@ -351,7 +371,7 @@
                                         @click="queueAgentRun(ticket)"
                                         class="rounded-full bg-sky-100 px-3 py-1 font-semibold text-sky-700 hover:bg-sky-200 dark:bg-sky-950/40 dark:text-sky-300"
                                     >
-                                        Retry
+                                        Retry as {% raw %}{{ selectedAgentLabel }}{% endraw %}
                                     </button>
                                 </div>
                                 <p class="mt-2 text-slate-600 dark:text-gray-300">
@@ -395,17 +415,25 @@
 </div>
 
 <script>
-    const { createApp, ref } = Vue;
+    const { createApp, computed, ref } = Vue;
     const PROJECT_ID = {{ project.id }};
     const INITIAL_TICKETS = {{ initial_tickets | tojson }};
     const BOARD_STATES = {{ board_states | tojson }};
     const STATE_LABELS = {{ ticket_state_labels | tojson }};
+    const AGENT_OPTIONS = [
+        { value: "dry-run", label: "Dry Run", executor: "dry-run" },
+        { value: "codex", label: "Codex", executor: "codex" },
+        { value: "gemini", label: "Gemini", executor: "gemini" },
+    ];
 
     createApp({
         setup() {
             const tickets = ref(INITIAL_TICKETS || []);
             const boardStates = ref(BOARD_STATES || []);
             const stateLabels = ref(STATE_LABELS || {});
+            const agentOptions = ref(AGENT_OPTIONS);
+            const savedAgentKind = window.localStorage.getItem(`rasbhari:project:${PROJECT_ID}:agent-kind`);
+            const selectedAgentKind = ref(AGENT_OPTIONS.some((option) => option.value === savedAgentKind) ? savedAgentKind : "dry-run");
             const isSubmitting = ref(false);
             const errorMessage = ref("");
             const newTicket = ref({ title: "", description: "" });
@@ -577,13 +605,14 @@
 
             const queueAgentRun = async (ticket) => {
                 errorMessage.value = "";
+                window.localStorage.setItem(`rasbhari:project:${PROJECT_ID}:agent-kind`, selectedAgentKind.value);
                 try {
                     const res = await fetch(`/agent-runs/ticket/${ticket.id}/queue`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             workspace_key: 'integrity',
-                            agent_kind: 'dry-run',
+                            agent_kind: selectedAgentKind.value,
                         })
                     });
                     if (!res.ok) throw new Error("Failed to queue agent run");
@@ -617,6 +646,26 @@
                 if (!status) return 'Not queued';
                 return String(status).replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
             };
+            const labelForAgentKind = (agentKind) => {
+                const option = AGENT_OPTIONS.find((item) => item.value === agentKind);
+                return option ? option.label : formatAgentStatus(agentKind || "agent");
+            };
+            const selectedAgentLabel = computed(() => labelForAgentKind(selectedAgentKind.value));
+            const selectedAgentExecutor = computed(() => {
+                const option = AGENT_OPTIONS.find((item) => item.value === selectedAgentKind.value);
+                return option ? option.executor : selectedAgentKind.value;
+            });
+            const workerCommand = computed(() => [
+                "python3 scripts/rasbhari_agent_worker.py \\",
+                "  --server http://rasbhari.local \\",
+                "  --api-key YOUR_API_KEY \\",
+                "  --worker macbook-work \\",
+                "  --workspace integrity=/Users/manish/PycharmProjects/integrity \\",
+                "  --workspace-key integrity \\",
+                `  --agent-kind ${selectedAgentKind.value} \\`,
+                `  --executor ${selectedAgentExecutor.value}`,
+            ].join("\n"));
+            const agentRunLabel = (run) => `${labelForAgentKind(run && run.agent_kind)} Run`;
 
             const ticketsByState = (state) => tickets.value.filter((ticket) => ticket.state === state);
             const formatDate = (value) => value ? new Date(value).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Unknown';
@@ -639,6 +688,10 @@
                 tickets,
                 boardStates,
                 stateLabels,
+                agentOptions,
+                selectedAgentKind,
+                selectedAgentLabel,
+                workerCommand,
                 newTicket,
                 isSubmitting,
                 errorMessage,
@@ -658,6 +711,7 @@
                 cancelAgentRun,
                 isAgentRunActive,
                 formatAgentStatus,
+                agentRunLabel,
                 ticketsByState,
                 formatDate,
                 isTicketExpanded,

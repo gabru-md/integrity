@@ -113,6 +113,7 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - includes project detail and timeline routes
   - creates project progress events when timeline items are added
   - project boards can queue pull-based local agent runs for Kanban tickets; laptop workers poll `/agent-runs/*` and post results back into the project timeline
+  - the project board includes an Agent Worker panel for choosing Dry Run, Codex, or Gemini before queueing a ticket
 
 ### 8.5. AgentRuns
 

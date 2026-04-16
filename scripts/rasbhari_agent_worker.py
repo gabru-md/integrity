@@ -193,11 +193,13 @@ def main() -> int:
     parser.add_argument("--worker", default="local-agent-worker", help="Worker name reported to Rasbhari")
     parser.add_argument("--workspace", action="append", type=parse_workspace, required=True, help="Workspace mapping KEY=/absolute/path")
     parser.add_argument("--workspace-key", default="integrity", help="Workspace key to poll")
-    parser.add_argument("--agent-kind", default="dry-run", help="Agent kind to poll from Rasbhari")
+    parser.add_argument("--agent-kind", help="Agent kind to poll from Rasbhari. Defaults to --executor.")
     parser.add_argument("--executor", choices=["dry-run", "codex", "gemini"], default="dry-run", help="Local executor")
     parser.add_argument("--poll-interval", type=float, default=8.0, help="Seconds between idle polls")
     parser.add_argument("--once", action="store_true", help="Poll once and exit")
     args = parser.parse_args()
+    if not args.agent_kind:
+        args.agent_kind = args.executor
 
     workspaces = dict(args.workspace)
     while True:
