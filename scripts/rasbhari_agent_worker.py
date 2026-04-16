@@ -151,12 +151,18 @@ def poll_once(args, workspaces: dict[str, Path]) -> bool:
         "workspace_key": args.workspace_key,
         "agent_kind": args.agent_kind,
     })
+    if args.verbose:
+        print(f"Polling {args.server.rstrip('/')}/agent-runs/next for workspace={args.workspace_key!r} agent_kind={args.agent_kind!r}")
     data = request_json(args.server, f"/agent-runs/next?{query}", args.api_key)
     run = data.get("run")
     if not run:
+        if args.once or args.verbose:
+            print("No queued agent run matched this worker.")
         return False
 
     run_id = int(run["id"])
+    if args.verbose:
+        print(f"Claiming agent run #{run_id} for ticket #{run.get('ticket_id')}")
     workspace_key = run.get("workspace_key") or args.workspace_key
     workspace_path = workspaces.get(workspace_key)
     if not workspace_path:
@@ -197,6 +203,7 @@ def main() -> int:
     parser.add_argument("--executor", choices=["dry-run", "codex", "gemini"], default="dry-run", help="Local executor")
     parser.add_argument("--poll-interval", type=float, default=8.0, help="Seconds between idle polls")
     parser.add_argument("--once", action="store_true", help="Poll once and exit")
+    parser.add_argument("--verbose", action="store_true", help="Print polling and claim details")
     args = parser.parse_args()
     if not args.agent_kind:
         args.agent_kind = args.executor

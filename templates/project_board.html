@@ -135,11 +135,21 @@
                     <span class="disclosure-summary-chevron">⌄</span>
                 </summary>
                 <div class="disclosure-body space-y-3">
-                    <label class="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400" for="board-agent-kind">Agent kind</label>
-                    <select id="board-agent-kind" v-model="selectedAgentKind"
-                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                        <option v-for="option in agentOptions" :key="option.value" :value="option.value">{% raw %}{{ option.label }}{% endraw %}</option>
-                    </select>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400" for="board-agent-kind">Agent kind</label>
+                            <select id="board-agent-kind" v-model="selectedAgentKind"
+                                    class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                                <option v-for="option in agentOptions" :key="option.value" :value="option.value">{% raw %}{{ option.label }}{% endraw %}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-gray-400" for="board-workspace-key">Workspace</label>
+                            <input id="board-workspace-key" v-model="selectedWorkspaceKey" type="text"
+                                   class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                   placeholder="integrity">
+                        </div>
+                    </div>
                     <p class="text-xs leading-5 text-slate-500 dark:text-gray-400">
                         Start a matching worker on the laptop that owns the repo. Rasbhari queues the run; the laptop pulls and executes it locally.
                     </p>
@@ -443,6 +453,8 @@
             const agentOptions = ref(AGENT_OPTIONS);
             const savedAgentKind = window.localStorage.getItem(`rasbhari:project:${PROJECT_ID}:agent-kind`);
             const selectedAgentKind = ref(AGENT_OPTIONS.some((option) => option.value === savedAgentKind) ? savedAgentKind : "dry-run");
+            const savedWorkspaceKey = window.localStorage.getItem(`rasbhari:project:${PROJECT_ID}:workspace-key`);
+            const selectedWorkspaceKey = ref(savedWorkspaceKey || "integrity");
             const isSubmitting = ref(false);
             const errorMessage = ref("");
             const newTicket = ref({ title: "", description: "" });
@@ -615,12 +627,13 @@
             const queueAgentRun = async (ticket) => {
                 errorMessage.value = "";
                 window.localStorage.setItem(`rasbhari:project:${PROJECT_ID}:agent-kind`, selectedAgentKind.value);
+                window.localStorage.setItem(`rasbhari:project:${PROJECT_ID}:workspace-key`, selectedWorkspaceKey.value.trim() || "integrity");
                 try {
                     const res = await fetch(`/agent-runs/ticket/${ticket.id}/queue`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            workspace_key: 'integrity',
+                            workspace_key: selectedWorkspaceKey.value.trim() || "integrity",
                             agent_kind: selectedAgentKind.value,
                         })
                     });
@@ -669,8 +682,8 @@
                 "  --server http://rasbhari.local \\",
                 "  --api-key YOUR_API_KEY \\",
                 "  --worker macbook-work \\",
-                "  --workspace integrity=/Users/manish/PycharmProjects/integrity \\",
-                "  --workspace-key integrity \\",
+                `  --workspace ${selectedWorkspaceKey.value || "integrity"}=/path/to/local/repo \\`,
+                `  --workspace-key ${selectedWorkspaceKey.value || "integrity"} \\`,
                 `  --agent-kind ${selectedAgentKind.value} \\`,
                 `  --executor ${selectedAgentExecutor.value}`,
             ].join("\n"));
@@ -700,6 +713,7 @@
                 stateLabels,
                 agentOptions,
                 selectedAgentKind,
+                selectedWorkspaceKey,
                 selectedAgentLabel,
                 workerCommand,
                 newTicket,
