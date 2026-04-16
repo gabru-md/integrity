@@ -251,6 +251,10 @@ class AgentRunService(CRUDService[AgentRun]):
             "- Run relevant lightweight validation when practical.",
             "- Return a short merge-request-style summary of the user-visible or behavioral change.",
             "- Do not paste full command output, full diffs, or implementation logs into the summary.",
+            "- End your final answer with a machine-readable Rasbhari summary block exactly like:",
+            "RASBHARI_RESULT_BEGIN",
+            "{\"summary\":\"One or two sentences describing the feature or bug change for the project timeline.\"}",
+            "RASBHARI_RESULT_END",
             "- Report changed files separately if your tool supports it.",
         ])
 

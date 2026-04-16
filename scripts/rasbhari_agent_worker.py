@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import time
@@ -53,28 +54,68 @@ def run_dry_run(run: dict[str, Any], workspace_path: Path) -> tuple[str, list[st
     return summary, []
 
 
+def append_result_contract(prompt: str) -> str:
+    return "\n".join([
+        prompt.rstrip(),
+        "",
+        "Rasbhari reporting contract:",
+        "- Do not use your raw execution log as the final result.",
+        "- At the very end, emit exactly one JSON block between these markers:",
+        "RASBHARI_RESULT_BEGIN",
+        "{\"summary\":\"One or two sentences explaining what feature or bug behavior changed. No file list, no code, no command output.\"}",
+        "RASBHARI_RESULT_END",
+    ])
+
+
+def parse_rasbhari_result(output: str) -> str:
+    match = re.search(r"RASBHARI_RESULT_BEGIN\s*(\{.*?\})\s*RASBHARI_RESULT_END", output or "", re.DOTALL)
+    if match:
+        try:
+            payload = json.loads(match.group(1))
+            summary = str(payload.get("summary") or "").strip()
+            if summary:
+                return normalize_summary(summary)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            pass
+    return fallback_summary(output)
+
+
+def normalize_summary(summary: str) -> str:
+    compact = " ".join(line.strip() for line in summary.splitlines() if line.strip())
+    if len(compact) > 500:
+        compact = compact[:497].rstrip() + "..."
+    return compact or "The requested ticket work was completed."
+
+
+def fallback_summary(output: str) -> str:
+    if not output:
+        return "The requested ticket work was completed."
+    lower_output = output.lower()
+    if "no changes" in lower_output or "nothing to change" in lower_output:
+        return "The agent reviewed the ticket and did not find a code change to apply."
+    return "The requested ticket work was completed. The agent did not provide a structured Rasbhari summary."
+
+
 def run_codex(run: dict[str, Any], workspace_path: Path) -> tuple[str, list[str]]:
-    prompt = run.get("prompt") or ""
+    prompt = append_result_contract(run.get("prompt") or "")
     command = ["codex", "exec", "--cd", str(workspace_path), prompt]
     completed = subprocess.run(command, cwd=str(workspace_path), text=True, capture_output=True, check=False)
     output = "\n".join(part for part in [completed.stdout.strip(), completed.stderr.strip()] if part).strip()
     if completed.returncode != 0:
         raise RuntimeError(output or f"codex exec failed with exit code {completed.returncode}")
     changed_files = git_changed_files(workspace_path)
-    summary = output or "codex exec completed without output."
-    return summary[-6000:], changed_files
+    return parse_rasbhari_result(output), changed_files
 
 
 def run_gemini(run: dict[str, Any], workspace_path: Path) -> tuple[str, list[str]]:
-    prompt = run.get("prompt") or ""
+    prompt = append_result_contract(run.get("prompt") or "")
     command = ["gemini", prompt]
     completed = subprocess.run(command, cwd=str(workspace_path), text=True, capture_output=True, check=False)
     output = "\n".join(part for part in [completed.stdout.strip(), completed.stderr.strip()] if part).strip()
     if completed.returncode != 0:
         raise RuntimeError(output or f"gemini failed with exit code {completed.returncode}")
     changed_files = git_changed_files(workspace_path)
-    summary = output or "gemini completed without output."
-    return summary[-6000:], changed_files
+    return parse_rasbhari_result(output), changed_files
 
 
 def git_changed_files(workspace_path: Path) -> list[str]:
