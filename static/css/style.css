@@ -1344,12 +1344,6 @@ input[readonly] {
     position: relative;
 }
 
-.today-mobile-actions {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem;
-}
-
 .capture-chip {
     cursor: pointer;
 }
@@ -1451,28 +1445,8 @@ input[readonly] {
         line-height: 1.05;
     }
 
-    .today-mobile-actions .btn-primary,
-    .today-mobile-actions .btn-secondary {
-        width: 100%;
-        min-height: 3rem;
-        padding-inline: 0.8rem;
-        font-size: 0.82rem;
-    }
-
-    .today-stats-grid {
-        gap: 0.75rem !important;
-    }
-
-    .today-stats-grid > article,
-    .today-primary-column > article,
-    .today-secondary-column > article,
     .capture-layout > article {
         padding: 1rem !important;
-    }
-
-    .today-stats-grid .text-3xl {
-        font-size: 1.75rem !important;
-        line-height: 1.1;
     }
 
     .capture-chip-group {

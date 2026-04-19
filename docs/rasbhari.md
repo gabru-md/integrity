@@ -2,11 +2,11 @@
 
 Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts.
 
-It keeps one daily loop coherent: capture, structure, commit, grow, reflect, and act.
+It keeps one operating loop coherent: capture, structure, commit, grow, reflect, and act.
 
 ## Core Shape
 
-- `Today` is the calm daily home.
+- `Dashboard` is the home surface.
 - `Capture` and `Activities` reduce manual entry.
 - `Projects`, `KanbanTickets`, `Promises`, `Skills`, `Connections`, and `Reports` add structure and reflection.
 - `Automation` reduces capture friction without becoming a separate meaning system.
@@ -17,7 +17,7 @@ It keeps one daily loop coherent: capture, structure, commit, grow, reflect, and
 
 Rasbhari uses four experience modes:
 
-- `Everyday` for the daily loop
+- `Everyday` for the lightest workspace
 - `Structured` for planning and ecosystem linkage
 - `Work` for screen-safe workplace capture, projects, and writing
 - `System` for operator and control-plane depth

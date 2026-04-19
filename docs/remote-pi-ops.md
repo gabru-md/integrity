@@ -31,7 +31,7 @@ Recommended remote URLs:
 
 Primary remote product surfaces:
 
-- `/` for `Today`
+- `/` for `Dashboard`
 - `/capture` for urgent event logging
 - `/admin` for operator health and recovery
 - `/processes` for queue and worker intervention
@@ -148,7 +148,7 @@ From `/admin` and `/users/home`, you can:
 
 - approve users
 - review onboarding readiness
-- verify that people are being sent to the right surfaces (`Today`, tutorial, checklist)
+- verify that people are being sent to the right surfaces (`Dashboard`, tutorial, checklist)
 
 ### Dependency Visibility
 

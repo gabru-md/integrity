@@ -35,7 +35,6 @@ from runtime.providers import (
 from services.browser_automation import BrowserAutomationService
 from services.device_pairing import DevicePairingService
 from services.docs import DocsService
-from services.users import UserService
 
 basedir = os.path.dirname(__file__)
 
@@ -116,24 +115,6 @@ class RasbhariServer(Server):
         docs_service = DocsService(os.path.join(basedir, "docs"))
         browser_automation_service = BrowserAutomationService()
         device_pairing_service = DevicePairingService()
-        user_service = UserService()
-
-        @self.app.before_request
-        def redirect_work_mode_home():
-            if request.path != "/" or not PermissionManager.is_authenticated():
-                return None
-
-            current_user = PermissionManager.get_current_user() or {}
-            experience_mode = (
-                current_user.get("experience_mode", "everyday")
-                if isinstance(current_user, dict)
-                else getattr(current_user, "experience_mode", "everyday")
-            )
-            if user_service.normalize_experience_mode(experience_mode) == "work":
-                return redirect("/dashboard")
-
-            return None
-
         @self.app.route('/chat')
         @login_required
         def show_open_webui():

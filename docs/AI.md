@@ -330,7 +330,7 @@ Example:
 
 This is a controlled override path, not a second LLM round-trip.
 
-## Supported Actions Today
+## Currently Supported Actions
 
 The assistant currently supports these action types:
 

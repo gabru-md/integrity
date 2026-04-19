@@ -6,11 +6,11 @@
 
 Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts.
 
-It is built around a calm daily loop: capture, structure, commit, grow, reflect, and act.
+It is built around a calm operating loop: capture, structure, commit, grow, reflect, and act.
 
 Key surfaces:
 
-- `Today` for the daily home
+- `Dashboard` for the home surface
 - `Capture` for quick logging
 - `Promises` for commitments
 - `Reports` for reflection

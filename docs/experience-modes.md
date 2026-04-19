@@ -9,7 +9,7 @@ The product goal is not to expose the whole machine immediately. It is to let a 
 Rasbhari should introduce itself in this order:
 
 1. help the user capture something meaningful
-2. show what matters now
+2. keep the current workspace visible
 3. make commitments and patterns legible
 4. reveal deeper structure and operating surfaces only when useful
 
@@ -31,7 +31,7 @@ This is the default experience for a regular person who wants a calm daily syste
 Primary goals:
 
 - capture what happened quickly
-- see what matters today
+- keep current work and commitments visible
 - keep a few commitments visible
 - notice drift without needing to understand the whole ecosystem
 
@@ -79,13 +79,13 @@ This tier includes the control-plane weight that should not be pushed into the d
 
 ### Everyday
 
-- `Today`
+- `Dashboard`
 - `Capture`
 - `Thoughts`
 - `Promises`
 - `Reports`
 - lightweight `Profile`
-- first-run tutorial and setup checklist
+- first-run tutorial
 
 These are the surfaces that should define Rasbhari for a new or regular user.
 
@@ -110,7 +110,7 @@ These are the surfaces that turn Rasbhari from a daily companion into a more int
 - lightweight `Profile`
 - `Help`
 
-These are the surfaces that support workplace capture and writing while keeping personal/leisure apps out of the sidebar. In Work mode, `/` redirects to `/dashboard`, and the Work dashboard filters widgets down to work-safe app widgets rather than exposing the full system dashboard.
+These are the surfaces that support workplace capture and writing while keeping personal/leisure apps out of the sidebar. In Work mode, the Dashboard filters widgets down to work-safe app widgets rather than exposing the full system dashboard.
 
 ### System
 
@@ -134,7 +134,7 @@ The tier model should drive future product work in four places:
 
 ### Navigation
 
-- `Everyday` users should see the calm daily loop first
+- `Everyday` users should see a compact workspace first
 - `Structured` users can see planning and ecosystem apps more prominently
 - `Work` users should see only work-safe capture, writing, and project surfaces in shared-screen contexts
 - `System` users can access the operator surfaces without hiding the rest of the product

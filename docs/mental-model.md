@@ -20,7 +20,7 @@ That means:
 - other apps interpret or structure it
 - commitments and growth react to it
 - reflection surfaces what changed
-- Today turns that into the next small actions
+- the dashboard and reports keep the current state visible
 
 ## The Core Loop
 
@@ -102,15 +102,15 @@ Rule:
 
 ### 6. Act
 
-Act is how Rasbhari helps you move today, not just archive the past.
+Act is how Rasbhari helps you move, not just archive the past.
 
 Primary action surfaces:
 
-- `Today`
+- `Dashboard`
 - notifications
 - staged recommendation follow-ups
 
-Today pulls together active work, due promises, neglected relationships, suggested actions, and high-signal guidance.
+The dashboard keeps active surfaces visible while reports and notifications help narrow attention.
 
 Rule:
 
@@ -125,7 +125,7 @@ Rule:
 - `Skills` reward repeated tagged work
 - `Connections` let relationship maintenance become visible
 - `Reports` reflect the system back to you
-- `Today` unifies the important current state
+- `Dashboard` keeps the current workspace visible
 
 ## What Makes Rasbhari Cohesive
 
@@ -136,7 +136,7 @@ Rasbhari becomes useful when the same work can be seen from multiple angles:
 - those tags can satisfy a promise
 - those same tags can grow a skill
 - Reports can reflect whether that work is actually happening
-- Today can tell you what deserves attention next
+- reports and notifications can tell you what deserves attention next
 
 That is the point of the ecosystem.
 
@@ -150,7 +150,7 @@ Usually the answer is one of these:
 - captured signals are not being structured into projects or relationships
 - commitments are not watching the same event vocabulary
 - growth is not tied to stable tags
-- reflection and Today do not yet have enough honest evidence to become useful
+- reflection does not yet have enough honest evidence to become useful
 
 ## Minimal Useful Setup
 
@@ -162,7 +162,7 @@ If you are setting up Rasbhari from scratch, start here:
 4. Create one `Promise`
 5. Create one `Skill`
 6. Trigger or log one real event
-7. Open `Today` and see whether the connections are visible
+7. Open `Dashboard` and see whether the connections are visible
 
 ## A Simple Test
 
@@ -182,7 +182,7 @@ Rasbhari includes a first-run interactive tutorial for signed-in users.
 
 It walks through the ecosystem in product order:
 
-1. `Today`
+1. `Dashboard`
 2. `Events`
 3. `Activities`
 4. `Projects`
@@ -196,15 +196,6 @@ The tutorial is intentionally non-AI. It explains the product loop, why each sur
 It is also designed to guide alongside the product instead of covering it up. The current page should remain visible enough that the tutorial feels like a live walkthrough, not a blocking modal.
 
 Users can restart it later from `Profile Settings`.
-
-The `Today` page also includes a guided setup checklist for new users. It marks progress automatically as the user creates the minimum useful structure:
-
-- one activity
-- one project
-- one promise
-- one skill
-- one ticket
-- one ticket move out of backlog
 
 ## App-Level Helpers
 

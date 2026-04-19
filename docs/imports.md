@@ -11,7 +11,7 @@ The import layer is designed to keep integrations small and predictable:
 - Rasbhari stores a durable import record
 - the pipeline emits a normal event into the event bus
 
-This keeps integrations compatible with promises, skills, reports, notifications, and Today without every new source inventing its own ingestion model.
+This keeps integrations compatible with promises, skills, reports, and notifications without every new source inventing its own ingestion model.
 
 ## Core Pieces
 
@@ -64,7 +64,7 @@ This means imported calendar entries, device sightings, or other signals can flo
 - skills
 - reports
 - notifications
-- Today guidance
+- dashboard and report surfaces
 
 without adding special-case downstream logic.
 

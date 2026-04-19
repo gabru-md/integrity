@@ -114,9 +114,6 @@ class FakeAppStatusStore:
 
 
 class FakeDashboardProvider:
-    def get_today_data(self):
-        return {"guidance": [{"title": "Start with one meaningful move", "body": "Today route is working.", "href": "/projects/home"}]}
-
     def get_notification_center_data(self):
         return {
             "items": [
@@ -374,17 +371,19 @@ class MentalModelContextTests(unittest.TestCase):
 
         with app.test_request_context("/"):
             rendered = render_flask_template(
-                "today.html",
-                today_data={"guidance": [], "active_work": [], "prioritized_work": [], "due_promises": [], "neglected_connections": [], "suggested_activities": [], "recommended_follow_ups": [], "active_project_count": 0, "latest_report": None, "events_today_count": 0},
+                "home.html",
+                widgets_data=[],
+                reliability_data=[],
+                universal_timeline=[],
                 PermissionManager=mock.Mock(can_view_app=lambda *_: False),
                 active_app_names=set(),
                 current_user={"id": 1, "username": "tester", "display_name": "Tester", "is_admin": False, "onboarding_completed": False},
                 Role=mock.Mock(),
             )
 
-        self.assertIn("Capture, Structure, Commit, Grow, Reflect, Act", rendered)
+        self.assertIn("Rasbhari Apps Dashboard", rendered)
         self.assertNotIn("How Rasbhari Works", rendered)
-        self.assertIn("Meet Rasbhari", rendered)
+        self.assertIn("Operations", rendered)
 
     def test_app_instructions_render_helper_sections(self):
         app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
@@ -407,13 +406,13 @@ class MentalModelContextTests(unittest.TestCase):
                 },
             )
 
-        self.assertIn("What This App Is For", rendered)
-        self.assertIn("How to get more from it", rendered)
-        self.assertIn("Works especially well with", rendered)
+        self.assertIn("How to use it", rendered)
+        self.assertIn("Make setup count", rendered)
+        self.assertIn("Pairs with", rendered)
 
 
-class TodayRouteTests(unittest.TestCase):
-    def test_home_uses_today_template_and_dashboard_route_still_exists(self):
+class DashboardRouteTests(unittest.TestCase):
+    def test_home_uses_dashboard_template_and_dashboard_route_still_exists(self):
         fake_auth_provider = FakeAuthProvider()
         server = Server(
             "TestServer",
@@ -436,8 +435,7 @@ class TodayRouteTests(unittest.TestCase):
         dashboard_response = client.get("/dashboard")
 
         self.assertEqual(home_response.status_code, 200)
-        self.assertIn(b"Your Daily Operating Loop", home_response.data)
-        self.assertIn(b"What Rasbhari Is", home_response.data)
+        self.assertIn(b"Rasbhari Apps Dashboard", home_response.data)
         self.assertEqual(dashboard_response.status_code, 200)
         self.assertIn(b"Rasbhari Apps Dashboard", dashboard_response.data)
 
@@ -530,15 +528,12 @@ class TodayRouteTests(unittest.TestCase):
         admin_response = client.get("/admin")
         self.assertEqual(admin_response.status_code, 200)
         self.assertIn(b"Admin Control Plane", admin_response.data)
-        self.assertIn(b"Operate the ecosystem", admin_response.data)
+        self.assertIn(b"Admin Control Plane", admin_response.data)
         self.assertIn(b"Pi Health Snapshot", admin_response.data)
         self.assertIn(b"Server Availability", admin_response.data)
         self.assertIn(b"Queue Drift", admin_response.data)
-        self.assertIn(b"Replayable Processors", admin_response.data)
-        self.assertIn(b"Disabled Apps", admin_response.data)
-        self.assertIn(b"Degraded Capabilities", admin_response.data)
-        self.assertIn(b"Stuck Processors", admin_response.data)
-        self.assertIn(b"Pending Approvals", admin_response.data)
+        self.assertIn(b"Primary Control", admin_response.data)
+        self.assertIn(b"Code Update and Approvals", admin_response.data)
         self.assertIn(b"Code Update", admin_response.data)
         self.assertIn(b"Update To Latest", admin_response.data)
 
@@ -600,7 +595,7 @@ class TodayRouteTests(unittest.TestCase):
             user_guidance={
                 "app_purpose": "Use this app to structure demo records for the ecosystem.",
                 "setup_leverage": ["Enable the widget only if the data is worth surfacing."],
-                "pairs_with": ["Projects", "Today"],
+                "pairs_with": ["Projects", "Dashboard"],
                 "ecosystem_fit": {
                     "headline": "How this app fits Rasbhari",
                     "summary": "It supports the structure layer and feeds later views.",
@@ -625,7 +620,7 @@ class TodayRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Registered Applications", response.data)
         self.assertIn(b"Ownership", response.data)
-        self.assertIn(b"Worker Dependency", response.data)
+        self.assertIn(b"Process-Backed", response.data)
         self.assertIn(b"Works With", response.data)
         self.assertIn(b"Demoregistry", response.data)
 

@@ -34,8 +34,8 @@ def build_rasbhari_mental_model() -> dict:
             },
             {
                 "name": "Act",
-                "description": "Today and notifications focus attention on the next small move.",
-                "apps": ["Today", "Reports", "Projects", "Promises"],
+                "description": "Dashboard, reports, and notifications keep the next useful move visible.",
+                "apps": ["Dashboard", "Reports", "Projects", "Promises"],
             },
         ],
         "setup_path": [
@@ -43,7 +43,7 @@ def build_rasbhari_mental_model() -> dict:
             "Create one project and one ticket.",
             "Add one promise.",
             "Add one skill.",
-            "Open Today and check the loop.",
+            "Open Dashboard and check the loop.",
         ],
     }
 
@@ -53,14 +53,14 @@ def build_rasbhari_tutorial() -> dict:
         {
             "id": "daily_clarity",
             "title": "Stay on top of daily life",
-            "summary": "Start with capture, Today, commitments, and review.",
+            "summary": "Start with capture, dashboard, commitments, and review.",
             "why_it_matters": "Best if you want clarity first.",
             "recommended_mode": "everyday",
         },
         {
             "id": "work_and_routines",
             "title": "Organize projects and routines",
-            "summary": "Add projects, activities, and skills after the daily loop feels stable.",
+            "summary": "Add projects, activities, and skills after the core loop feels stable.",
             "why_it_matters": "Best if you want execution next.",
             "recommended_mode": "structured",
         },
@@ -75,12 +75,12 @@ def build_rasbhari_tutorial() -> dict:
 
     steps = [
         {
-            "id": "today",
-            "title": "Today is the front door",
-            "target_label": "Today",
+            "id": "dashboard",
+            "title": "Dashboard is the front door",
+            "target_label": "Dashboard",
             "target_path": "/",
             "modes": ["everyday", "structured", "system"],
-            "summary": "Today shows the next useful thing.",
+            "summary": "Dashboard keeps the current workspace visible.",
             "why_it_matters": "Start here when the system feels scattered.",
             "checklist": [
                 "Read the summary first.",
@@ -162,7 +162,7 @@ def build_rasbhari_tutorial() -> dict:
             "why_it_matters": "They only work if labels match real behavior.",
             "checklist": [
                 "Use a real event type or tag.",
-                "Check drift from Today or Reports.",
+                "Check drift from Dashboard or Reports.",
             ],
         },
         {
@@ -199,7 +199,7 @@ def build_rasbhari_tutorial() -> dict:
         "goals": goals,
         "goal_summary": "Pick the closest fit. Rasbhari starts you in the right mode.",
         "steps": steps,
-        "completion_copy": "Create one real thing, then return to Today.",
+        "completion_copy": "Create one real thing, then return to Dashboard.",
     }
 
 
@@ -266,14 +266,14 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Start with MP4 H264 AAC files for the best TV-browser playback chance.",
                 "Keep the library small and curated so the Raspberry Pi stays responsive.",
             ],
-            "pairs_with": ["Events", "Reports", "Today"],
+            "pairs_with": ["Events", "Reports", "Dashboard"],
             "glossary": [
                 {"term": "Ready Movie", "meaning": "A local movie file that rTV can serve to the TV player."},
                 {"term": "Candidate", "meaning": "A movie record saved for later download or preparation."},
             ],
         },
         "Activities": {
-            "overview": "Activities are reusable actions you want to trigger from the dashboard. When you trigger one, Rasbhari turns it into an event so promises, skills, Today, and reports can react.",
+            "overview": "Activities are reusable actions you want to trigger from the dashboard. When you trigger one, Rasbhari turns it into an event so promises, skills and reports can react.",
             "app_purpose": "Use Activities when you want repeated real-world actions to become consistent event-producing shortcuts instead of manual form work, and when you want those triggers to stay visibly connected to the rest of the ecosystem.",
             "how_to_use": [
                 "Create an activity once, then trigger it whenever that action happens in real life.",
@@ -286,7 +286,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Choose stable event types and tags so the rest of Rasbhari can react consistently.",
                 "Prefer tags that already exist in promises or skills so each trigger visibly contributes elsewhere.",
             ],
-            "pairs_with": ["Events", "Skills", "Promises", "Today"],
+            "pairs_with": ["Events", "Skills", "Promises", "Dashboard"],
             "glossary": [
                 {"term": "Activity",
                  "meaning": "A reusable action template such as Clean Kitchen, Study Session, or Water Plants."},
@@ -347,7 +347,7 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "Connections": {
             "overview": "Connections represent people or relationships you want Rasbhari to help you maintain with intention.",
-            "app_purpose": "Use Connections when you want relationships to be visible enough for Today and Reports to surface neglect, cadence drift, and social balance.",
+            "app_purpose": "Use Connections when you want relationships to be visible enough for Dashboard and Reports to surface neglect, cadence drift, and social balance.",
             "how_to_use": [
                 "Create one record per person or relationship that matters enough to track.",
                 "Set cadence days to the maximum gap you want between meaningful touchpoints.",
@@ -359,7 +359,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Start with only the people you actually want Rasbhari to remind you about.",
                 "Set cadence days honestly so overdue signals are meaningful instead of noisy.",
             ],
-            "pairs_with": ["Today", "Reports", "Events"],
+            "pairs_with": ["Dashboard", "Reports", "Events"],
             "glossary": [
                 {"term": "Cadence",
                  "meaning": "How many days can pass before the relationship is considered overdue for contact."},
@@ -386,7 +386,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Standardize event types early so downstream processors stay reliable.",
                 "Use tags for cross-app linkage rather than inventing too many similar event types.",
             ],
-            "pairs_with": ["Activities", "Promises", "Skills", "Reports", "Today"],
+            "pairs_with": ["Activities", "Promises", "Skills", "Reports", "Dashboard"],
             "glossary": [
                 {"term": "Event", "meaning": "A record of something that happened at a point in time."},
                 {"term": "Event Type", "meaning": "The main event identifier, usually written like domain:action."},
@@ -413,10 +413,10 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Choose a ticket prefix before the board gets busy so references stay clean from the start.",
                 "Use the board for execution and the timeline for narrative progress.",
             ],
-            "pairs_with": ["KanbanTickets", "Reports", "Skills", "Promises", "Today"],
+            "pairs_with": ["KanbanTickets", "Reports", "Skills", "Promises", "Dashboard"],
             "glossary": [
                 {"term": "Project Type", "meaning": "A simple category such as Code, DIY, or Other."},
-                {"term": "Focus Tags", "meaning": "Shared tags Rasbhari adds to project work events so tickets, promises, skills, and Today can line up around the same work."},
+                {"term": "Focus Tags", "meaning": "Shared tags Rasbhari adds to project work events so tickets, promises, skills, and Dashboard can line up around the same work."},
                 {"term": "Ticket Prefix", "meaning": "The short code Rasbhari uses to issue stable ticket references like RSB-14 for this project."},
                 {"term": "State",
                  "meaning": "The current lifecycle status of the project, such as Active or Completed."},
@@ -426,7 +426,7 @@ def build_app_user_guidance(app_name: str) -> dict:
         },
         "KanbanTickets": {
             "overview": "Kanban tickets are minimal project work items. Each ticket belongs to one project and moves through a fixed board from backlog to shipped.",
-            "app_purpose": "Use KanbanTickets to turn project intent into concrete execution that Rasbhari can reflect through events, Today, skills, and reports.",
+            "app_purpose": "Use KanbanTickets to turn project intent into concrete execution that Rasbhari can reflect through events, Dashboard, skills, and reports.",
             "how_to_use": [
                 "Keep tickets short and concrete so the board stays fast to scan.",
                 "Use the board for day-to-day execution and the project timeline for narrative updates.",
@@ -439,7 +439,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Only keep the next layer of concrete work on the board so it stays fast to scan.",
                 "Make sure the parent project has useful focus tags so ticket work contributes elsewhere.",
             ],
-            "pairs_with": ["Projects", "Today", "Reports", "Skills", "Promises"],
+            "pairs_with": ["Projects", "Dashboard", "Reports", "Skills", "Promises"],
             "glossary": [
                 {"term": "Backlog", "meaning": "Work that exists but is not yet selected."},
                 {"term": "Prioritized", "meaning": "Work chosen as likely next."},
@@ -462,7 +462,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Attach promises to event types or tags you already use.",
                 "Prefer a few meaningful promises over many weak ones.",
             ],
-            "pairs_with": ["Events", "Today", "Reports", "Projects"],
+            "pairs_with": ["Events", "Dashboard", "Reports", "Projects"],
             "glossary": [
                 {"term": "Frequency",
                  "meaning": "How often the promise resets, such as daily, weekly, monthly, or once."},
@@ -487,7 +487,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Choose stable tag keys that already appear in activities, projects, or events.",
                 "Keep aliases limited to real naming variations so XP does not become noisy.",
             ],
-            "pairs_with": ["Events", "Projects", "KanbanTickets", "Today", "Reports"],
+            "pairs_with": ["Events", "Projects", "KanbanTickets", "Dashboard", "Reports"],
             "glossary": [
                 {"term": "Skill",
                  "meaning": "A capability you want to grow over time, such as Python, Cooking, or Counter Strike."},
@@ -517,7 +517,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Reports become useful after the system has real data.",
                 "Use reports to adjust structure, not just admire outputs.",
             ],
-            "pairs_with": ["Today", "Projects", "Promises", "Skills", "Connections", "Events"],
+            "pairs_with": ["Dashboard", "Projects", "Promises", "Skills", "Connections", "Events"],
             "glossary": [
                 {"term": "Integrity Score",
                  "meaning": "A 0 to 100 score estimating how closely your behavior matched your visible commitments and growth signals."},
@@ -545,7 +545,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Capture thoughts quickly, then later convert the important ones into projects, events, or reports.",
                 "Use thoughts for context and reflection, not as a substitute for all structured data.",
             ],
-            "pairs_with": ["Reports", "Projects", "Today"],
+            "pairs_with": ["Reports", "Projects", "Dashboard"],
             "glossary": [
                 {"term": "Thought", "meaning": "A short private post captured with minimal structure."},
             ],
@@ -562,7 +562,7 @@ def build_app_user_guidance(app_name: str) -> dict:
                 "Keep admin accounts limited to trusted operators.",
                 "Treat onboarding and profile settings as part of user adoption, not just account management.",
             ],
-            "pairs_with": ["Today", "Processes", "Profile"],
+            "pairs_with": ["Dashboard", "Processes", "Profile"],
             "glossary": [
                 {"term": "Admin",
                  "meaning": "An operator who can access system panels like Processes, Devices, and dependency health."},
@@ -587,7 +587,7 @@ def build_app_user_guidance(app_name: str) -> dict:
             "rTV": "rTV turns ready owned movies into a TV-first watch surface and records watching as media events.",
             "Activities": "Activities are the easiest way to capture repeated real-world actions so the rest of Rasbhari can react to them.",
             "Blogs": "Blogs add longer narrative context to project work and reflection.",
-            "Connections": "Connections turn relationship maintenance into something visible enough for Today and Reports to reason about.",
+            "Connections": "Connections turn relationship maintenance into something visible enough for Dashboard and Reports to reason about.",
             "Devices": "Devices define the physical endpoints future automation and imports can use.",
             "Events": "Events are the shared language everything else listens to or emits.",
             "Projects": "Projects structure larger bodies of work so execution, progress, promises, and skills can line up.",
