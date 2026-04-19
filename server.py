@@ -8,6 +8,7 @@ from flask import redirect, abort, send_file, jsonify, request
 
 from apps.devices import devices_app
 from apps.events import events_app
+from apps.home_assistant import home_assistant_blueprint
 from apps.thoughts import thoughts_app
 from apps.projects import project_app
 from apps.promises import promises_app
@@ -101,6 +102,7 @@ class RasbhariServer(Server):
         self.register_app(rtv_app)
         self.register_app(users_app)
         self.app.register_blueprint(agent_runs_blueprint)
+        self.app.register_blueprint(home_assistant_blueprint)
 
 
     def run_server(self):

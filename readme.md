@@ -24,6 +24,7 @@ Docs:
 - [Rasbhari Overview](docs/rasbhari.md)
 - [Experience Modes](docs/experience-modes.md)
 - [Automation](docs/automation.md)
+- [Home Assistant Integration](docs/home-assistant.md)
 - [AI Command Layer](docs/AI.md)
 - [macOS Local Signals and Agent Worker](docs/mac-agent.md)
 - [Setup Guide](docs/setup.md)
