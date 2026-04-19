@@ -194,29 +194,6 @@
                 </details>
             </div>
 
-            {% if not user.onboarding_completed %}
-            <div class="shell-card px-6 py-6">
-                <details class="disclosure">
-                    <summary class="disclosure-summary">
-                        <div class="disclosure-summary-copy">
-                            <div class="disclosure-summary-title">Interactive Walkthrough</div>
-                            <div class="disclosure-summary-meta">Rerun the guided refresher on how the Rasbhari ecosystem fits together.</div>
-                        </div>
-                        <span class="disclosure-summary-chevron">⌄</span>
-                    </summary>
-                    <div class="disclosure-body">
-                        <div class="rounded-[calc(var(--card-radius)-8px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--text-soft)]">
-                            Status: {{ 'Completed' if user.onboarding_completed else 'Not completed yet' }}
-                        </div>
-
-                        <form action="{{ url_for('Users.update_onboarding') }}" method="POST" class="mt-4">
-                            <input type="hidden" name="completed" value="false">
-                            <button type="submit" class="btn-secondary w-full px-5 py-3">Restart Tutorial</button>
-                        </form>
-                    </div>
-                </details>
-            </div>
-            {% endif %}
         </div>
 
     </div>

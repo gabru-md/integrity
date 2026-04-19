@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import request, redirect, url_for, flash, session, jsonify
+from flask import request, redirect, url_for, flash, session
 from apps.user_docs import build_app_user_guidance
 from gabru.auth import PermissionManager
 from gabru.flask.app import App
@@ -149,46 +149,4 @@ def regenerate_api_key():
     )
 
     flash("API key regenerated successfully.", "success")
-    return redirect(url_for("Users.profile"))
-
-
-@users_app.blueprint.route("/profile/onboarding", methods=["POST"])
-def update_onboarding():
-    user_id = PermissionManager.get_current_user_id()
-    if not user_id:
-        if request.is_json:
-            return jsonify({"error": "Login required"}), 401
-        return redirect(url_for("login"))
-
-    user = users_app.service.get_by_id(user_id)
-    if not user:
-        if request.is_json:
-            return jsonify({"error": "User not found"}), 404
-        flash("User not found.", "error")
-        return redirect(url_for("home"))
-
-    data = request.get_json(silent=True) if request.is_json else request.form
-    completed_value = data.get("completed")
-    experience_mode = data.get("experience_mode")
-    if isinstance(completed_value, str):
-        completed = completed_value.strip().lower() in {"1", "true", "yes", "on"}
-    else:
-        completed = bool(completed_value)
-
-    user.onboarding_completed = completed
-    if experience_mode is not None:
-        user.experience_mode = users_app.service.normalize_experience_mode(experience_mode)
-    success = users_app.service.update(user)
-    if success:
-        session["onboarding_completed"] = completed
-        if experience_mode is not None:
-            session["experience_mode"] = user.experience_mode
-        if request.is_json:
-            return jsonify({"ok": True, "onboarding_completed": completed, "experience_mode": user.experience_mode}), 200
-        flash("Tutorial state updated.", "success")
-    else:
-        if request.is_json:
-            return jsonify({"error": "Failed to update tutorial state"}), 500
-        flash("Failed to update tutorial state.", "error")
-
     return redirect(url_for("Users.profile"))

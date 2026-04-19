@@ -385,32 +385,6 @@ class MentalModelContextTests(unittest.TestCase):
         self.assertNotIn("How Rasbhari Works", rendered)
         self.assertIn("Operations", rendered)
 
-    def test_app_instructions_render_helper_sections(self):
-        app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
-        app.secret_key = "test-secret"
-
-        with app.test_request_context("/events/home"):
-            rendered = render_flask_template(
-                "_app_instructions.html",
-                app_name="Events",
-                user_guidance={
-                    "overview": "Overview",
-                    "app_purpose": "Purpose copy",
-                    "how_to_use": ["Use it well"],
-                    "setup_leverage": ["Make setup count"],
-                    "pairs_with": ["Promises", "Skills"],
-                    "ecosystem_fit": {"headline": "How this app fits Rasbhari", "summary": "Connected", "stages": ["Capture"]},
-                    "glossary": [],
-                    "fields": [],
-                    "examples": [],
-                },
-            )
-
-        self.assertIn("How to use it", rendered)
-        self.assertIn("Make setup count", rendered)
-        self.assertIn("Pairs with", rendered)
-
-
 class DashboardRouteTests(unittest.TestCase):
     def test_home_uses_dashboard_template_and_dashboard_route_still_exists(self):
         fake_auth_provider = FakeAuthProvider()

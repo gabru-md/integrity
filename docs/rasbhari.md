@@ -29,7 +29,6 @@ The product should stay deep by capability but shallow by default.
 - Events are the shared language across apps and processes.
 - Structured payloads let apps and automation attach machine-readable context.
 - The browser extension is the first Capture Automation client.
-- In-product docs and instructions should stay short and user-facing.
 
 ## References
 

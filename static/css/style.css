@@ -367,47 +367,6 @@ body {
     min-width: 0;
 }
 
-.app-instructions-panel {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-}
-
-.app-instructions-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.28);
-}
-
-.app-instructions-sidebar {
-    position: absolute;
-    right: 0;
-    top: 0;
-    display: flex;
-    height: 100%;
-    width: min(100%, 25rem);
-    flex-direction: column;
-    border-left: 1px solid var(--border);
-    background: var(--surface);
-    box-shadow: var(--shadow-pop);
-}
-
-.instructions-hero {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 82%, transparent), transparent);
-}
-
-.instructions-body {
-    background: color-mix(in srgb, var(--surface-muted) 32%, transparent);
-}
-
-.instructions-card {
-    background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
-}
-
-body.instructions-open {
-    overflow: hidden;
-}
-
 @media (max-width: 767px) {
     .notification-panel {
         right: 0.75rem;
@@ -415,10 +374,6 @@ body.instructions-open {
         top: 4.75rem;
         width: auto;
         max-width: none;
-    }
-
-    .app-instructions-sidebar {
-        width: min(100%, 100vw);
     }
 }
 
@@ -1614,138 +1569,6 @@ input[readonly] {
     background: color-mix(in srgb, var(--surface) 96%, transparent);
     overflow: hidden;
     box-shadow: 0 14px 30px color-mix(in srgb, var(--shadow-color) 9%, transparent);
-}
-
-.tutorial-open {
-    overflow: hidden;
-}
-
-.onboarding-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 70;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 1.5rem;
-    pointer-events: none;
-}
-
-.onboarding-backdrop {
-    position: absolute;
-    inset: 0;
-    background:
-        linear-gradient(180deg, rgba(15, 23, 42, 0.12) 0%, rgba(15, 23, 42, 0.2) 100%);
-}
-
-.onboarding-panel {
-    position: relative;
-    width: min(880px, 100%);
-    max-height: min(84vh, 860px);
-    overflow: auto;
-    padding: 1.5rem;
-    display: grid;
-    gap: 1.25rem;
-    pointer-events: auto;
-    border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
-    background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
-    box-shadow: 0 32px 86px color-mix(in srgb, var(--shadow-color) 16%, transparent);
-}
-
-.onboarding-header,
-.onboarding-footer {
-    display: flex;
-    gap: 1rem;
-    align-items: start;
-    justify-content: space-between;
-}
-
-.onboarding-progress-wrap {
-    display: grid;
-    gap: 0.65rem;
-}
-
-.onboarding-peek-note {
-    margin-top: 0.85rem;
-    max-width: 38rem;
-    border-left: 3px solid color-mix(in srgb, var(--accent) 42%, transparent);
-    padding-left: 0.85rem;
-    font-size: 0.9rem;
-    line-height: 1.65;
-    color: var(--text-soft);
-}
-
-.onboarding-progress-bar {
-    height: 0.7rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--surface-muted) 92%, transparent);
-    overflow: hidden;
-}
-
-.onboarding-progress-fill {
-    height: 100%;
-    width: 0;
-    border-radius: inherit;
-    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 52%, white));
-    transition: width 180ms ease;
-}
-
-.onboarding-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
-    gap: 1.25rem;
-}
-
-.onboarding-step-shell {
-    border-radius: calc(var(--card-radius) - 8px);
-    border: 1px solid var(--border);
-    background: color-mix(in srgb, var(--surface-muted) 82%, transparent);
-    padding: 1.2rem;
-}
-
-.onboarding-why {
-    margin-top: 1rem;
-}
-
-.onboarding-page-peek {
-    border-radius: calc(var(--card-radius) - 10px);
-    border: 1px dashed color-mix(in srgb, var(--accent) 20%, var(--border));
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--surface-muted) 82%, transparent) 0%, color-mix(in srgb, var(--surface) 70%, transparent) 100%);
-    padding: 1rem 1.15rem;
-}
-
-.onboarding-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-@media (max-width: 880px) {
-    .onboarding-overlay {
-        align-items: flex-end;
-        justify-content: stretch;
-        padding: 0.85rem;
-    }
-
-    .onboarding-body {
-        grid-template-columns: 1fr;
-    }
-
-    .onboarding-header,
-    .onboarding-footer {
-        flex-direction: column;
-    }
-
-    .onboarding-actions {
-        width: 100%;
-        justify-content: stretch;
-    }
-
-    .onboarding-actions > * {
-        flex: 1 1 0;
-    }
 }
 
 .assistant-card-staged {

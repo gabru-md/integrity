@@ -4,9 +4,6 @@ from functools import lru_cache
 
 from flask import render_template
 
-from apps.user_docs import build_rasbhari_mental_model, build_rasbhari_tutorial
-
-
 @lru_cache(maxsize=1)
 def get_build_info():
     version = (
@@ -43,7 +40,5 @@ def render_flask_template(template_name, **context):
         template_name,
         open_webui_url=open_webui_url,
         build_info=get_build_info(),
-        rasbhari_mental_model=build_rasbhari_mental_model(),
-        rasbhari_tutorial=build_rasbhari_tutorial(),
         **context,
     )

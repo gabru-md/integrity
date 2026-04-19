@@ -142,13 +142,12 @@ Use this when:
 - a product area feels missing
 - a user expects a feature that is currently disabled
 
-### User And Onboarding State
+### User State
 
 From `/admin` and `/users/home`, you can:
 
 - approve users
-- review onboarding readiness
-- verify that people are being sent to the right surfaces (`Dashboard`, tutorial, checklist)
+- verify that people are being sent to the right surfaces
 
 ### Dependency Visibility
 

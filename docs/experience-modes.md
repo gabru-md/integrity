@@ -85,8 +85,6 @@ This tier includes the control-plane weight that should not be pushed into the d
 - `Promises`
 - `Reports`
 - lightweight `Profile`
-- first-run tutorial
-
 These are the surfaces that should define Rasbhari for a new or regular user.
 
 ### Structured
@@ -129,7 +127,7 @@ The tier model should drive future product work in four places:
 
 1. navigation visibility
 2. page density and disclosure defaults
-3. onboarding and tutorial framing
+3. default page hierarchy
 4. recommendation intensity
 
 ### Navigation

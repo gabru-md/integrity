@@ -14,8 +14,6 @@ apps/*.py
 
 Most apps are built directly with `gabru.flask.app.App`. A few extend it when they need a custom home page or extra routes. The app layer is where Rasbhari chooses concrete implementations; the framework itself only knows about contracts.
 
-Each app should now also expose user-facing instructions in the web UI via `user_guidance`. This is separate from developer documentation and should explain what the app is for, what important terms mean, and how a user should fill in the main fields.
-
 ## Shared AI Command Layer
 
 Rasbhari also exposes a shell-level assistant command surface through the floating `Rasbhari AI` panel and the `/assistant/command` route.
@@ -210,18 +208,6 @@ Rasbhari also exposes a shell-level assistant command surface through the floati
   - protected routes also accept `X-API-Key` or `Authorization: ApiKey <key>` for non-session access
   - **Signup & Approval**: Users can self-signup at `/signup`. New accounts are disabled (`is_approved=False`) until an admin approves them in the Users panel. Accounts created directly by admins are auto-approved.
 
-## User-Facing Instructions
-
-`gabru.flask.app.App` now passes `user_guidance` into the app home template. The shared instructions panel can render:
-
-- `overview`
-- `how_to_use`
-- `glossary`
-- `examples`
-- `fields`
-
-Field descriptions are also derived automatically from Pydantic `Field(..., description="...")` metadata, so app authors should keep those descriptions user-friendly.
-
 ## Widget Types In Use
 
 The current dashboard uses these widget types:
@@ -266,7 +252,6 @@ When adding a new app:
 3. If the feature needs app-wide framework composition, wire it through `runtime/providers.py`.
 4. Create the app in `apps/`.
 5. Register it in [server.py](server.py).
-6. Add or update `user_guidance` so the app home page explains the app to end users.
-7. Add user-friendly `description=` text to important Pydantic fields.
-8. Update this file and the root [readme.md](readme.md).
-9. Update [.env.example](.env.example) if the app adds environment requirements.
+6. Add user-friendly `description=` text to important Pydantic fields.
+7. Update this file and the root [readme.md](readme.md).
+8. Update [.env.example](.env.example) if the app adds environment requirements.
