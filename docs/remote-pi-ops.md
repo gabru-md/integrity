@@ -144,7 +144,7 @@ Use this when:
 
 ### User And Onboarding State
 
-From `/admin`, `/users/home`, and the admin guide, you can:
+From `/admin` and `/users/home`, you can:
 
 - approve users
 - review onboarding readiness

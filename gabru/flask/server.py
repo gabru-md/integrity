@@ -16,7 +16,6 @@ from gabru.process import ProcessManager
 from gabru.qprocessor.qprocessor import QueueProcessor
 from gabru.qprocessor.qservice import QueueService
 from gabru.flask.util import render_flask_template
-from apps.user_docs import build_rasbhari_admin_guide
 
 from dotenv import load_dotenv
 
@@ -259,11 +258,6 @@ class Server:
         @system_admin_required
         def heimdall():
             return render_flask_template('heimdall.html')
-
-        @self.app.route('/admin/guide')
-        @system_admin_required
-        def admin_guide():
-            return render_flask_template('admin_guide.html', admin_guide=build_rasbhari_admin_guide())
 
         @self.app.route('/admin')
         @system_admin_required
@@ -890,8 +884,8 @@ class Server:
                         "Inside Rasbhari: apps, widgets, processes, queue recovery, approvals, and dependency checks",
                         "Outside Rasbhari: database repair, container/service restarts, backups, and filesystem work",
                     ],
-                    "href": "/admin/guide",
-                    "action_label": "Open Admin Guide",
+                    "href": "/admin",
+                    "action_label": "Open Admin",
                 },
             ],
             "attention_items": operator_issues,

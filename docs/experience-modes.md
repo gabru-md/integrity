@@ -117,7 +117,7 @@ These are the surfaces that support workplace capture and writing while keeping 
 - `Admin`
 - `Processes`
 - `Apps`
-- operator guide surfaces
+- operator surfaces
 - advanced recommendation behavior
 - deployment, backup, and update visibility
 

@@ -118,14 +118,13 @@
                     </details>
 
                     {% if current_user and current_user.is_admin and is_system_mode %}
-                    <details class="sidebar-group" {% if request.path == '/admin' or request.path == '/apps' or request.path == '/processes' or request.path == '/heimdall' or request.path == '/admin/guide' or '/users/home' in request.path or '/devices' in request.path %}open{% endif %}>
+                    <details class="sidebar-group" {% if request.path == '/admin' or request.path == '/apps' or request.path == '/processes' or request.path == '/heimdall' or '/users/home' in request.path or '/devices' in request.path %}open{% endif %}>
                         <summary class="sidebar-group-summary">
                             <span>Admin</span>
                             <span class="sidebar-group-chevron">⌄</span>
                         </summary>
                         <ul class="space-y-1.5 pt-2">
                             <li><a href="/admin" class="nav-link {% if request.path == '/admin' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◈</span><span>Admin Overview</span></a></li>
-                            <li><a href="/admin/guide" class="nav-link {% if request.path == '/admin/guide' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Admin Guide</span></a></li>
                             <li><a href="/apps" class="nav-link {% if request.path == '/apps' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌘</span><span>App Registry</span></a></li>
                             <li><a href="/processes" class="nav-link {% if request.path == '/processes' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◫</span><span>Processes</span></a></li>
                             {% if PermissionManager.can_view_app('users') and 'users' in active_app_names %}<li><a href="/users/home" class="nav-link {% if '/users/home' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◍</span><span>Users</span></a></li>{% endif %}

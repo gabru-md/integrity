@@ -52,7 +52,6 @@ DEFAULT_PATHS = [
     "/rtv/home",
     "/automation",
     "/admin",
-    "/admin/guide",
     "/apps",
     "/processes",
     "/users/profile",

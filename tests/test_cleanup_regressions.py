@@ -494,45 +494,6 @@ class TodayRouteTests(unittest.TestCase):
         self.assertIn(b"Color Direction", response.data)
         self.assertIn(b"Information Weight", response.data)
 
-    def test_admin_guide_requires_system_mode_admin_and_renders_for_system_admin(self):
-        fake_auth_provider = FakeAuthProvider()
-        server = Server(
-            "TestServer",
-            template_folder=os.path.join(BASE_DIR, "templates"),
-            static_folder=os.path.join(BASE_DIR, "static"),
-            auth_provider=fake_auth_provider,
-            app_status_store=FakeAppStatusStore(),
-            dashboard_provider=FakeDashboardProvider(),
-            admin_ops_provider=FakeAdminOpsProvider(),
-        )
-        client = server.app.test_client()
-
-        with client.session_transaction() as session:
-            session["user_id"] = 1
-            session["username"] = "tester"
-            session["display_name"] = "Tester"
-            session["is_admin"] = False
-            session["onboarding_completed"] = False
-            session["experience_mode"] = "everyday"
-
-        non_admin_response = client.get("/admin/guide")
-        self.assertEqual(non_admin_response.status_code, 403)
-
-        with client.session_transaction() as session:
-            session["is_admin"] = True
-            session["experience_mode"] = "structured"
-
-        structured_admin_response = client.get("/admin/guide")
-        self.assertEqual(structured_admin_response.status_code, 403)
-
-        with client.session_transaction() as session:
-            session["experience_mode"] = "system"
-
-        admin_response = client.get("/admin/guide")
-        self.assertEqual(admin_response.status_code, 200)
-        self.assertIn(b"Admin Guide", admin_response.data)
-        self.assertIn(b"Process Health", admin_response.data)
-
     def test_admin_overview_requires_system_mode_admin_and_renders_for_system_admin(self):
         fake_auth_provider = FakeAuthProvider()
         server = Server(
