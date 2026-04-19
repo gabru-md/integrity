@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link id="app-favicon" rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>{% block title %}Rasbhari{% endblock %}</title>
     <script>
@@ -405,6 +406,111 @@
         const tutorialExperienceMode = {{ experience_mode | tojson }};
         applyThemeMeta(localStorage.getItem('theme') || 'slate');
         syncPreferenceButtons();
+
+        const responsiveActionIcons = {
+            archive: 'fa-box-archive',
+            back: 'fa-arrow-left',
+            cancel: 'fa-xmark',
+            change: 'fa-pen-to-square',
+            close: 'fa-xmark',
+            collapse: 'fa-chevron-up',
+            delete: 'fa-trash',
+            details: 'fa-circle-info',
+            download: 'fa-download',
+            edit: 'fa-pen-to-square',
+            expand: 'fa-chevron-down',
+            inspect: 'fa-magnifying-glass-chart',
+            more: 'fa-ellipsis',
+            open: 'fa-arrow-up-right-from-square',
+            play: 'fa-play',
+            refresh: 'fa-rotate',
+            resolve: 'fa-wand-magic-sparkles',
+            retry: 'fa-rotate-right',
+            save: 'fa-floppy-disk',
+            skip: 'fa-forward',
+            tools: 'fa-screwdriver-wrench',
+        };
+
+        function actionKeyForLabel(label) {
+            const normalized = (label || '').trim().replace(/\s+/g, ' ');
+            if (!normalized) return null;
+            const lower = normalized.toLowerCase();
+            if (lower.startsWith('delete')) return 'delete';
+            if (lower.startsWith('save') || lower.startsWith('update')) return 'save';
+            if (lower.startsWith('open')) return 'open';
+            if (lower.startsWith('edit')) return 'edit';
+            if (lower.startsWith('refresh')) return 'refresh';
+            if (lower.startsWith('inspect')) return 'inspect';
+            if (lower.startsWith('collapse')) return 'collapse';
+            if (lower.startsWith('expand')) return 'expand';
+            if (lower.startsWith('cancel')) return 'cancel';
+            if (lower.startsWith('close')) return 'close';
+            if (lower.startsWith('archive')) return 'archive';
+            if (lower.startsWith('download') || lower.startsWith('queue download')) return 'download';
+            if (lower.startsWith('play') || lower.startsWith('resume')) return 'play';
+            if (lower.startsWith('retry')) return 'retry';
+            if (lower.startsWith('resolve')) return 'resolve';
+            if (lower.startsWith('more')) return 'more';
+            if (lower.startsWith('details')) return 'details';
+            if (lower.startsWith('tools')) return 'tools';
+            if (lower.startsWith('back')) return 'back';
+            if (lower.startsWith('skip')) return 'skip';
+            if (lower.startsWith('change')) return 'change';
+            return null;
+        }
+
+        function responsiveActionTargets(root) {
+            const targets = [];
+            if (root.matches && root.matches('button, a, summary')) {
+                targets.push(root);
+            }
+            root.querySelectorAll('button, a, summary').forEach((element) => targets.push(element));
+            return targets;
+        }
+
+        function enhanceResponsiveActionButtons(root = document) {
+            responsiveActionTargets(root).forEach((element) => {
+                if (element.closest('.nav-link') || element.closest('.sidebar-group-summary')) return;
+                if (element.closest('.rasbhari-no-responsive-action-icons')) return;
+                const wasEnhanced = Boolean(element.dataset.actionIconEnhanced);
+                const existingChildren = Array.from(element.children);
+                if (!wasEnhanced && existingChildren.length > 0) return;
+
+                const label = element.textContent.trim().replace(/\s+/g, ' ');
+                const actionKey = actionKeyForLabel(label);
+                if (!actionKey || !responsiveActionIcons[actionKey]) return;
+                if (element.dataset.actionIconEnhanced === label) return;
+
+                element.dataset.actionIconEnhanced = label;
+                if (!element.getAttribute('aria-label')) {
+                    element.setAttribute('aria-label', label);
+                }
+                element.classList.add('responsive-action');
+                element.textContent = '';
+                const icon = document.createElement('i');
+                icon.className = `fa-solid ${responsiveActionIcons[actionKey]} responsive-action-icon`;
+                icon.setAttribute('aria-hidden', 'true');
+                const labelElement = document.createElement('span');
+                labelElement.className = 'responsive-action-label';
+                labelElement.textContent = label;
+                element.append(icon, labelElement);
+            });
+        }
+
+        enhanceResponsiveActionButtons();
+        const actionObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        enhanceResponsiveActionButtons(node);
+                    }
+                });
+                if (mutation.type === 'characterData' && mutation.target.parentElement) {
+                    enhanceResponsiveActionButtons(mutation.target.parentElement);
+                }
+            }
+        });
+        actionObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
 
         const chatButton = document.getElementById('chat-button');
         const closeChatButton = document.getElementById('close-chat-button');
