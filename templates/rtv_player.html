@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-light.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.generated.css') }}">
     <title>{{ item.title }} - rTV</title>
 </head>
 <body class="min-h-screen overflow-hidden bg-black text-white">
@@ -41,7 +40,7 @@
                     {% endif %}
                 </div>
             </div>
-            <a href="/tv" data-player-focus class="shrink-0 rounded-full bg-white/10 px-6 py-4 text-sm font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Back</a>
+            <a href="/tv" data-player-focus class="shrink-0 rounded-full border border-white/10 bg-white/10 px-6 py-4 text-sm font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Back</a>
         </div>
 
         <div class="mb-5 h-2 overflow-hidden rounded-full bg-white/15">
@@ -49,11 +48,11 @@
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-3">
-            <button type="button" data-player-focus data-action="rewind" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">-30s</button>
+            <button type="button" data-player-focus data-action="rewind" class="rounded-full border border-white/10 bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">-30s</button>
             <button type="button" data-player-focus data-action="toggle" class="rounded-full bg-white px-10 py-4 text-base font-black text-slate-950 outline-none transition hover:bg-amber-200 focus:bg-amber-200 focus:ring-4 focus:ring-amber-300/35">Pause</button>
-            <button type="button" data-player-focus data-action="forward" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">+30s</button>
-            <button type="button" data-player-focus data-action="hide-controls" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Hide Controls</button>
-            <button type="button" data-player-focus data-action="fullscreen" class="rounded-full bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Fullscreen</button>
+            <button type="button" data-player-focus data-action="forward" class="rounded-full border border-white/10 bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">+30s</button>
+            <button type="button" data-player-focus data-action="hide-controls" class="rounded-full border border-white/10 bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Hide Controls</button>
+            <button type="button" data-player-focus data-action="fullscreen" class="rounded-full border border-white/10 bg-white/10 px-7 py-4 text-base font-black text-white outline-none transition hover:bg-white/15 focus:bg-white focus:text-slate-950 focus:ring-4 focus:ring-amber-300/35">Fullscreen</button>
         </div>
 
         <div class="mt-4 text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-500">

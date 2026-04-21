@@ -3,21 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-light.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.generated.css') }}">
     <title>Authorize Device | Rasbhari</title>
 </head>
-<body class="flex h-screen items-center justify-center bg-gray-900 text-white">
-    <div class="w-full max-w-sm rounded-2xl bg-gray-800 p-8 text-center shadow-xl">
-        <h1 class="text-2xl font-bold">Authorize Device</h1>
-        <p class="mt-4 text-gray-400">Approve this sign-in request for your TV or secondary device.</p>
-        <div class="mt-4 rounded-xl bg-gray-900/70 px-4 py-3 text-left text-xs text-gray-300">
+<body class="shell-fade-in min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.18),transparent_24%),linear-gradient(180deg,#0f172a,#020617)] text-white">
+    <main class="flex min-h-screen items-center justify-center px-6 py-10">
+    <div class="w-full max-w-md rounded-[28px] border border-white/10 bg-white/[0.06] p-8 text-center shadow-2xl backdrop-blur">
+        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
+            <img src="{{ url_for('static', filename='favicon-light.png') }}" alt="Rasbhari logo" class="h-8 w-8 object-contain">
+        </div>
+        <div class="mt-5 text-[11px] font-extrabold uppercase tracking-[0.24em] text-amber-300">Device Pairing</div>
+        <h1 class="mt-3 text-3xl font-black tracking-tight">Authorize Device</h1>
+        <p class="mt-4 text-sm leading-6 text-slate-300">Approve this sign-in request for your TV or secondary device.</p>
+        <div class="mt-5 rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-left text-xs text-slate-300">
             <div>Requested path: <span class="font-bold text-white">{{ pairing.requested_path }}</span></div>
-            {% if pairing.requester_ip %}<div class="mt-1">IP: <span class="font-semibold text-white">{{ pairing.requester_ip }}</span></div>{% endif %}
-            {% if pairing.requester_user_agent %}<div class="mt-1 truncate">Agent: <span class="font-semibold text-white">{{ pairing.requester_user_agent }}</span></div>{% endif %}
+            {% if pairing.requester_ip %}<div class="mt-2">IP: <span class="font-semibold text-white">{{ pairing.requester_ip }}</span></div>{% endif %}
+            {% if pairing.requester_user_agent %}<div class="mt-2 truncate">Agent: <span class="font-semibold text-white">{{ pairing.requester_user_agent }}</span></div>{% endif %}
         </div>
         <form method="POST" action="/auth/device/authorize?token={{ token }}">
-            <button type="submit" class="mt-6 w-full rounded-full bg-amber-500 py-3 font-bold text-gray-900 transition hover:bg-amber-400">Authorize</button>
+            <button type="submit" class="mt-6 w-full rounded-full bg-amber-400 py-3.5 font-black text-slate-950 transition hover:bg-amber-300">Authorize</button>
         </form>
     </div>
+    </main>
 </body>
 </html>

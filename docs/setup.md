@@ -6,6 +6,7 @@ Rasbhari is a modular, event-driven Application OS built on the Gabru Framework.
 
 - **Python**: `3.14+`
 - **uv**: package and project manager (replaces pip/venv)
+- **Node.js**: `20+` for local Tailwind builds
 - **PostgreSQL**: `12+`
 - **OS**: Linux (Ubuntu/Debian/Raspberry Pi OS) or macOS.
 
@@ -42,6 +43,7 @@ docker compose down
 
 - **Python**: `3.14+`
 - **uv**: `1.0+` — install via `curl -LsSf https://astral.sh/uv/install.sh | sh` (macOS/Linux)
+- **Node.js**: `20+`
 - **PostgreSQL**: `12+`
 - **OS**: Linux (Ubuntu/Debian/Raspberry Pi OS) or macOS.
 
@@ -54,6 +56,12 @@ cd integrity
 
 # uv creates the venv and installs all dependencies from uv.lock
 uv sync
+
+# install frontend build tooling once
+npm install
+
+# build Tailwind utilities used by Jinja templates
+npm run build:css
 ```
 
 uv will automatically use the Python version specified in `.python-version` (`3.14`). To run any command inside the managed environment use `uv run`:
@@ -61,6 +69,14 @@ uv will automatically use the Python version specified in `.python-version` (`3.
 ```bash
 uv run python server.py
 ```
+
+During UI work, use:
+
+```bash
+npm run watch:css
+```
+
+This rebuilds `static/css/tailwind.generated.css` whenever template utility classes change.
 
 ### 3.3 Database Configuration
 

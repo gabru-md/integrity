@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link id="app-favicon" rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.generated.css') }}">
     <title>{% block title %}Rasbhari{% endblock %}</title>
     <script>
         (function() {
@@ -48,7 +47,7 @@
 <nav id="sidebar" class="fixed left-0 top-0 z-30 h-screen -translate-x-full overflow-y-auto p-2 transition-transform duration-300 md:translate-x-0 md:p-3">
     <div class="flex min-h-full flex-col justify-between">
         <div class="min-h-0">
-            <div class="border-b border-[var(--border)] px-4 pb-4 pt-4">
+            <div class="border-b border-[var(--border)] px-4 pb-4 pt-5">
                 <div class="flex items-center gap-4">
                     <div class="sidebar-brand-mark flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-[var(--accent-soft)] text-[var(--accent)] shadow-sm">
                         <img id="shell-logo" src="{{ url_for('static', filename='favicon.png') }}" alt="Rasbhari logo" class="h-8 w-8 object-contain">
@@ -139,9 +138,9 @@
 
         <div class="border-t border-[var(--border)] px-2 py-3 space-y-2">
             {% if build_info.commit %}
-            <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2.5">
-                <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Deployment</div>
-                <div class="mt-1 text-xs font-bold text-[var(--text-soft)]">{{ build_info.label }}</div>
+            <div class="sidebar-meta-card">
+                <div class="sidebar-meta-label">Deployment</div>
+                <div class="sidebar-meta-value">{{ build_info.label }}</div>
             </div>
             {% endif %}
             {% if current_user %}
@@ -183,7 +182,7 @@
     </div>
 </nav>
 
-<div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="pointer-events-none fixed inset-0 z-20 bg-slate-950/45 opacity-0 transition-opacity duration-300 md:hidden"></div>
+<div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="pointer-events-none fixed inset-0 z-20 bg-slate-950/40 opacity-0 transition-opacity duration-300 md:hidden"></div>
 
 <header class="sticky top-0 z-20 px-3 pt-3 md:hidden">
     <div class="shell-card app-shell flex items-center justify-between px-4 py-2.5">
@@ -208,13 +207,6 @@
 </header>
 
 {% if current_user %}
-<div class="notification-shell hidden md:block">
-    <button id="notification-button" type="button" class="btn-secondary notification-trigger relative px-4 py-3 text-sm" aria-label="Open notifications">
-        <span>Notices</span>
-        <span id="desktop-notification-count" class="notification-count {% if not notification_center or not notification_center['unread_count'] %}hidden{% endif %}">{{ notification_center['unread_count'] if notification_center and notification_center['unread_count'] and notification_center['unread_count'] < 10 else ('9+' if notification_center and notification_center['unread_count'] else '') }}</span>
-    </button>
-</div>
-
 <div id="notification-panel" class="notification-panel shell-card fixed left-3 right-3 top-[4.75rem] z-[70] hidden w-auto max-w-none md:left-auto md:right-5 md:top-[4.9rem] md:w-[min(25rem,calc(100vw-1.5rem))] md:max-w-[calc(100vw-1.5rem)]">
     <div class="flex items-start justify-between gap-4 border-b border-[var(--border)] px-4 py-4">
         <div>
@@ -256,7 +248,7 @@
 {% endif %}
 
 <main id="content-wrapper" class="min-h-screen px-2 pb-5 pt-2.5 md:px-4 md:pb-8">
-    <div class="app-shell">
+    <div class="app-shell shell-main px-3 py-3 md:px-4 md:py-4">
         {% block content %}{% endblock %}
     </div>
 
@@ -468,7 +460,7 @@
         let pendingCardId = null;
 
         function setNotificationCount(unreadCount) {
-            ['desktop-notification-count', 'mobile-notification-count'].forEach((id) => {
+            ['mobile-notification-count'].forEach((id) => {
                 const badge = document.getElementById(id);
                 if (!badge) return;
                 if (unreadCount > 0) {

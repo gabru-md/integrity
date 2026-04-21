@@ -6,6 +6,8 @@
 
 Rasbhari is an event-driven personal operating system for Raspberry Pi and lightweight Linux hosts.
 
+UI styling now compiles through one local Tailwind pipeline. After pulling frontend class changes, run `npm install` once and `npm run build:css` to refresh `static/css/tailwind.generated.css`.
+
 It is built around a calm operating loop: capture, structure, commit, grow, reflect, and act.
 
 Key surfaces:

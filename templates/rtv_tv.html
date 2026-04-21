@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-light.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.generated.css') }}">
     <title>rTV</title>
 </head>
 <body class="min-h-screen overflow-hidden bg-black text-white">
@@ -17,7 +16,7 @@
                 <div class="text-xs font-black uppercase tracking-[0.34em] text-amber-300">rTV</div>
             </div>
             <h1 class="mt-4 text-5xl font-black tracking-tight sm:text-7xl">Your movie shelf</h1>
-            <p class="mt-3 max-w-2xl text-base leading-7 text-slate-300">Ready movies only. Use the remote arrows, press enter to play, and press back to return.</p>
+            <p class="mt-3 max-w-2xl text-base leading-7 text-slate-300">Ready movies only. Use remote arrows, press enter to play, and press back to return.</p>
         </div>
         <div class="w-full lg:w-[28rem]">
             <label for="rtv-search" class="sr-only">Search movies</label>
@@ -33,7 +32,7 @@
 
     {% set hero_item = continue_items[0] if continue_items else (recent_items[0] if recent_items else none) %}
     {% if hero_item %}
-    <section class="mb-10 rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl lg:p-8">
+    <section class="mb-10 rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl backdrop-blur-sm lg:p-8">
         <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
             <div>
                 <div class="text-xs font-black uppercase tracking-[0.24em] text-slate-400">{% if hero_item.progress_seconds > 0 %}Continue Watching{% else %}Recently Added{% endif %}</div>
@@ -57,7 +56,7 @@
     </section>
     {% endif %}
 
-    <div id="rtv-empty-search" class="mb-8 hidden rounded-3xl border border-dashed border-white/15 p-8 text-center text-slate-400">
+    <div id="rtv-empty-search" class="mb-8 hidden rounded-3xl border border-dashed border-white/15 bg-white/[0.03] p-8 text-center text-slate-400">
         No ready movies match that search.
     </div>
 
@@ -89,7 +88,7 @@
             {% for item in ready_items %}
             {% include "rtv_tv_card.html" %}
             {% else %}
-            <div class="rounded-3xl border border-dashed border-white/15 p-10 text-center text-slate-400 sm:col-span-2 xl:col-span-4">
+            <div class="rounded-3xl border border-dashed border-white/15 bg-white/[0.03] p-10 text-center text-slate-400 sm:col-span-2 xl:col-span-4">
                 No ready movies yet. Add a candidate in rTV, then come back here after it is ready.
             </div>
             {% endfor %}

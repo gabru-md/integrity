@@ -54,7 +54,7 @@ The AI surface currently appears as a floating `Rasbhari AI` chat panel in the s
 Files:
 
 - [templates/index.html](templates/index.html)
-- [static/css/style.css](static/css/style.css)
+- [static/css/tailwind.css](static/css/tailwind.css)
 
 Current UI behavior:
 

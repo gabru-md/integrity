@@ -6,24 +6,24 @@
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
 {% set is_everyday_mode = experience_mode == 'everyday' %}
 <div class="surface-grid px-1 py-2">
-    <header class="compact-page-header">
+    <header class="shell-card hero-card px-6 py-6 lg:px-7 lg:py-7">
         <div>
             <div class="section-kicker text-[10px] font-extrabold uppercase">Remote Capture</div>
-            <h1 class="compact-page-header-title">Log it before it disappears</h1>
-            <p class="compact-page-header-copy">Fast capture for moments that cannot wait. Save a direct event or trigger a reusable shortcut.</p>
-        </div>
-        <div class="page-actions">
-            <a href="/" class="btn-secondary px-4 py-3 text-sm">Dashboard</a>
-            <a href="#quick-log" class="btn-primary px-4 py-3 text-sm">Quick Log</a>
-            {% if not is_everyday_mode %}
-            <a href="/activities/home" class="btn-secondary px-4 py-3 text-sm">Activities</a>
-            <a href="/events/home" class="btn-secondary px-4 py-3 text-sm">Events</a>
-            {% endif %}
+            <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Log it before it disappears</h1>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Fast capture for moments that cannot wait. Save a direct event or trigger a reusable shortcut.</p>
+            <div class="mt-5 flex flex-wrap gap-3">
+                <a href="/" class="btn-secondary px-4 py-3 text-sm">Dashboard</a>
+                <a href="#quick-log" class="btn-primary px-4 py-3 text-sm">Quick Log</a>
+                {% if not is_everyday_mode %}
+                <a href="/activities/home" class="btn-secondary px-4 py-3 text-sm">Activities</a>
+                <a href="/events/home" class="btn-ghost px-4 py-3 text-sm">Events</a>
+                {% endif %}
+            </div>
         </div>
     </header>
 
     <section class="capture-layout grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <article class="card-tier-primary p-6">
+        <article class="shell-card p-6 lg:p-7">
             <div id="quick-log" class="flex items-center justify-between gap-3">
                 <div>
                     <div class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">Direct Event</div>
@@ -35,7 +35,7 @@
             <form id="remote-capture-form" class="capture-form mt-5 grid gap-4">
                 <div>
                     <label for="capture-event-type" class="mb-2 block text-sm font-semibold text-[var(--text)]">Event type</label>
-                    <input id="capture-event-type" name="event_type" type="text" required class="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" placeholder="e.g. travel:arrival">
+                    <input id="capture-event-type" name="event_type" type="text" required class="w-full" placeholder="e.g. travel:arrival">
                     {% if capture_data.suggested_event_types %}
                     <div class="mt-3 flex flex-wrap gap-2 capture-chip-group">
                         {% for item in capture_data.suggested_event_types %}
@@ -47,12 +47,12 @@
 
                 <div>
                     <label for="capture-description" class="mb-2 block text-sm font-semibold text-[var(--text)]">Description</label>
-                    <textarea id="capture-description" name="description" rows="3" class="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" placeholder="Short summary of what happened"></textarea>
+                    <textarea id="capture-description" name="description" rows="3" class="w-full" placeholder="Short summary of what happened"></textarea>
                 </div>
 
                 <div>
                     <label for="capture-tags" class="mb-2 block text-sm font-semibold text-[var(--text)]">Tags</label>
-                    <input id="capture-tags" name="tags" type="text" class="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-sm outline-none focus:border-[var(--accent)]" placeholder="comma, separated, tags">
+                    <input id="capture-tags" name="tags" type="text" class="w-full" placeholder="comma, separated, tags">
                     {% if capture_data.suggested_tags %}
                     <div class="mt-3 flex flex-wrap gap-2 capture-chip-group">
                         {% for tag in capture_data.suggested_tags %}
@@ -76,7 +76,7 @@
             <div id="capture-feedback" class="mt-4 hidden rounded-2xl border px-4 py-3 text-sm"></div>
         </article>
 
-        <article class="operator-table-card p-6">
+        <article class="shell-card p-6 lg:p-7">
             <details class="disclosure" {% if not is_everyday_mode %}open{% endif %}>
                 <summary class="disclosure-summary">
                     <div class="disclosure-summary-copy">
@@ -94,11 +94,7 @@
                     </div>
                     <div class="grid gap-3">
                         {% for activity in capture_data.recent_activities or [] %}
-                        <button
-                            type="button"
-                            class="capture-activity-btn rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-left transition hover:-translate-y-0.5"
-                            data-activity-id="{{ activity.id }}"
-                        >
+                        <button type="button" class="capture-activity-btn rounded-[calc(var(--card-radius)-6px)] border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-left transition hover:-translate-y-0.5 hover:border-[color:var(--accent)] hover:bg-[var(--surface)]" data-activity-id="{{ activity.id }}">
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <div class="text-sm font-bold text-[var(--text)]">{{ activity.name }}</div>
