@@ -7,18 +7,14 @@
 <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 
 <div class="surface-grid px-1 py-2">
-    <header class="compact-page-header">
-        <div class="flex items-start gap-3">
-            <div>
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Writing</div>
-                <h1 class="compact-page-header-title">Personal Blog</h1>
-                <p class="compact-page-header-copy">Draft and publish longer markdown notes with a cleaner editorial shelf.</p>
-            </div>
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div class="space-y-2">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Writing</div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text)] md:text-4xl">Personal Blog</h1>
+            <p class="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Draft and publish longer markdown notes with a cleaner editorial shelf.</p>
         </div>
-        <button onclick="openBlogModal()" class="btn-primary px-5 py-3 text-sm">
-            Write Post
-        </button>
-    </header>
+        <button onclick="openBlogModal()" class="btn-primary px-5 py-3 text-sm">Write Post</button>
+    </div>
 
     <!-- Posts List -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">

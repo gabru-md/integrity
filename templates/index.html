@@ -38,174 +38,12 @@
 <body class="shell-fade-in" data-experience-mode="{{ experience_mode }}" data-page-density="{{ 'compact' if is_system_mode else ('comfortable' if is_structured_mode or is_work_mode else 'relaxed') }}">
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const shellLogo = document.getElementById('shell-logo');
-        if (shellLogo && window.__rasbhariLogoSrc) {
-            shellLogo.src = window.__rasbhariLogoSrc;
+        const dockLogo = document.getElementById('dock-logo');
+        if (dockLogo && window.__rasbhariLogoSrc) {
+            dockLogo.src = window.__rasbhariLogoSrc;
         }
     });
 </script>
-<nav id="sidebar" class="fixed left-0 top-0 z-30 h-screen -translate-x-full overflow-y-auto p-2 transition-transform duration-300 md:translate-x-0 md:p-3">
-    <div class="flex min-h-full flex-col justify-between">
-        <div class="min-h-0">
-            <div class="border-b border-[var(--border)] px-4 pb-4 pt-5">
-                <div class="flex items-center gap-4">
-                    <div class="sidebar-brand-mark flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-[var(--accent-soft)] text-[var(--accent)] shadow-sm">
-                        <img id="shell-logo" src="{{ url_for('static', filename='favicon.png') }}" alt="Rasbhari logo" class="h-8 w-8 object-contain">
-                    </div>
-                    <div class="min-w-0">
-                        <div class="truncate text-[1.35rem] font-extrabold text-[var(--text)]">Rasbhari</div>
-                        <div class="mt-1 text-xs font-medium text-[var(--text-soft)]" style="font-family: 'Manrope', sans-serif;">{{ 'Work-safe surface' if is_work_mode else 'Workspace, calm by default' }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="min-h-0 overflow-y-auto px-2 py-4">
-                <div class="space-y-3">
-                    <details class="sidebar-group" {% if request.path == '/' or request.path == '/capture' or request.path == '/dashboard' or '/promises' in request.path or '/reports' in request.path or '/thoughts' in request.path or '/rtv' in request.path or '/projects' in request.path or '/blogs' in request.path %}open{% endif %}>
-                        <summary class="sidebar-group-summary">
-                            <span>{{ 'Work Desk' if is_work_mode else 'Workspace' }}</span>
-                            <span class="sidebar-group-chevron">⌄</span>
-                        </summary>
-                        <ul class="space-y-1.5 pt-2">
-                            {% if is_work_mode %}
-                            <li><a href="/" class="nav-link {% if request.path == '/' or request.path == '/dashboard' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a></li>
-                            <li><a href="/capture" class="nav-link {% if request.path == '/capture' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✚</span><span>Capture</span></a></li>
-                            {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}<li><a href="/thoughts/home" class="nav-link {% if '/thoughts' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✎</span><span>Thoughts</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('projects') and 'projects' in active_app_names %}<li><a href="/projects/home" class="nav-link {% if '/projects' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▣</span><span>Projects</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('blogs') and 'blogs' in active_app_names %}<li><a href="/blogs/home" class="nav-link {% if '/blogs' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Blogs</span></a></li>{% endif %}
-                            {% else %}
-                            <li><a href="/" class="nav-link {% if request.path == '/' or request.path == '/dashboard' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a></li>
-                            <li><a href="/capture" class="nav-link {% if request.path == '/capture' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✚</span><span>Capture</span></a></li>
-                            {% if PermissionManager.can_view_app('promises') and 'promises' in active_app_names %}<li><a href="/promises/home" class="nav-link {% if '/promises' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◌</span><span>Promises</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}<li><a href="/thoughts/home" class="nav-link {% if '/thoughts' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✎</span><span>Thoughts</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('reports') and 'reports' in active_app_names %}<li><a href="/reports/home" class="nav-link {% if '/reports' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▤</span><span>Reports</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('rtv') and 'rtv' in active_app_names %}<li><a href="/rtv/home" class="nav-link {% if '/rtv' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▶</span><span>rTV</span></a></li>{% endif %}
-                            {% endif %}
-                        </ul>
-                    </details>
-
-                    {% if not is_everyday_mode and not is_work_mode %}
-                    <details class="sidebar-group" {% if '/projects' in request.path or '/activities' in request.path or '/skills' in request.path or '/connections' in request.path or '/events' in request.path or '/blogs' in request.path %}open{% endif %}>
-                        <summary class="sidebar-group-summary">
-                            <span>Structured</span>
-                            <span class="sidebar-group-chevron">⌄</span>
-                        </summary>
-                        <ul class="space-y-1.5 pt-2">
-                            {% if PermissionManager.can_view_app('projects') and 'projects' in active_app_names %}<li><a href="/projects/home" class="nav-link {% if '/projects' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">▣</span><span>Projects</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('activities') and 'activities' in active_app_names %}<li><a href="/activities/home" class="nav-link {% if '/activities' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">↻</span><span>Activities</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('skills') and 'skills' in active_app_names %}<li><a href="/skills/home" class="nav-link {% if '/skills' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">✦</span><span>Skills</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('connections') and 'connections' in active_app_names %}<li><a href="/connections/home" class="nav-link {% if '/connections' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">∞</span><span>Connections</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('events') and 'events' in active_app_names %}<li><a href="/events/home" class="nav-link {% if '/events' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⚑</span><span>Events</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('blogs') and 'blogs' in active_app_names %}<li><a href="/blogs/home" class="nav-link {% if '/blogs' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Blogs</span></a></li>{% endif %}
-                        </ul>
-                    </details>
-                    {% endif %}
-
-                    <details class="sidebar-group" {% if '/users/profile' in request.path or request.path == '/appearance' or request.path == '/automation' or request.path == '/docs' or '/docs/' in request.path %}open{% endif %}>
-                        <summary class="sidebar-group-summary">
-                            <span>Settings</span>
-                            <span class="sidebar-group-chevron">⌄</span>
-                        </summary>
-                        <div class="space-y-2 pt-2">
-                            <a href="/users/profile" class="nav-link {% if '/users/profile' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⚙</span><span>Profile</span></a>
-                            <a href="/appearance" class="nav-link {% if request.path == '/appearance' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◫</span><span>Appearance</span></a>
-                            {% if not is_everyday_mode and not is_work_mode %}
-                            <a href="/automation" class="nav-link {% if request.path == '/automation' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">↻</span><span>Automation</span></a>
-                            {% endif %}
-                            <a href="/docs" class="nav-link {% if request.path == '/docs' or '/docs/' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">☰</span><span>Help</span></a>
-                        </div>
-                    </details>
-
-                    {% if current_user and current_user.is_admin and is_system_mode %}
-                    <details class="sidebar-group" {% if request.path == '/admin' or request.path == '/apps' or request.path == '/processes' or request.path == '/heimdall' or '/users/home' in request.path or '/devices' in request.path %}open{% endif %}>
-                        <summary class="sidebar-group-summary">
-                            <span>Admin</span>
-                            <span class="sidebar-group-chevron">⌄</span>
-                        </summary>
-                        <ul class="space-y-1.5 pt-2">
-                            <li><a href="/admin" class="nav-link {% if request.path == '/admin' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◈</span><span>Admin Overview</span></a></li>
-                            <li><a href="/apps" class="nav-link {% if request.path == '/apps' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⌘</span><span>App Registry</span></a></li>
-                            <li><a href="/processes" class="nav-link {% if request.path == '/processes' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◫</span><span>Processes</span></a></li>
-                            {% if PermissionManager.can_view_app('users') and 'users' in active_app_names %}<li><a href="/users/home" class="nav-link {% if '/users/home' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◍</span><span>Users</span></a></li>{% endif %}
-                            {% if PermissionManager.can_view_app('devices') and 'devices' in active_app_names %}<li><a href="/devices/home" class="nav-link {% if '/devices' in request.path %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">⬡</span><span>Devices</span></a></li>{% endif %}
-                            <li><a href="/heimdall" class="nav-link {% if request.path == '/heimdall' %}nav-link-active{% endif %} flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold"><span class="nav-icon" aria-hidden="true">◉</span><span>Heimdall</span></a></li>
-                        </ul>
-                    </details>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="border-t border-[var(--border)] px-2 py-3 space-y-2">
-            {% if build_info.commit %}
-            <div class="sidebar-meta-card">
-                <div class="sidebar-meta-label">Deployment</div>
-                <div class="sidebar-meta-value">{{ build_info.label }}</div>
-            </div>
-            {% endif %}
-            {% if current_user %}
-            <details id="user-menu" class="shell-card overflow-hidden">
-                <summary class="flex cursor-pointer items-center gap-3 px-3 py-2.5">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-sm font-extrabold text-[var(--accent)]">
-                        {{ (current_user.display_name or current_user.username or 'R')[:1] | upper }}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="truncate text-sm font-bold text-[var(--text)]">{{ current_user.display_name or current_user.username }}</div>
-                        <div class="truncate text-xs text-[var(--text-soft)]">@{{ current_user.username }}</div>
-                        <div class="truncate text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-soft)]">{{ experience_mode }}</div>
-                    </div>
-                </summary>
-
-                <div class="border-t border-[var(--border)] px-3 py-2.5">
-                    <div class="grid gap-2">
-                        <form action="/users/profile/work-mode" method="POST">
-                            <button type="submit" class="{{ 'btn-primary' if not is_work_mode else 'btn-secondary' }} sidebar-footer-action w-full px-3 py-2.5 text-sm">
-                                <span class="nav-icon" aria-hidden="true">{{ '◂' if is_work_mode else '◈' }}</span>
-                                <span class="sidebar-footer-label">{{ 'Leave Work Mode' if is_work_mode else 'Work Mode' }}</span>
-                            </button>
-                        </form>
-                        <a href="/users/profile" class="btn-secondary sidebar-footer-action w-full px-3 py-2.5 text-sm">
-                            <span class="nav-icon" aria-hidden="true">⚙</span>
-                            <span class="sidebar-footer-label">Profile Settings</span>
-                        </a>
-                        <form action="/logout" method="POST">
-                            <button type="submit" class="btn-ghost sidebar-footer-action w-full px-3 py-2.5 text-sm">
-                                <span class="nav-icon" aria-hidden="true">⇢</span>
-                                <span class="sidebar-footer-label">Sign Out</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </details>
-            {% endif %}
-        </div>
-    </div>
-</nav>
-
-<div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="pointer-events-none fixed inset-0 z-20 bg-slate-950/40 opacity-0 transition-opacity duration-300 md:hidden"></div>
-
-<header class="sticky top-0 z-20 px-3 pt-3 md:hidden">
-    <div class="shell-card app-shell flex items-center justify-between px-4 py-2.5">
-        <button id="sidebar-toggle-button" onclick="toggleSidebar()" class="btn-ghost h-11 w-11 rounded-2xl p-0" aria-label="Toggle navigation">☰</button>
-        <div class="text-base font-extrabold text-[var(--text)]">Rasbhari</div>
-        <div class="flex items-center gap-2">
-            {% if current_user %}
-            <button id="mobile-notification-button" type="button" class="btn-ghost notification-trigger relative h-11 w-11 rounded-2xl p-0" aria-label="Open notifications">
-                <span aria-hidden="true">◔</span>
-                <span id="mobile-notification-count" class="notification-count {% if not notification_center or not notification_center['unread_count'] %}hidden{% endif %}">{{ notification_center['unread_count'] if notification_center and notification_center['unread_count'] and notification_center['unread_count'] < 10 else ('9+' if notification_center and notification_center['unread_count'] else '') }}</span>
-            </button>
-            <form action="/users/profile/work-mode" method="POST">
-                <button type="submit" class="{{ 'btn-primary' if is_work_mode else 'btn-secondary' }} h-11 rounded-2xl px-3 text-sm">
-                    {{ 'Work' if is_work_mode else 'Work Mode' }}
-                </button>
-            </form>
-            <a href="/capture" class="btn-primary h-11 rounded-2xl px-4 text-sm {% if request.path == '/capture' %}pointer-events-none opacity-80{% endif %}">Capture</a>
-            {% endif %}
-            <button type="button" onclick="document.getElementById('user-menu')?.setAttribute('open','open'); toggleSidebar(true);" class="btn-secondary h-11 rounded-2xl px-4 text-sm">Profile</button>
-        </div>
-    </div>
-</header>
-
 {% if current_user %}
 <div id="notification-panel" class="notification-panel shell-card fixed left-3 right-3 top-[4.75rem] z-[70] hidden w-auto max-w-none md:left-auto md:right-5 md:top-[4.9rem] md:w-[min(25rem,calc(100vw-1.5rem))] md:max-w-[calc(100vw-1.5rem)]">
     <div class="flex items-start justify-between gap-4 border-b border-[var(--border)] px-4 py-4">
@@ -247,7 +85,7 @@
 </div>
 {% endif %}
 
-<main id="content-wrapper" class="min-h-screen px-2 pb-5 pt-2.5 md:px-4 md:pb-8">
+<main id="content-wrapper" class="min-h-screen px-2 pb-28 pt-2.5 md:px-4 md:pb-32">
     <div class="app-shell shell-main px-3 py-3 md:px-4 md:py-4">
         {% block content %}{% endblock %}
     </div>
@@ -286,6 +124,78 @@
     </div>
 </main>
 
+{% if current_user %}
+<nav class="dock-shell" aria-label="Rasbhari navigation">
+    <div id="dock-stack" class="dock-stack">
+        <div id="dock-subdock" class="subdock hidden" aria-live="polite"></div>
+        <div class="dock">
+        <a href="/"
+           class="dock-item dock-brand {% if request.path == '/' or request.path == '/dashboard' %}dock-item-active{% endif %}"
+           aria-label="Rasbhari"
+           title="Rasbhari">
+            <img id="dock-logo" src="{{ url_for('static', filename='favicon.png') }}" alt="Rasbhari logo" class="h-7 w-7 object-contain">
+            <span class="dock-label">Rasbhari</span>
+        </a>
+        <button type="button"
+                class="dock-item dock-tier {% if request.path == '/' or request.path == '/dashboard' or request.path == '/capture' or '/thoughts' in request.path or '/promises' in request.path or '/reports' in request.path or '/rtv' in request.path %}dock-item-active{% endif %}"
+                data-dock-tier="workspace"
+                aria-label="Workspace"
+                title="Workspace">
+            <span class="dock-icon" aria-hidden="true">⌂</span>
+            <span class="dock-label">Workspace</span>
+        </button>
+        {% if not is_everyday_mode and not is_work_mode %}
+        <button type="button"
+                class="dock-item dock-tier {% if '/projects' in request.path or '/activities' in request.path or '/skills' in request.path or '/connections' in request.path or '/events' in request.path or '/blogs' in request.path %}dock-item-active{% endif %}"
+                data-dock-tier="structured"
+                aria-label="Structured"
+                title="Structured">
+            <span class="dock-icon" aria-hidden="true">▣</span>
+            <span class="dock-label">Structured</span>
+        </button>
+        {% endif %}
+        <div class="dock-divider" aria-hidden="true"></div>
+        <button type="button"
+                class="dock-item dock-tier {% if '/users/profile' in request.path or request.path == '/appearance' or request.path == '/automation' or request.path == '/docs' or '/docs/' in request.path %}dock-item-active{% endif %}"
+                data-dock-tier="settings"
+                aria-label="Settings"
+                title="Settings">
+            <span class="dock-icon" aria-hidden="true">⚙</span>
+            <span class="dock-label">Settings</span>
+        </button>
+        {% if current_user.is_admin and is_system_mode %}
+        <button type="button"
+                class="dock-item dock-tier {% if request.path == '/admin' or request.path == '/apps' or request.path == '/processes' or request.path == '/heimdall' or '/users/home' in request.path or '/devices' in request.path %}dock-item-active{% endif %}"
+                data-dock-tier="admin"
+                aria-label="Admin"
+                title="Admin">
+            <span class="dock-icon" aria-hidden="true">◈</span>
+            <span class="dock-label">Admin</span>
+        </button>
+        {% endif %}
+        <button type="button"
+                id="dock-notification-button"
+                class="dock-item dock-item-utility"
+                aria-label="Notifications"
+                title="Notifications">
+            <span class="dock-icon" aria-hidden="true">◔</span>
+            <span class="dock-label">Notices</span>
+            <span id="dock-notification-count" class="notification-count {% if not notification_center or not notification_center['unread_count'] %}hidden{% endif %}">{{ notification_center['unread_count'] if notification_center and notification_center['unread_count'] and notification_center['unread_count'] < 10 else ('9+' if notification_center and notification_center['unread_count'] else '') }}</span>
+        </button>
+        <form action="/logout" method="POST" class="dock-form">
+            <button type="submit"
+                    class="dock-item dock-item-utility"
+                    aria-label="Sign Out"
+                    title="Sign Out">
+                <span class="dock-icon" aria-hidden="true">⇢</span>
+                <span class="dock-label">Sign Out</span>
+            </button>
+        </form>
+        </div>
+    </div>
+</nav>
+{% endif %}
+
 {% block scripts %}
 <script>
     function applyThemeMeta(themeName) {
@@ -322,18 +232,123 @@
         syncPreferenceButtons();
     }
 
-        function toggleSidebar(forceOpen) {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebar-backdrop');
-            const willOpen = forceOpen === undefined ? !sidebar.classList.contains('open') : forceOpen;
-            sidebar.classList.toggle('open', willOpen);
-        backdrop.classList.toggle('opacity-100', willOpen);
-        backdrop.classList.toggle('pointer-events-auto', willOpen);
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
         applyThemeMeta(localStorage.getItem('theme') || 'slate');
         syncPreferenceButtons();
+        const dockSubdock = document.getElementById('dock-subdock');
+        const dockTierButtons = Array.from(document.querySelectorAll('[data-dock-tier]'));
+        const dockMenus = {
+            workspace: [
+                { href: '/', label: 'Dashboard', icon: '⌂', active: {{ (request.path == '/' or request.path == '/dashboard') | tojson }} },
+                { href: '/capture', label: 'Capture', icon: '✚', active: {{ (request.path == '/capture') | tojson }} },
+                {% if PermissionManager.can_view_app('thoughts') and 'thoughts' in active_app_names %}
+                { href: '/thoughts/home', label: 'Thoughts', icon: '✎', active: {{ ('/thoughts' in request.path) | tojson }} },
+                {% endif %}
+                {% if not is_work_mode and PermissionManager.can_view_app('promises') and 'promises' in active_app_names %}
+                { href: '/promises/home', label: 'Promises', icon: '◌', active: {{ ('/promises' in request.path) | tojson }} },
+                {% endif %}
+                {% if PermissionManager.can_view_app('reports') and 'reports' in active_app_names %}
+                { href: '/reports/home', label: 'Reports', icon: '▤', active: {{ ('/reports' in request.path) | tojson }} },
+                {% endif %}
+                {% if PermissionManager.can_view_app('rtv') and 'rtv' in active_app_names %}
+                { href: '/rtv/home', label: 'rTV', icon: '▶', active: {{ ('/rtv' in request.path) | tojson }} },
+                {% endif %}
+            ],
+            structured: [
+                {% if PermissionManager.can_view_app('projects') and 'projects' in active_app_names %}
+                { href: '/projects/home', label: 'Projects', icon: '▣', active: {{ ('/projects' in request.path) | tojson }} },
+                {% endif %}
+                {% if PermissionManager.can_view_app('activities') and 'activities' in active_app_names %}
+                { href: '/activities/home', label: 'Activities', icon: '↻', active: {{ ('/activities' in request.path) | tojson }} },
+                {% endif %}
+                {% if PermissionManager.can_view_app('skills') and 'skills' in active_app_names %}
+                { href: '/skills/home', label: 'Skills', icon: '✦', active: {{ ('/skills' in request.path) | tojson }} },
+                {% endif %}
+                {% if PermissionManager.can_view_app('connections') and 'connections' in active_app_names %}
+                { href: '/connections/home', label: 'Connections', icon: '∞', active: {{ ('/connections' in request.path) | tojson }} },
+                {% endif %}
+                {% if PermissionManager.can_view_app('events') and 'events' in active_app_names %}
+                { href: '/events/home', label: 'Events', icon: '⚑', active: {{ ('/events' in request.path) | tojson }} },
+                {% endif %}
+                {% if PermissionManager.can_view_app('blogs') and 'blogs' in active_app_names %}
+                { href: '/blogs/home', label: 'Blogs', icon: '☰', active: {{ ('/blogs' in request.path) | tojson }} },
+                {% endif %}
+            ],
+            settings: [
+                { href: '/users/profile', label: 'Profile', icon: '⚙', active: {{ ('/users/profile' in request.path) | tojson }} },
+                { href: '/appearance', label: 'Appearance', icon: '◫', active: {{ (request.path == '/appearance') | tojson }} },
+                {% if not is_everyday_mode and not is_work_mode %}
+                { href: '/automation', label: 'Automation', icon: '↻', active: {{ (request.path == '/automation') | tojson }} },
+                {% endif %}
+                { action: '/users/profile/work-mode', method: 'POST', label: {{ ('Leave Work Mode' if is_work_mode else 'Work Mode') | tojson }}, shortLabel: {{ ('Leave Work' if is_work_mode else 'Work Mode') | tojson }}, icon: {{ ('◂' if is_work_mode else '◈') | tojson }}, active: false },
+                { href: '/docs', label: 'Help', icon: '☰', active: {{ (request.path == '/docs' or '/docs/' in request.path) | tojson }} },
+            ],
+            admin: [
+                { href: '/admin', label: 'Admin', icon: '◈', active: {{ (request.path == '/admin') | tojson }} },
+                { href: '/apps', label: 'Apps', icon: '⌘', active: {{ (request.path == '/apps') | tojson }} },
+                { href: '/processes', label: 'Processes', icon: '◫', active: {{ (request.path == '/processes') | tojson }} },
+                {% if PermissionManager.can_view_app('users') and 'users' in active_app_names %}
+                { href: '/users/home', label: 'Users', icon: '◍', active: {{ ('/users/home' in request.path) | tojson }} },
+                {% endif %}
+                {% if PermissionManager.can_view_app('devices') and 'devices' in active_app_names %}
+                { href: '/devices/home', label: 'Devices', icon: '⬡', active: {{ ('/devices' in request.path) | tojson }} },
+                {% endif %}
+                { href: '/heimdall', label: 'Heimdall', icon: '◉', active: {{ (request.path == '/heimdall') | tojson }} },
+            ],
+        };
+        let activeDockTier = null;
+
+        function renderSubdock(tier) {
+            if (!dockSubdock) return;
+            const items = (dockMenus[tier] || []).filter(Boolean);
+            if (!items.length) {
+                dockSubdock.classList.add('hidden');
+                dockSubdock.innerHTML = '';
+                activeDockTier = null;
+                dockTierButtons.forEach((button) => button.classList.remove('dock-item-open'));
+                return;
+            }
+            activeDockTier = tier;
+            dockTierButtons.forEach((button) => {
+                button.classList.toggle('dock-item-open', button.dataset.dockTier === tier);
+            });
+            dockSubdock.innerHTML = items.map((item) => {
+                if (item.href) {
+                    return `
+                        <a href="${item.href}" class="subdock-item ${item.active ? 'subdock-item-active' : ''}" aria-label="${item.label}">
+                            <span class="subdock-icon" aria-hidden="true">${item.icon}</span>
+                            <span class="subdock-text">${item.shortLabel || item.label}</span>
+                        </a>
+                    `;
+                }
+                if (item.action && item.method === 'POST') {
+                    return `
+                        <form action="${item.action}" method="POST" class="dock-form">
+                            <button type="submit" class="subdock-item ${item.active ? 'subdock-item-active' : ''}" aria-label="${item.label}" title="${item.label}">
+                                <span class="subdock-icon" aria-hidden="true">${item.icon}</span>
+                                <span class="subdock-text">${item.shortLabel || item.label}</span>
+                            </button>
+                        </form>
+                    `;
+                }
+                return '';
+            }).join('');
+            dockSubdock.classList.remove('hidden');
+        }
+
+        dockTierButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const tier = button.dataset.dockTier;
+                if (activeDockTier === tier) {
+                    dockSubdock.classList.add('hidden');
+                    dockSubdock.innerHTML = '';
+                    activeDockTier = null;
+                    dockTierButtons.forEach((entry) => entry.classList.remove('dock-item-open'));
+                    return;
+                }
+                renderSubdock(tier);
+            });
+        });
 
         const responsiveActionIcons = {
             archive: 'fa-box-archive',
@@ -398,7 +413,7 @@
 
         function enhanceResponsiveActionButtons(root = document) {
             responsiveActionTargets(root).forEach((element) => {
-                if (element.closest('.nav-link') || element.closest('.sidebar-group-summary')) return;
+                if (element.closest('.nav-link')) return;
                 if (element.closest('.rasbhari-no-responsive-action-icons')) return;
                 const wasEnhanced = Boolean(element.dataset.actionIconEnhanced);
                 const existingChildren = Array.from(element.children);
@@ -453,6 +468,7 @@
         const assistantPendingCardKey = 'rasbhari_assistant_pending_card_v1';
         const notificationButton = document.getElementById('notification-button');
         const mobileNotificationButton = document.getElementById('mobile-notification-button');
+        const dockNotificationButton = document.getElementById('dock-notification-button');
         const notificationPanel = document.getElementById('notification-panel');
         const notificationItems = document.getElementById('notification-items');
         const notificationReadAllButton = document.getElementById('notifications-read-all');
@@ -460,7 +476,7 @@
         let pendingCardId = null;
 
         function setNotificationCount(unreadCount) {
-            ['mobile-notification-count'].forEach((id) => {
+            ['dock-notification-count'].forEach((id) => {
                 const badge = document.getElementById(id);
                 if (!badge) return;
                 if (unreadCount > 0) {
@@ -524,7 +540,7 @@
             ensureNotificationEmptyState();
         }
 
-        [notificationButton, mobileNotificationButton].forEach((button) => {
+        [notificationButton, mobileNotificationButton, dockNotificationButton].forEach((button) => {
             button?.addEventListener('click', (event) => {
                 event.stopPropagation();
                 toggleNotificationPanel();
@@ -547,7 +563,7 @@
         document.addEventListener('click', (event) => {
             if (!notificationPanel || notificationPanel.classList.contains('hidden')) return;
             if (notificationPanel.contains(event.target)) return;
-            if (notificationButton?.contains(event.target) || mobileNotificationButton?.contains(event.target)) return;
+            if (notificationButton?.contains(event.target) || mobileNotificationButton?.contains(event.target) || dockNotificationButton?.contains(event.target)) return;
             toggleNotificationPanel(false);
         });
 

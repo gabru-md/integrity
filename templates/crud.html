@@ -7,15 +7,13 @@
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <div id="vue-crud-app" class="vue-island surface-grid px-1 py-2">
-    <header class="compact-page-header">
-        <div>
-            {% raw %}
-            <div class="section-kicker text-[10px] font-extrabold uppercase">Resource Management</div>
-            <h1 class="compact-page-header-title capitalize">{{ modelClassName }}s Workspace</h1>
-            <p class="compact-page-header-copy">Review, search, create, and edit <span class="lowercase">{{ modelClassName }}</span> records.</p>
-            {% endraw %}
-        </div>
-    </header>
+    <div class="space-y-2">
+        {% raw %}
+        <div class="section-kicker text-[10px] font-extrabold uppercase">Resource Management</div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text)] capitalize md:text-4xl">{{ modelClassName }}s Workspace</h1>
+        <p class="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Review, search, create, and edit <span class="lowercase">{{ modelClassName }}</span> records.</p>
+        {% endraw %}
+    </div>
 
     {% raw %}
 

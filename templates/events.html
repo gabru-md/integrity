@@ -5,16 +5,16 @@
 
 {% block content %}
 <div class="operator-console px-1 py-2">
-    <section class="compact-page-header">
-        <div>
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div class="space-y-2">
             <div class="section-kicker text-[10px] font-extrabold uppercase">Event Stream</div>
-            <h1 class="compact-page-header-title">Events</h1>
-            <p class="compact-page-header-copy">Investigate what happened without mixing user signals and Rasbhari runtime noise unless you ask for both.</p>
+            <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text)] md:text-4xl">Events</h1>
+            <p class="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Investigate what happened without mixing user signals and Rasbhari runtime noise unless you ask for both.</p>
         </div>
-        <div class="page-actions">
+        <div class="flex flex-wrap gap-3">
             <a href="/capture" class="btn-primary px-4 py-3 text-sm">Capture Event</a>
         </div>
-    </section>
+    </div>
 
     <section class="operator-table-card">
         <div class="resource-list-header">

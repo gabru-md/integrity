@@ -7,23 +7,19 @@
 {% set experience_mode = (current_user.experience_mode if current_user and current_user.experience_mode else 'everyday') %}
 {% set is_system_mode = experience_mode == 'system' %}
 <div class="page-shell px-1 py-2">
-    <section class="page-rail-grid">
-        <div class="shell-card hero-card px-6 py-6">
-            <div class="page-hero">
-                <div class="page-hero-header">
-                    <div class="section-kicker text-[10px] font-extrabold uppercase">Reports</div>
-                    <h1 class="page-hero-title">Behavioral Mirror</h1>
-                    <p class="page-hero-copy">Generate a report when you want a clean read on intent, action, and drift.</p>
-                </div>
-            </div>
-            <div class="page-actions mt-5">
-                <a href="#report-generate-form" class="btn-primary px-5 py-3 text-sm">Create Report</a>
-                {% if reports %}
-                <a href="/reports/{{ reports[0].id }}/view" class="btn-secondary px-5 py-3 text-sm">Open Latest</a>
-                {% endif %}
-            </div>
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div class="space-y-2">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Reports</div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text)] md:text-4xl">Behavioral Mirror</h1>
+            <p class="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Generate a report when you want a clean read on intent, action, and drift.</p>
         </div>
-    </section>
+        <div class="flex flex-wrap gap-3">
+            <a href="#report-generate-form" class="btn-primary px-5 py-3 text-sm">Create Report</a>
+            {% if reports %}
+            <a href="/reports/{{ reports[0].id }}/view" class="btn-secondary px-5 py-3 text-sm">Open Latest</a>
+            {% endif %}
+        </div>
+    </div>
 
     <section class="page-rail-grid">
         <div class="shell-card px-6 py-6">

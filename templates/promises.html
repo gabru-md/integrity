@@ -9,18 +9,16 @@
 {% set is_everyday_mode = experience_mode == 'everyday' %}
 
 <div class="page-shell px-1 py-2">
-    <section class="shell-card hero-card px-6 py-6">
-        <div class="page-hero">
-            <div class="page-hero-header">
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Promises</div>
-                <h1 class="page-hero-title">Keep commitments visible</h1>
-                <p class="page-hero-copy">One page for what you promised, what is due, and what needs the next check-in.</p>
-            </div>
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div class="space-y-2">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Promises</div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text)] md:text-4xl">Keep commitments visible</h1>
+            <p class="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">One page for what you promised, what is due, and what needs the next check-in.</p>
         </div>
-        <div class="page-actions mt-5">
+        <div class="flex flex-wrap gap-3">
             <button onclick="openModal()" class="btn-primary px-5 py-3 text-sm">Make a Promise</button>
         </div>
-    </section>
+    </div>
 
     <div class="flex flex-wrap gap-2 text-sm text-[var(--text-soft)]">
         <span class="ui-badge">{{ stats.active }} active</span>

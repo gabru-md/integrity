@@ -7,20 +7,18 @@
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <div id="skills-app" class="vue-island space-y-6 px-1 py-2">
-    <header class="shell-card hero-card px-6 py-6">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-                <div class="section-kicker text-[10px] font-extrabold uppercase">Growth</div>
-                <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Skills</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Turn repeated tagged work into a visible growth system with levels, XP, and momentum.</p>
-            </div>
-            <div class="flex items-start gap-3">
-                <button @click="openCreateModal" class="btn-primary px-4 py-3 text-sm">
-                    Create Skill
-                </button>
-            </div>
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div class="space-y-2">
+            <div class="section-kicker text-[10px] font-extrabold uppercase">Growth</div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text)] md:text-4xl">Skills</h1>
+            <p class="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">Turn repeated tagged work into a visible growth system with levels, XP, and momentum.</p>
         </div>
-    </header>
+        <div class="flex items-start gap-3">
+            <button @click="openCreateModal" class="btn-primary px-4 py-3 text-sm">
+                Create Skill
+            </button>
+        </div>
+    </div>
 
     {% raw %}
     <section class="shell-card p-6">

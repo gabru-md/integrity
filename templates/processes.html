@@ -5,17 +5,16 @@
 
 {% block content %}
 <div class="operator-console px-1 py-2">
-
-    <header class="shell-card hero-card px-6 py-6 lg:px-7 lg:py-7">
-        <div>
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div class="space-y-2">
             <div class="section-kicker text-[10px] font-extrabold uppercase">Runtime</div>
-            <h1 class="mt-3 text-4xl font-extrabold tracking-tight text-[var(--text)]">Background Processes</h1>
-            <p class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Inspect worker health, recover queues, and restart processes from one compact operator console.</p>
-            <div class="mt-5 flex flex-wrap gap-3">
-                <a href="/admin" class="btn-secondary px-4 py-3 text-sm">Admin Overview</a>
-            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text)] md:text-4xl">Background Processes</h1>
+            <p class="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">Inspect worker health, recover queues, and restart processes from one compact operator console.</p>
         </div>
-    </header>
+        <div class="flex flex-wrap gap-3">
+            <a href="/admin" class="btn-secondary px-4 py-3 text-sm">Admin Overview</a>
+        </div>
+    </div>
 
     {% set queue_processors = processes_data | selectattr('type', 'equalto', 'QueueProcessor') | list %}
     {% set running_processes = processes_data | selectattr('is_alive', 'equalto', True) | list %}
