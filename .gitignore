@@ -16,3 +16,5 @@ RULES.md
 .cursorrules
 backups/*
 media/*
+.agents/*
+.codex-plugins/*
